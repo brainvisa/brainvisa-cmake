@@ -1,6 +1,5 @@
 get_filename_component( soma-infra_MODULE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH )
 set( soma-infra_MODULE_DIR "${soma-infra_MODULE_DIR}/modules" )
-message( "soma-infra: CMAKE_CURRENT_LIST_FILE = ${CMAKE_CURRENT_LIST_FILE}" )
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${soma-infra_MODULE_DIR}" )
 
 OPTION( SOMA_BUILD_FROM_BINARY_DIR "Try to locate and use build directories for soma projects" )

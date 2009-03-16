@@ -151,6 +151,13 @@ IF( DCMTK_dcmimgle_LIBRARY )
    ${DCMTK_LIBRARIES}
    ${DCMTK_dcmnet_LIBRARY}
    )
+   IF(EXISTS /etc/debian_version AND EXISTS /lib/libwrap.so.0)
+     SET( DCMTK_LIBRARIES
+     ${DCMTK_LIBRARIES}
+     /lib/libwrap.so.0
+     )
+   ENDIF(EXISTS /etc/debian_version AND EXISTS /lib/libwrap.so.0)
+   
   ENDIF(DCMTK_dcmnet_LIBRARY)
 
   IF( WIN32 )

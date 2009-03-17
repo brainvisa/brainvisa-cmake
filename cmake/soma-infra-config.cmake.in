@@ -236,8 +236,27 @@ macro( SOMA_COPY_PYTHON_DIRECTORY _pythonDirectory _targetName _component )
     find_package( PythonInterp REQUIRED )
   endif( NOT DEFINED PYTHON_EXECUTABLE )
   
-  file( GLOB_RECURSE _pythonSources RELATIVE "${_pythonDirectory}" "${_pythonDirectory}/*.py" )
-  set( _targetDepends ) # Python sources and byte compiled files in the build directory
+  # Read source directory and separate Python sources (*.py) from other files
+  set( _pythonSources )
+  set( _nonPythonSources )
+  file( GLOB_RECURSE _files RELATIVE "${_pythonDirectory}" "${_pythonDirectory}/*" )
+  foreach( _i ${_files} )
+    get_filename_component( _f ${_i} NAME )
+    string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*\\.pyo)|(.*\\.pyc)$" _match ${_f} )
+    if( NOT _match )
+      string( REGEX MATCH ".*\\.py$" _match ${_f} )
+      if( _match )
+        set( _pythonSources ${_pythonSources} ${_i} )
+      else( _match )
+        set( _nonPythonSources ${_nonPythonSources} ${_i} )
+      endif( _match )
+    endif( NOT _match )
+  endforeach( _i ${_files} )
+
+  # List containing all source files and also byte compiled files in the build directory
+  set( _targetDepends )
+
+  # Copy or symlink Python sources
   foreach(_file ${_pythonSources})
     # Copy the source file in build directory
     set( _fileBuild "${CMAKE_BINARY_DIR}/${_destDir}/${_file}" )
@@ -271,6 +290,22 @@ macro( SOMA_COPY_PYTHON_DIRECTORY _pythonDirectory _targetName _component )
                   COMPONENT ${_component} )
     set( _targetDepends ${_targetDepends} "${_fileBuild}" "${_fileBuild}c" "${_fileBuild}o" )
   endforeach(_file ${_pythonSources})
+
+  # Copy other files
+  foreach(_file ${_nonPythonSources})
+    set( _fileBuild "${CMAKE_BINARY_DIR}/${_destDir}/${_file}" )
+    configure_file( "${_pythonDirectory}/${_file}"
+                    "${_fileBuild}"
+                    COPYONLY )
+    # Install source file and byte compiled files
+    get_filename_component( _path "${_file}" PATH )
+    SOMA_INSTALL( FILES "${_pythonDirectory}/${_file}"
+                  DESTINATION ${_destDir}/${_path}
+                  COMPONENT ${_component} )
+    set( _targetDepends ${_targetDepends} "${_fileBuild}" )
+  endforeach(_file ${_nonPythonSources})
+
+
   # Make a target that depends on all files that must be copied or generated
   # Is there a better way to force files creation ?
   add_custom_target( ${_targetName} ALL

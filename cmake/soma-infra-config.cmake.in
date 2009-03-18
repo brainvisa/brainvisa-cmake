@@ -24,6 +24,7 @@ macro( SOMA_PROJECT _projectName _versionMajor _versionMinor _versionPatch _vend
   
   include( CPack )
   
+  set( ${PROJECT_NAME}_TARGET_COUNT 0 CACHE INTERNAL "Used to generate new targets" )
   SOMA_CREATE_MAIN_COMPONENTS()
   
   set( ${PROJECT_NAME}_IS_COMPILED ON PARENT_SCOPE )
@@ -148,31 +149,15 @@ MACRO( SOMA_SET_PROJECT_VERSION )
 ENDMACRO( SOMA_SET_PROJECT_VERSION )
 
 
-# SOMA_GENERATE_VERSION_FILE
-#
-# Usage:
-#  SOMA_GENERATE_VERSION_FILE( <target> c )
-#  SOMA_GENERATE_VERSION_FILE( <target> python )
-#  SOMA_GENERATE_VERSION_FILE( <target> python <module> )
-MACRO( SOMA_GENERATE_VERSION_FILE  _targetName _type )
-  SOMA_SET_PROJECT_VERSION()
-  IF ( ${_type} STREQUAL "python" )
-    IF ( ${ARGC} GREATER 2 )
-      SET( _pythonModule ${ARGV2} )
-    ELSE ( ${ARGC} GREATER 2 )
-      SET( _pythonModule ${PROJECT_NAME} )
-    ENDIF ( ${ARGC} GREATER 2 )
-    CONFIGURE_FILE( "${SOMA_VERSION_PY_IN}" "${CMAKE_BINARY_DIR}/python/${_pythonModule}/version.py" )
-    ADD_CUSTOM_TARGET( ${_targetName} ALL DEPENDS "${CMAKE_BINARY_DIR}/python/${_pythonModule}/version.py" )
-    INSTALL( FILES "${CMAKE_BINARY_DIR}/python/${_pythonModule}/version.py" DESTINATION "python/${_pythonModule}"  )
-  ELSE ( ${_type} STREQUAL "python" )
-    IF ( ${_type} STREQUAL "c" )
-      MESSAGE( SEND_ERROR "Generation of version file for c or c++ is not yet implemented." )
-    ELSE ( ${_type} STREQUAL "c" )
-      MESSAGE( FATAL_ERROR "First argument of GENERATE_VERSION_FILE must be either \"c\" or \"python\" but not \"${_type}\"." )
-    ENDIF ( ${_type} STREQUAL "c" )
-  ENDIF ( ${_type} STREQUAL "python" )
-ENDMACRO( SOMA_GENERATE_VERSION_FILE )
+function( SOMA_GENERATE_TARGET_NAME _variableName )
+  if( DEFINED ${PROJECT_NAME}_TARGET_COUNT )
+    math( EXPR ${PROJECT_NAME}_TARGET_COUNT ${${PROJECT_NAME}_TARGET_COUNT}+1 )
+    set( ${PROJECT_NAME}_TARGET_COUNT ${${PROJECT_NAME}_TARGET_COUNT} CACHE INTERNAL "Used to generate new targets" )
+  else( DEFINED ${PROJECT_NAME}_TARGET_COUNT )
+    set( ${PROJECT_NAME}_TARGET_COUNT 1 CACHE INTERNAL "Used to generate new targets" )
+  endif( DEFINED ${PROJECT_NAME}_TARGET_COUNT )
+  set( ${_variableName} ${PROJECT_NAME}_target_${${PROJECT_NAME}_TARGET_COUNT} PARENT_SCOPE )
+endfunction( SOMA_GENERATE_TARGET_NAME )
 
 
 # SOMA_GET_FILE_LIST_FROM_PRO
@@ -212,7 +197,7 @@ ENDMACRO( SOMA_GET_FILE_LIST_FROM_PRO )
 #
 # Example:
 #
-MACRO( SOMA_COPY_AND_INSTALL_HEADERS _headersVariable _includeDir _installComponent )
+MACRO( SOMA_COPY_AND_INSTALL_HEADERS _headersVariable _includeDir )
   FOREACH( _currentHeader ${${_headersVariable}} )
     CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}
                     ${CMAKE_BINARY_DIR}/include/${_includeDir}/${_currentHeader}
@@ -220,18 +205,17 @@ MACRO( SOMA_COPY_AND_INSTALL_HEADERS _headersVariable _includeDir _installCompon
     GET_FILENAME_COMPONENT( _path "${_currentHeader}" PATH )
     SOMA_INSTALL( FILES ${_currentHeader}
                   DESTINATION include/${_includeDir}/${_path}
-                  COMPONENT ${_installComponent} )
+                  COMPONENT ${PROJECT_NAME}-devel )
   ENDFOREACH( _currentHeader ${${_headersVariable}} )
-ENDMACRO( SOMA_COPY_AND_INSTALL_HEADERS _headersVariable _includeDir _installComponent )
+ENDMACRO( SOMA_COPY_AND_INSTALL_HEADERS _headersVariable _includeDir )
 
 
 # SOMA_COPY_FILES
 #
 # Usage:
-#  SOMA_COPY_FILES( <target> <component> [ <source files> [SOURCE_DIRECTORY <directory>] DESTINATION <destination directory> ]... )
+#  SOMA_COPY_FILES( <component> [ <source files> [SOURCE_DIRECTORY <directory>] DESTINATION <destination directory> ]... )
 #
-macro( SOMA_COPY_FILES _target _component )
-#   message( "++++++++++++ SOMA_COPY_FILES( ${_target} ${ARGN} )" )
+macro( SOMA_COPY_FILES _component )
   set( _targetDepends )
   set( _i 0 )
   set( _argn ${ARGN} )
@@ -281,9 +265,9 @@ macro( SOMA_COPY_FILES _target _component )
       set( _targetDepends ${_targetDepends} "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
     endforeach( _file ${_files} )
   endwhile( ${_i} LESS ${_lengthARGN} )
+  SOMA_GENERATE_TARGET_NAME( _target )
   add_custom_target( ${_target} ALL
                      DEPENDS ${_targetDepends} )
-#   message( "------------ SOMA_COPY_FILES( ${_target} ${ARGN} )" )
 endmacro( SOMA_COPY_FILES )
 
 
@@ -292,9 +276,9 @@ endmacro( SOMA_COPY_FILES )
 #  CMakeLists.txt or *~.
 #
 # Usage:
-#  SOMA_COPY_DIRECTORY( <source directory> <destination directory> <target> <component> )
+#  SOMA_COPY_DIRECTORY( <source directory> <destination directory> <component> )
 #
-macro( SOMA_COPY_DIRECTORY _directory _destination _target _component )
+macro( SOMA_COPY_DIRECTORY _directory _destination _component )
   file( GLOB_RECURSE _files RELATIVE "${_directory}" "${_directory}/*" )
   set( _selectedFiles )
   foreach( _i ${_files} )
@@ -304,8 +288,8 @@ macro( SOMA_COPY_DIRECTORY _directory _destination _target _component )
       set( _selectedFiles ${_selectedFiles} ${_i} )
     endif( NOT _match )
   endforeach( _i ${_files} )
-  SOMA_COPY_FILES( ${_target} ${_component} ${_selectedFiles} SOURCE_DIRECTORY "${_directory}" DESTINATION "${_destination}" )
-endmacro( SOMA_COPY_DIRECTORY _directory _destination _target _component )
+  SOMA_COPY_FILES( ${_component} ${_selectedFiles} SOURCE_DIRECTORY "${_directory}" DESTINATION "${_destination}" )
+endmacro( SOMA_COPY_DIRECTORY _directory _destination _component )
 
 
 # SOMA_COPY_PYTHON_DIRECTORY
@@ -313,27 +297,25 @@ endmacro( SOMA_COPY_DIRECTORY _directory _destination _target _component )
 #   contained in a directory.
 #
 # Usage:
-#   SOMA_COPY_PYTHON_DIRECTORY( <python directory> <target> <component> 
+#   SOMA_COPY_PYTHON_DIRECTORY( <python directory> <component> 
 #                               <destination directory> )
 #     <python directory>: python directory to copy
-#     <target>: name of a target that will be created to force generation
-#         of all files. I do not know how to avoid this target creation.
 #     <component>: name of the component passed to SOMA_INSTALL.
 #     <destination directory>: directory where the wiles will be copied
 #         (relative to build directory).
-#   SOMA_COPY_PYTHON_DIRECTORY( <python directory> <target> <component> )
+#   SOMA_COPY_PYTHON_DIRECTORY( <python directory> <component> )
 #     <destination directory> is set to the right most directory name in
 #         <python directory>
 #
 # Example:
 #   SOMA_COPY_PYTHON_DIRECTORY(  ${CMAKE_CURRENT_SOURCE_DIR}/python brainvisa_python )
 #
-macro( SOMA_COPY_PYTHON_DIRECTORY _pythonDirectory _targetName _component )
-  if( ${ARGC} GREATER 3 )
-    set( _destDir "${ARGV3}" )
-  else( ${ARGC} GREATER 3 )
+macro( SOMA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
+  if( ${ARGC} GREATER 2 )
+    set( _destDir "${ARGV2}" )
+  else( ${ARGC} GREATER 2 )
     get_filename_component( _destDir "${_pythonDirectory}" NAME )
-  endif( ${ARGC} GREATER 3 )
+  endif( ${ARGC} GREATER 2 )
 
   # Make sure Python can be executed
   if( NOT DEFINED PYTHON_EXECUTABLE )
@@ -412,9 +394,10 @@ macro( SOMA_COPY_PYTHON_DIRECTORY _pythonDirectory _targetName _component )
 
   # Make a target that depends on all files that must be copied or generated
   # Is there a better way to force files creation ?
-  add_custom_target( ${_targetName} ALL
+  SOMA_GENERATE_TARGET_NAME( _target )
+  add_custom_target( ${_target} ALL
                      DEPENDS ${_targetDepends} )
-endmacro( SOMA_COPY_PYTHON_DIRECTORY _pythonDirectory _targetName _component )
+endmacro( SOMA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
 
 
 # SOMA_GET_SPACED_QUOTED_LIST
@@ -445,15 +428,11 @@ MACRO( SOMA_GET_SPACED_QUOTED_LIST _listVariable _outputVariable )
 ENDMACRO( SOMA_GET_SPACED_QUOTED_LIST _listVariable _outputVariable )
 
 
-#TODO: Ajouter un component en option
 # SOMA_GENERATE_DOXYGEN_DOC
-#    Add rules to generate doxygen documentation with "make doc" or 
-#    "make <target>" (where <target> is a parameter of the macro).
+#    Add rules to generate doxygen documentation with "make doc".
 #
 # Usage:
-#   SOMA_GENERATE_DOXYGEN_DOC( <target> <input_variable> [<file to copy> ...] )
-#   <target>: name of the target allowing to create doxygen documentation for 
-#             this project
+#   SOMA_GENERATE_DOXYGEN_DOC( <input_variable> [<file to copy> ...] )
 #   <input_variable>: variable containing a string or a list of input sources. 
 #                     Its content will be copied in the INPUT field of the 
 #                     Doxygen configuration file.
@@ -477,9 +456,9 @@ ENDMACRO( SOMA_GET_SPACED_QUOTED_LIST _listVariable _outputVariable )
 #       SET( DOXYFILE_OPTIMIZE_OUTPUT_FOR_C YES )
 #       SET( DOXYFILE_BUILTIN_STL_SUPPORT NO )
 #       FILE( READ "${DOXYGEN_BINARY_DIR}/doxygenInput" _doxygenInput )
-#       SOMA_GENERATE_DOXYGEN_DOC( ${PROJECT_NAME}_doxygen _doxygenInput head_vip.html vip.gif )
+#       SOMA_GENERATE_DOXYGEN_DOC( _doxygenInput head_vip.html vip.gif )
 #     ENDIF ( DOXYGEN_FOUND )
-MACRO( SOMA_GENERATE_DOXYGEN_DOC _targetName _inputVariable )
+MACRO( SOMA_GENERATE_DOXYGEN_DOC _inputVariable )
   IF( DOXYGEN_FOUND )
     IF( DEFINED DOXYGEN_BINARY_DIR )
       SET( _doxygenBinaryDir "${DOXYGEN_BINARY_DIR}" )
@@ -514,12 +493,13 @@ MACRO( SOMA_GENERATE_DOXYGEN_DOC _targetName _inputVariable )
     ENDFOREACH( _file ${ARGN} )
   
     CONFIGURE_FILE( "${soma-infra_DIR}/Doxyfile.in" "${_doxygenBinaryDir}/Doxyfile" @ONLY )
-    ADD_CUSTOM_TARGET( ${_targetName} 
+    SOMA_GENERATE_TARGET_NAME( _target )
+    ADD_CUSTOM_TARGET( ${_target} 
                       DEPENDS "${_doxygenBinaryDir}/Doxyfile" ${_generatedFiles}
                       COMMAND ${CMAKE_COMMAND} -E make_directory "${DOXYFILE_OUTPUT_DIRECTORY}"
                       COMMAND "${DOXYGEN_EXECUTABLE}" "${_doxygenBinaryDir}/Doxyfile" )
     # Make sure doc target exists, I do not know if it is clean
-    ADD_DEPENDENCIES( doc ${_targetName} )
+    ADD_DEPENDENCIES( doc ${_target} )
     # Install HTML documentation
     if( IS_ABSOLUTE "${DOXYFILE_HTML_OUTPUT}" )
       set( _directory "${DOXYFILE_HTML_OUTPUT}" )
@@ -528,21 +508,21 @@ MACRO( SOMA_GENERATE_DOXYGEN_DOC _targetName _inputVariable )
     endif( IS_ABSOLUTE "${DOXYFILE_HTML_OUTPUT}" )
     SOMA_INSTALL( DIRECTORY "${_directory}"
                   DESTINATION "share/doc/${PROJECT_NAME}-${DOXYFILE_PROJECT_VERSION}/doxygen"
-                  COMPONENT ${PROJECT_NAME}-doxygen )
+                  COMPONENT ${PROJECT_NAME}-doc )
   ENDIF( DOXYGEN_FOUND )
 ENDMACRO( SOMA_GENERATE_DOXYGEN_DOC )
 
 
 # SOMA_GENERATE_EPYDOC_DOC
-#    Add rules to generate epydoc documentation with "make doc" or 
-#    "make <target>" (where <target> is a parameter of the macro).
+#    Add rules to generate epydoc documentation with "make doc".
 #
-macro( SOMA_GENERATE_EPYDOC_DOC _target _component _sourceDirectory _outputDirectory )
+macro( SOMA_GENERATE_EPYDOC_DOC _sourceDirectory _outputDirectory )
   if( Epydoc_FOUND )
     file( GLOB_RECURSE _pythonFiles "${_sourceDirectory}/*.py" )
     if( DOT_EXECUTABLE )
       set( _dotParameters --dotpath "${DOT_EXECUTABLE}" --graph classtree )
     endif( DOT_EXECUTABLE )
+    SOMA_GENERATE_TARGET_NAME( _target )
     add_custom_target( ${_target}
                       DEPENDS ${_pythonFiles}
                       COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/${_outputDirectory}"
@@ -557,55 +537,11 @@ macro( SOMA_GENERATE_EPYDOC_DOC _target _component _sourceDirectory _outputDirec
     # Install HTML documentation
     SOMA_INSTALL( DIRECTORY "${CMAKE_BINARY_DIR}/${_outputDirectory}"
                   DESTINATION "${_outputDirectory}"
-                  COMPONENT ${_component} )
+                  COMPONENT ${PACKAGE_NAME}-doc )
   endif( Epydoc_FOUND )
 endmacro( SOMA_GENERATE_EPYDOC_DOC )
 
 
-# SOMA_GENERATED_FILES_DECLARE_TARGET
-# SOMA_GENERATED_FILES_ADD_TO_TARGET
-# SOMA_GENERATED_FILES_CREATE_TARGET
-#    These three macros are used to attach a series of generated files to a 
-#    makefile target when these files are declared in several cmake files. In
-#    this case, it is not possible to use ADD_CUSTOM_TARGET because it must
-#    be called only once with all the generated files in the DEPENDS parameter.
-#    I did not found a way to overcome this problem with ADD_DEPENDENCIES.
-#    These macro just store the files in a variable and call ADD_CUSTOM_TARGET
-#    when the list is complete.
-#
-# Usage:
-#   SOMA_GENERATED_FILES_DECLARE_TARGET( <target> )
-#   SOMA_GENERATED_FILES_ADD_TO_TARGET( <target> <file> [<file>...] )
-#   SOMA_GENERATED_FILES_CREATE_TARGET( <target> [ ALL ] )
-#
-# Example:
-#     # The following line can be in a first cmake file such as
-#     # the main CMakeLists.txt
-#     SOMA_GENERATED_FILES_DECLARE_TARGET( test )
-#     # The main CMakeList.txt can include a first file producing
-#     # the following commands
-#     ADD_CUSTOM_COMMAND( OUTPUT ${CMAKE_BINARY_DIR}/test1
-#                         COMMAND touch ${CMAKE_BINARY_DIR}/test1 )
-#     SOMA_GENERATED_FILES_ADD_TO_TARGET( test ${CMAKE_BINARY_DIR}/test1 )
-#     # The main CMakeList.txt can include a second file producing
-#     # the following commands
-#     ADD_CUSTOM_COMMAND( OUTPUT ${CMAKE_BINARY_DIR}/test2
-#                         COMMAND touch ${CMAKE_BINARY_DIR}/test2 )
-#     SOMA_GENERATED_FILES_ADD_TO_TARGET( test ${CMAKE_BINARY_DIR}/test2 )
-#     # When all files had been included, the target can be created. In
-#     # this example using "make test" will generate test1 and test2.
-#     SOMA_GENERATED_FILES_CREATE_TARGET( test )
-MACRO( SOMA_GENERATED_FILES_DECLARE_TARGET _target )
-  SET( _soma_generated_files_for_${_target} )
-ENDMACRO( SOMA_GENERATED_FILES_DECLARE_TARGET _target )
-
-MACRO( SOMA_GENERATED_FILES_ADD_TO_TARGET _target )
-  SET( _soma_generated_files_for_${_target} ${_soma_generated_files_for_${_target}} ${ARGN} )
-ENDMACRO( SOMA_GENERATED_FILES_ADD_TO_TARGET _target )
-
-MACRO( SOMA_GENERATED_FILES_CREATE_TARGET _target )
-  ADD_CUSTOM_TARGET( ${_target} ${ARGN} DEPENDS ${_soma_generated_files_for_${_target}} )
-ENDMACRO( SOMA_GENERATED_FILES_CREATE_TARGET _target )
 
 #
 #
@@ -682,6 +618,7 @@ MACRO( SOMA_INSTALL )
   install( ${ARGN} )
 ENDMACRO( SOMA_INSTALL _component )
 
+
 # Copy/pasted from KDE3Macros.cmake
 MACRO(SOMA_ADD_MOC_FILES _sources)
    FOREACH (_current_FILE ${ARGN})
@@ -697,12 +634,13 @@ MACRO(SOMA_ADD_MOC_FILES _sources)
    ENDFOREACH (_current_FILE)
 ENDMACRO(SOMA_ADD_MOC_FILES)
 
+
 #
 # Usage:
-#   SOMA_ADD_SIP_PYTHON_MODULE( <module> <directory> <component> <devel_component> <mainSipFile> [ SIP_SOURCES <file> ... ] [ SIP_INCLUDE <directory> ... ] )
+#   SOMA_ADD_SIP_PYTHON_MODULE( <module> <directory> <mainSipFile> [ SIP_SOURCES <file> ... ] [ SIP_INCLUDE <directory> ... ] )
 #
 #
-macro( SOMA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _installComponent _installComponentDevel _mainSipFile )
+macro( SOMA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
   # Parse parameters
   set( _SIP_SOURCES )
   set( _SIP_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}" )
@@ -723,7 +661,7 @@ macro( SOMA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _installComponent _ins
   endforeach( _i ${ARGN} )
 
   # Build install rules for sip files
-  SOMA_COPY_FILES( "_${_moduleName}_sip_target" ${_installComponentDevel}
+  SOMA_COPY_FILES( ${PROJECT_NAME}-devel
     "${_mainSipFile}" ${_SIP_SOURCES}
     DESTINATION "share/sip/${PROJECT_NAME}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}")
 
@@ -765,11 +703,11 @@ macro( SOMA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _installComponent _ins
   add_library( ${_moduleName} MODULE ${_sipOutputFiles} )
   set_target_properties( ${_moduleName} PROPERTIES
                 LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python/${_modulePath}"
-#                 VERSION "${SOMA_CURRENT_PROJECT_VERSION}"
+                VERSION "${${PROJECT_NAME}_VERSION}"
                 PREFIX "" )
   SOMA_INSTALL( TARGETS ${_moduleName} 
                 DESTINATION "python/${_modulePath}"
-                COMPONENT ${_installComponent} )
+                COMPONENT ${PROJECT_NAME} )
 endmacro( SOMA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _installComponent _installComponentDevel _sipSplitGeneratedCode _mainSipFile )
 
 
@@ -788,3 +726,29 @@ macro( SOMA_CREATE_CMAKE_CONFIG_FILES )
 endmacro( SOMA_CREATE_CMAKE_CONFIG_FILES )
 
 
+# SOMA_GENERATE_VERSION_FILE
+#
+# Usage:
+#  SOMA_GENERATE_VERSION_FILE( <target> c )
+#  SOMA_GENERATE_VERSION_FILE( <target> python )
+#  SOMA_GENERATE_VERSION_FILE( <target> python <module> )
+# MACRO( SOMA_GENERATE_VERSION_FILE  _type )
+#   SOMA_SET_PROJECT_VERSION()
+#   IF ( ${_type} STREQUAL "python" )
+#     IF ( ${ARGC} GREATER 2 )
+#       SET( _pythonModule ${ARGV2} )
+#     ELSE ( ${ARGC} GREATER 2 )
+#       SET( _pythonModule ${PROJECT_NAME} )
+#     ENDIF ( ${ARGC} GREATER 2 )
+#     CONFIGURE_FILE( "${SOMA_VERSION_PY_IN}" "${CMAKE_BINARY_DIR}/python/${_pythonModule}/version.py" )
+#     SOMA_GENERATE_TARGET_NAME( _targetName )
+#     ADD_CUSTOM_TARGET( ${_targetName} ALL DEPENDS "${CMAKE_BINARY_DIR}/python/${_pythonModule}/version.py" )
+#     INSTALL( FILES "${CMAKE_BINARY_DIR}/python/${_pythonModule}/version.py" DESTINATION "python/${_pythonModule}"  )
+#   ELSE ( ${_type} STREQUAL "python" )
+#     IF ( ${_type} STREQUAL "c" )
+#       MESSAGE( SEND_ERROR "Generation of version file for c or c++ is not yet implemented." )
+#     ELSE ( ${_type} STREQUAL "c" )
+#       MESSAGE( FATAL_ERROR "First argument of GENERATE_VERSION_FILE must be either \"c\" or \"python\" but not \"${_type}\"." )
+#     ENDIF ( ${_type} STREQUAL "c" )
+#   ENDIF ( ${_type} STREQUAL "python" )
+# ENDMACRO( SOMA_GENERATE_VERSION_FILE )

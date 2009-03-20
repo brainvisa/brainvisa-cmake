@@ -100,8 +100,57 @@ macro( SOMA_CREATE_MAIN_COMPONENTS )
   SOMA_ADD_COMPONENT( ${PROJECT_NAME}-doc
                       GROUP doc
                       DESCRIPTION "Documentation of ${PROJECT_NAME}" )
-
 endmacro( SOMA_CREATE_MAIN_COMPONENTS )
+
+
+function( SOMA_CREATE_PACKAGING_RULES )
+  # Rules for packaging
+  set( _packageSuffix "${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}" )
+  set( _allPackages )
+  foreach( _project ${SOMA_ALL_PROJECTS} )
+    set( _tmpDir "${SOMA_PACKAGING_TEMPORARY_DIRECTORY}/${_project}" )
+    set( _packageName "${SOMA_PACKAGING_TEMPORARY_DIRECTORY}/${_project}-${${_project}_VERSION}-${_packageSuffix}.tar.bz2" )
+    set( _packageNameDevel "${SOMA_PACKAGING_TEMPORARY_DIRECTORY}/${_project}-devel-${${_project}_VERSION}-${_packageSuffix}.tar.bz2" )
+    add_custom_command( OUTPUT "${_packageName}"
+      COMMENT "Packaging ${_packageName}"
+      COMMAND ${CMAKE_COMMAND} -E remove_directory "${_tmpDir}"
+      COMMAND ${CMAKE_COMMAND} -E make_directory "${_tmpDir}"
+      COMMAND ${CMAKE_COMMAND} "-DCMAKE_INSTALL_PREFIX=${_tmpDir}" -DCMAKE_INSTALL_COMPONENT=${_project} -P "${CMAKE_BINARY_DIR}/cmake_install.cmake"
+      COMMAND tar "--directory=${_tmpDir}" -jcf "${_packageName}" .
+      COMMAND ${CMAKE_COMMAND} -E remove_directory "${_tmpDir}"
+    )
+    set( _allPackages ${_allPackages} "${_packageName}" )
+  
+    add_custom_command( OUTPUT "${_packageNameDevel}"
+      COMMENT "Packaging ${_packageNameDevel}"
+      COMMAND ${CMAKE_COMMAND} -E remove_directory "${_tmpDir}"
+      COMMAND ${CMAKE_COMMAND} -E remove_directory "${_tmpDir}-devel"
+      COMMAND ${CMAKE_COMMAND} -E make_directory "${_tmpDir}-devel"
+      COMMAND ${CMAKE_COMMAND} "-DCMAKE_INSTALL_PREFIX=${_tmpDir}-devel" -DCMAKE_INSTALL_COMPONENT=${_project}-devel -P "${CMAKE_BINARY_DIR}/cmake_install.cmake"
+      COMMAND tar "--directory=${_tmpDir}-devel" -jcf "${_packageNameDevel}" .
+      COMMAND ${CMAKE_COMMAND} -E remove_directory "${_tmpDir}-devel"
+    )
+    set( _allPackages ${_allPackages} "${_packageNameDevel}" )
+  
+  endforeach( _project ${SOMA_ALL_PROJECTS} )
+  
+  set( _packageName "${SOMA_PACKAGING_TEMPORARY_DIRECTORY}/system-${_packageSuffix}.tar.bz2" )
+  set( _tmpDir "${SOMA_PACKAGING_TEMPORARY_DIRECTORY}/system" )
+  add_custom_command( OUTPUT "${_packageName}"
+    COMMENT "Packaging ${_packageName}"
+    COMMAND ${CMAKE_COMMAND} -E remove_directory "${_tmpDir}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${_tmpDir}"
+    COMMAND ${CMAKE_COMMAND} "-DCMAKE_INSTALL_PREFIX=${_tmpDir}" -DCMAKE_INSTALL_COMPONENT=system-runtime -P "${CMAKE_BINARY_DIR}/cmake_install.cmake"
+    COMMAND tar "--directory=${_tmpDir}" -jcf "${_packageName}" .
+    COMMAND ${CMAKE_COMMAND} -E remove_directory "${_tmpDir}"
+  )
+  set( _allPackages ${_allPackages} "${_packageName}" )
+  
+  add_custom_target( packages
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${SOMA_PACKAGING_TEMPORARY_DIRECTORY}"
+    DEPENDS ${_allPackages}
+  )
+endfunction( SOMA_CREATE_PACKAGING_RULES )
 
 
 
@@ -734,29 +783,16 @@ macro( SOMA_CREATE_CMAKE_CONFIG_FILES )
 endmacro( SOMA_CREATE_CMAKE_CONFIG_FILES )
 
 
-# SOMA_GENERATE_VERSION_FILE
-#
-# Usage:
-#  SOMA_GENERATE_VERSION_FILE( <target> c )
-#  SOMA_GENERATE_VERSION_FILE( <target> python )
-#  SOMA_GENERATE_VERSION_FILE( <target> python <module> )
-# MACRO( SOMA_GENERATE_VERSION_FILE  _type )
-#   SOMA_SET_PROJECT_VERSION()
-#   IF ( ${_type} STREQUAL "python" )
-#     IF ( ${ARGC} GREATER 2 )
-#       SET( _pythonModule ${ARGV2} )
-#     ELSE ( ${ARGC} GREATER 2 )
-#       SET( _pythonModule ${PROJECT_NAME} )
-#     ENDIF ( ${ARGC} GREATER 2 )
-#     CONFIGURE_FILE( "${SOMA_VERSION_PY_IN}" "${CMAKE_BINARY_DIR}/python/${_pythonModule}/version.py" )
-#     SOMA_GENERATE_TARGET_NAME( _targetName )
-#     ADD_CUSTOM_TARGET( ${_targetName} ALL DEPENDS "${CMAKE_BINARY_DIR}/python/${_pythonModule}/version.py" )
-#     INSTALL( FILES "${CMAKE_BINARY_DIR}/python/${_pythonModule}/version.py" DESTINATION "python/${_pythonModule}"  )
-#   ELSE ( ${_type} STREQUAL "python" )
-#     IF ( ${_type} STREQUAL "c" )
-#       MESSAGE( SEND_ERROR "Generation of version file for c or c++ is not yet implemented." )
-#     ELSE ( ${_type} STREQUAL "c" )
-#       MESSAGE( FATAL_ERROR "First argument of GENERATE_VERSION_FILE must be either \"c\" or \"python\" but not \"${_type}\"." )
-#     ENDIF ( ${_type} STREQUAL "c" )
-#   ENDIF ( ${_type} STREQUAL "python" )
-# ENDMACRO( SOMA_GENERATE_VERSION_FILE )
+function( SOMA_INSTALL_RUNTIME_LIBRARIES )
+  set( librariesToInstall )
+  foreach( lib ${ARGN} )
+    get_filename_component( lib "${lib}" ABSOLUTE )
+    if( UNIX OR APPLE )
+      file( GLOB lib "${lib}*" )
+    endif( UNIX OR APPLE )
+    set( librariesToInstall ${librariesToInstall} ${lib} )
+  endforeach( lib ${ARGN} )
+  SOMA_INSTALL( FILES ${librariesToInstall}
+                DESTINATION lib
+                COMPONENT system-runtime )
+endfunction( SOMA_INSTALL_RUNTIME_LIBRARIES )

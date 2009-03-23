@@ -7,15 +7,9 @@ set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${soma-infra_MODULE_DIR}" )
 # Requires CPack for its argument parsing macro
 include( CPack )
 
-macro( SOMA_PROJECT _projectName _versionMajor _versionMinor _versionPatch _vendor )
-  project( ${_projectName} )
-  set( CPACK_PACKAGE_NAME "${PROJECT_NAME}" )
-  set( CPACK_PACKAGE_VENDOR "${_vendor}" )
-  set( CPACK_PACKAGE_VERSION_MAJOR ${_versionMajor} )
-  set( CPACK_PACKAGE_VERSION_MINOR ${_versionMinor} )
-  set( CPACK_PACKAGE_VERSION_PATCH ${_versionPatch} )
-  set( CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}-linux-i686" )
-  set( CPACK_PACKAGE_INSTALL_DIRECTORY "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}" )
+macro( SOMA_PROJECT )
+  include( "${CMAKE_CURRENT_SOURCE_DIR}/project_info.cmake" )
+  project( ${CPACK_PACKAGE_NAME} )
   
   set( ${PROJECT_NAME}_VERSION_MAJOR ${CPACK_PACKAGE_VERSION_MAJOR} )
   set( ${PROJECT_NAME}_VERSION_MINOR ${CPACK_PACKAGE_VERSION_MINOR} )
@@ -35,6 +29,7 @@ macro( SOMA_PROJECT _projectName _versionMajor _versionMinor _versionPatch _vend
   set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
   set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
 endmacro( SOMA_PROJECT )
+
 
 # TODO: delete this macro
 macro( SOMA_CREATE_MAIN_COMPONENTS )
@@ -107,7 +102,7 @@ function( SOMA_CREATE_PACKAGING_RULES )
   # Rules for packaging
   set( _packageSuffix "${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}" )
   set( _allPackages )
-  foreach( _project ${SOMA_ALL_PROJECTS} )
+  foreach( _project ${SOMA_BUILD_PROJECTS} )
     set( _tmpDir "${SOMA_PACKAGING_TEMPORARY_DIRECTORY}/${_project}" )
     set( _packageName "${SOMA_PACKAGING_TEMPORARY_DIRECTORY}/${_project}-${${_project}_VERSION}-${_packageSuffix}.tar.bz2" )
     set( _packageNameDevel "${SOMA_PACKAGING_TEMPORARY_DIRECTORY}/${_project}-devel-${${_project}_VERSION}-${_packageSuffix}.tar.bz2" )
@@ -796,3 +791,26 @@ function( SOMA_INSTALL_RUNTIME_LIBRARIES )
                 DESTINATION lib
                 COMPONENT system-runtime )
 endfunction( SOMA_INSTALL_RUNTIME_LIBRARIES )
+
+
+macro( SOMA_INCLUDE_PROJECT_SOURCES _project _version )
+  string( REGEX REPLACE "([^.]+)\\.([^.]+)(\\.(.*))?" "\\1" _versionMajor "${_version}")
+  string( REGEX REPLACE "([^.]+)\\.([^.]+)(\\.(.*))?" "\\2" _versionMinor "${_version}")
+  string( REGEX REPLACE "([^.]+)\\.([^.]+)\\.?(.*)" "\\3" _versionPatch "${_version}")
+
+  set( _found FALSE )
+  file( GLOB _sourceDirectories "$ENV{P4}/${_project}/*" "$ENV{P4}/trunk/${_project}" )
+  foreach( _sourceDir ${_sourceDirectories} )
+    if( EXISTS "${_sourceDir}/project_info.cmake" )
+      # TODO: check that the version is correct
+      set( _found TRUE )
+      message( STATUS "${_project} source directory is \"${_sourceDir}\"." )
+      set( SOMA_BUILD_PROJECTS ${SOMA_BUILD_PROJECTS} ${_project} )
+      add_subdirectory( "${_sourceDir}" "build_files/${_project}" )
+      break()
+    endif( EXISTS "${_sourceDir}/project_info.cmake" )
+  endforeach( _sourceDir ${_sourceDirectories} )
+  if( NOT _found )
+    message( FATAL_ERROR "Cannot find sources of ${_project}." )
+  endif( NOT _found )
+endmacro( SOMA_INCLUDE_PROJECT_SOURCES )

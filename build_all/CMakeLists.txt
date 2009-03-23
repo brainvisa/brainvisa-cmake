@@ -1,15 +1,16 @@
 cmake_minimum_required( VERSION 2.6 )
 
 set( CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}" ${CMAKE_PREFIX_PATH} )
-set( SOMA_ALL_PROJECTS soma-base aims aims-gpl anatomist brainvisa CACHE STRING "List of projects to compile" )
-set( SOMA_PACKAGING_TEMPORARY_DIRECTORY /tmp/somaPackaging CACHE STRING "Temporary directory for creating packages" )
 
 find_package( soma-infra REQUIRED )
 SOMA_CREATE_MAIN_COMPONENTS()
 
-foreach( _project ${SOMA_ALL_PROJECTS} )
-  add_subdirectory( "$ENV{P4}/trunk/${_project}" "${_project}" )
-endforeach( _project ${SOMA_ALL_PROJECTS} )
+set( SOMA_PACKAGING_TEMPORARY_DIRECTORY /tmp/somaPackaging CACHE STRING "Temporary directory for creating packages" )
+SOMA_INCLUDE_PROJECT_SOURCES( soma-base 4.0.0 )
+SOMA_INCLUDE_PROJECT_SOURCES( aims 4.0.0 )
+SOMA_INCLUDE_PROJECT_SOURCES( aims-gpl 4.0.0 )
+SOMA_INCLUDE_PROJECT_SOURCES( anatomist 4.0.0 )
+# SOMA_INCLUDE_PROJECT_SOURCES( brainvisa 4.0.0 )
 
 
 find_package( Sigc++2-install REQUIRED )

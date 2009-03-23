@@ -118,7 +118,6 @@ function( SOMA_CREATE_PACKAGING_RULES )
   
     add_custom_command( OUTPUT "${_packageNameDevel}"
       COMMENT "Packaging ${_packageNameDevel}"
-      COMMAND ${CMAKE_COMMAND} -E remove_directory "${_tmpDir}"
       COMMAND ${CMAKE_COMMAND} -E remove_directory "${_tmpDir}-devel"
       COMMAND ${CMAKE_COMMAND} -E make_directory "${_tmpDir}-devel"
       COMMAND ${CMAKE_COMMAND} "-DCMAKE_INSTALL_PREFIX=${_tmpDir}-devel" -DCMAKE_INSTALL_COMPONENT=${_project}-devel -P "${CMAKE_BINARY_DIR}/cmake_install.cmake"

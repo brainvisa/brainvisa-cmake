@@ -61,8 +61,7 @@ macro( SOMA_CREATE_MAIN_COMPONENTS )
                               DESCRIPTION "Files shared by several projects." )
     SOMA_ADD_COMPONENT( system-runtime
                         GROUP devel
-                        DESCRIPTION "Developpement files for ${PROJECT_NAME}"
-                        DEPENDS ${PROJECT_NAME} )
+                        DESCRIPTION "Files to install in order to have a system independent package" )
     add_dependencies( install-runtime install-share )
     add_dependencies( install-devel install-runtime )
     add_custom_target( doc )
@@ -168,7 +167,10 @@ endmacro( SOMA_FIND_PACKAGE package )
 #   SOMA_ADD_RUNTIME_DEPENDENCY( SOMA|THIRDPARTY|SYSTEM <project> )
 #
 function( SOMA_ADD_RUNTIME_DEPENDENCY dependencyType project )
-  # TODO: 
+  if( "${dependencyType}" STREQUAL THIRDPARTY OR "${dependencyType}" STREQUAL SYSTEM )
+    find_package( ${project}-runtime QUIET )
+    string( TOUPPER ${project} p )
+  endif( "${dependencyType}" STREQUAL THIRDPARTY OR "${dependencyType}" STREQUAL SYSTEM )
 endfunction( SOMA_ADD_RUNTIME_DEPENDENCY dependencyType project )
 
 

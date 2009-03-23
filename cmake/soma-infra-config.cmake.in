@@ -163,6 +163,15 @@ macro( SOMA_FIND_PACKAGE _package )
 endmacro( SOMA_FIND_PACKAGE package )
 
 
+# SOMA_ADD_RUNTIME_DEPENDENCY
+# Usage:
+#   SOMA_ADD_RUNTIME_DEPENDENCY( SOMA|THIRDPARTY|SYSTEM <project> )
+#
+function( SOMA_ADD_RUNTIME_DEPENDENCY dependencyType project )
+  # TODO: 
+endfunction( SOMA_ADD_RUNTIME_DEPENDENCY dependencyType project )
+
+
 # SOMA_SET_PROJECT_VERSION
 #   Read the VERSION file in "${PROJECT_SOURCE_DIR} and parse it to set the
 #   following variables:

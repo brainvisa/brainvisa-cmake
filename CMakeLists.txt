@@ -23,8 +23,8 @@ install( FILES cmake/version.py.in
                cmake/DoxyfileDefaultValues.cmake
          DESTINATION "${soma-infra_INSTALL_PREFIX}/cmake" )
 
-file( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/*" )
+file( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/*[^~]" )
 install( FILES ${_files} DESTINATION "${soma-infra_INSTALL_PREFIX}/cmake/modules" )
 
-file( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/scripts/*" )
+file( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/scripts/*[^~]" )
 install( FILES ${_files} DESTINATION "${soma-infra_INSTALL_PREFIX}/scripts" )

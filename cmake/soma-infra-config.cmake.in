@@ -56,18 +56,14 @@ macro( SOMA_CREATE_MAIN_COMPONENTS )
                               PARENT_GROUP doc
                               DISPLAY_NAME "HTML documentation"
                               DESCRIPTION "Documentation written in HTML." )
-    SOMA_ADD_COMPONENT_GROUP( share
-                              DISPLAY_NAME "Shared files"
-                              DESCRIPTION "Files shared by several projects." )
     SOMA_ADD_COMPONENT( system-runtime
                         GROUP devel
                         DESCRIPTION "Files to install in order to have a system independent package" )
-    add_dependencies( install-runtime install-share )
     add_dependencies( install-devel install-runtime )
     add_custom_target( doc )
     add_dependencies( install-doc doc )
     add_custom_target( install-nodoc )
-    add_dependencies( install-nodoc install-runtime install-devel install-share )
+    add_dependencies( install-nodoc install-runtime install-devel )
 
   endif( NOT SOMA_MAIN_COMPONENTS_CREATED )
 
@@ -77,10 +73,6 @@ macro( SOMA_CREATE_MAIN_COMPONENTS )
   SOMA_ADD_COMPONENT( ${PROJECT_NAME}-devel 
                       GROUP devel
                       DESCRIPTION "Developpement files for ${PROJECT_NAME}"
-                      DEPENDS ${PROJECT_NAME} )
-  SOMA_ADD_COMPONENT( ${PROJECT_NAME}-share 
-                      GROUP devel
-                      DESCRIPTION "Shared files for ${PROJECT_NAME}"
                       DEPENDS ${PROJECT_NAME} )
   SOMA_ADD_COMPONENT( ${PROJECT_NAME}-doxygen
                       GROUP doxygen-doc

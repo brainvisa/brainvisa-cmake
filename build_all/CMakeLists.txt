@@ -2,7 +2,7 @@ cmake_minimum_required( VERSION 2.6 )
 
 set( CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}" ${CMAKE_PREFIX_PATH} )
 
-find_package( soma-infra REQUIRED )
+find_package( brainvisa-cmake REQUIRED )
 SOMA_CREATE_MAIN_COMPONENTS()
 
 set( SOMA_PACKAGING_TEMPORARY_DIRECTORY /tmp/somaPackaging CACHE STRING "Temporary directory for creating packages" )

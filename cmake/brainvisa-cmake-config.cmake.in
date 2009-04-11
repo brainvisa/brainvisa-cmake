@@ -1,6 +1,4 @@
-get_filename_component( brainvisa-cmake_MODULE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH )
-set( brainvisa-cmake_MODULE_DIR "${brainvisa-cmake_MODULE_DIR}/modules" )
-set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${brainvisa-cmake_MODULE_DIR}" )
+set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${brainvisa-cmake_DIR}/modules" )
 
 # Requires CPack for its argument parsing macro
 include( CPack )
@@ -761,19 +759,25 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
 endmacro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _installComponent _installComponentDevel _sipSplitGeneratedCode _mainSipFile )
 
 
-macro( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
+function( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
   set( _prefixForCmakeFiles "share/${PROJECT_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}/cmake" )
   configure_file( cmake/${PROJECT_NAME}-config.cmake.in
                   "${_prefixForCmakeFiles}/${PROJECT_NAME}-config.cmake" 
                   @ONLY )
-  configure_file( cmake/${PROJECT_NAME}-config-version.cmake.in
-                  "${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake" 
-                  @ONLY )
+  if( EXISTS cmake/${PROJECT_NAME}-config-version.cmake.in )
+    configure_file( cmake/${PROJECT_NAME}-config-version.cmake.in
+                    "${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake" 
+                    @ONLY )
+  else( EXISTS cmake/${PROJECT_NAME}-config-version.cmake.in )
+    configure_file( "${brainvisa-cmake_DIR}/brainvisa-cmake-config-version.cmake.in"
+                    "${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake" 
+                    @ONLY )
+  endif( EXISTS cmake/${PROJECT_NAME}-config-version.cmake.in )
   install( FILES
           "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config.cmake"
           "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake"
           DESTINATION "${_prefixForCmakeFiles}" )
-endmacro( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
+endfunction( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
 
 
 function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES )
@@ -791,24 +795,54 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES )
 endfunction( BRAINVISA_INSTALL_RUNTIME_LIBRARIES )
 
 
-macro( BRAINVISA_INCLUDE_PROJECT_SOURCES _project _version )
+function( BRAINVISA_FIND_PROJECT_SOURCES _project _version )
+  set( BRAINVISA_SOURCES "$ENV{SVN}/brainvisa" CACHE STRING "Directories where to look for project sources" )
+
+  # Look for all project_info.cmake files in source trees
+  set( _info )
+  foreach( _dir ${BRAINVISA_SOURCES} )
+    set( _info ${_info} "${_dir}/project_info.cmake" )
+  endforeach( _dir ${BRAINVISA_SOURCES} )
+  file( GLOB_RECURSE _info ${_info} )
+  
+  # Extract version components
   string( REGEX REPLACE "([^.]+)\\.([^.]+)(\\.(.*))?" "\\1" _versionMajor "${_version}")
   string( REGEX REPLACE "([^.]+)\\.([^.]+)(\\.(.*))?" "\\2" _versionMinor "${_version}")
   string( REGEX REPLACE "([^.]+)\\.([^.]+)\\.?(.*)" "\\3" _versionPatch "${_version}")
 
-  set( _found FALSE )
-  file( GLOB _sourceDirectories "$ENV{P4}/${_project}/*" "$ENV{P4}/trunk/${_project}" )
-  foreach( _sourceDir ${_sourceDirectories} )
-    if( EXISTS "${_sourceDir}/project_info.cmake" )
-      # TODO: check that the version is correct
-      set( _found TRUE )
-      message( STATUS "${_project} source directory is \"${_sourceDir}\"." )
-      set( BRAINVISA_BUILD_PROJECTS ${BRAINVISA_BUILD_PROJECTS} ${_project} )
-      add_subdirectory( "${_sourceDir}" "build_files/${_project}" )
-      break()
-    endif( EXISTS "${_sourceDir}/project_info.cmake" )
-  endforeach( _sourceDir ${_sourceDirectories} )
-  if( NOT _found )
-    message( FATAL_ERROR "Cannot find sources of ${_project}." )
-  endif( NOT _found )
+#   message( "BRAINVISA_FIND_PROJECT_SOURCES: looking for ${_project} version ${_versionMajor}.${_versionMinor}.${_versionPatch}" )
+
+  # Find compatible projects
+  set( _sources )
+  foreach( _info ${_info} )
+#     message( "BRAINVISA_FIND_PROJECT_SOURCES: read ${_info}" )
+    include( "${_info}" )
+    if( CPACK_PACKAGE_NAME STREQUAL "${_project}" )
+#       message( "BRAINVISA_FIND_PROJECT_SOURCES: version found ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}" )
+      if( CPACK_PACKAGE_VERSION_MAJOR EQUAL ${_versionMajor} AND CPACK_PACKAGE_VERSION_MINOR EQUAL ${_versionMinor} )
+        if( NOT _versionPatch OR CPACK_PACKAGE_VERSION_PATCH EQUAL ${_versionPatch} )
+          get_filename_component( _s "${_info}" PATH )
+          set( _sources ${_sources} ${_s} )
+        endif( NOT _versionPatch OR CPACK_PACKAGE_VERSION_PATCH EQUAL ${_versionPatch} )
+      endif( CPACK_PACKAGE_VERSION_MAJOR EQUAL ${_versionMajor} AND CPACK_PACKAGE_VERSION_MINOR EQUAL ${_versionMinor} )
+    endif( CPACK_PACKAGE_NAME STREQUAL "${_project}" )
+  endforeach( _info ${_info} )
+  if( NOT _sources )
+    message( FATAL_ERROR "Cannot find sources for version ${_version} of ${_project}." )
+  else( NOT _sources )
+    list( LENGTH _sources _length )
+    if( _length GREATER 1 )
+      message( FATAL_ERROR "Several sources found for version ${_version} of ${_project}: ${_sources}" )
+    endif( _length GREATER 1 )
+  endif( NOT _sources )
+  message( STATUS "Sources for version ${_version} of ${_project} found in \"${_sources}\"" )
+  set( ${_project}_SOURCES "${_sources}" CACHE STRING "Sources directory for project ${_project}" )
+endfunction( BRAINVISA_FIND_PROJECT_SOURCES _project _version )
+
+macro( BRAINVISA_INCLUDE_PROJECT_SOURCES _project _version )
+  if( NOT DEFINED ${_project}_SOURCES )
+    BRAINVISA_FIND_PROJECT_SOURCES( "${_project}" "${_version}" )
+  endif( NOT DEFINED ${_project}_SOURCES )
+  set( BRAINVISA_BUILD_PROJECTS ${BRAINVISA_BUILD_PROJECTS} ${_project} )
+  add_subdirectory( "${${_project}_SOURCES}" "build_files/${_project}" )
 endmacro( BRAINVISA_INCLUDE_PROJECT_SOURCES )

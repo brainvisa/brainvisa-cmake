@@ -16,10 +16,10 @@ configure_file( cmake/brainvisa-cmake-config-version.cmake.in
 install( FILES "${CMAKE_BINARY_DIR}/${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config.cmake"
                "${CMAKE_BINARY_DIR}/${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config-version.cmake"
          DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake" )
-install( FILES cmake/version.py.in
-               cmake/Doxyfile.in
+install( FILES cmake/Doxyfile.in
                cmake/DoxyfileDefaultValues.cmake
-         DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake" )
+               cmake/brainvisa-cmake-config-version.cmake.in
+DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake" )
 
 file( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/*[^~]" )
 install( FILES ${_files} DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake/modules" )

@@ -3,13 +3,13 @@ How to setup, configure, and compile Soma software with CMake
 
 With CMake, you always start by creating a build directory, configure it using CMakeLists.txt in source tree and start compilation. For Soma projects, one can either create a separate build directory for each project or create a single build tree using a meta source tree. A meta source tree contains only a CMakeLists.txt that will find and include a predefined list of projects.
 
-1) Install soma-infra
+1) Install brainvisa-cmake
 The first step 
-mkdir soma-infra
-cd soma-infra
-ccmake $P4/trunk/soma-infra
+mkdir brainvisa-cmake
+cd brainvisa-cmake
+ccmake $P4/trunk/brainvisa-cmake
 --> select an install directory in CMAKE_INSTALL_PREFIX.
-    Upon "make install", it will create $CMAKE_INSTALL_PREFIX/share/soma-infra-<version> directory.
+    Upon "make install", it will create $CMAKE_INSTALL_PREFIX/share/brainvisa-cmake-<version> directory.
     CMake will be able to automatically find this directory if $CMAKE_INSTALL_PREFIX/bin is in your PATH.
     For more information, see command find_package in CMake documentation.
 make

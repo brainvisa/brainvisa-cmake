@@ -331,7 +331,7 @@ macro( BRAINVISA_COPY_DIRECTORY _directory _destination _component )
   set( _selectedFiles )
   foreach( _i ${_files} )
     get_filename_component( _f ${_i} NAME )
-    string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)$"_match ${_f} )
+    string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(\\.svn)$"_match ${_f} )
     if( NOT _match )
       set( _selectedFiles ${_selectedFiles} ${_i} )
     endif( NOT _match )
@@ -376,7 +376,7 @@ macro( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
   file( GLOB_RECURSE _files RELATIVE "${_pythonDirectory}" "${_pythonDirectory}/*" )
   foreach( _i ${_files} )
     get_filename_component( _f ${_i} NAME )
-    string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*\\.pyo)|(.*\\.pyc)$" _match ${_f} )
+    string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*\\.svn/.*)|(.*\\.pyo)|(.*\\.pyc)$" _match ${_f} )
     if( NOT _match )
       string( REGEX MATCH ".*\\.py$" _match ${_f} )
       if( _match )
@@ -760,6 +760,7 @@ endmacro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _installCompon
 
 
 function( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
+  string( TOUPPER "${PROJECT_NAME}" PROJECT_NAME_UPPER )
   set( _prefixForCmakeFiles "share/${PROJECT_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}/cmake" )
   configure_file( cmake/${PROJECT_NAME}-config.cmake.in
                   "${_prefixForCmakeFiles}/${PROJECT_NAME}-config.cmake" 

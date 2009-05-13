@@ -1,71 +1,50 @@
-# Find SIP
-# ~~~~~~~~
-# Copyright (c) 2007, Simon Edwards <simon@simonzone.com>
-# Redistribution and use is allowed according to the terms of the BSD license.
-# For details see the accompanying COPYING-CMAKE-SCRIPTS file.
-#
-# SIP website: http://www.riverbankcomputing.co.uk/sip/index.php
-#
-# Find the installed version of SIP. FindSIP should be called after Python
-# has been found.
-#
 # This file defines the following variables:
-#
-# SIP_VERSION - The version of SIP found expressed as a 6 digit hex number
-#     suitable for comparision as a string.
-#
-# SIP_VERSION_STR - The version of SIP found as a human readable string.
 #
 # SIP_EXECUTABLE - Path and filename of the SIP command line executable.
 #
 # SIP_INCLUDE_DIR - Directory holding the SIP C++ header file.
 #
-# SIP_DEFAULT_SIP_DIR - Default directory where .sip files should be installed
-#     into.
+# SIP_INCLUDE_DIRS - All include directories necessary to compile sip generated files.
+#
+# SIP_VERSION - The version of SIP found expressed as a 6 digit hex number
+#     suitable for comparision as a string.
+#
 
-IF(SIP_VERSION)
-
+# message( "SIP_VERSION: ${SIP_VERSION}" )
+if( SIP_VERSION )
   # SIP is already found, do nothing
-  SET(SIP_FOUND TRUE)
-
-ELSE (SIP_VERSION)
-
-  IF( NOT PYTHON_EXECUTABLE )
-
-      MESSAGE(ERROR "Find Python before SIP.")
-
-  ELSE( NOT PYTHON_EXECUTABLE )
-
-  GET_FILENAME_COMPONENT(_cmake_module_path ${CMAKE_CURRENT_LIST_FILE}  PATH)
-
-  EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} ${_cmake_module_path}/FindSIP.py OUTPUT_VARIABLE sip_config)
-  IF(sip_config)
-    STRING(REGEX REPLACE "^sip_version:([^\n]+).*$" "\\1" SIP_VERSION ${sip_config})
-    STRING(REGEX REPLACE ".*\nsip_version_str:([^\n]+).*$" "\\1" SIP_VERSION_STR ${sip_config})
-    STRING(REGEX REPLACE ".*\nsip_bin:([^\n]+).*$" "\\1" SIP_EXECUTABLE ${sip_config})
-    STRING(REGEX REPLACE ".*\ndefault_sip_dir:([^\n]+).*$" "\\1" SIP_DEFAULT_SIP_DIR ${sip_config})
-    STRING(REGEX REPLACE ".*\nsip_inc_dir:([^\n]+).*$" "\\1" SIP_INCLUDE_DIR ${sip_config})
-    SET(SIP_FOUND TRUE)
-  ENDIF(sip_config)
-
-  IF(SIP_FOUND)
-    IF(NOT SIP_FIND_QUIETLY)
-      MESSAGE(STATUS "Found SIP version: ${SIP_VERSION_STR}")
-    ENDIF(NOT SIP_FIND_QUIETLY)
-  ELSE(SIP_FOUND)
-    IF(SIP_FIND_REQUIRED)
-      MESSAGE(FATAL_ERROR "Could not find SIP")
-    ENDIF(SIP_FIND_REQUIRED)
-  ENDIF(SIP_FOUND)
-
-  SET(SIP_VERSION     ${SIP_VERSION}     CACHE STRING "Sip version")
-  SET(SIP_EXECUTABLE  ${SIP_EXECUTABLE}  CACHE FILE "Sip executable")
-  SET(SIP_INCLUDE_DIR ${SIP_INCLUDE_DIR} CACHE PATH "Path to sip include files")
-
-  MARK_AS_ADVANCED(SIP_VERSION)
-  MARK_AS_ADVANCED(SIP_EXECUTABLE)
-  MARK_AS_ADVANCED(SIP_INCLUDE_DIR)
-
-ENDIF( NOT PYTHON_EXECUTABLE )
-
-ENDIF(SIP_VERSION)
+  set( SIP_INCLUDE_DIRS "${PYTHON_INCLUDE_PATH}" "${SIP_INCLUDE_DIR}" )
+  set(SIP_FOUND TRUE)
+else( SIP_VERSION )
+  find_program( SIP_EXECUTABLE
+    NAMES sip
+    DOC "Path to sip executable" )
+  
+  if( SIP_EXECUTABLE )
+    if( not PYTHONINTERP_FOUND )
+      find_package( PythonInterp REQUIRED )
+    endif( not PYTHONINTERP_FOUND )
+    if( not PYTHONLIBS_FOUND )
+      find_package( PythonLibs REQUIRED )
+    endif( not PYTHONLIBS_FOUND )
+    
+    mark_as_advanced( SIP_EXECUTABLE )
+    execute_process( COMMAND ${SIP_EXECUTABLE} -V OUTPUT_VARIABLE SIP_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE )
+    set( SIP_VERSION "${SIP_VERSION}" CACHE STRING "Version of sip executable" )
+    mark_as_advanced( SIP_VERSION )
+    execute_process( COMMAND ${PYTHON_EXECUTABLE} -c "import sipconfig; print sipconfig.Configuration().sip_inc_dir"
+      OUTPUT_VARIABLE SIP_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE )
+    set( SIP_INCLUDE_DIR "${SIP_INCLUDE_DIR}" CACHE PATH "Path to sip include files" )
+    mark_as_advanced( SIP_INCLUDE_DIR )
+    set( SIP_INCLUDE_DIRS "${PYTHON_INCLUDE_PATH}" "${SIP_INCLUDE_DIR}" )
+    set( SIP_FOUND TRUE )
+    if( NOT SIP_FIND_QUIETLY )
+      message( STATUS "Found SIP version: ${SIP_VERSION}" )
+    endif(NOT SIP_FIND_QUIETLY)
+  else( SIP_EXECUTABLE )
+    set( SIP_FOUND FALSE )
+    if( SIP_FIND_REQUIRED )
+      message( FATAL_ERROR "SIP not found" )
+    endif(SIP_FIND_REQUIRED)
+  endif( SIP_EXECUTABLE )
+endif( SIP_VERSION )

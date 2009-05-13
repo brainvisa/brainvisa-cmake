@@ -35,7 +35,7 @@ install( FILES cmake/Doxyfile.in
                cmake/brainvisa-cmake-config-version.cmake.in
 DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake" )
 
-BRAINVISA_GLOB_AND_FILTER( GLOB _allFiles "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/*[^~]" )
+BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/*[^~]" )
 
 install( FILES ${_files} 
          DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake/modules" )

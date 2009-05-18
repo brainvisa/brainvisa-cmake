@@ -1,4 +1,7 @@
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${brainvisa-cmake_DIR}/modules" )
+if( WIN32 AND CMAKE_CROSSCOMPILING )
+  link_directories( "${BRAINVISA_CROSSCOMPILATION_DIR}/windows/lib" "${BRAINVISA_CROSSCOMPILATION_DIR}/windows/bin" )
+endif( WIN32 AND CMAKE_CROSSCOMPILING )
 
 # Requires CPack for its argument parsing macro
 include( CPack )
@@ -753,6 +756,9 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
                 LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python/${_modulePath}"
                 VERSION "${${PROJECT_NAME}_VERSION}"
                 PREFIX "" )
+  if( WIN32 )
+    set_target_properties( ${_moduleName} PROPERTIES SUFFIX "pyd" )
+  endif( WIN32 )
   BRAINVISA_INSTALL( TARGETS ${_moduleName} 
                 DESTINATION "python/${_modulePath}"
                 COMPONENT ${PROJECT_NAME} )

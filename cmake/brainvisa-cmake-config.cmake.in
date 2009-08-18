@@ -6,6 +6,26 @@ endif( WIN32 AND CMAKE_CROSSCOMPILING )
 # Requires CPack for its argument parsing macro
 include( CPack )
 
+
+# BRAINVISA_SYSTEM_PATH_TO_LIST
+#   Convert a path stored in a system environment variable into a cmake list.
+#
+# Usage:
+#  BRAINVISA_SYSTEM_PATH_TO_LIST( <output variable> <system path> )
+#
+# Example:
+#   BRAINVISA_SYSTEM_PATH_TO_LIST( PATH "$ENV{PATH}" )
+#   foreach( p ${PATH} )
+#     message( ${p} )
+#   endforeach( p ${PATH} )
+function( BRAINVISA_SYSTEM_PATH_TO_LIST  result_variable_name system_path )
+  if( NOT WIN32 )
+    string( REPLACE ":" ";" system_path "${system_path}" )
+  endif( NOT WIN32 )
+  set( ${result_variable_name} "${system_path}" PARENT_SCOPE )
+endfunction( BRAINVISA_SYSTEM_PATH_TO_LIST  result_variable_name system_path )
+
+
 macro( BRAINVISA_PROJECT )
   include( "${CMAKE_CURRENT_SOURCE_DIR}/project_info.cmake" )
   project( ${CPACK_PACKAGE_NAME} )
@@ -846,6 +866,7 @@ function( BRAINVISA_FIND_PROJECT_SOURCES _project _version )
   set( ${_project}_SOURCES "${_sources}" CACHE STRING "Sources directory for project ${_project}" )
 endfunction( BRAINVISA_FIND_PROJECT_SOURCES _project _version )
 
+
 macro( BRAINVISA_INCLUDE_PROJECT_SOURCES _project _version )
   if( NOT DEFINED ${_project}_SOURCES )
     BRAINVISA_FIND_PROJECT_SOURCES( "${_project}" "${_version}" )
@@ -853,3 +874,4 @@ macro( BRAINVISA_INCLUDE_PROJECT_SOURCES _project _version )
   set( BRAINVISA_BUILD_PROJECTS ${BRAINVISA_BUILD_PROJECTS} ${_project} )
   add_subdirectory( "${${_project}_SOURCES}" "build_files/${_project}" )
 endmacro( BRAINVISA_INCLUDE_PROJECT_SOURCES )
+

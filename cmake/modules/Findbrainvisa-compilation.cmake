@@ -1,8 +1,3 @@
-cmake_minimum_required( VERSION 2.6 )
-
-set( CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}" ${CMAKE_PREFIX_PATH} )
-
-find_package( brainvisa-cmake REQUIRED )
 BRAINVISA_CREATE_MAIN_COMPONENTS()
 
 function( BRAINVISA_READ_COMPONENT_INFOS )

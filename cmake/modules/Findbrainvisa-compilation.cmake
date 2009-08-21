@@ -282,25 +282,6 @@ if( STOP_PROCESSING )
 endif()
 
 foreach( component ${BRAINVISA_COMPONENTS} )
-  message( "Include component ${component} from \"${BRAINVISA_SOURCES_${component}}\"" )
+  message( STATUS "Configuring component ${component} from source directory \"${BRAINVISA_SOURCES_${component}}\"" )
+  add_subdirectory( "${BRAINVISA_SOURCES_${component}}" "build_files/${component}" )
 endforeach()
-
-
-# 
-# function( BRAINVISA_FIND_PROJECT_SOURCE_DIRECTORY result project )
-#   if( NOT DEFINED ${_project}_SOURCES )
-#     BRAINVISA_FIND_PROJECT_SOURCES( "${_project}" "${_version}" )
-#   endif( NOT DEFINED ${_project}_SOURCES )
-#   set( BRAINVISA_BUILD_PROJECTS ${BRAINVISA_BUILD_PROJECTS} ${_project} )
-#   add_subdirectory( "${${_project}_SOURCES}" "build_files/${_project}" )
-# endfunction( BRAINVISA_FIND_PROJECT_SOURCE_DIRECTORY )
-# 
-# foreach( project 
-# BRAINVISA_INCLUDE_PROJECT_SOURCES( soma-base 4.0.0 )
-# BRAINVISA_INCLUDE_PROJECT_SOURCES( aims 4.0.0 )
-# # BRAINVISA_INCLUDE_PROJECT_SOURCES( aims-gpl 4.0.0 )
-# # BRAINVISA_INCLUDE_PROJECT_SOURCES( anatomist 4.0.0 )
-# BRAINVISA_INCLUDE_PROJECT_SOURCES( axon 4.0.0 )
-# BRAINVISA_INCLUDE_PROJECT_SOURCES( share 4.0.0 )
-# 
-# BRAINVISA_CREATE_PACKAGING_RULES()

@@ -865,13 +865,3 @@ function( BRAINVISA_FIND_PROJECT_SOURCES _project _version )
   message( STATUS "Sources for version ${_version} of ${_project} found in \"${_sources}\"" )
   set( ${_project}_SOURCES "${_sources}" CACHE STRING "Sources directory for project ${_project}" )
 endfunction( BRAINVISA_FIND_PROJECT_SOURCES _project _version )
-
-
-macro( BRAINVISA_INCLUDE_PROJECT_SOURCES _project _version )
-  if( NOT DEFINED ${_project}_SOURCES )
-    BRAINVISA_FIND_PROJECT_SOURCES( "${_project}" "${_version}" )
-  endif( NOT DEFINED ${_project}_SOURCES )
-  set( BRAINVISA_BUILD_PROJECTS ${BRAINVISA_BUILD_PROJECTS} ${_project} )
-  add_subdirectory( "${${_project}_SOURCES}" "build_files/${_project}" )
-endmacro( BRAINVISA_INCLUDE_PROJECT_SOURCES )
-

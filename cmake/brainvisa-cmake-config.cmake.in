@@ -432,7 +432,7 @@ macro( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
   file( GLOB_RECURSE _files RELATIVE "${_pythonDirectory}" "${_pythonDirectory}/*" )
   foreach( _i ${_files} )
     get_filename_component( _f ${_i} NAME )
-    string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*\\.svn/.*)|(.*\\.pyo)|(.*\\.pyc)$" _match ${_f} )
+    string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*\\.svn/.*)|(.*\\.pyo)|(.*\\.pyc)$" _match ${_i} )
     if( NOT _match )
       string( REGEX MATCH ".*\\.py$" _match ${_f} )
       if( _match )
@@ -448,6 +448,7 @@ macro( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
 
   # Copy or symlink Python sources
   foreach(_file ${_pythonSources})
+    message( "!python! ${_pythonDirectory}/${_file}" )
     # Copy the source file in build directory
     set( _fileBuild "${CMAKE_BINARY_DIR}/${_destDir}/${_file}" )
     if( UNIX OR APPLE )
@@ -483,6 +484,7 @@ macro( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
 
   # Copy other files
   foreach(_file ${_nonPythonSources})
+    message( "!non-python! ${_pythonDirectory}/${_file}" )
     set( _fileBuild "${CMAKE_BINARY_DIR}/${_destDir}/${_file}" )
     configure_file( "${_pythonDirectory}/${_file}"
                     "${_fileBuild}"

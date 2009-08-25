@@ -1,3 +1,23 @@
+foreach( package_type RUN DEV DOC SRC )
+  set( DEB_${package_type}_DEPENDENCIES )
+  if( ${PROJECT_NAME}_DEB_${package_type}_DEPENDS )
+    string( REPLACE ";" "," dependencies "${${PROJECT_NAME}_DEB_${package_type}_DEPENDS}" )
+    set( DEB_${package_type}_DEPENDENCIES "${DEB_${package_type}_DEPENDENCIES}Depends: ${dependencies}\n" )
+  endif()
+  if( ${PROJECT_NAME}_DEB_${package_type}_RECOMMENDS )
+    string( REPLACE ";" "," dependencies "${${PROJECT_NAME}_DEB_${package_type}_RECOMMENDS}" )
+    set( DEB_${package_type}_DEPENDENCIES "${DEB_${package_type}_DEPENDENCIES}Recommends: ${dependencies}\n" )
+  endif()
+  if( ${PROJECT_NAME}_DEB_${package_type}_SUGGESTS )
+    string( REPLACE ";" "," dependencies "${${PROJECT_NAME}_DEB_${package_type}_SUGGESTS}" )
+    set( DEB_${package_type}_DEPENDENCIES "${DEB_${package_type}_DEPENDENCIES}Suggests: ${dependencies}\n" )
+  endif()
+  if( ${PROJECT_NAME}_DEB_${package_type}_ENHANCES )
+    string( REPLACE ";" "," dependencies "${${PROJECT_NAME}_DEB_${package_type}_ENHANCES}" )
+    set( DEB_${package_type}_DEPENDENCIES "${DEB_${package_type}_DEPENDENCIES}Enhances: ${dependencies}\n" )
+  endif()
+endforeach()
+
 configure_file( "${brainvisa-cmake_DIR}/debian-control-run.in"
                 "${CMAKE_BINARY_DIR}/debian/control-${PROJECT_NAME}-run" 
                 @ONLY )

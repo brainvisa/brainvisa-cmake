@@ -11,7 +11,7 @@ include( CPack )
 
 # Initialize default package type
 set( BRAINVISA_PACKAGE_TYPE "deb" CACHE STRING "Type of package to create. Possible values are \"deb\" or \"tar.bz2\"." )
-set( BRAINVISA_PACKAGING NO CACHE STRING "Create rules for packaging" )
+option( BRAINVISA_PACKAGING "Create rules for packaging" OFF )
 if( BRAINVISA_PACKAGING )
   if( NOT DEFINED BRAINVISA_PACKAGE_SUFFIX )
     execute_process( COMMAND systemIdentification 
@@ -27,6 +27,7 @@ if( BRAINVISA_PACKAGING )
   include( "${brainvisa-cmake_DIR}/packaging-${BRAINVISA_PACKAGE_TYPE}.cmake" )
 endif()
 
+# 
 # BRAINVISA_SYSTEM_PATH_TO_LIST
 #   Convert a path stored in a system environment variable into a cmake list.
 #
@@ -184,10 +185,26 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
     endif()
   endif()
       
+  if( BRAINVISA_DEPENDENCY_GRAPH )
+    if( "${pack_type}" STREQUAL "RUN" )
+      set( sourceNodeLabel "${BRAINVISA_PACKAGE_NAME}" )
+    else()
+      string( TOLOWER "${pack_type}" sourceNodeLabel )
+      set( sourceNodeLabel "${BRAINVISA_PACKAGE_NAME}-${sourceNodeLabel}" )
+    endif()
+    if( "${component_pack_type}" STREQUAL "RUN" )
+      set( destNodeLabel "${component}" )
+    else()
+      string( TOLOWER "${pack_type}" destNodeLabel )
+      set( destNodeLabel "${component}-${destNodeLabel}" )
+    endif()
+  endif()
+
   # Check if component is external or not
   list( FIND BRAINVISA_COMPONENTS "${component}" result )
   if( result EQUAL -1 )
     # Component is not in BRAINVISA_COMPONENTS, it is considered as an external component
+    set( destNodeAttributes ", color=orange" )
     if( BRAINVISA_PACKAGING )
       include( "${brainvisa-cmake_DIR}/brainvisa-packaging-${BRAINVISA_PACKAGE_TYPE}-${component}.cmake" )
       if( "${component_pack_type}" STREQUAL "RUN" )
@@ -204,6 +221,7 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
     endif()
   else()
     # Component is a brainvisa-cmake component
+    set( destNodeAttributes )
     if( BRAINVISA_PACKAGING )
       if( "${BRAINVISA_PACKAGE_TYPE}" STREQUAL "deb" )
         unset( deb_package )
@@ -223,6 +241,30 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
         endif()
       endif()
       set( deb_version_ranges "${version_ranges}" )
+    endif()
+  endif()
+
+  if( BRAINVISA_DEPENDENCY_GRAPH )
+    list( FIND BRAINVISA_DEPENDENCY_NODES ${sourceNodeLabel} sourceNode )
+    if( sourceNode EQUAL -1 )
+      list( LENGTH BRAINVISA_DEPENDENCY_NODES sourceNode )
+      set( BRAINVISA_DEPENDENCY_NODES ${BRAINVISA_DEPENDENCY_NODES} "${sourceNodeLabel}" CACHE STRING INTERNAL FORCE )
+      file( APPEND "${BRAINVISA_DEPENDENCY_GRAPH}" "${sourceNode} [ label=\"${sourceNodeLabel}\" ]\n" )
+    endif()
+
+    list( FIND BRAINVISA_DEPENDENCY_NODES ${destNodeLabel} destNode )
+    if( destNode EQUAL -1 )
+      list( LENGTH BRAINVISA_DEPENDENCY_NODES destNode )
+      set( BRAINVISA_DEPENDENCY_NODES ${BRAINVISA_DEPENDENCY_NODES} "${destNodeLabel}" CACHE STRING INTERNAL FORCE )
+      file( APPEND "${BRAINVISA_DEPENDENCY_GRAPH}" "${destNode} [ label=\"${destNodeLabel}\"${destNodeAttributes} ]\n" )
+    endif()
+    
+    if( "${dependency_type}" STREQUAL "DEPENDS" )
+      file( APPEND "${BRAINVISA_DEPENDENCY_GRAPH}" "${sourceNode} -> ${destNode}\n" )
+    elseif( "${dependency_type}" STREQUAL "RECOMMENDS" )
+      file( APPEND "${BRAINVISA_DEPENDENCY_GRAPH}" "${sourceNode} -> ${destNode} [ color=green ]\n" )
+    else()
+      file( APPEND "${BRAINVISA_DEPENDENCY_GRAPH}" "${sourceNode} -> ${destNode} [ color=blue ]\n" )
     endif()
   endif()
   

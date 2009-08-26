@@ -1,3 +1,6 @@
+cmake_policy( SET CMP0011 NEW )
+cmake_policy( SET CMP0009 NEW )
+
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${brainvisa-cmake_DIR}/modules" )
 if( WIN32 AND CMAKE_CROSSCOMPILING )
   link_directories( "${BRAINVISA_CROSSCOMPILATION_DIR}/windows/lib" "${BRAINVISA_CROSSCOMPILATION_DIR}/windows/bin" )
@@ -6,6 +9,23 @@ endif( WIN32 AND CMAKE_CROSSCOMPILING )
 # Requires CPack for its argument parsing macro
 include( CPack )
 
+# Initialize default package type
+set( BRAINVISA_PACKAGE_TYPE "deb" CACHE STRING "Type of package to create. Possible values are \"deb\" or \"tar.bz2\"." )
+set( BRAINVISA_PACKAGING NO CACHE STRING "Create rules for packaging" )
+if( BRAINVISA_PACKAGING )
+  if( NOT DEFINED BRAINVISA_PACKAGE_SUFFIX )
+    execute_process( COMMAND systemIdentification 
+      OUTPUT_VARIABLE output OUTPUT_STRIP_TRAILING_WHITESPACE
+      RESULT_VARIABLE result )
+    if( output AND result EQUAL 0 )
+      set( BRAINVISA_PACKAGE_SUFFIX "${output}" )
+    else()
+      set( BRAINVISA_PACKAGE_SUFFIX "${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}" )
+    endif()
+    set( BRAINVISA_PACKAGE_SUFFIX "${BRAINVISA_PACKAGE_SUFFIX}" CACHE STRING "Suffix for system identification in generated packages name" )
+  endif()
+  include( "${brainvisa-cmake_DIR}/packaging-${BRAINVISA_PACKAGE_TYPE}.cmake" )
+endif()
 
 # BRAINVISA_SYSTEM_PATH_TO_LIST
 #   Convert a path stored in a system environment variable into a cmake list.
@@ -28,17 +48,20 @@ endfunction( BRAINVISA_SYSTEM_PATH_TO_LIST  result_variable_name system_path )
 
 macro( BRAINVISA_PROJECT )
   include( "${CMAKE_CURRENT_SOURCE_DIR}/project_info.cmake" )
+  if( NOT DEFINED BRAINVISA_PACKAGE_VERSION )
+    set( BRAINVISA_PACKAGE_VERSION "${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}.${BRAINVISA_PACKAGE_VERSION_PATCH}" )
+  endif()
   project( ${BRAINVISA_PACKAGE_NAME} )
   
   set( ${PROJECT_NAME}_VERSION_MAJOR ${BRAINVISA_PACKAGE_VERSION_MAJOR} )
   set( ${PROJECT_NAME}_VERSION_MINOR ${BRAINVISA_PACKAGE_VERSION_MINOR} )
   set( ${PROJECT_NAME}_VERSION_PATCH ${BRAINVISA_PACKAGE_VERSION_PATCH} )
-  set( ${PROJECT_NAME}_VERSION ${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}.${${PROJECT_NAME}_VERSION_PATCH} )
+  set( ${PROJECT_NAME}_VERSION "${BRAINVISA_PACKAGE_VERSION}" )
   set( ${PROJECT_NAME}_VERSION_MAJOR ${BRAINVISA_PACKAGE_VERSION_MAJOR} PARENT_SCOPE )
   set( ${PROJECT_NAME}_VERSION_MINOR ${BRAINVISA_PACKAGE_VERSION_MINOR} PARENT_SCOPE )
   set( ${PROJECT_NAME}_VERSION_PATCH ${BRAINVISA_PACKAGE_VERSION_PATCH} PARENT_SCOPE )
-  set( ${PROJECT_NAME}_VERSION ${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}.${${PROJECT_NAME}_VERSION_PATCH} PARENT_SCOPE )
-  
+  set( ${PROJECT_NAME}_VERSION "${BRAINVISA_PACKAGE_VERSION}" PARENT_SCOPE )
+
   include( CPack )
   
   set( ${PROJECT_NAME}_TARGET_COUNT 0 CACHE INTERNAL "Used to generate new targets" )
@@ -47,10 +70,6 @@ macro( BRAINVISA_PROJECT )
   set( ${PROJECT_NAME}_IS_COMPILED ON PARENT_SCOPE )
   set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
   set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
-
-
-  # Initialize default package type
-  set( BRAINVISA_PACKAGE_TYPE "deb" CACHE STRING "Type of package to create. Possible values are \"tar.bz2\" or \"deb\"." )
   
   # Initialize dependency variables
   if( "${BRAINVISA_PACKAGE_TYPE}" STREQUAL "deb" )
@@ -67,6 +86,7 @@ endmacro( BRAINVISA_PROJECT )
 macro( BRAINVISA_CREATE_MAIN_COMPONENTS )
   if( NOT BRAINVISA_MAIN_COMPONENTS_CREATED )
     set( BRAINVISA_MAIN_COMPONENTS_CREATED true )
+    unset( BRAINVISA_EXTERNAL_COMPONENTS CACHE )
     BRAINVISA_ADD_COMPONENT_GROUP( runtime
                               DISPLAY_NAME "Runtime"
                               DESCRIPTION "All elements necessary to use ${PROJECT_NAME} at runtime without developpement files such as C++ headers." )
@@ -88,9 +108,6 @@ macro( BRAINVISA_CREATE_MAIN_COMPONENTS )
                               PARENT_GROUP doc
                               DISPLAY_NAME "HTML documentation"
                               DESCRIPTION "Documentation written in HTML." )
-    BRAINVISA_ADD_COMPONENT( system-runtime
-                        GROUP devel
-                        DESCRIPTION "Files to install in order to have a system independent package" )
     add_dependencies( install-devel install-runtime )
     add_custom_target( doc )
     add_dependencies( install-doc doc )
@@ -171,45 +188,57 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
   list( FIND BRAINVISA_COMPONENTS "${component}" result )
   if( result EQUAL -1 )
     # Component is not in BRAINVISA_COMPONENTS, it is considered as an external component
-    find_package( brainvisa-dependencies-${component} REQUIRED )
-    if( COMMAND DO_${BRAINVISA_PACKAGE_TYPE}_DEPENDENCIES_${component} )
-      file( WRITE "${CMAKE_BINARY_DIR}/temp" "DO_${BRAINVISA_PACKAGE_TYPE}_DEPENDENCIES_${component}( \"${pack_type}\" \"${dependency_type}\" \"${component}\" \"${component_pack_type}\" \"${version_ranges}\" \"${binary_independent}\" )" )
-      include( "${CMAKE_BINARY_DIR}/temp" )
-      #file( REMOVE "${CMAKE_BINARY_DIR}/temp" )
+    if( BRAINVISA_PACKAGING )
+      include( "${brainvisa-cmake_DIR}/brainvisa-packaging-${BRAINVISA_PACKAGE_TYPE}-${component}.cmake" )
+      if( "${component_pack_type}" STREQUAL "RUN" )
+        BRAINVISA_PACKAGING_RUN( "${pack_type}" "${dependency_type}" "${component}" "${component_pack_type}" "${version_ranges}" "${binary_independent}" )
+      elseif( "${component_pack_type}" STREQUAL "DEV" )
+        BRAINVISA_PACKAGING_DEV( "${pack_type}" "${dependency_type}" "${component}" "${component_pack_type}" "${version_ranges}" "${binary_independent}" )
+      elseif( "${component_pack_type}" STREQUAL "DOC" )
+        BRAINVISA_PACKAGING_DOC( "${pack_type}" "${dependency_type}" "${component}" "${component_pack_type}" "${version_ranges}" "${binary_independent}" )
+      elseif( "${component_pack_type}" STREQUAL "DEVDOC" )
+        BRAINVISA_PACKAGING_DEVDOC( "${pack_type}" "${dependency_type}" "${component}" "${component_pack_type}" "${version_ranges}" "${binary_independent}" )
+      elseif( "${component_pack_type}" STREQUAL "SRC" )
+        BRAINVISA_PACKAGING_SRC( "${pack_type}" "${dependency_type}" "${component}" "${component_pack_type}" "${version_ranges}" "${binary_independent}" )
+      endif()
     endif()
   else()
     # Component is a brainvisa-cmake component
-    if( "${BRAINVISA_PACKAGE_TYPE}" STREQUAL "deb" )
-      unset( deb_package )
-      unset( deb_version_ranges )
-      if( "${component_pack_type}" STREQUAL "RUN" )
-        set( deb_package "${component}" )
-      elseif( "${component_pack_type}" STREQUAL "DEV" )
-        set( deb_package "${component}-dev" )
-      elseif( "${component_pack_type}" STREQUAL "SRC" )
-        set( deb_package "${component}-src" )
-      elseif( "${component_pack_type}" STREQUAL "DOC" )
-        set( deb_package "${component}-doc" )
-      elseif( "${component_pack_type}" STREQUAL "DEVDOC" )
-        set( deb_package "${component}-dev-doc" )
-      else()
-        message( SEND_ERROR "Unknown component package type \"${component_pack_type}\"" )
+    if( BRAINVISA_PACKAGING )
+      if( "${BRAINVISA_PACKAGE_TYPE}" STREQUAL "deb" )
+        unset( deb_package )
+        unset( deb_version_ranges )
+        if( "${component_pack_type}" STREQUAL "RUN" )
+          set( deb_package "${component}" )
+        elseif( "${component_pack_type}" STREQUAL "DEV" )
+          set( deb_package "${component}-dev" )
+        elseif( "${component_pack_type}" STREQUAL "SRC" )
+          set( deb_package "${component}-src" )
+        elseif( "${component_pack_type}" STREQUAL "DOC" )
+          set( deb_package "${component}-doc" )
+        elseif( "${component_pack_type}" STREQUAL "DEVDOC" )
+          set( deb_package "${component}-dev-doc" )
+        else()
+          message( SEND_ERROR "Unknown component package type \"${component_pack_type}\"" )
+        endif()
       endif()
+      set( deb_version_ranges "${version_ranges}" )
     endif()
-    set( deb_version_ranges "${version_ranges}" )
   endif()
   
-  if( "${BRAINVISA_PACKAGE_TYPE}" STREQUAL "deb" )
-    # Add deb dependency to the appropriate variable
-    if ( deb_version_ranges )
-      foreach( range ${deb_version_ranges} )
-        set( ${PROJECT_NAME}_DEB_${pack_type}_${dependency_type} ${${PROJECT_NAME}_DEB_${pack_type}_${dependency_type}} "${deb_package}( ${range} )" )
-      endforeach()
-    else()
-      set( ${PROJECT_NAME}_DEB_${pack_type}_${dependency_type} ${${component}_DEB_${pack_type}_${dependency_type}} "${deb_package}" )
+  if( BRAINVISA_PACKAGING )
+    if( "${BRAINVISA_PACKAGE_TYPE}" STREQUAL "deb" )
+      # Add deb dependency to the appropriate variable
+      if ( deb_version_ranges )
+        foreach( range ${deb_version_ranges} )
+          set( ${PROJECT_NAME}_DEB_${pack_type}_${dependency_type} ${${PROJECT_NAME}_DEB_${pack_type}_${dependency_type}} "${deb_package}( ${range} )" )
+        endforeach()
+      else()
+        set( ${PROJECT_NAME}_DEB_${pack_type}_${dependency_type} ${${component}_DEB_${pack_type}_${dependency_type}} "${deb_package}" )
+      endif()
     endif()
+    set( ${PROJECT_NAME}_DEB_${pack_type}_${dependency_type} "${${PROJECT_NAME}_DEB_${pack_type}_${dependency_type}}" CACHE STRING INTERNAL FORCE )
   endif()
-  set( ${PROJECT_NAME}_DEB_${pack_type}_${dependency_type} "${${PROJECT_NAME}_DEB_${pack_type}_${dependency_type}}" CACHE STRING INTERNAL FORCE )
 endfunction()
 
 
@@ -353,17 +382,21 @@ macro( BRAINVISA_COPY_FILES _component )
       elseif( _sourceDirectory )
         set( _absoluteFile "${_sourceDirectory}/${_file}"  )
         get_filename_component( _path "${_file}" PATH )
-      else( IS_ABSOLUTE "${_file}" )
+      else()
         set( _absoluteFile "${_file}"  )
         get_filename_component( _path "${_file}" PATH )
-    endif( IS_ABSOLUTE "${_file}" )
-      configure_file( "${_absoluteFile}"
-                      "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
-                      COPYONLY )
-      BRAINVISA_INSTALL( FILES "${_absoluteFile}" 
-                    DESTINATION "${_destination}/${_path}"
-                    COMPONENT  ${_component} )
-      set( _targetDepends ${_targetDepends} "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
+      endif()
+      if( EXISTS "${_absoluteFile}" )
+        configure_file( "${_absoluteFile}"
+                        "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
+                        COPYONLY )
+        BRAINVISA_INSTALL( FILES "${_absoluteFile}"
+                           DESTINATION "${_destination}/${_path}"
+                           COMPONENT  ${_component} )
+        set( _targetDepends ${_targetDepends} "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
+      else()
+        message( "Warning: file \"${_absoluteFile}\" does not exists (probably an invalid link)" )
+      endif()
     endforeach( _file ${_files} )
   endwhile( ${_i} LESS ${_lengthARGN} )
   BRAINVISA_GENERATE_TARGET_NAME( _target )
@@ -499,6 +532,29 @@ macro( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
   add_custom_target( ${_target} ALL
                      DEPENDS ${_targetDepends} )
 endmacro( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
+
+
+# BRAINVISA_INSTALL_DIRECTORY
+#   Install a directory without copying it into the build tree.
+# Usage:
+#   BRAINVISA_INSTALL_DIRECTORY <directory> <destination> <component> )
+#
+# Example:
+#  BRAINVISA_INSTALL_DIRECTORY( "/usr/lib/python2.6" "python" "brainvisa-python" )
+function( BRAINVISA_INSTALL_DIRECTORY directory destination component )
+  file( GLOB_RECURSE allFiles RELATIVE "${directory}" FOLLOW_SYMLINKS "${directory}/*" )
+  foreach( file ${allFiles} )
+    get_filename_component( path "${file}" PATH )
+    get_filename_component( name "${file}" NAME )
+    if( EXISTS "${directory}/${path}/${name}" )
+      BRAINVISA_INSTALL( FILES "${directory}/${path}/${name}"
+        DESTINATION "${destination}/${path}"
+        COMPONENT "${component}" )
+    else()
+      message( "Warning: file \"${directory}/${path}/${name}\" does not exists (probably an invalid link)" )
+    endif()
+  endforeach()
+endfunction()
 
 
 # BRAINVISA_GET_SPACED_QUOTED_LIST
@@ -835,8 +891,14 @@ function( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
           "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake"
           DESTINATION "${_prefixForCmakeFiles}" )
 
-  # Create packaging rules
-  include( "${brainvisa-cmake_DIR}/packaging-${BRAINVISA_PACKAGE_TYPE}.cmake" )
+  if( BRAINVISA_PACKAGING )
+    # Create packaging rules
+    CREATE_RUN_PACKAGE()
+    CREATE_DEV_PACKAGE()
+    CREATE_DOC_PACKAGE()
+    CREATE_DEVDOC_PACKAGE()
+    CREATE_SRC_PACKAGE()
+  endif()
 endfunction( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
 
 

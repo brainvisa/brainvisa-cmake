@@ -8,6 +8,7 @@
 #  PYTHON_MODULES_PATH - path to main Python modules
 #  PYTHON_INCLUDE_PATH - path to Python header files
 #  PYTHON_LIBRARY - path to Python dynamic library
+#  PYTHON_VERSION - Python version
 
 find_package( PythonInterp REQUIRED )
 include( CMakeFindFrameworks )
@@ -15,15 +16,17 @@ include( CMakeFindFrameworks )
 cmake_find_frameworks( Python )
 
 
-
-
-
-execute_process( COMMAND "${PYTHON_EXECUTABLE}" "-c" "import sys, os; os.path.normpath( sys.prefix )"
+execute_process( COMMAND "${PYTHON_EXECUTABLE}" "-c" "import sys, os; print os.path.normpath( sys.prefix )"
   OUTPUT_VARIABLE _prefix OUTPUT_STRIP_TRAILING_WHITESPACE )
 FILE( TO_CMAKE_PATH "${_prefix}" _prefix )
 execute_process( COMMAND "${PYTHON_EXECUTABLE}" "-c" "import sys; print \".\".join( (str(i) for i in sys.version_info[ :2 ]) )"
   OUTPUT_VARIABLE _version OUTPUT_STRIP_TRAILING_WHITESPACE )
+execute_process( COMMAND "${PYTHON_EXECUTABLE}" "-c" "import sys; print \".\".join( (str(i) for i in sys.version_info[ :3 ]) )"
+  OUTPUT_VARIABLE _fullVersion OUTPUT_STRIP_TRAILING_WHITESPACE )
 string(REPLACE "." "" _versionNoDot ${_version} )
+message( STATUS "Using python ${_fullVersion}: ${PYTHON_EXECUTABLE}" )
+
+set( PYTHON_VERSION "${_fullVersion}" CACHE STRING "Python version" )
 
 set( PYTHON_FRAMEWORK_INCLUDES )
 if( Python_FRAMEWORKS AND NOT PYTHON_INCLUDE_PATH )

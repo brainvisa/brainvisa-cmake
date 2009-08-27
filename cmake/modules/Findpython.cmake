@@ -8,7 +8,8 @@
 #  PYTHON_MODULES_PATH - path to main Python modules
 #  PYTHON_INCLUDE_PATH - path to Python header files
 #  PYTHON_LIBRARY - path to Python dynamic library
-#  PYTHON_VERSION - Python version
+#  PYTHON_VERSION - Python full version (e.g. "2.6.2")
+#  PYTHON_SHORT_VERSION - Python short version (e.g. "2.6")
 
 find_package( PythonInterp REQUIRED )
 include( CMakeFindFrameworks )
@@ -26,7 +27,8 @@ execute_process( COMMAND "${PYTHON_EXECUTABLE}" "-c" "import sys; print \".\".jo
 string(REPLACE "." "" _versionNoDot ${_version} )
 message( STATUS "Using python ${_fullVersion}: ${PYTHON_EXECUTABLE}" )
 
-set( PYTHON_VERSION "${_fullVersion}" CACHE STRING "Python version" )
+set( PYTHON_VERSION "${_fullVersion}" CACHE STRING "Python full version (e.g. \"2.6.2\")" )
+set( PYTHON_SHORT_VERSION "${_version}" CACHE STRING "Python short version (e.g. \"2.6\")" )
 
 set( PYTHON_FRAMEWORK_INCLUDES )
 if( Python_FRAMEWORKS AND NOT PYTHON_INCLUDE_PATH )

@@ -37,6 +37,7 @@ install( FILES cmake/Doxyfile.in
                cmake/brainvisa-cmake-config-version.cmake.in
                cmake/debian-control-run.in
                cmake/debian-control-dev.in
+               cmake/CMakeLists.txt
          DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake" )
 
 BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/*[^~]" )

@@ -139,19 +139,6 @@ macro( BRAINVISA_CREATE_MAIN_COMPONENTS )
 endmacro( BRAINVISA_CREATE_MAIN_COMPONENTS )
 
 
-macro( BRAINVISA_FIND_PACKAGE _package )
-  get_filename_component( _binaryDir "${CMAKE_BINARY_DIR}" PATH )
-  set( _binaryDirs "${_binaryDir}/${_package}" "${CMAKE_BINARY_DIR}/${_package}" )
-  foreach( _binaryDir ${_binaryDirs} )
-    if( EXISTS "${_binaryDir}/CMakeCache.txt" )
-      set( CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${_binaryDir}" )
-      break()
-    endif( EXISTS "${_binaryDir}/CMakeCache.txt" )
-  endforeach( _binaryDir ${_binaryDirs} )
-  find_package( "${_package}" ${ARGN} )
-endmacro( BRAINVISA_FIND_PACKAGE package )
-
-
 # BRAINVISA_DEPENDENCY
 # Usage:
 #   BRAINVISA_DEPENDENCY( <package type> <dependency type> <component> <component package type> [ <version ranges> ] [BINARY_INDEPENDENT] )
@@ -425,7 +412,7 @@ macro( BRAINVISA_COPY_FILES _component )
         set( _absoluteFile "${_sourceDirectory}/${_file}"  )
         get_filename_component( _path "${_file}" PATH )
       else()
-        set( _absoluteFile "${_file}"  )
+        set( _absoluteFile "${CMAKE_CURRENT_SOURCE_DIR}/${_file}"  )
         get_filename_component( _path "${_file}" PATH )
       endif()
       if( EXISTS "${_absoluteFile}" )

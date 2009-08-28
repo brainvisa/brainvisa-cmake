@@ -2,7 +2,7 @@
 if( NOT DEFINED QT_VERSION )
   find_package( Qt REQUIRED QUIET )
   execute_process( COMMAND "${QT_QMAKE_EXECUTABLE_FINDQT}" "-v"
-    OUTPUT_VARIABLE output OUTPUT_STRIP_TRAILING_WHITESPACE
+    OUTPUT_VARIABLE output ERROR_VARIABLE output
     RESULT_VARIABLE result )
   if( output AND result EQUAL 0 )
     string( REGEX REPLACE ".*Using Qt version ([^ ]*) in.*" "\\1" QT_VERSION "${output}" )

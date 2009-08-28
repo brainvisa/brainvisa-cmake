@@ -17,15 +17,11 @@
 
 set( _includeDirectories
   "${DCMTK_DIR}/include"
-  "${_guessedDcmtkDir}/include"
-  /i2bm/local/dcmtk/include
   /usr/local/include
   /usr/include
 )
 set( _libraryDirectories
   "${DCMTK_DIR}/lib"
-  "${_guessedDcmtkDir}/lib"
-  /i2bm/local/dcmtk/lib
   /usr/local/lib
   /usr/lib
 )

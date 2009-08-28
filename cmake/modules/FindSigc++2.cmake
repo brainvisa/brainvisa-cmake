@@ -28,7 +28,7 @@ ELSE(EXISTS Sigc++2_INCLUDE_DIR)
     ENDIF(NOT Sigc++2_FIND_QUIETLY)
   ENDIF(NOT Sigc++2_FOUND)
 
-  SET( Sigc++2_LIBRARIES "${Sigc++2_LIBRARIES}" CACHE PATH "Sig++2 libraries" )
+  SET( Sigc++2_LIBRARIES "${Sigc++2_LIBRARIES}" CACHE PATH "Sigc++2 libraries" )
   SET( Sigc++2_INCLUDE_DIRS "${Sigc++2_INCLUDE_DIR}" "${Sigc++2_CONFIG_DIR}" )
 
 ENDIF(EXISTS Sigc++2_INCLUDE_DIR)

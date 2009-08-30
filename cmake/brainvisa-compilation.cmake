@@ -123,6 +123,8 @@ function( BRAINVISA_READ_COMPONENT_INFOS )
   endforeach()
 endfunction()
 
+set( CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_BINARY_DIR}" )
+
 set( stropProcessing FALSE )
 if( NOT DEFINED BRAINVISA_SOURCES )
   file( TO_CMAKE_PATH "$ENV{BRAINVISA_SOURCES}" BRAINVISA_SOURCES )
@@ -229,10 +231,13 @@ endif()
 BRAINVISA_CREATE_MAIN_COMPONENTS()
   
 foreach( component ${BRAINVISA_COMPONENTS} )
+  set( ${component}_IS_BEIGN_COMPILED TRUE CACHE BOOL INTERNAL )
+endforeach()
+
+foreach( component ${BRAINVISA_COMPONENTS} )
   message( STATUS "Configuring component ${component} from source directory \"${BRAINVISA_SOURCES_${component}}\"" )
   add_subdirectory( "${BRAINVISA_SOURCES_${component}}" "build_files/${component}" )
 endforeach()
-
 if( BRAINVISA_PACKAGING )
   set( runPackages )
   set( devPackages )

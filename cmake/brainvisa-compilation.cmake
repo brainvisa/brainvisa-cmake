@@ -210,6 +210,9 @@ if( stopProcessing )
   return()
 endif()
 
+foreach( component ${BRAINVISA_COMPONENTS} )
+  set( ${component}_IS_BEING_COMPILED TRUE CACHE BOOL INTERNAL )
+endforeach()
 
 # Initialize dependencies
 set( BRAINVISA_DEPENDENCY_GRAPH "NO" CACHE FILEPATH "File name where a Graphviz dependency graph will be created. Set to \"NO\" to disable dependency graph." )
@@ -230,10 +233,6 @@ endif()
   
 BRAINVISA_CREATE_MAIN_COMPONENTS()
   
-foreach( component ${BRAINVISA_COMPONENTS} )
-  set( ${component}_IS_BEING_COMPILED TRUE CACHE BOOL INTERNAL )
-endforeach()
-
 foreach( component ${BRAINVISA_COMPONENTS} )
   message( STATUS "Configuring component ${component} from source directory \"${BRAINVISA_SOURCES_${component}}\"" )
   add_subdirectory( "${BRAINVISA_SOURCES_${component}}" "build_files/${component}" )

@@ -47,6 +47,20 @@ function( BRAINVISA_SYSTEM_PATH_TO_LIST  result_variable_name system_path )
 endfunction( BRAINVISA_SYSTEM_PATH_TO_LIST  result_variable_name system_path )
 
 
+macro( BRAINVISA_FIND_PACKAGE component )
+  if( ${component}_IS_BEING_COMPILED AND NOT ${component}_BINARY_DIR )
+    set( args ${ARGN} )
+    list( REMOVE_ITEM args REQUIRED ) # We do not want CMake to display an error and stop here
+    list( REMOVE_ITEM args QUIET ) # Avoid to use QUIET twice
+    find_package( "${component}" ${args} QUIET )
+    if( NOT ${component}_FOUND )
+      message( SEND_ERROR "BrainVISA component ${component} has to be configured before it can be imported by ${BRAINVISA_PACKAGE_NAME}. Configure one more time to get rid of this error." )
+    endif()
+  else()
+    find_package( "${component}" ${ARGN} )
+  endif()
+endmacro()
+
 macro( BRAINVISA_PROJECT )
   include( "${CMAKE_CURRENT_SOURCE_DIR}/project_info.cmake" )
   if( NOT DEFINED BRAINVISA_PACKAGE_VERSION )
@@ -68,7 +82,6 @@ macro( BRAINVISA_PROJECT )
   set( ${PROJECT_NAME}_TARGET_COUNT 0 CACHE INTERNAL "Used to generate new targets" )
   BRAINVISA_CREATE_MAIN_COMPONENTS()
   
-  set( ${PROJECT_NAME}_IS_COMPILED ON PARENT_SCOPE )
   set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
   set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
   
@@ -228,6 +241,17 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
         endif()
       endif()
       set( deb_version_ranges "${version_ranges}" )
+    endif()
+    
+    # Reorder BRAINVISA_COMPONENTS to be sure that all dependencies of a 
+    # component are configured before configuring the component itself.
+    list( FIND BRAINVISA_COMPONENTS "${BRAINVISA_PACKAGE_NAME}" indexSource )
+    list( FIND BRAINVISA_COMPONENTS "${component}" indexDest )
+    if( indexDest GREATER ${indexSource} )
+      list( REMOVE_AT BRAINVISA_COMPONENTS ${indexDest} )
+      list( INSERT BRAINVISA_COMPONENTS ${indexSource} "${component}" )
+      set( BRAINVISA_COMPONENTS "${BRAINVISA_COMPONENTS}" CACHE STRING "" FORCE )
+      set( _BRAINVISA_COMPONENTS "${BRAINVISA_COMPONENTS}" CACHE INTERNAL "" )
     endif()
   endif()
 

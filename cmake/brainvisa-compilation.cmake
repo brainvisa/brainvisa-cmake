@@ -231,7 +231,7 @@ endif()
 BRAINVISA_CREATE_MAIN_COMPONENTS()
   
 foreach( component ${BRAINVISA_COMPONENTS} )
-  set( ${component}_IS_BEIGN_COMPILED TRUE CACHE BOOL INTERNAL )
+  set( ${component}_IS_BEING_COMPILED TRUE CACHE BOOL INTERNAL )
 endforeach()
 
 foreach( component ${BRAINVISA_COMPONENTS} )

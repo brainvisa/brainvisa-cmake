@@ -11,7 +11,7 @@ if (NUMPY_INCLUDE_DIR)
 endif (NUMPY_INCLUDE_DIR)
 
 EXEC_PROGRAM ("${PYTHON_EXECUTABLE}"
-  ARGS "-c 'import numpy; print numpy.get_include()'"
+  ARGS "-c" "'import numpy; print numpy.get_include()'"
   OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
   RETURN_VALUE NUMPY_NOT_FOUND)
 

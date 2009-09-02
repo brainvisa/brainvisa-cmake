@@ -829,20 +829,23 @@ MACRO( BRAINVISA_INSTALL )
 ENDMACRO( BRAINVISA_INSTALL _component )
 
 
-# Copy/pasted from KDE3Macros.cmake
-MACRO(BRAINVISA_ADD_MOC_FILES _sources)
-   FOREACH (_current_FILE ${ARGN})
-      GET_FILENAME_COMPONENT(_tmp_FILE ${_current_FILE} ABSOLUTE)
-      GET_FILENAME_COMPONENT(_basename ${_tmp_FILE} NAME_WE)
-      SET(_moc ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.moc.cpp)
-      ADD_CUSTOM_COMMAND(OUTPUT ${_moc}
+macro( BRAINVISA_ADD_MOC_FILES _sources )
+  foreach( _current_FILE ${ARGN} )
+    get_filename_component( _tmp_FILE ${_current_FILE} ABSOLUTE )
+    get_filename_component( _basename ${_tmp_FILE} NAME_WE )
+    set( _moc ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.moc.cpp )
+    if( DESIRED_QT_VERSION EQUAL 3 )
+      add_custom_command(OUTPUT ${_moc}
          COMMAND ${QT_MOC_EXECUTABLE}
          ARGS ${_tmp_FILE} -o ${_moc}
          DEPENDS ${_tmp_FILE}
       )
-      SET(${_sources} ${${_sources}} ${_moc})
-   ENDFOREACH (_current_FILE)
-ENDMACRO(BRAINVISA_ADD_MOC_FILES)
+    else()
+      QT4_GENERATE_MOC( "${_tmp_FILE}" "${_moc}" )
+    endif()
+    set(${_sources} ${${_sources}} ${_moc})
+  endforeach()
+endmacro()
 
 
 #
@@ -930,19 +933,30 @@ function( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
   configure_file( cmake/${PROJECT_NAME}-config.cmake.in
                   "${_prefixForCmakeFiles}/${PROJECT_NAME}-config.cmake" 
                   @ONLY )
-  if( EXISTS cmake/${PROJECT_NAME}-config-version.cmake.in )
-    configure_file( cmake/${PROJECT_NAME}-config-version.cmake.in
+  if( EXISTS "${BRAINVISA_SOURCES_${PROJECT_NAME}}/cmake/${PROJECT_NAME}-config-version.cmake.in" )
+    configure_file( "${BRAINVISA_SOURCES_${PROJECT_NAME}}/cmake/${PROJECT_NAME}-config-version.cmake.in"
                     "${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake" 
                     @ONLY )
-  else( EXISTS cmake/${PROJECT_NAME}-config-version.cmake.in )
+  else()
     configure_file( "${brainvisa-cmake_DIR}/brainvisa-cmake-config-version.cmake.in"
                     "${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake" 
                     @ONLY )
-  endif( EXISTS cmake/${PROJECT_NAME}-config-version.cmake.in )
-  install( FILES
+  endif()
+  if( EXISTS "${BRAINVISA_SOURCES_${PROJECT_NAME}}/cmake/${PROJECT_NAME}-use.cmake.in" )
+    configure_file( "${BRAINVISA_SOURCES_${PROJECT_NAME}}/cmake/${PROJECT_NAME}-use.cmake.in"
+                    "${_prefixForCmakeFiles}/${PROJECT_NAME}-use.cmake" 
+                    @ONLY )
+  else()
+    configure_file( "${brainvisa-cmake_DIR}/default-use.cmake.in"
+                    "${_prefixForCmakeFiles}/${PROJECT_NAME}-use.cmake" 
+                    @ONLY )
+  endif()
+  BRAINVISA_INSTALL( FILES
           "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config.cmake"
           "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake"
-          DESTINATION "${_prefixForCmakeFiles}" )
+          "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-use.cmake"
+          DESTINATION "${_prefixForCmakeFiles}"
+          COMPONENT ${PROJECT_NAME}-devel )
 
   if( BRAINVISA_PACKAGING )
     # Create packaging rules
@@ -952,7 +966,7 @@ function( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
     CREATE_DEVDOC_PACKAGE()
     CREATE_SRC_PACKAGE()
   endif()
-endfunction( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
+endfunction()
 
 
 function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES )

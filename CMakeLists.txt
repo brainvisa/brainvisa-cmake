@@ -1,5 +1,5 @@
 project( brainvisa-cmake )
-cmake_minimum_required( VERSION 2.6 )
+cmake_minimum_required( VERSION 2.6.4 )
 
 
 function( BRAINVISA_GLOB_AND_FILTER glob variable )
@@ -7,12 +7,12 @@ function( BRAINVISA_GLOB_AND_FILTER glob variable )
   set( result )
   foreach( f ${allFiles} )
     get_filename_component( n "${f}" NAME )
-    if ( NOT n STREQUAL ".svn" )
+    if ( NOT IS_DIRECTORY "${f}" AND NOT n STREQUAL ".svn" )
       set( result ${result} "${f}" )
-    endif ( NOT n STREQUAL ".svn" )
-  endforeach( f ${_allFiles} )
+    endif ()
+  endforeach()
   set( ${variable} ${result} PARENT_SCOPE )
-endfunction( BRAINVISA_GLOB_AND_FILTER variable )
+endfunction()
 
 
 set( PACKAGE_VERSION_MAJOR 1 )
@@ -50,3 +50,8 @@ install( FILES ${_files}
 BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/scripts/*[^~]" )
 install( FILES ${_files}
          DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/scripts" )
+
+BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/scripts/windows/*[^~]" )
+install( FILES ${_files}
+         DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/scripts/windows" )
+

@@ -49,12 +49,15 @@ endfunction( BRAINVISA_SYSTEM_PATH_TO_LIST  result_variable_name system_path )
 
 macro( BRAINVISA_FIND_PACKAGE component )
   if( ${component}_IS_BEING_COMPILED AND NOT ${component}_BINARY_DIR )
-    set( args ${ARGN} )
+    set( args "${ARGN}" )
     list( REMOVE_ITEM args REQUIRED ) # We do not want CMake to display an error and stop here
     list( REMOVE_ITEM args QUIET ) # Avoid to use QUIET twice
     find_package( "${component}" ${args} QUIET )
     if( NOT ${component}_FOUND )
-      message( SEND_ERROR "BrainVISA component ${component} has to be configured before it can be imported by ${BRAINVISA_PACKAGE_NAME}. Configure one more time to get rid of this error." )
+      if( NOT BRAINVISA_FIND_FAILED_${component} )
+        set( BRAINVISA_FIND_FAILED_${component} TRUE CACHE INTERNAL "" )
+        message( SEND_ERROR "BrainVISA component ${component} has to be configured before it can be imported by ${BRAINVISA_PACKAGE_NAME}. Configure one more time to get rid of this error." )
+      endif()
     endif()
   else()
     find_package( "${component}" ${ARGN} )
@@ -380,28 +383,56 @@ ENDMACRO( BRAINVISA_GET_FILE_LIST_FROM_PRO )
 #
 # Example:
 #
-MACRO( BRAINVISA_COPY_AND_INSTALL_HEADERS _headersVariable _includeDir )
-  FOREACH( _currentHeader ${${_headersVariable}} )
-    CONFIGURE_FILE( ${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}
-                    ${CMAKE_BINARY_DIR}/include/${_includeDir}/${_currentHeader}
-                    COPYONLY )
-    GET_FILENAME_COMPONENT( _path "${_currentHeader}" PATH )
+function( BRAINVISA_COPY_AND_INSTALL_HEADERS _headersVariable _includeDir targetVariable )
+  set( destHeaders )
+  foreach( _currentHeader ${${_headersVariable}} )
+    add_custom_command( 
+      OUTPUT "${CMAKE_BINARY_DIR}/include/${_includeDir}/${_currentHeader}"
+      DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}"
+      COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}" "${CMAKE_BINARY_DIR}/include/${_includeDir}/${_currentHeader}" )
+    set( destHeaders ${destHeaders}  "${CMAKE_BINARY_DIR}/include/${_includeDir}/${_currentHeader}" )
+    get_filename_component( _path "${_currentHeader}" PATH )
     BRAINVISA_INSTALL( FILES ${_currentHeader}
-                  DESTINATION include/${_includeDir}/${_path}
-                  COMPONENT ${PROJECT_NAME}-devel )
-  ENDFOREACH( _currentHeader ${${_headersVariable}} )
-ENDMACRO( BRAINVISA_COPY_AND_INSTALL_HEADERS _headersVariable _includeDir )
+                       DESTINATION include/${_includeDir}/${_path}
+                       COMPONENT ${PROJECT_NAME}-devel )
+  endforeach()
+  BRAINVISA_GENERATE_TARGET_NAME( target )
+  add_custom_target( ${target} ALL
+                     DEPENDS ${destHeaders} )
+  set( ${targetVariable} "${target}" PARENT_SCOPE )
+endfunction()
 
 
 # BRAINVISA_COPY_FILES
 #
 # Usage:
-#  BRAINVISA_COPY_FILES( <component> [ <source files> [SOURCE_DIRECTORY <directory>] DESTINATION <destination directory> ]... )
+#  BRAINVISA_COPY_FILES( <component> [ <source files> [SOURCE_DIRECTORY <directory>] DESTINATION <destination directory> ]... [IMMEDIATE] [GET_TARGET <target variable>] )
 #
-macro( BRAINVISA_COPY_FILES _component )
+function( BRAINVISA_COPY_FILES component )
+  set( _argn "${ARGN}" )
+  
+  # Read IMMEDIATE option
+  list( FIND _argn IMMEDIATE result )
+  if( result EQUAL -1 )
+    set( immediate FALSE )
+  else()
+    set( immediate TRUE )
+    list( REMOVE_AT _argn ${result} )
+  endif()
+  
+  # Read GET_TARGET option
+  list( FIND _argn GET_TARGET result )
+  if( result EQUAL -1 )
+    set( targetVariable )
+  else()
+    list( REMOVE_AT _argn ${result} )
+    list( GET _argn ${result} targetVariable )
+    list( REMOVE_AT _argn ${result} )
+  endif()
+  
+  
   set( _targetDepends )
   set( _i 0 )
-  set( _argn ${ARGN} )
   list( LENGTH _argn _lengthARGN )
   while( ${_i} LESS ${_lengthARGN} )
     # Read source file list
@@ -440,22 +471,35 @@ macro( BRAINVISA_COPY_FILES _component )
         get_filename_component( _path "${_file}" PATH )
       endif()
       if( EXISTS "${_absoluteFile}" )
-        configure_file( "${_absoluteFile}"
-                        "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
-                        COPYONLY )
-        BRAINVISA_INSTALL( FILES "${_absoluteFile}"
-                           DESTINATION "${_destination}/${_path}"
-                           COMPONENT  ${_component} )
+        if( immediate )
+          configure_file( "${_absoluteFile}"
+                          "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
+                          COPYONLY )
+          BRAINVISA_INSTALL( FILES "${_absoluteFile}"
+                            DESTINATION "${_destination}/${_path}"
+                            COMPONENT  ${component} )
+        else()
+          add_custom_command( 
+            OUTPUT "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
+            DEPENDS "${_absoluteFile}"
+            COMMAND "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
+          BRAINVISA_INSTALL( FILES "${_absoluteFile}"
+                            DESTINATION "${_destination}/${_path}"
+                            COMPONENT  ${component} )
+        endif()
         set( _targetDepends ${_targetDepends} "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
       else()
-        message( "Warning: file \"${_absoluteFile}\" does not exists (probably an invalid link)" )
+        message( "Warning: file \"${_absoluteFile}\" does not exists" )
       endif()
-    endforeach( _file ${_files} )
-  endwhile( ${_i} LESS ${_lengthARGN} )
-  BRAINVISA_GENERATE_TARGET_NAME( _target )
-  add_custom_target( ${_target} ALL
+    endforeach()
+  endwhile()
+  BRAINVISA_GENERATE_TARGET_NAME( target )
+  add_custom_target( ${target} ALL
                      DEPENDS ${_targetDepends} )
-endmacro( BRAINVISA_COPY_FILES )
+  if( targetVariable )
+    set( ${targetVariable} "${target}" PARENT_SCOPE )
+  endif()
+endfunction()
 
 
 # BRAINVISA_COPY_DIRECTORY
@@ -463,20 +507,50 @@ endmacro( BRAINVISA_COPY_FILES )
 #  CMakeLists.txt or *~.
 #
 # Usage:
-#  BRAINVISA_COPY_DIRECTORY( <source directory> <destination directory> <component> )
+#  BRAINVISA_COPY_DIRECTORY( <source directory> <destination directory> <component> [IMMEDIATE] [GET_TARGET <target variable>] )
 #
-macro( BRAINVISA_COPY_DIRECTORY _directory _destination _component )
-  file( GLOB_RECURSE _files RELATIVE "${_directory}" "${_directory}/*" )
-  set( _selectedFiles )
-  foreach( _i ${_files} )
-    get_filename_component( _f ${_i} NAME )
-    string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(\\.svn)$"_match ${_f} )
-    if( NOT _match )
-      set( _selectedFiles ${_selectedFiles} ${_i} )
-    endif( NOT _match )
-  endforeach( _i ${_files} )
-  BRAINVISA_COPY_FILES( ${_component} ${_selectedFiles} SOURCE_DIRECTORY "${_directory}" DESTINATION "${_destination}" )
-endmacro( BRAINVISA_COPY_DIRECTORY _directory _destination _component )
+function( BRAINVISA_COPY_DIRECTORY _directory _destination _component )
+  set( _argn "${ARGN}" )
+  
+  # Read IMMEDIATE option
+  list( FIND _argn IMMEDIATE result )
+  if( result EQUAL -1 )
+    set( immediate FALSE )
+  else()
+    set( immediate TRUE )
+    list( REMOVE_AT _argn ${result} )
+  endif()
+  
+  # Read GET_TARGET option
+  list( FIND _argn GET_TARGET result )
+  if( result EQUAL -1 )
+    set( targetVariable )
+  else()
+    list( REMOVE_AT _argn ${result} )
+    list( GET _argn ${result} targetVariable )
+    list( REMOVE_AT _argn ${result} )
+  endif()
+  
+  file( GLOB_RECURSE _selectedFiles RELATIVE "${_directory}" "${_directory}/*" )
+  set( i 0 )
+  list( LENGTH _selectedFiles l )
+  while( ${i} LESS ${l} )
+    list( GET _files ${i} file )
+    get_filename_component( f ${file} NAME )
+    string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*\\.svn/.*)$" _match "${file}" )
+    if( _match )
+      list( REMOVE_AT _selectedFiles ${i} )
+      math( EXPR l "${l} - 1" )
+    else()
+      math( EXPR i "${i} + 1" )
+    endif()
+  endwhile()
+  if( immediate )
+    BRAINVISA_COPY_FILES( ${_component} ${_selectedFiles} SOURCE_DIRECTORY "${_directory}" DESTINATION "${_destination}" IMMEDIATE GET_TARGET "${targetVariable}" )
+  else()
+    BRAINVISA_COPY_FILES( ${_component} ${_selectedFiles} SOURCE_DIRECTORY "${_directory}" DESTINATION "${_destination}" GET_TARGET "${targetVariable}" )
+  endif()
+endfunction()
 
 
 # BRAINVISA_COPY_PYTHON_DIRECTORY
@@ -515,7 +589,7 @@ macro( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
   file( GLOB_RECURSE _files RELATIVE "${_pythonDirectory}" "${_pythonDirectory}/*" )
   foreach( _i ${_files} )
     get_filename_component( _f ${_i} NAME )
-    string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*\\.svn/.*)|(.*\\.pyo)|(.*\\.pyc)$" _match ${_i} )
+    string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*\\.svn/.*)|(.*\\.pyo)|(.*\\.pyc)$" _match "${_i}" )
     if( NOT _match )
       string( REGEX MATCH ".*\\.py$" _match ${_f} )
       if( _match )
@@ -542,11 +616,11 @@ macro( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
                           COMMAND ${CMAKE_COMMAND} -E make_directory "${_path}"
                           COMMAND ${CMAKE_COMMAND} -E create_symlink "${_pythonDirectory}/${_file}" "${_fileBuild}"
                           DEPENDS "${_pythonDirectory}/${_file}" )
-    else( UNIX OR APPLE )
-      configure_file( "${_pythonDirectory}/${_file}"
-                      "${_fileBuild}"
-                      COPYONLY )
-    endif( UNIX OR APPLE )
+    else()
+      add_custom_command( OUTPUT "${_fileBuild}"
+                          COMMAND ${CMAKE_COMMAND} -E copy "${_pythonDirectory}/${_file}" "${_fileBuild}"
+                          DEPENDS "${_pythonDirectory}/${_file}" )
+    endif()
 
     # Byte compile python code (creating *.pyc and *.pyo)
     add_custom_command( OUTPUT "${_fileBuild}c"
@@ -559,22 +633,22 @@ macro( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
     # Install source file and byte compiled files
     get_filename_component( _path "${_file}" PATH )
     BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}" "${_fileBuild}c" "${_fileBuild}o"
-                  DESTINATION ${_destDir}/${_path}
-                  COMPONENT ${_component} )
+                       DESTINATION ${_destDir}/${_path}
+                       COMPONENT ${_component} )
     set( _targetDepends ${_targetDepends} "${_fileBuild}" "${_fileBuild}c" "${_fileBuild}o" )
   endforeach(_file ${_pythonSources})
 
   # Copy other files
   foreach(_file ${_nonPythonSources})
     set( _fileBuild "${CMAKE_BINARY_DIR}/${_destDir}/${_file}" )
-    configure_file( "${_pythonDirectory}/${_file}"
-                    "${_fileBuild}"
-                    COPYONLY )
+    add_custom_command( OUTPUT "${_fileBuild}"
+      COMMAND ${CMAKE_COMMAND} -E copy "${_pythonDirectory}/${_file}" "${_fileBuild}"
+      DEPENDS "${_pythonDirectory}/${_file}" )
     # Install source file and byte compiled files
     get_filename_component( _path "${_file}" PATH )
     BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}"
-                  DESTINATION ${_destDir}/${_path}
-                  COMPONENT ${_component} )
+                       DESTINATION ${_destDir}/${_path}
+                       COMPONENT ${_component} )
     set( _targetDepends ${_targetDepends} "${_fileBuild}" )
   endforeach(_file ${_nonPythonSources})
 

@@ -406,93 +406,84 @@ endfunction()
 # BRAINVISA_COPY_FILES
 #
 # Usage:
-#  BRAINVISA_COPY_FILES( <component> [ <source files> [SOURCE_DIRECTORY <directory>] DESTINATION <destination directory> ]... [IMMEDIATE] [GET_TARGET <target variable>] )
+#  BRAINVISA_COPY_FILES( <component> <source files> [SOURCE_DIRECTORY <directory>] DESTINATION <destination directory>  [IMMEDIATE] [GET_TARGET <target variable>] )
 #
 function( BRAINVISA_COPY_FILES component )
-  set( _argn "${ARGN}" )
+  set( _files "${ARGN}" )
   
+  # Read GET_TARGET option
+  list( FIND _files GET_TARGET result )
+  if( result EQUAL -1 )
+    set( targetVariable )
+  else()
+    list( REMOVE_AT _files ${result} )
+    list( GET _files ${result} targetVariable )
+    list( REMOVE_AT _files ${result} )
+  endif()
+
+  # Read DESTINATION option
+  list( FIND _files DESTINATION result )
+  if( result EQUAL -1 )
+    message( FATAL_ERROR "DESTINATION argument is mandatory for BRAINVISA_COPY_FILES" )
+  else()
+    list( REMOVE_AT _files ${result} )
+    list( GET _files ${result} _destination )
+    list( REMOVE_AT _files ${result} )
+  endif()
+
+  # Read SOURCE_DIRECTORY option
+  list( FIND _files SOURCE_DIRECTORY result )
+  if( result EQUAL -1 )
+    set( _sourceDirectory )
+  else()
+    list( REMOVE_AT _files ${result} )
+    list( GET _files ${result} _sourceDirectory )
+    list( REMOVE_AT _files ${result} )
+  endif()
+
   # Read IMMEDIATE option
-  list( FIND _argn IMMEDIATE result )
+  list( FIND _files IMMEDIATE result )
   if( result EQUAL -1 )
     set( immediate FALSE )
   else()
     set( immediate TRUE )
-    list( REMOVE_AT _argn ${result} )
+    list( REMOVE_AT _files ${result} )
   endif()
+    
   
-  # Read GET_TARGET option
-  list( FIND _argn GET_TARGET result )
-  if( result EQUAL -1 )
-    set( targetVariable )
-  else()
-    list( REMOVE_AT _argn ${result} )
-    list( GET _argn ${result} targetVariable )
-    list( REMOVE_AT _argn ${result} )
-  endif()
-  
-  
-  set( _targetDepends )
-  set( _i 0 )
-  list( LENGTH _argn _lengthARGN )
-  while( ${_i} LESS ${_lengthARGN} )
-    # Read source file list
-    set( _files )
-    while( ${_i} LESS ${_lengthARGN} )
-      list( GET _argn ${_i} _item )
-      if( "${_item}" STREQUAL "SOURCE_DIRECTORY" OR "${_item}" STREQUAL "DESTINATION" )
-        break()
-      endif( "${_item}" STREQUAL "SOURCE_DIRECTORY" OR "${_item}" STREQUAL "DESTINATION" )
-      set( _files ${_files} "${_item}" )
-      math( EXPR _i "${_i} + 1" )
-    endwhile( ${_i} LESS ${_lengthARGN} )
-
-    # Read options
-    set( _sourceDirectory )
-    if( "${_item}" STREQUAL SOURCE_DIRECTORY )
-      math( EXPR _i "${_i} + 1" )
-      list( GET _argn ${_i} _sourceDirectory )
-      math( EXPR _i "${_i} + 1" )
-    endif( "${_item}" STREQUAL SOURCE_DIRECTORY )
-    math( EXPR _i "${_i} + 1" )
-    list( GET _argn ${_i} _destination )
-    math( EXPR _i "${_i} + 1" )
-
 #     message( "=== copy: from ${_sourceDirectory} to ${_destination} : ${_files}" )
-    foreach( _file ${_files} )
-      if( IS_ABSOLUTE "${_file}" )
-        set( _absoluteFile "${_file}"  )
-        set( _path )
-        get_filename_component( _file "${_file}" NAME )
-      elseif( _sourceDirectory )
-        set( _absoluteFile "${_sourceDirectory}/${_file}"  )
-        get_filename_component( _path "${_file}" PATH )
+  foreach( _file ${_files} )
+    if( IS_ABSOLUTE "${_file}" )
+      set( _absoluteFile "${_file}"  )
+      set( _path )
+      get_filename_component( _file "${_file}" NAME )
+    elseif( _sourceDirectory )
+      set( _absoluteFile "${_sourceDirectory}/${_file}"  )
+      get_filename_component( _path "${_file}" PATH )
+    else()
+      set( _absoluteFile "${CMAKE_CURRENT_SOURCE_DIR}/${_file}"  )
+      get_filename_component( _path "${_file}" PATH )
+    endif()
+    if( EXISTS "${_absoluteFile}" )
+      if( immediate )
+        configure_file( "${_absoluteFile}"
+                        "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
+                        COPYONLY )
       else()
-        set( _absoluteFile "${CMAKE_CURRENT_SOURCE_DIR}/${_file}"  )
-        get_filename_component( _path "${_file}" PATH )
+        add_custom_command( 
+          OUTPUT "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
+          DEPENDS "${_absoluteFile}"
+          COMMAND "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
       endif()
-      if( EXISTS "${_absoluteFile}" )
-        if( immediate )
-          configure_file( "${_absoluteFile}"
-                          "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
-                          COPYONLY )
-          BRAINVISA_INSTALL( FILES "${_absoluteFile}"
-                            DESTINATION "${_destination}/${_path}"
-                            COMPONENT  ${component} )
-        else()
-          add_custom_command( 
-            OUTPUT "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
-            DEPENDS "${_absoluteFile}"
-            COMMAND "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
-          BRAINVISA_INSTALL( FILES "${_absoluteFile}"
-                            DESTINATION "${_destination}/${_path}"
-                            COMPONENT  ${component} )
-        endif()
-        set( _targetDepends ${_targetDepends} "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
-      else()
-        message( "Warning: file \"${_absoluteFile}\" does not exists" )
-      endif()
-    endforeach()
-  endwhile()
+      BRAINVISA_INSTALL( FILES "${_absoluteFile}"
+                         DESTINATION "${_destination}/${_path}"
+                         COMPONENT  ${component} )
+      set( _targetDepends ${_targetDepends} "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
+    else()
+      message( "Warning: file \"${_absoluteFile}\" does not exists" )
+    endif()
+  endforeach()
+
   BRAINVISA_GENERATE_TARGET_NAME( target )
   add_custom_target( ${target} ALL
                      DEPENDS ${_targetDepends} )
@@ -535,8 +526,8 @@ function( BRAINVISA_COPY_DIRECTORY _directory _destination _component )
   set( i 0 )
   list( LENGTH _selectedFiles l )
   while( ${i} LESS ${l} )
-    list( GET _files ${i} file )
-    get_filename_component( f ${file} NAME )
+    list( GET _selectedFiles ${i} file )
+    get_filename_component( f "${file}" NAME )
     string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*\\.svn/.*)$" _match "${file}" )
     if( _match )
       list( REMOVE_AT _selectedFiles ${i} )
@@ -881,26 +872,15 @@ ENDMACRO( BRAINVISA_ADD_COMPONENT _component _group )
 
 #
 #
-MACRO( BRAINVISA_INSTALL )
-  set( _readVariable )
-  set( _component )
-  foreach( _i ${ARGN} )
-    if( _readVariable )
-      set( ${_readVariable} "${_i}" )
-#       set( _readVariable )
-      break()
-    else( _readVariable )
-      if( "${_i}" STREQUAL COMPONENT )
-        set( _readVariable _component )
-      endif( "${_i}" STREQUAL COMPONENT )
-    endif( _readVariable )
-  endforeach( _i ${ARGN} )
-
-  if( NOT _component )
-    message( FATAL_ERROR "A component must be defined with BRAINVISA_INSTALL" )
-  endif( NOT _component )
-  install( ${ARGN} )
-ENDMACRO( BRAINVISA_INSTALL _component )
+function( BRAINVISA_INSTALL )
+  set( args "${ARGN}" )
+  list( FIND args COMPONENT result )
+  if( result EQUAL -1 )
+    message( FATAL_ERROR "COMPONENT argument is mandatory for BRAINVISA_INSTALL" )
+  else()
+    install( ${ARGN} )
+  endif()
+endfunction()
 
 
 macro( BRAINVISA_ADD_MOC_FILES _sources )
@@ -949,8 +929,9 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
 
   # Build install rules for sip files
   BRAINVISA_COPY_FILES( ${PROJECT_NAME}-devel
-    "${_mainSipFile}" ${_SIP_SOURCES}
-    DESTINATION "share/sip/${PROJECT_NAME}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}")
+    ${_mainSipFile} ${_SIP_SOURCES}
+    DESTINATION "share/sip/${PROJECT_NAME}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
+    IMMEDIATE )
 
   # Compute C++ file names that will be generated by sip.
   # This is only possible with -j option.

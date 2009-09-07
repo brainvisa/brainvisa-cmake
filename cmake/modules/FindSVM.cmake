@@ -5,20 +5,17 @@
 # SVM_INCLUDE_DIRS - directory where the header file can be found
 # SVM_LIBRARIES    - the svm libraries
 
-
-FIND_PATH( SVM_INCLUDE_DIR svm.h
-  ${SVM_DIR}/include
-  /i2bm/local/svm/include
-  /usr/local/include
-  /usr/include 
-)
-
+find_path( SVM_INCLUDE_DIR "svm.h"
+    ${SVM_DIR}/include
+    /usr/local/include
+    /usr/include
+    PATH_SUFFIXES include )
 
 FIND_LIBRARY( SVM_LIBRARY svm
   ${SVM_DIR}/lib
-  /i2bm/local/svm/lib
   /usr/local/lib
   /usr/lib
+  PATH_SUFFIXES lib
 )
 
 IF( SVM_INCLUDE_DIR )

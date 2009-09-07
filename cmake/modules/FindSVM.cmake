@@ -9,13 +9,13 @@ find_path( SVM_INCLUDE_DIR "svm.h"
     ${SVM_DIR}/include
     /usr/local/include
     /usr/include
-    PATH_SUFFIXES include )
+    PATH_SUFFIXES libsvm/include include )
 
 FIND_LIBRARY( SVM_LIBRARY svm
   ${SVM_DIR}/lib
   /usr/local/lib
   /usr/lib
-  PATH_SUFFIXES lib
+  PATH_SUFFIXES libsvm/lib lib
 )
 
 IF( SVM_INCLUDE_DIR )

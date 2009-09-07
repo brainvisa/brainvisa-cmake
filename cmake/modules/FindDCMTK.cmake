@@ -25,10 +25,15 @@ set( _libraryDirectories
   /usr/local/lib
   /usr/lib
 )
+set( _pathSuffixes
+  "dcmtk/include"
+  "dcmtk/lib"
+)
 
 If( NOT DCMTK_PRE_353 )
   FIND_PATH( DCMTK_config_INCLUDE_DIR dcmtk/config/osconfig.h
     ${_includeDirectories}
+    PATH_SUFFIXES ${_pathSuffixes}
   )
 ENDIF( NOT DCMTK_PRE_353 )
 
@@ -36,6 +41,7 @@ IF( NOT DCMTK_config_INCLUDE_DIR OR DCMTK_PRE_353 )
   # For DCMTK <= 3.5.3
   FIND_PATH( DCMTK_config_INCLUDE_DIR osconfig.h
     ${_includeDirectories}
+    PATH_SUFFIXES ${_pathSuffixes}
   )
   IF( DCMTK_config_INCLUDE_DIR )
     SET( DCMTK_PRE_353 TRUE CACHE STRING
@@ -50,14 +56,17 @@ IF( DCMTK_PRE_353 )
 
   FIND_PATH( DCMTK_ofstd_INCLUDE_DIR ofstd/ofstdinc.h
     ${_includeDirectories}
+    PATH_SUFFIXES ${_pathSuffixes}
   )
 
   FIND_PATH( DCMTK_dcmdata_INCLUDE_DIR dcmdata/dctypes.h
     ${_includeDirectories}
+    PATH_SUFFIXES ${_pathSuffixes}
   )
 
   FIND_PATH( DCMTK_dcmimgle_INCLUDE_DIR dcmimgle/dcmimage.h
     ${_includeDirectories}
+    PATH_SUFFIXES ${_pathSuffixes}
   )
 
 ELSE( DCMTK_PRE_353 )
@@ -65,37 +74,45 @@ ELSE( DCMTK_PRE_353 )
 
   FIND_PATH( DCMTK_ofstd_INCLUDE_DIR dcmtk/ofstd/ofstdinc.h
     ${_includeDirectories}
+    PATH_SUFFIXES ${_pathSuffixes}
   )
 
 
   FIND_PATH( DCMTK_dcmdata_INCLUDE_DIR dcmtk/dcmdata/dctypes.h
     ${_includeDirectories}
+    PATH_SUFFIXES ${_pathSuffixes}
   )
 
   FIND_PATH( DCMTK_dcmimgle_INCLUDE_DIR dcmtk/dcmimgle/dcmimage.h
     ${_includeDirectories}
+    PATH_SUFFIXES ${_pathSuffixes}
   )
 
 ENDIF( DCMTK_PRE_353 )
 
 FIND_LIBRARY( DCMTK_ofstd_LIBRARY ofstd
   ${_libraryDirectories}
+  PATH_SUFFIXES ${_pathSuffixes}
 )
 
 FIND_LIBRARY( DCMTK_dcmdata_LIBRARY dcmdata
   ${_libraryDirectories}
+  PATH_SUFFIXES ${_pathSuffixes}
 )
 
 FIND_LIBRARY( DCMTK_dcmimgle_LIBRARY dcmimgle
   ${_libraryDirectories}
+  PATH_SUFFIXES ${_pathSuffixes}
 )
 
 FIND_LIBRARY(DCMTK_imagedb_LIBRARY imagedb
   ${_libraryDirectories}
+  PATH_SUFFIXES ${_pathSuffixes}
 )
 
 FIND_LIBRARY(DCMTK_dcmnet_LIBRARY dcmnet
   ${_libraryDirectories}
+  PATH_SUFFIXES ${_pathSuffixes}
 )
 
 

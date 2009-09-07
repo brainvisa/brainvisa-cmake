@@ -1,6 +1,26 @@
 cmake_policy( SET CMP0011 NEW )
 cmake_policy( SET CMP0009 NEW )
 
+# Set some variables to mak find_* easier to use
+file( TO_CMAKE_PATH "$ENV{PATH}" _path )
+if( APPLE )
+  file( TO_CMAKE_PATH "$ENV{DYLD_LIBRARY_PATH}" _ldLibraryPath )
+else()
+  file( TO_CMAKE_PATH "$ENV{LD_LIBRARY_PATH}" _ldLibraryPath )
+endif()
+foreach( _path ${_path} ${_ldLibraryPath} )
+  get_filename_component( _path "${_path}" PATH )
+  list( FIND CMAKE_INCLUDE_PATH "${_path}" _result )
+  if( NOT result EQUAL -1 )
+    set( CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "${_path}" )
+  endif()
+  list( FIND CMAKE_LIBRARY_PATH "${_path}" _result )
+  if( NOT result EQUAL -1 )
+    set( CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "${_path}" )
+  endif()
+endforeach()
+
+
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${brainvisa-cmake_DIR}/modules" )
 if( WIN32 AND CMAKE_CROSSCOMPILING )
   link_directories( "${BRAINVISA_CROSSCOMPILATION_DIR}/windows/lib" "${BRAINVISA_CROSSCOMPILATION_DIR}/windows/bin" )

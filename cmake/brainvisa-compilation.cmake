@@ -134,6 +134,7 @@ endif()
 if( NOT DEFINED BRAINVISA_VERSION_SELECTION )
   set( BRAINVISA_VERSION_SELECTION trunk CACHE STRING "Type of branch that is used for automatic sources selection. Possible values are \"trunk\", \"stable\" and \"tag\"." )
   message( "BRAINVISA_VERSION_SELECTION has been set to its default value (\"${BRAINVISA_VERSION_SELECTION})\". Please check that this value is correct and launch the configuration again." )
+  set( _BRAINVISA_VERSION_SELECTION "${BRAINVISA_VERSION_SELECTION}" CACHE INTERNAL "" )
   set( stopProcessing TRUE )
 endif()
 
@@ -142,11 +143,15 @@ if( NOT BRAINVISA_SOURCES )
 endif()
 
 # Build projects list
-if( NOT BRAINVISA_PROJECTS OR NOT "${BRAINVISA_PROJECTS}" STREQUAL "${_BRAINVISA_PROJECTS}" )
-  message( "BRAINVISA_PROJECTS has changed. Components list and sources had been reset." )
+if( NOT BRAINVISA_PROJECTS OR NOT "${BRAINVISA_PROJECTS}" STREQUAL "${_BRAINVISA_PROJECTS}" OR NOT "${BRAINVISA_VERSION_SELECTION}" STREQUAL "${_BRAINVISA_VERSION_SELECTION}" )
+  message( "BRAINVISA_VERSION_SELECTION or BRAINVISA_PROJECTS has changed. Components list and sources had been reset." )
 
   # Clear components list
   foreach( component ${_BRAINVISA_COMPONENTS} )
+    if( ${component}_DIR AND ${component}_IS_BEING_COMPILED )
+      message( STATUS "Remove directory \"${${component}_DIR}\"" )
+#       execute_process( COMMAND "${CMAKE_COMMAND}" -E remove_directory "${${component}_DIR}" )
+    endif()
     unset( BRAINVISA_SOURCES_${component} CACHE )
   endforeach()
   unset( BRAINVISA_COMPONENTS CACHE )
@@ -161,6 +166,7 @@ if( NOT BRAINVISA_PROJECTS OR NOT "${BRAINVISA_PROJECTS}" STREQUAL "${_BRAINVISA
     set( _BRAINVISA_VERSION_SELECTION_${project} "${BRAINVISA_VERSION_SELECTION_${project}}" CACHE INTERNAL "" )
   endforeach()
   set( _BRAINVISA_PROJECTS "${BRAINVISA_PROJECTS}" CACHE INTERNAL "" )
+  set( _BRAINVISA_VERSION_SELECTION "${BRAINVISA_VERSION_SELECTION}" CACHE INTERNAL "" )
 endif()
 
 

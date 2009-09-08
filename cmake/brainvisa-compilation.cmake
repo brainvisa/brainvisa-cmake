@@ -150,7 +150,7 @@ if( NOT BRAINVISA_PROJECTS OR NOT "${BRAINVISA_PROJECTS}" STREQUAL "${_BRAINVISA
   foreach( component ${_BRAINVISA_COMPONENTS} )
     if( ${component}_DIR AND ${component}_IS_BEING_COMPILED )
       message( STATUS "Remove directory \"${${component}_DIR}\"" )
-#       execute_process( COMMAND "${CMAKE_COMMAND}" -E remove_directory "${${component}_DIR}" )
+      execute_process( COMMAND "${CMAKE_COMMAND}" -E remove_directory "${${component}_DIR}" )
     endif()
     unset( BRAINVISA_SOURCES_${component} CACHE )
   endforeach()

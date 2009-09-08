@@ -906,18 +906,22 @@ endfunction()
 macro( BRAINVISA_ADD_MOC_FILES _sources )
   foreach( _current_FILE ${ARGN} )
     get_filename_component( _tmp_FILE ${_current_FILE} ABSOLUTE )
-    get_filename_component( _basename ${_tmp_FILE} NAME_WE )
-    set( _moc ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.moc.cpp )
-    if( DESIRED_QT_VERSION EQUAL 3 )
-      add_custom_command(OUTPUT ${_moc}
-         COMMAND ${QT_MOC_EXECUTABLE}
-         ARGS ${_tmp_FILE} -o ${_moc}
-         DEPENDS ${_tmp_FILE}
-      )
-    else()
-      QT4_GENERATE_MOC( "${_tmp_FILE}" "${_moc}" )
+    file( READ "${_tmp_FILE}" _content )
+    string( REGEX MATCH Q_OBJECT _match "${_content}" )
+    if( _match )
+      get_filename_component( _basename ${_tmp_FILE} NAME_WE )
+      set( _moc ${CMAKE_CURRENT_BINARY_DIR}/${_basename}.moc.cpp )
+      if( DESIRED_QT_VERSION EQUAL 3 )
+        add_custom_command(OUTPUT ${_moc}
+          COMMAND ${QT_MOC_EXECUTABLE}
+          ARGS ${_tmp_FILE} -o ${_moc}
+          DEPENDS ${_tmp_FILE}
+        )
+      else()
+        QT4_GENERATE_MOC( "${_tmp_FILE}" "${_moc}" )
+      endif()
+      set(${_sources} ${${_sources}} "${_moc}" )
     endif()
-    set(${_sources} ${${_sources}} ${_moc})
   endforeach()
 endmacro()
 

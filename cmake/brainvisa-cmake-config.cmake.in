@@ -1024,7 +1024,6 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
   add_library( ${_moduleName} MODULE ${_sipOutputFiles} )
   set_target_properties( ${_moduleName} PROPERTIES
                 LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python/${_modulePath}"
-                VERSION "${${PROJECT_NAME}_VERSION}"
                 PREFIX "" )
   if( WIN32 )
     set_target_properties( ${_moduleName} PROPERTIES SUFFIX "pyd" )

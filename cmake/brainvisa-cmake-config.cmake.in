@@ -795,6 +795,12 @@ ENDMACRO( BRAINVISA_GENERATE_DOXYGEN_DOC )
 #
 #   BRAINVISA_GENERATE_EPYDOC_DOC( <source directory> [ <source directory> ... ] <output directory> [ EXCLUDE <exclude list> ] )
 #
+# Example:
+#
+#   BRAINVISA_GENERATE_EPYDOC_DOC( "${CMAKE_BINARY_DIR}/python/soma"
+#     "share/doc/${PROJECT_NAME}-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}/epydoc/html"
+#     EXCLUDE soma.aims* )
+#
 function( BRAINVISA_GENERATE_EPYDOC_DOC  )
   if( Epydoc_FOUND )
     set( args "${ARGN}" )

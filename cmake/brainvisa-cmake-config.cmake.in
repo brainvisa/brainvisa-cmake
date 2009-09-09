@@ -472,6 +472,7 @@ function( BRAINVISA_COPY_FILES component )
     
   
 #     message( "=== copy: from ${_sourceDirectory} to ${_destination} : ${_files}" )
+  set( _targetDepends  )
   foreach( _file ${_files} )
     if( IS_ABSOLUTE "${_file}" )
       set( _absoluteFile "${_file}"  )
@@ -582,7 +583,7 @@ endfunction()
 # Example:
 #   BRAINVISA_COPY_PYTHON_DIRECTORY(  ${CMAKE_CURRENT_SOURCE_DIR}/python brainvisa_python )
 #
-macro( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
+function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
   if( ${ARGC} GREATER 2 )
     set( _destDir "${ARGV2}" )
   else( ${ARGC} GREATER 2 )
@@ -624,27 +625,27 @@ macro( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
       # modifications in the source tree (without typing make)
       get_filename_component( _path "${_fileBuild}" PATH )
       add_custom_command( OUTPUT "${_fileBuild}"
-                          COMMAND ${CMAKE_COMMAND} -E make_directory "${_path}"
-                          COMMAND ${CMAKE_COMMAND} -E create_symlink "${_pythonDirectory}/${_file}" "${_fileBuild}"
+                          COMMAND "${CMAKE_COMMAND}" -E make_directory "${_path}"
+                          COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_pythonDirectory}/${_file}" "${_fileBuild}"
                           DEPENDS "${_pythonDirectory}/${_file}" )
     else()
       add_custom_command( OUTPUT "${_fileBuild}"
-                          COMMAND ${CMAKE_COMMAND} -E copy "${_pythonDirectory}/${_file}" "${_fileBuild}"
+                          COMMAND "${CMAKE_COMMAND}" -E copy "${_pythonDirectory}/${_file}" "${_fileBuild}"
                           DEPENDS "${_pythonDirectory}/${_file}" )
     endif()
 
     # Byte compile python code (creating *.pyc and *.pyo)
     add_custom_command( OUTPUT "${_fileBuild}c"
-                        COMMAND ${PYTHON_EXECUTABLE} -c "import py_compile\\;py_compile.main\\(\\)" "${_fileBuild}"
+                        COMMAND "${PYTHON_EXECUTABLE}" -c "import py_compile\\;py_compile.main\\(\\)" "${_fileBuild}"
                         DEPENDS "${_fileBuild}" )
     add_custom_command( OUTPUT "${_fileBuild}o"
-                        COMMAND ${PYTHON_EXECUTABLE} -O -c "import py_compile\\;py_compile.main\\(\\)" "${_fileBuild}"
+                        COMMAND "${PYTHON_EXECUTABLE}" -O -c "import py_compile\\;py_compile.main\\(\\)" "${_fileBuild}"
                         DEPENDS "${_fileBuild}" )
   
     # Install source file and byte compiled files
     get_filename_component( _path "${_file}" PATH )
     BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}" "${_fileBuild}c" "${_fileBuild}o"
-                       DESTINATION ${_destDir}/${_path}
+                       DESTINATION "${_destDir}/${_path}"
                        COMPONENT ${_component} )
     set( _targetDepends ${_targetDepends} "${_fileBuild}" "${_fileBuild}c" "${_fileBuild}o" )
   endforeach(_file ${_pythonSources})
@@ -669,7 +670,7 @@ macro( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
   BRAINVISA_GENERATE_TARGET_NAME( _target )
   add_custom_target( ${_target} ALL
                      DEPENDS ${_targetDepends} )
-endmacro( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
+endfunction()
 
 
 # BRAINVISA_INSTALL_DIRECTORY
@@ -1120,4 +1121,4 @@ function( BRAINVISA_FIND_PROJECT_SOURCES _project _version )
   endif( NOT _sources )
   message( STATUS "Sources for version ${_version} of ${_project} found in \"${_sources}\"" )
   set( ${_project}_SOURCES "${_sources}" CACHE STRING "Sources directory for project ${_project}" )
-endfunction( BRAINVISA_FIND_PROJECT_SOURCES _project _version )
+endfunction()

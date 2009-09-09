@@ -793,9 +793,9 @@ ENDMACRO( BRAINVISA_GENERATE_DOXYGEN_DOC )
 #    Add rules to generate epydoc documentation with "make doc" or "make <component>-doc".
 # Usage:
 #
-#   BRAINVISA_GENERATE_EPYDOC_DOC( <source directory> <output directory> [ EXCLUDE <exclude list> ] )
+#   BRAINVISA_GENERATE_EPYDOC_DOC( <source directory> [ <source directory> ... ] <output directory> [ EXCLUDE <exclude list> ] )
 #
-function( BRAINVISA_GENERATE_EPYDOC_DOC _sourceDirectory _outputDirectory )
+function( BRAINVISA_GENERATE_EPYDOC_DOC  )
   if( Epydoc_FOUND )
     set( args "${ARGN}" )
     list( FIND args EXCLUDE result )
@@ -809,29 +809,38 @@ function( BRAINVISA_GENERATE_EPYDOC_DOC _sourceDirectory _outputDirectory )
       list( REMOVE_AT args ${result} )
     endif()
     
-    file( GLOB_RECURSE _pythonFiles "${_sourceDirectory}/*.py" )
+    list( GET args -1 outputDirectory )
+    list( REMOVE_AT args -1 )
+    set( sourceDirectories ${args} )
+    
+    set( pythonFiles )
+    foreach( sourceDirectory ${sourceDirectories} )
+      file( GLOB_RECURSE result "${sourceDirectory}/*.py" )
+      set( pythonFiles ${pythonFiles} ${result} )
+    endforeach()
     if( DOT_EXECUTABLE )
-      set( _dotParameters --dotpath "${DOT_EXECUTABLE}" --graph classtree )
+      set( dotParameters --dotpath "${DOT_EXECUTABLE}" --graph classtree )
+    else()
+      set( dotParameters )
     endif()
-    add_custom_command( OUTPUT "${CMAKE_BINARY_DIR}/${_outputDirectory}/index.html"
-                        DEPENDS ${_pythonFiles}
-                        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/${_outputDirectory}"
+    add_custom_command( OUTPUT "${CMAKE_BINARY_DIR}/${outputDirectory}/index.html"
+                        DEPENDS ${pythonFiles}
+                        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/${outputDirectory}"
                         COMMAND "${EPYDOC_EXECUTABLE}" 
                           --html
                           --name "${PROJECT_NAME} ${${PROJECT_NAME}_VERSION}"
-                          -o "${CMAKE_BINARY_DIR}/${_outputDirectory}"
+                          -o "${CMAKE_BINARY_DIR}/${outputDirectory}"
                           --inheritance grouped
-                          ${_dotParameters}
+                          ${dotParameters}
                           ${excludeParameters}
-  #                         ${_pythonFiles} )
-                          ${_sourceDirectory} )
-      BRAINVISA_GENERATE_TARGET_NAME( _target )
-      add_custom_target( ${_target} DEPENDS "${CMAKE_BINARY_DIR}/${_outputDirectory}/index.html" )
-      add_dependencies( ${PROJECT_NAME}-doc ${_target} )
+                          ${sourceDirectories} )
+      BRAINVISA_GENERATE_TARGET_NAME( target )
+      add_custom_target( ${target} DEPENDS "${CMAKE_BINARY_DIR}/${outputDirectory}/index.html" )
+      add_dependencies( ${PROJECT_NAME}-doc ${target} )
       # Install HTML documentation
-      BRAINVISA_INSTALL( DIRECTORY "${CMAKE_BINARY_DIR}/${_outputDirectory}"
-                        DESTINATION "${_outputDirectory}"
-                        COMPONENT ${PROJECT_NAME}-doc )
+      BRAINVISA_INSTALL( DIRECTORY "${CMAKE_BINARY_DIR}/${outputDirectory}"
+                         DESTINATION "${outputDirectory}"
+                         COMPONENT ${PROJECT_NAME}-doc )
   endif()
 endfunction()
 

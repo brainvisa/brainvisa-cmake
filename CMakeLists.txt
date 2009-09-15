@@ -1,5 +1,5 @@
-project( brainvisa-cmake )
-cmake_minimum_required( VERSION 2.6.4 )
+project( brainvisa-cmake NONE )
+cmake_minimum_required( VERSION 2.6 )
 
 
 function( BRAINVISA_GLOB_AND_FILTER glob variable )
@@ -54,4 +54,22 @@ install( FILES ${_files}
 BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/scripts/windows/*[^~]" )
 install( FILES ${_files}
          DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/scripts/windows" )
+
+# Packaging
+configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/debian-control.in"
+                "${CMAKE_BINARY_DIR}/debian-control" 
+                @ONLY )
+set( packageName "${CMAKE_BINARY_DIR}/brainvisa-cmake-${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}.${PACKAGE_VERSION_PATCH}.deb" )
+set( tmpDir "/tmp/brainvisa-cmake_create_deb" )
+add_custom_command( OUTPUT "${packageName}"
+  COMMENT "Creating package \"${packageName}\""
+  COMMAND ${CMAKE_COMMAND} -E remove_directory "${tmpDir}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${tmpDir}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${tmpDir}/DEBIAN"
+  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/debian-control" "${tmpDir}/DEBIAN/control"
+  COMMAND ${CMAKE_COMMAND} "-DCMAKE_INSTALL_PREFIX=${tmpDir}${CMAKE_INSTALL_PREFIX}" -P "${CMAKE_BINARY_DIR}/cmake_install.cmake"
+  COMMAND dpkg --build "${tmpDir}" "${packageName}"
+  COMMAND ${CMAKE_COMMAND} -E remove_directory "${tmpDir}"
+)
+add_custom_target( "package" DEPENDS "${packageName}" )
 

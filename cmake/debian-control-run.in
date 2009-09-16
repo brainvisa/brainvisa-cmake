@@ -3,4 +3,7 @@ Version: @BRAINVISA_PACKAGE_VERSION@
 Maintainer: @BRAINVISA_PACKAGE_MAINTAINER@
 Architecture: @CMAKE_SYSTEM_PROCESSOR@
 Description: Test package for component @BRAINVISA_PACKAGE_NAME@ of project @BRAINVISA_PACKAGE_MAIN_PROJECT@
+Priority: optional
+Section: science
+Homepage: @BRAINVISA_PACKAGE_HOMEPAGE@
 @DEB_RUN_DEPENDENCIES@

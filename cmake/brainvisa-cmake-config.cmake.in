@@ -208,7 +208,7 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
   if( result EQUAL -1 )
     # Component is not in BRAINVISA_COMPONENTS, it is considered as an external component
     set( destNodeAttributes ", color=orange" )
-    if( BRAINVISA_PACKAGING )
+    if( BRAINVISA_PACKAGING AND EXISTS "${brainvisa-cmake_DIR}/brainvisa-packaging-${BRAINVISA_PACKAGE_TYPE}-${component}.cmake" )
       include( "${brainvisa-cmake_DIR}/brainvisa-packaging-${BRAINVISA_PACKAGE_TYPE}-${component}.cmake" )
       if( "${component_pack_type}" STREQUAL "RUN" )
         BRAINVISA_PACKAGING_RUN( "${pack_type}" "${dependency_type}" "${component}" "${component_pack_type}" "${version_ranges}" "${binary_independent}" )

@@ -4,8 +4,9 @@ Maintainer: IFR 49
 Architecture: all
 Description: CMake based compilation and packaging tools for BrainVISA projects.
 Priority: optional
-Section: devel
+Section: multiverse/science
 Depends: cmake (>= 2.6)
+
 
 
 

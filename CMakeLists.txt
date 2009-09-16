@@ -15,8 +15,8 @@ function( BRAINVISA_GLOB_AND_FILTER glob variable )
 endfunction()
 
 
-set( PACKAGE_VERSION_MAJOR 1 )
-set( PACKAGE_VERSION_MINOR 0 )
+set( PACKAGE_VERSION_MAJOR 2 )
+set( PACKAGE_VERSION_MINOR 1 )
 set( PACKAGE_VERSION_PATCH 0 )
 
 set( brainvisa-cmake_INSTALL_PREFIX "share/brainvisa-cmake-${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}" )
@@ -62,6 +62,7 @@ configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/debian-control.in"
 set( packageName "${CMAKE_BINARY_DIR}/brainvisa-cmake-${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}.${PACKAGE_VERSION_PATCH}.deb" )
 set( tmpDir "/tmp/brainvisa-cmake_create_deb" )
 add_custom_command( OUTPUT "${packageName}"
+  DEPENDS "${CMAKE_BINARY_DIR}/debian-control"
   COMMENT "Creating package \"${packageName}\""
   COMMAND ${CMAKE_COMMAND} -E remove_directory "${tmpDir}"
   COMMAND ${CMAKE_COMMAND} -E make_directory "${tmpDir}"

@@ -15,8 +15,8 @@ function( BRAINVISA_GLOB_AND_FILTER glob variable )
 endfunction()
 
 
-set( PACKAGE_VERSION_MAJOR 2 )
-set( PACKAGE_VERSION_MINOR 1 )
+set( PACKAGE_VERSION_MAJOR 1 )
+set( PACKAGE_VERSION_MINOR 0 )
 set( PACKAGE_VERSION_PATCH 0 )
 
 set( brainvisa-cmake_INSTALL_PREFIX "share/brainvisa-cmake-${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}" )

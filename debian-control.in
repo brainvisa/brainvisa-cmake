@@ -5,5 +5,7 @@ Architecture: all
 Description: CMake based compilation and packaging tools for BrainVISA projects.
 Priority: optional
 Section: devel
+Depends: cmake (>= 2.6)
+
 
 

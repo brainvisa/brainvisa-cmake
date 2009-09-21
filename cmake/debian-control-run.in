@@ -1,9 +1,9 @@
-Package: @BRAINVISA_PACKAGE_NAME@
+Package: @DEBIAN_PACKAGE_NAME@
 Version: @BRAINVISA_PACKAGE_VERSION@
 Maintainer: @BRAINVISA_PACKAGE_MAINTAINER@
-Architecture: @CMAKE_SYSTEM_PROCESSOR@
+Architecture: @DEBIAN_ARCHITECTURE@
 Description: Test package for component @BRAINVISA_PACKAGE_NAME@ of project @BRAINVISA_PACKAGE_MAIN_PROJECT@
 Priority: optional
-Section: science
+Section: multiverse/science
 Homepage: @BRAINVISA_PACKAGE_HOMEPAGE@
 @DEB_RUN_DEPENDENCIES@

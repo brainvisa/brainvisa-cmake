@@ -1,6 +1,28 @@
 set( BRAINVISA_PACKAGING_TEMPORARY_DIRECTORY "/tmp" CACHE PATH "Temporary directory used to create packages" )
 
+function( GET_DEBIAN_PACKAGE_NAME package_name )
+  string( REPLACE "_" "-" DEBIAN_PACKAGE_NAME "${package_name}" )
+  set( DEBIAN_PACKAGE_NAME "${DEBIAN_PACKAGE_NAME}" PARENT_SCOPE )
+endfunction()
+
+function( GET_DEBIAN_ARCHITECTURE )
+  execute_process( COMMAND apt-config dump RESULT_VARIABLE result OUTPUT_VARIABLE output )
+  if( result GREATER -1 )
+    string( REGEX MATCH "APT::Architecture \"([^;]*)\";" match "${output}" )
+    if( match )
+      set( DEBIAN_ARCHITECTURE ${CMAKE_MATCH_1} PARENT_SCOPE )
+    else()
+      set( DEBIAN_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}" PARENT_SCOPE )
+    endif()
+  else()
+    set( DEBIAN_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}" PARENT_SCOPE )
+  endif()
+endfunction()
+
+
 macro( CREATE_RUN_PACKAGE )
+  GET_DEBIAN_PACKAGE_NAME( ${BRAINVISA_PACKAGE_NAME} )
+  GET_DEBIAN_ARCHITECTURE()
   set( DEB_RUN_DEPENDENCIES )
   if( ${BRAINVISA_PACKAGE_NAME}_DEB_RUN_DEPENDS )
     string( REPLACE ";" "," dependencies "${${BRAINVISA_PACKAGE_NAME}_DEB_RUN_DEPENDS}" )
@@ -42,6 +64,8 @@ endmacro()
 
 
 macro( CREATE_DEV_PACKAGE )
+  GET_DEBIAN_PACKAGE_NAME( ${BRAINVISA_PACKAGE_NAME} )
+  GET_DEBIAN_ARCHITECTURE()
   set( DEB_DEV_DEPENDENCIES )
   if( ${BRAINVISA_PACKAGE_NAME}_DEB_DEV_DEPENDS )
     string( REPLACE ";" "," dependencies "${${BRAINVISA_PACKAGE_NAME}_DEB_DEV_DEPENDS}" )

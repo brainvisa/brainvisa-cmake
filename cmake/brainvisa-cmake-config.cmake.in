@@ -476,7 +476,7 @@ function( BRAINVISA_COPY_FILES component )
           DEPENDS "${_absoluteFile}"
           COMMAND "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
       endif()
-      BRAINVISA_INSTALL( FILES "${_absoluteFile}"
+      BRAINVISA_INSTALL( PROGRAMS "${_absoluteFile}"
                          DESTINATION "${_destination}/${_path}"
                          COMPONENT  ${component} )
       set( _targetDepends ${_targetDepends} "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
@@ -666,7 +666,7 @@ function( BRAINVISA_INSTALL_DIRECTORY directory destination component )
     get_filename_component( path "${file}" PATH )
     get_filename_component( name "${file}" NAME )
     if( EXISTS "${directory}/${path}/${name}" )
-      BRAINVISA_INSTALL( FILES "${directory}/${path}/${name}"
+      BRAINVISA_INSTALL( PROGRAMS "${directory}/${path}/${name}"
         DESTINATION "${destination}/${path}"
         COMPONENT "${component}" )
     else()

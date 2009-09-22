@@ -54,7 +54,7 @@ macro( CREATE_RUN_PACKAGE )
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_tmpDir}"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_tmpDir}/DEBIAN"
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/debian/control-${BRAINVISA_PACKAGE_NAME}-run" "${_tmpDir}/DEBIAN/control"
-    COMMAND ${CMAKE_COMMAND} "-DCMAKE_INSTALL_PREFIX=${_tmpDir}" -DCOMPONENT=${BRAINVISA_PACKAGE_NAME} -P "${CMAKE_BINARY_DIR}/cmake_install.cmake"
+    COMMAND ${CMAKE_COMMAND} "-DCMAKE_INSTALL_PREFIX=${_tmpDir}${CMAKE_INSTALL_PREFIX}" -DCOMPONENT=${BRAINVISA_PACKAGE_NAME} -P "${CMAKE_BINARY_DIR}/cmake_install.cmake"
     COMMAND dpkg --build "${_tmpDir}" "${_packageNameRun}"
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${_tmpDir}"
   )
@@ -97,7 +97,7 @@ macro( CREATE_DEV_PACKAGE )
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_tmpDir}-dev"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_tmpDir}-dev/DEBIAN"
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/debian/control-${BRAINVISA_PACKAGE_NAME}-dev" "${_tmpDir}-dev/DEBIAN/control"
-    COMMAND ${CMAKE_COMMAND} "-DCMAKE_INSTALL_PREFIX=${_tmpDir}-dev" -DCOMPONENT=${BRAINVISA_PACKAGE_NAME}-devel -P "${CMAKE_BINARY_DIR}/cmake_install.cmake"
+    COMMAND ${CMAKE_COMMAND} "-DCMAKE_INSTALL_PREFIX=${_tmpDir}-dev${CMAKE_INSTALL_PREFIX}" -DCOMPONENT=${BRAINVISA_PACKAGE_NAME}-devel -P "${CMAKE_BINARY_DIR}/cmake_install.cmake"
     COMMAND dpkg --build "${_tmpDir}-dev" "${_packageNameDev}"
     COMMAND ${CMAKE_COMMAND} -E remove_directory "${_tmpDir}-dev"
   )

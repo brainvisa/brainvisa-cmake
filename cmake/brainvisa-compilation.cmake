@@ -1,4 +1,4 @@
-
+find_package( brainvisa-cmake REQUIRED )
 
 function( BRAINVISA_READ_COMPONENT_INFOS )
   if( "${ARGV0}" STREQUAL "QUIET" )
@@ -123,7 +123,26 @@ function( BRAINVISA_READ_COMPONENT_INFOS )
   endforeach()
 endfunction()
 
+
 set( CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_BINARY_DIR}" )
+
+#---------------------------------------------
+if( DEFINED BRAINVISA_NEW_COMPILATION_SYSTEM )
+#---------------------------------------------
+  
+  message( "Using experimental new compilation system" )
+  include( "${brainvisa-cmake_DIR}/brainvisa-projects.cmake" )
+  set( BRAINVISA_ALL_COMPONENTS )
+  message( "BRAINVISA_ALL_PROJECTS = ${BRAINVISA_ALL_PROJECTS}" )
+  foreach( project ${BRAINVISA_ALL_PROJECTS} )
+    set( BRAINVISA_ALL_COMPONENTS ${BRAINVISA_ALL_COMPONENTS} ${BRAINVISA_ALL_COMPONENTS_${project}} )
+  endforeach()
+  message( "BRAINVISA_ALL_COMPONENTS = ${BRAINVISA_ALL_COMPONENTS}" )
+
+
+#-----------------------------------------------
+else( DEFINED BRAINVISA_NEW_COMPILATION_SYSTEM )
+#-----------------------------------------------
 
 set( stropProcessing FALSE )
 if( NOT DEFINED BRAINVISA_SOURCES )
@@ -267,3 +286,7 @@ endif()
 if( BRAINVISA_DEPENDENCY_GRAPH )
   file( APPEND "${BRAINVISA_DEPENDENCY_GRAPH}" "}\n" )
 endif()
+
+#------------------------------------------------
+endif( DEFINED BRAINVISA_NEW_COMPILATION_SYSTEM )
+#------------------------------------------------

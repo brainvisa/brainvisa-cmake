@@ -118,7 +118,7 @@ REM #---------------------------------------------------------------------------
 REM # get os id
 REM #------------------------------------------------------------------------------
 setlocal
-call :i2bm_pathvar_find "%BRAINVISA_SOURCES%" "development\build-config\%SOMA_VERSION%\systemIdentification"
+call :i2bm_pathvar_find "%BRAINVISA_SOURCES%" "development\build-config\trunk\systemIdentification"
 set scriptpath=%result%
 set result=""
 for /F "usebackq delims==" %%i in (`python.exe %scriptpath%`) do (

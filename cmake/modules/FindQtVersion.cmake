@@ -7,6 +7,8 @@ if( NOT DEFINED QT_VERSION )
   if( output AND result EQUAL 0 )
     string( REGEX REPLACE ".*Using Qt version ([^ ]*) in.*" "\\1" QT_VERSION "${output}" )
     set( QT_VERSION "${QT_VERSION}" CACHE STRING "Full version of Qt (e.g \"4.3.1\")." )
+  else()
+    message( "Cannot find Qt version: ${result} \"${output}\"" )
   endif()
 endif()
 

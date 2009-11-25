@@ -1063,24 +1063,24 @@ function( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
   string( TOUPPER "${PROJECT_NAME}" PROJECT_NAME_UPPER )
   set( _prefixForCmakeFiles "share/${PROJECT_NAME}-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}/cmake" )
   configure_file( cmake/${PROJECT_NAME}-config.cmake.in
-                  "${_prefixForCmakeFiles}/${PROJECT_NAME}-config.cmake" 
+                  "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config.cmake" 
                   @ONLY )
   if( EXISTS "${BRAINVISA_SOURCES_${PROJECT_NAME}}/cmake/${PROJECT_NAME}-config-version.cmake.in" )
     configure_file( "${BRAINVISA_SOURCES_${PROJECT_NAME}}/cmake/${PROJECT_NAME}-config-version.cmake.in"
-                    "${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake" 
+                    "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake" 
                     @ONLY )
   else()
     configure_file( "${brainvisa-cmake_DIR}/brainvisa-cmake-config-version.cmake.in"
-                    "${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake" 
+                    "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake" 
                     @ONLY )
   endif()
   if( EXISTS "${BRAINVISA_SOURCES_${PROJECT_NAME}}/cmake/${PROJECT_NAME}-use.cmake.in" )
     configure_file( "${BRAINVISA_SOURCES_${PROJECT_NAME}}/cmake/${PROJECT_NAME}-use.cmake.in"
-                    "${_prefixForCmakeFiles}/${PROJECT_NAME}-use.cmake" 
+                    "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-use.cmake" 
                     @ONLY )
   else()
     configure_file( "${brainvisa-cmake_DIR}/default-use.cmake.in"
-                    "${_prefixForCmakeFiles}/${PROJECT_NAME}-use.cmake" 
+                    "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-use.cmake" 
                     @ONLY )
   endif()
   BRAINVISA_INSTALL( FILES

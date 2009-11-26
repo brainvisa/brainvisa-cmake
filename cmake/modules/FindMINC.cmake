@@ -17,47 +17,43 @@ ENDIF( MINC_FIND_QUIETLY )
 
 IF( NETCDF_FOUND AND HDF5_FOUND )
 
-set( _includeDirectories
-  "${MINC_DIR}/include"
-  /usr/local/include
-  /usr/include
+set( _directories
+  "${MINC_DIR}"
 )
-set( _libraryDirectories
-  "${MINC_DIR}/lib"
-  /usr/local/lib
-  /usr/lib
+set( _librarySuffixes
+  lib
+  minc/lib
 )
-set( _pathSuffixes
-  "minc/include"
-  "minc/lib"
+set( _includeSuffixes
+  include
+  minc/include
 )
 
 find_path( MINC_INCLUDE_DIR minc.h
-    ${_includeDirectories}
-    PATH_SUFFIXES ${_pathSuffixes}
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
 )
 
-
 find_library( MINC_minc_LIBRARY minc
-  ${_libraryDirectories}
-  PATH_SUFFIXES ${_pathSuffixes}
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_librarySuffixes}
 )
 if( NOT MINC_minc_LIBRARY )
   find_library( MINC_minc_LIBRARY minc2
-    ${_libraryDirectories}
-    PATH_SUFFIXES ${_pathSuffixes}
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_librarySuffixes}
   )
 endif( NOT MINC_minc_LIBRARY )
 
 
 find_library( MINC_volumeio_LIBRARY volume_io
-  ${_libraryDirectories}
-  PATH_SUFFIXES ${_pathSuffixes}
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_librarySuffixes}
 )
 if( NOT MINC_volumeio_LIBRARY )
   find_library( MINC_volumeio_LIBRARY volume_io2
-    ${_libraryDirectories}
-    PATH_SUFFIXES ${_pathSuffixes}
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_librarySuffixes}
   )
 endif( NOT MINC_volumeio_LIBRARY )
 

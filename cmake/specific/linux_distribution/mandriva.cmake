@@ -1,0 +1,7 @@
+message( STATUS "Add specific paths for Mandriva distribution" )
+if( DESIRED_QT_VERSION EQUAL 4 AND NOT ENV{QTDIR} AND IS_DIRECTORY /usr/lib/qt4 )
+  list( FIND CMAKE_PREFIX_PATH /usr/lib/qt4 _result )
+  if( _result EQUAL -1 )
+    set( CMAKE_PREFIX_PATH /usr/lib/qt4 ${CMAKE_PREFIX_PATH} )
+  endif()
+endif()

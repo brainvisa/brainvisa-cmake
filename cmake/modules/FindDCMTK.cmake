@@ -15,114 +15,111 @@
 # Hacked again by Yann Cointepas
 
 
-set( _includeDirectories
-  "${DCMTK_DIR}/include"
-  /usr/local/include
-  /usr/include
+set( _directories
+  "${DCMTK_DIR}"
 )
-set( _libraryDirectories
-  "${DCMTK_DIR}/lib"
-  /usr/local/lib
-  /usr/lib
+  
+set( _includeSuffixes
+  include
+  dcmtk/include
 )
-set( _pathSuffixes
-  "dcmtk/include"
-  "dcmtk/lib"
+set( _librarySuffixes
+  lib
+  dcmtk/lib
 )
 
-If( NOT DCMTK_PRE_353 )
-  FIND_PATH( DCMTK_config_INCLUDE_DIR dcmtk/config/osconfig.h
-    ${_includeDirectories}
-    PATH_SUFFIXES ${_pathSuffixes}
+if( NOT DCMTK_PRE_353 )
+  find_path( DCMTK_config_INCLUDE_DIR dcmtk/config/osconfig.h
+    ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
   )
-ENDIF( NOT DCMTK_PRE_353 )
+endif()
 
-IF( NOT DCMTK_config_INCLUDE_DIR OR DCMTK_PRE_353 )
+if( NOT DCMTK_config_INCLUDE_DIR OR DCMTK_PRE_353 )
   # For DCMTK <= 3.5.3
-  FIND_PATH( DCMTK_config_INCLUDE_DIR osconfig.h
-    ${_includeDirectories}
-    PATH_SUFFIXES ${_pathSuffixes}
+  find_path( DCMTK_config_INCLUDE_DIR osconfig.h
+    ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
   )
-  IF( DCMTK_config_INCLUDE_DIR )
-    SET( DCMTK_PRE_353 TRUE CACHE STRING
+  if( DCMTK_config_INCLUDE_DIR )
+    set( DCMTK_PRE_353 TRUE CACHE STRING
       "if DcmTk version is older or equal to  3.5.3" )
     mark_as_advanced( DCMTK_PRE_353 )
-  ENDIF( DCMTK_config_INCLUDE_DIR )
-ELSE( NOT DCMTK_config_INCLUDE_DIR )
-ENDIF( NOT DCMTK_config_INCLUDE_DIR OR DCMTK_PRE_353 )
+  endif( DCMTK_config_INCLUDE_DIR )
+endif()
 
-IF( DCMTK_PRE_353 )
+if( DCMTK_PRE_353 )
   # For DCMTK <= 3.5.3
 
-  FIND_PATH( DCMTK_ofstd_INCLUDE_DIR ofstd/ofstdinc.h
-    ${_includeDirectories}
-    PATH_SUFFIXES ${_pathSuffixes}
+  find_path( DCMTK_ofstd_INCLUDE_DIR ofstd/ofstdinc.h
+    ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
   )
 
-  FIND_PATH( DCMTK_dcmdata_INCLUDE_DIR dcmdata/dctypes.h
-    ${_includeDirectories}
-    PATH_SUFFIXES ${_pathSuffixes}
+  find_path( DCMTK_dcmdata_INCLUDE_DIR dcmdata/dctypes.h
+    ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
   )
 
-  FIND_PATH( DCMTK_dcmimgle_INCLUDE_DIR dcmimgle/dcmimage.h
-    ${_includeDirectories}
-    PATH_SUFFIXES ${_pathSuffixes}
+  find_path( DCMTK_dcmimgle_INCLUDE_DIR dcmimgle/dcmimage.h
+    ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
   )
 
-ELSE( DCMTK_PRE_353 )
+else()
   # For DCMTK >= 3.5.4
 
-  FIND_PATH( DCMTK_ofstd_INCLUDE_DIR dcmtk/ofstd/ofstdinc.h
-    ${_includeDirectories}
-    PATH_SUFFIXES ${_pathSuffixes}
+  find_path( DCMTK_ofstd_INCLUDE_DIR dcmtk/ofstd/ofstdinc.h
+    ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
   )
 
 
-  FIND_PATH( DCMTK_dcmdata_INCLUDE_DIR dcmtk/dcmdata/dctypes.h
-    ${_includeDirectories}
-    PATH_SUFFIXES ${_pathSuffixes}
+  find_path( DCMTK_dcmdata_INCLUDE_DIR dcmtk/dcmdata/dctypes.h
+    ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
   )
 
-  FIND_PATH( DCMTK_dcmimgle_INCLUDE_DIR dcmtk/dcmimgle/dcmimage.h
-    ${_includeDirectories}
-    PATH_SUFFIXES ${_pathSuffixes}
+  find_path( DCMTK_dcmimgle_INCLUDE_DIR dcmtk/dcmimgle/dcmimage.h
+    ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
   )
 
-ENDIF( DCMTK_PRE_353 )
+endif()
 
-FIND_LIBRARY( DCMTK_ofstd_LIBRARY ofstd
+find_library( DCMTK_ofstd_LIBRARY ofstd
+    ${_directories}
+    PATH_SUFFIXES ${_librarySuffixes}
+)
+
+find_library( DCMTK_dcmdata_LIBRARY dcmdata
+    ${_directories}
+    PATH_SUFFIXES ${_librarySuffixes}
+)
+
+find_library( DCMTK_dcmimgle_LIBRARY dcmimgle
+    ${_directories}
+    PATH_SUFFIXES ${_librarySuffixes}
+)
+
+find_library(DCMTK_imagedb_LIBRARY imagedb
   ${_libraryDirectories}
   PATH_SUFFIXES ${_pathSuffixes}
 )
 
-FIND_LIBRARY( DCMTK_dcmdata_LIBRARY dcmdata
-  ${_libraryDirectories}
-  PATH_SUFFIXES ${_pathSuffixes}
-)
-
-FIND_LIBRARY( DCMTK_dcmimgle_LIBRARY dcmimgle
-  ${_libraryDirectories}
-  PATH_SUFFIXES ${_pathSuffixes}
-)
-
-FIND_LIBRARY(DCMTK_imagedb_LIBRARY imagedb
-  ${_libraryDirectories}
-  PATH_SUFFIXES ${_pathSuffixes}
-)
-
-FIND_LIBRARY(DCMTK_dcmnet_LIBRARY dcmnet
-  ${_libraryDirectories}
-  PATH_SUFFIXES ${_pathSuffixes}
+find_library(DCMTK_dcmnet_LIBRARY dcmnet
+    ${_directories}
+    PATH_SUFFIXES ${_librarySuffixes}
 )
 
 
-IF( DCMTK_config_INCLUDE_DIR )
-IF( DCMTK_ofstd_INCLUDE_DIR )
-IF( DCMTK_ofstd_LIBRARY )
-IF( DCMTK_dcmdata_INCLUDE_DIR )
-IF( DCMTK_dcmdata_LIBRARY )
-IF( DCMTK_dcmimgle_INCLUDE_DIR )
-IF( DCMTK_dcmimgle_LIBRARY )
+if( DCMTK_config_INCLUDE_DIR AND
+    DCMTK_ofstd_INCLUDE_DIR AND
+    DCMTK_ofstd_LIBRARY AND
+    DCMTK_dcmdata_INCLUDE_DIR AND
+    DCMTK_dcmdata_LIBRARY AND
+    DCMTK_dcmimgle_INCLUDE_DIR AND
+    DCMTK_dcmimgle_LIBRARY )
 
   SET( DCMTK_FOUND "YES" )
   IF( DCMTK_PRE_353 )
@@ -177,14 +174,7 @@ IF( DCMTK_dcmimgle_LIBRARY )
     SET( DCMTK_LIBRARIES ${DCMTK_LIBRARIES} netapi32 )
   ENDIF( WIN32 )
 
-ENDIF( DCMTK_dcmimgle_LIBRARY )
-ENDIF( DCMTK_dcmimgle_INCLUDE_DIR )
-ENDIF( DCMTK_dcmdata_LIBRARY )
-ENDIF( DCMTK_dcmdata_INCLUDE_DIR )
-ENDIF( DCMTK_ofstd_LIBRARY )
-ENDIF( DCMTK_ofstd_INCLUDE_DIR )
-ENDIF( DCMTK_config_INCLUDE_DIR )
-
+endif()
 
 if( DCMTK_FOUND )
   if( NOT DCMTK_FIND_QUIETLY )

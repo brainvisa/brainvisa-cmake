@@ -1,7 +1,10 @@
 # Defines QT_VERSION that contains full version of Qt (e.g "4.3.1").
 if( NOT DEFINED QT_VERSION )
-  find_package( Qt REQUIRED QUIET )
-  execute_process( COMMAND "${QT_QMAKE_EXECUTABLE_FINDQT}" "-v"
+  if( NOT DESIRED_QT_VERSION )
+    find_package( Qt REQUIRED QUIET )
+  endif()
+  find_package( Qt${DESIRED_QT_VERSION} REQUIRED QUIET )
+  execute_process( COMMAND "${QT_QMAKE_EXECUTABLE}" "-v"
     OUTPUT_VARIABLE output ERROR_VARIABLE output
     RESULT_VARIABLE result )
   if( output AND result EQUAL 0 )

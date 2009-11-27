@@ -1,8 +1,8 @@
-Package: @DEBIAN_PACKAGE_NAME@-dev
-Version: @BRAINVISA_PACKAGE_VERSION@
-Maintainer: @BRAINVISA_PACKAGE_MAINTAINER@
-Architecture: @DEBIAN_ARCHITECTURE@
-Description: Test development package for component @BRAINVISA_PACKAGE_NAME@ of project @BRAINVISA_PACKAGE_MAIN_PROJECT@
+Package: @package_name@-dev
+Version: @package_version@
+Maintainer: @package_maintainer@
+Architecture: @architecture@
+Description: Test development package for component @package_name@
 Priority: optional
 Section: multiverse/science
 @DEB_DEV_DEPENDENCIES@

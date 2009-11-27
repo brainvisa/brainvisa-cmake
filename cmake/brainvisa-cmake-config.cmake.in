@@ -1,47 +1,51 @@
 cmake_policy( SET CMP0011 NEW )
 cmake_policy( SET CMP0009 NEW )
 
-# Include code specific to a platform or site
-if( EXISTS /etc/mandriva-release )
-  include( "${brainvisa-cmake_DIR}/specific/linux_distribution/mandriva.cmake" )
-elseif( EXISTS /etc/lsb-release )
-  file( READ /etc/lsb-release _x )
-  string( REGEX MATCH Ubuntu _x "${_x}" )
-  if( _x )
-    include( "${brainvisa-cmake_DIR}/specific/linux_distribution/ubuntu.cmake" )
-  endif()
-endif()
-file( GLOB _files "${brainvisa-cmake_DIR}/specific/*.cmake" )
-foreach( _file ${_files} )
-  include( "${_file}" )
-endforeach()
-
-set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${brainvisa-cmake_DIR}/modules" )
-if( WIN32 AND CMAKE_CROSSCOMPILING )
-  link_directories( "${BRAINVISA_CROSSCOMPILATION_DIR}/windows/lib" "${BRAINVISA_CROSSCOMPILATION_DIR}/windows/bin" )
-endif( WIN32 AND CMAKE_CROSSCOMPILING )
-
-# Requires CPack for its argument parsing macro
-include( CPack )
-
-# Initialize default package type
-option( BRAINVISA_PACKAGING "Create rules for packaging" OFF )
-mark_as_advanced( BRAINVISA_PACKAGING )
-set( BRAINVISA_PACKAGE_TYPE "deb" CACHE STRING "Type of package to create. Possible values are \"deb\" or \"tar.bz2\"." )
-mark_as_advanced( BRAINVISA_PACKAGE_TYPE )
-if( BRAINVISA_PACKAGING )
-  if( NOT DEFINED BRAINVISA_PACKAGE_SUFFIX )
-    execute_process( COMMAND systemIdentification 
-      OUTPUT_VARIABLE output OUTPUT_STRIP_TRAILING_WHITESPACE
-      RESULT_VARIABLE result )
-    if( output AND result EQUAL 0 )
-      set( BRAINVISA_PACKAGE_SUFFIX "${output}" )
-    else()
-      set( BRAINVISA_PACKAGE_SUFFIX "${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}" )
+if( NOT BRAINVISA_CMAKE_CONFIG_DONE )
+  set( BRAINVISA_CMAKE_CONFIG_DONE YES )
+  
+  # Include code specific to a platform or site
+  if( EXISTS /etc/mandriva-release )
+    include( "${brainvisa-cmake_DIR}/specific/linux_distribution/mandriva.cmake" )
+  elseif( EXISTS /etc/lsb-release )
+    file( READ /etc/lsb-release _x )
+    string( REGEX MATCH Ubuntu _x "${_x}" )
+    if( _x )
+      include( "${brainvisa-cmake_DIR}/specific/linux_distribution/ubuntu.cmake" )
     endif()
-    set( BRAINVISA_PACKAGE_SUFFIX "${BRAINVISA_PACKAGE_SUFFIX}" CACHE STRING "Suffix for system identification in generated packages name" )
   endif()
-  include( "${brainvisa-cmake_DIR}/packaging-${BRAINVISA_PACKAGE_TYPE}.cmake" )
+  file( GLOB _files "${brainvisa-cmake_DIR}/specific/*.cmake" )
+  foreach( _file ${_files} )
+    include( "${_file}" )
+  endforeach()
+  
+  set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${brainvisa-cmake_DIR}/modules" )
+  if( WIN32 AND CMAKE_CROSSCOMPILING )
+    link_directories( "${BRAINVISA_CROSSCOMPILATION_DIR}/windows/lib" "${BRAINVISA_CROSSCOMPILATION_DIR}/windows/bin" )
+  endif( WIN32 AND CMAKE_CROSSCOMPILING )
+  
+  # Requires CPack for its argument parsing macro
+  include( CPack )
+  
+  # Initialize default package type
+  option( BRAINVISA_PACKAGING "Create rules for packaging" ON )
+  mark_as_advanced( BRAINVISA_PACKAGING )
+  set( BRAINVISA_PACKAGE_TYPE "deb" CACHE STRING "Type of package to create. Possible values are \"deb\" or \"tar.bz2\"." )
+  mark_as_advanced( BRAINVISA_PACKAGE_TYPE )
+  if( BRAINVISA_PACKAGING )
+    if( NOT DEFINED BRAINVISA_PACKAGING_SUFFIX )
+      execute_process( COMMAND systemIdentification 
+        OUTPUT_VARIABLE output OUTPUT_STRIP_TRAILING_WHITESPACE
+        RESULT_VARIABLE result )
+      if( output AND result EQUAL 0 )
+        set( BRAINVISA_PACKAGING_SUFFIX "${output}" )
+      else()
+        set( BRAINVISA_PACKAGING_SUFFIX "${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}" )
+      endif()
+      set( BRAINVISA_PACKAGING_SUFFIX "${BRAINVISA_PACKAGING_SUFFIX}" CACHE STRING "Suffix for system identification in generated packages name" )
+    endif()
+    include( "${brainvisa-cmake_DIR}/packaging-${BRAINVISA_PACKAGE_TYPE}.cmake" )
+  endif()
 endif()
 
 # 
@@ -127,7 +131,7 @@ endmacro( BRAINVISA_PROJECT )
 function( BRAINVISA_CREATE_MAIN_COMPONENTS )
   if( NOT BRAINVISA_MAIN_COMPONENTS_CREATED )
     set( BRAINVISA_MAIN_COMPONENTS_CREATED true PARENT_SCOPE )
-    unset( BRAINVISA_EXTERNAL_COMPONENTS CACHE )
+    unset( BRAINVISA_THIRDPARTY_COMPONENTS CACHE )
     BRAINVISA_ADD_COMPONENT_GROUP( runtime
                                    DISPLAY_NAME "Runtime"
                                    DESCRIPTION "All elements necessary to use ${PROJECT_NAME} at runtime without developpement files such as C++ headers." )
@@ -198,82 +202,78 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
       set( sourceNodeLabel "${BRAINVISA_PACKAGE_NAME}" )
     else()
        set( sourceNodeLabel  )
-#      string( TOLOWER "${pack_type}" sourceNodeLabel )
-#      set( sourceNodeLabel "${BRAINVISA_PACKAGE_NAME}-${sourceNodeLabel}" )
     endif()
     if( "${component_pack_type}" STREQUAL "RUN" )
       set( destNodeLabel "${component}" )
     else()
       set( destNodeLabel )
-#      string( TOLOWER "${pack_type}" destNodeLabel )
-#      set( destNodeLabel "${component}-${destNodeLabel}" )
     endif()
   endif()
 
   # Check if component is external or not
   list( FIND BRAINVISA_COMPONENTS "${component}" result )
   if( result EQUAL -1 )
-    # Component is not in BRAINVISA_COMPONENTS, it is considered as an external component
+    # Component is not in BRAINVISA_COMPONENTS, it is considered as a third party component
     set( destNodeAttributes ", color=orange" )
     if( BRAINVISA_PACKAGING )
-      if( EXISTS "${brainvisa-cmake_DIR}/brainvisa-packaging-${BRAINVISA_PACKAGE_TYPE}-${component}.cmake" )
-        include( "${brainvisa-cmake_DIR}/brainvisa-packaging-${BRAINVISA_PACKAGE_TYPE}-${component}.cmake" )
-        if( "${component_pack_type}" STREQUAL "RUN" )
-          BRAINVISA_PACKAGING_RUN( "${pack_type}" "${dependency_type}" "${component}" "${component_pack_type}" "${version_ranges}" "${binary_independent}" )
-        elseif( "${component_pack_type}" STREQUAL "DEV" )
-          BRAINVISA_PACKAGING_DEV( "${pack_type}" "${dependency_type}" "${component}" "${component_pack_type}" "${version_ranges}" "${binary_independent}" )
-        elseif( "${component_pack_type}" STREQUAL "DOC" )
-          BRAINVISA_PACKAGING_DOC( "${pack_type}" "${dependency_type}" "${component}" "${component_pack_type}" "${version_ranges}" "${binary_independent}" )
-        elseif( "${component_pack_type}" STREQUAL "DEVDOC" )
-          BRAINVISA_PACKAGING_DEVDOC( "${pack_type}" "${dependency_type}" "${component}" "${component_pack_type}" "${version_ranges}" "${binary_independent}" )
-        elseif( "${component_pack_type}" STREQUAL "SRC" )
-          BRAINVISA_PACKAGING_SRC( "${pack_type}" "${dependency_type}" "${component}" "${component_pack_type}" "${version_ranges}" "${binary_independent}" )
+      # Check if third party component has already been considered for packaging
+      list( FIND BRAINVISA_THIRDPARTY_COMPONENTS "${component}" result )
+      if( result EQUAL -1 )
+        set( BRAINVISA_THIRDPARTY_COMPONENTS "${BRAINVISA_THIRDPARTY_COMPONENTS}" "${component}" CACHE INTERNAL "" )
+        if( EXISTS "${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake" )
+          include( "${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake" )
+          # Get component information
+          BRAINVISA_PACKAGING_COMPONENT_INFO( package_name package_maintainer package_version )
+          
+          # Package type specific initialization for component
+          BRAINVISA_PACKAGING_INITIALIZE_THIRDPARTY_COMPONENT( ${component} "${package_name}" "${package_maintainer}" "${package_version}" )
+          
+          # Call component specific functions that create install rules
+          BRAINVISA_PACKAGING_COMPONENT_RUN( "${component}" )
+          BRAINVISA_PACKAGING_COMPONENT_DEV( "${component}" )
+          BRAINVISA_PACKAGING_COMPONENT_DOC( "${component}" )
+          BRAINVISA_PACKAGING_COMPONENT_DEVDOC( "${component}" )
+          BRAINVISA_PACKAGING_COMPONENT_SRC( "${component}" )
+          
+          # Third party components packaging rules can be created immediately because
+          # their dependencies are fixed
+          if( "${component_pack_type}" STREQUAL "RUN" )
+            BRAINVISA_CREATE_RUN_PACKAGE( ${component} "${package_name}" "${package_maintainer}" "${package_version}" )
+          elseif( "${component_pack_type}" STREQUAL "DEV" )
+            BRAINVISA_CREATE_DEV_PACKAGE( ${component} "${package_name}" "${package_maintainer}" "${package_version}" )
+          elseif( "${component_pack_type}" STREQUAL "SRC" )
+            BRAINVISA_CREATE_SRC_PACKAGE( ${component} "${package_name}" "${package_maintainer}" "${package_version}" )
+          elseif( "${component_pack_type}" STREQUAL "DOC" )
+            BRAINVISA_CREATE_DOC_PACKAGE( ${component} "${package_name}" "${package_maintainer}" "${package_version}" )
+          elseif( "${component_pack_type}" STREQUAL "DEVDOC" )
+            BRAINVISA_CREATE_DEVDOC_PACKAGE( ${component} "${package_name}" "${package_maintainer}" "${package_version}" )
+          else()
+            message( SEND_ERROR "Unknown component package type \"${component_pack_type}\"" )
+          endif()
         endif()
-      else()
-        # Default behavior to allow adding dependencies on extenal components even if the file for packaging this component does not exists.
-         if( "${component_pack_type}" STREQUAL "RUN" )
-           set( deb_package "${component}" )
-           set( deb_version_ranges "${version_ranges}" )
-        elseif( "${component_pack_type}" STREQUAL "DEV" )
-           set( deb_package "${component}-dev" )
-           set( deb_version_ranges "${version_ranges}" )
-        endif()
+      
       endif()
     endif()
   else()
     # Component is a brainvisa-cmake component
     set( destNodeAttributes )
     if( BRAINVISA_PACKAGING )
-      if( "${BRAINVISA_PACKAGE_TYPE}" STREQUAL "deb" )
-        unset( deb_package )
-        unset( deb_version_ranges )
-        if( "${component_pack_type}" STREQUAL "RUN" )
-          set( deb_package "${component}" )
-        elseif( "${component_pack_type}" STREQUAL "DEV" )
-          set( deb_package "${component}-dev" )
-        elseif( "${component_pack_type}" STREQUAL "SRC" )
-          set( deb_package "${component}-src" )
-        elseif( "${component_pack_type}" STREQUAL "DOC" )
-          set( deb_package "${component}-doc" )
-        elseif( "${component_pack_type}" STREQUAL "DEVDOC" )
-          set( deb_package "${component}-dev-doc" )
-        else()
-          message( SEND_ERROR "Unknown component package type \"${component_pack_type}\"" )
-        endif()
-      endif()
-      set( deb_version_ranges "${version_ranges}" )
+      # Call package type specific code to handle dependencies
+      BRAINVISA_PACKAGING_DEPENDENCY( ${pack_type} ${dependency_type} ${component} ${component_pack_type}  )
     endif()
     
-    # Reorder BRAINVISA_COMPONENTS to be sure that all dependencies of a 
-    # component are configured before configuring the component itself.
-    list( FIND BRAINVISA_COMPONENTS "${BRAINVISA_PACKAGE_NAME}" indexSource )
-    list( FIND BRAINVISA_COMPONENTS "${component}" indexDest )
-    if( indexDest GREATER ${indexSource} )
-      list( REMOVE_AT BRAINVISA_COMPONENTS ${indexDest} )
-      list( INSERT BRAINVISA_COMPONENTS ${indexSource} "${component}" )
-      set( BRAINVISA_COMPONENTS "${BRAINVISA_COMPONENTS}" CACHE STRING "" FORCE )
-      set( _BRAINVISA_COMPONENTS "${BRAINVISA_COMPONENTS}" CACHE INTERNAL "" )
-    endif()
+    
+#     # Reorder BRAINVISA_COMPONENTS to be sure that all dependencies of a 
+#     # component are configured before configuring the component itself.
+#     list( FIND BRAINVISA_COMPONENTS "${BRAINVISA_PACKAGE_NAME}" indexSource )
+#     list( FIND BRAINVISA_COMPONENTS "${component}" indexDest )
+#     if( indexDest GREATER ${indexSource} )
+#       list( REMOVE_AT BRAINVISA_COMPONENTS ${indexDest} )
+#       list( INSERT BRAINVISA_COMPONENTS ${indexSource} "${component}" )
+#       set( BRAINVISA_COMPONENTS "${BRAINVISA_COMPONENTS}" CACHE STRING "" FORCE )
+#       set( _BRAINVISA_COMPONENTS "${BRAINVISA_COMPONENTS}" CACHE INTERNAL "" )
+#     endif()
+  
   endif()
 
   if( BRAINVISA_DEPENDENCY_GRAPH )
@@ -300,20 +300,6 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
         file( APPEND "${BRAINVISA_DEPENDENCY_GRAPH}" "${sourceNode} -> ${destNode} [ color=blue ]\n" )
       endif()
     endif()
-  endif()
-  
-  if( BRAINVISA_PACKAGING )
-    if( "${BRAINVISA_PACKAGE_TYPE}" STREQUAL "deb" )
-      # Add deb dependency to the appropriate variable
-      if ( deb_version_ranges )
-        foreach( range ${deb_version_ranges} )
-          set( ${PROJECT_NAME}_DEB_${pack_type}_${dependency_type} ${${PROJECT_NAME}_DEB_${pack_type}_${dependency_type}} "${deb_package}( ${range} )" )
-        endforeach()
-      else()
-        set( ${PROJECT_NAME}_DEB_${pack_type}_${dependency_type} ${${PROJECT_NAME}_DEB_${pack_type}_${dependency_type}} "${deb_package}" )
-      endif()
-    endif()
-    set( ${PROJECT_NAME}_DEB_${pack_type}_${dependency_type} "${${PROJECT_NAME}_DEB_${pack_type}_${dependency_type}}" CACHE STRING INTERNAL FORCE )
   endif()
 endfunction()
 
@@ -1086,12 +1072,13 @@ function( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
           COMPONENT ${PROJECT_NAME}-devel )
 
   if( BRAINVISA_PACKAGING )
+    # TODO
     # Create packaging rules
-    CREATE_RUN_PACKAGE()
-    CREATE_DEV_PACKAGE()
-    CREATE_DOC_PACKAGE()
-    CREATE_DEVDOC_PACKAGE()
-    CREATE_SRC_PACKAGE()
+#     CREATE_RUN_PACKAGE()
+#     CREATE_DEV_PACKAGE()
+#     CREATE_DOC_PACKAGE()
+#     CREATE_DEVDOC_PACKAGE()
+#     CREATE_SRC_PACKAGE()
   endif()
 endfunction()
 

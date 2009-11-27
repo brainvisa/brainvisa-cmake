@@ -149,6 +149,11 @@ if( stop )
   return()
 endif()
 
+
+if( BRAINVISA_PACKAGING )
+  set( BRAINVISA_THIRDPARTY_COMPONENTS "" CACHE INTERNAL "" )
+endif()
+
 BRAINVISA_CREATE_MAIN_COMPONENTS()
   
 foreach( component ${BRAINVISA_COMPONENTS} )
@@ -162,7 +167,6 @@ endforeach()
 if( BRAINVISA_PACKAGING )
   set( runPackages )
   set( devPackages )
-#   foreach( component ${BRAINVISA_COMPONENTS} ${BRAINVISA_EXTERNAL_COMPONENTS} )
   foreach( component ${BRAINVISA_COMPONENTS} )
     set( runPackages ${runPackages} "${component}-package-run" )
     set( devPackages ${devPackages} "${component}-package-dev" )
@@ -171,8 +175,12 @@ if( BRAINVISA_PACKAGING )
   add_dependencies( packages-run ${runPackages} )
   add_custom_target( packages-dev )
   add_dependencies( packages-dev ${devPackages} )
+  
+  add_custom_target( brainvisa-packages )
+  add_custom_target( thirdparty-packages )
+  add_dependencies( brainvisa-packages packages-run packages-dev )
   add_custom_target( packages )
-  add_dependencies( packages packages-run packages-dev )
+  add_dependencies( packages brainvisa-packages thirdparty-packages )
 endif()
 
 if( BRAINVISA_DEPENDENCY_GRAPH )

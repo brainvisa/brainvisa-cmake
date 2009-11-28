@@ -250,6 +250,8 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
           else()
             message( SEND_ERROR "Unknown component package type \"${component_pack_type}\"" )
           endif()
+        else()
+          message( "WARNING: Impossible to package third party component ${component} because file \"${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake\" does not exist." )
         endif()
       
       endif()

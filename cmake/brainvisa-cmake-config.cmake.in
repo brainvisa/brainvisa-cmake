@@ -91,14 +91,7 @@ macro( BRAINVISA_PROJECT )
     set( BRAINVISA_PACKAGE_VERSION "${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}.${BRAINVISA_PACKAGE_VERSION_PATCH}" )
   endif()
 
-  # Get optional arguments for the brainvisa project
-  IF ( ${ARGC} EQUAL 0 )
-    SET( BRAINVISA_PROJECT_LANGUAGES CXX )
-  ELSE ( ${ARGC} EQUAL 0 )
-    SET( BRAINVISA_PROJECT_LANGUAGES ${ARGN} )
-  ENDIF ( ${ARGC} EQUAL 0 )
-
-  project( ${BRAINVISA_PACKAGE_NAME} ${BRAINVISA_PROJECT_LANGUAGES} )
+  project( ${BRAINVISA_PACKAGE_NAME} ${ARGN} )
   
   set( ${PROJECT_NAME}_VERSION_MAJOR ${BRAINVISA_PACKAGE_VERSION_MAJOR} )
   set( ${PROJECT_NAME}_VERSION_MINOR ${BRAINVISA_PACKAGE_VERSION_MINOR} )
@@ -146,6 +139,25 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
     add_dependencies( install-doc doc )
     add_custom_target( install-nodoc )
     add_dependencies( install-nodoc install-runtime install-devel )
+
+    if( BRAINVISA_PACKAGING )
+      set( runPackages )
+      set( devPackages )
+      foreach( component ${BRAINVISA_COMPONENTS} )
+        set( runPackages ${runPackages} "${component}-package-run" )
+        set( devPackages ${devPackages} "${component}-package-dev" )
+      endforeach()
+      add_custom_target( packages-run )
+      add_dependencies( packages-run ${runPackages} )
+      add_custom_target( packages-dev )
+      add_dependencies( packages-dev ${devPackages} )
+      
+      add_custom_target( brainvisa-packages )
+      add_custom_target( thirdparty-packages )
+      add_dependencies( brainvisa-packages packages-run packages-dev )
+      add_custom_target( packages )
+      add_dependencies( packages brainvisa-packages thirdparty-packages )
+    endif()
 
   endif( NOT BRAINVISA_MAIN_COMPONENTS_CREATED )
 
@@ -222,6 +234,7 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
         set( BRAINVISA_THIRDPARTY_COMPONENTS "${BRAINVISA_THIRDPARTY_COMPONENTS}" "${component}" CACHE INTERNAL "" )
         if( EXISTS "${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake" )
           include( "${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake" )
+          message( STATUS "Packaging rules for ${component}" )
           # Get component information
           BRAINVISA_PACKAGING_COMPONENT_INFO( package_name package_maintainer package_version )
           
@@ -239,8 +252,10 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
           # their dependencies are fixed
           if( "${component_pack_type}" STREQUAL "RUN" )
             BRAINVISA_CREATE_RUN_PACKAGE( ${component} "${package_name}" "${package_maintainer}" "${package_version}" )
+            add_dependencies( thirdparty-packages ${component}-package-run )
           elseif( "${component_pack_type}" STREQUAL "DEV" )
             BRAINVISA_CREATE_DEV_PACKAGE( ${component} "${package_name}" "${package_maintainer}" "${package_version}" )
+            add_dependencies( thirdparty-packages ${component}-package-dev )
           elseif( "${component_pack_type}" STREQUAL "SRC" )
             BRAINVISA_CREATE_SRC_PACKAGE( ${component} "${package_name}" "${package_maintainer}" "${package_version}" )
           elseif( "${component_pack_type}" STREQUAL "DOC" )
@@ -924,6 +939,28 @@ function( BRAINVISA_INSTALL )
   endif()
 endfunction()
 
+# BRAINVISA_REAL_PATHS
+#   Remove all symlinks from a list of paths by applying get_filename_component( ... REALPATH )
+#   to each element of the list.
+#
+# Usage:
+#
+#   BRAINVISA_REAL_PATHS( output_variable [ <path> ... ] )
+#
+# Example:
+#    file( GLOB glob_result /usr/lib/*.so )
+#    BRAINVISA_REAL_PATHS( real_files ${glob_result} )
+#    foreach( file ${real_files} )
+#      message( "${file}" )
+#    endforeach()
+function( BRAINVISA_REAL_PATHS output_variable )
+  set( result )
+  foreach( file ${ARGN} )
+    get_filename_component( real "${file}" REALPATH )
+    set( result ${result} "${real}" )
+  endforeach()
+  set( ${output_variable} ${result} PARENT_SCOPE )
+endfunction()
 
 macro( BRAINVISA_ADD_MOC_FILES _sources )
   foreach( _current_FILE ${ARGN} )
@@ -1074,13 +1111,9 @@ function( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
           COMPONENT ${PROJECT_NAME}-devel )
 
   if( BRAINVISA_PACKAGING )
-    # TODO
     # Create packaging rules
-#     CREATE_RUN_PACKAGE()
-#     CREATE_DEV_PACKAGE()
-#     CREATE_DOC_PACKAGE()
-#     CREATE_DEVDOC_PACKAGE()
-#     CREATE_SRC_PACKAGE()
+    BRAINVISA_CREATE_RUN_PACKAGE( "${PROJECT_NAME}" "${BRAINVISA_PACKAGE_NAME}" "${BRAINVISA_PACKAGE_MAINTAINER}" "${BRAINVISA_PACKAGE_VERSION}" )
+    BRAINVISA_CREATE_DEV_PACKAGE( "${PROJECT_NAME}" "${BRAINVISA_PACKAGE_NAME}" "${BRAINVISA_PACKAGE_MAINTAINER}" "${BRAINVISA_PACKAGE_VERSION}" )
   endif()
 endfunction()
 

@@ -5,4 +5,4 @@ Architecture: @architecture@
 Description: Test package for component @package_name@
 Priority: optional
 Section: multiverse/science
-@DEB_RUN_DEPENDENCIES@
+@DEB_DEPENDENCIES@

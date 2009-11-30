@@ -28,7 +28,8 @@ if( NOT BRAINVISA_CMAKE_CONFIG_DONE )
   include( CPack )
   
   # Initialize default package type
-  option( BRAINVISA_PACKAGING "Create rules for packaging" ON )
+  option( BRAINVISA_PACKAGING "Create rules for packaging" OFF )
+  option( BRAINVISA_PACKAGING_THIRDPARTY "Include third-party software in packaging" ON )
   mark_as_advanced( BRAINVISA_PACKAGING )
   set( BRAINVISA_PACKAGE_TYPE "deb" CACHE STRING "Type of package to create. Possible values are \"deb\" or \"tar.bz2\"." )
   mark_as_advanced( BRAINVISA_PACKAGE_TYPE )
@@ -230,7 +231,7 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
     if( BRAINVISA_PACKAGING )
       # Check if third party component has already been considered for packaging
       list( FIND BRAINVISA_THIRDPARTY_COMPONENTS "${component}" result )
-      if( result EQUAL -1 )
+      if( BRAINVISA_PACKAGING_THIRDPARTY AND result EQUAL -1 )
         set( BRAINVISA_THIRDPARTY_COMPONENTS "${BRAINVISA_THIRDPARTY_COMPONENTS}" "${component}" CACHE INTERNAL "" )
         if( EXISTS "${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake" )
           include( "${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake" )
@@ -268,7 +269,7 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
         else()
           message( "WARNING: Impossible to package third party component ${component} because file \"${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake\" does not exist." )
         endif()
-      
+        BRAINVISA_PACKAGING_DEPENDENCY( ${pack_type} ${dependency_type} ${component} ${component_pack_type} "${version_ranges}" ${binary_independent} )
       endif()
     endif()
   else()
@@ -276,7 +277,7 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
     set( destNodeAttributes )
     if( BRAINVISA_PACKAGING )
       # Call package type specific code to handle dependencies
-      BRAINVISA_PACKAGING_DEPENDENCY( ${pack_type} ${dependency_type} ${component} ${component_pack_type}  )
+      BRAINVISA_PACKAGING_DEPENDENCY( ${pack_type} ${dependency_type} ${component} ${component_pack_type} "${version_ranges}" ${binary_independent} )
     endif()
     
     

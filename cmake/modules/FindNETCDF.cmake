@@ -11,8 +11,10 @@
 FIND_PATH( NETCDF_INCLUDE_DIR netcdf.h
   ${NETCDF_DIR}/include
   ${NETCDF_DIR}/include/netcdf-3
+  ${NETCDF_DIR}/include/netcdf
   /usr/include 
   /usr/include/netcdf-3 
+  /usr/include/netcdf
 )
 
 FIND_LIBRARY( NETCDF_LIBRARY netcdf

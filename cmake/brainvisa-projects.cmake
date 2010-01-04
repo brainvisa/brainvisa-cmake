@@ -1,5 +1,6 @@
-set( BRAINVISA_ALL_PROJECTS "installer;brainvisa-share;soma;aims;anatomist;axon;axon_web;data_storage_client;datamind;t1mri;sulci;connectomist;cortical_surface;brainrat;nuclear_processing;fmri" )
+set( BRAINVISA_ALL_PROJECTS "development;installer;brainvisa-share;soma;aims;anatomist;axon;axon_web;data_storage_client;datamind;t1mri;sulci;connectomist;cortical_surface;brainrat;nuclear_processing;fmri" )
 
+set( BRAINVISA_ALL_COMPONENTS_development "brainvisa-svn" )
 set( BRAINVISA_ALL_COMPONENTS_installer "installer" )
 set( BRAINVISA_ALL_COMPONENTS_brainvisa-share "brainvisa-share" )
 set( BRAINVISA_ALL_COMPONENTS_soma "soma-base;soma-io;soma-qtgui" )
@@ -17,6 +18,7 @@ set( BRAINVISA_ALL_COMPONENTS_brainrat "brainrat-gpl;brainrat-private;bioprocess
 set( BRAINVISA_ALL_COMPONENTS_nuclear_processing "nuclear_processing-gpl;nuclear_processing-private" )
 set( BRAINVISA_ALL_COMPONENTS_fmri "fmri-private;fmri-gpl" )
 
+set( BRAINVISA_PROJECT_brainvisa-svn "development" )
 set( BRAINVISA_PROJECT_installer "installer" )
 set( BRAINVISA_PROJECT_brainvisa-share "brainvisa-share" )
 set( BRAINVISA_PROJECT_soma-base "soma" )

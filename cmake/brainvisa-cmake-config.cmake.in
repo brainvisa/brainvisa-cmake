@@ -520,7 +520,7 @@ endfunction()
 
 # BRAINVISA_COPY_DIRECTORY
 #  Recursively copy and install all files in <source directory> except files named
-#  CMakeLists.txt or *~.
+#  CMakeLists.txt, *~ or */.svn/*.
 #
 # Usage:
 #  BRAINVISA_COPY_DIRECTORY( <source directory> <destination directory> <component> [IMMEDIATE] [GET_TARGET <target variable>] )
@@ -919,7 +919,7 @@ function( BRAINVISA_ADD_COMPONENT _component )
     endif()
   endforeach()
 
-#   message( "Create component ${_component} in group ${_group}" )
+#  message( "Create component ${_component} in group ${_group}" )
   cpack_add_component( ${_component}
                        ${ARGN} )
   add_custom_target( install-${_component}

@@ -19,7 +19,7 @@ set( _includeSuffixes
   lib/blitz/include
 )
 
-find_path( BLITZ_INCLUDE_DIRS blitz/blitz.h
+find_path( BLITZ_INCLUDE_DIR blitz/blitz.h
     PATHS ${_directories}
     PATH_SUFFIXES ${_includeSuffixes}
 )
@@ -35,11 +35,13 @@ find_library( BLITZ_LIBRARIES blitz
 )
 
 
-if( BLITZ_INCLUDE_DIRS AND BLITZ_LIBRARIES )
+if( BLITZ_INCLUDE_DIR AND BLITZ_LIBRARIES )
   set( BLITZ_FOUND "YES" )
   if( BLITZ_CONFIG_INCLUDE_DIR )
     set( BLITZ_INCLUDE_DIRS
-      "${BLITZ_INCLUDE_DIRS}" "${BLITZ_CONFIG_INCLUDE_DIR}")
+      "${BLITZ_INCLUDE_DIR}" "${BLITZ_CONFIG_INCLUDE_DIR}" )
+  else()
+    set( BLITZ_INCLUDE_DIRS "${BLITZ_INCLUDE_DIR}" )
   endif()
 endif()
 

@@ -16,11 +16,17 @@ set( _librarySuffixes
 set( _includeSuffixes
   include
   blitz/include
+  lib/blitz/include
 )
 
 find_path( BLITZ_INCLUDE_DIRS blitz/blitz.h
     PATHS ${_directories}
     PATH_SUFFIXES ${_includeSuffixes}
+)
+
+find_path( BLITZ_CONFIG_INCLUDE_DIR blitz/gnu/bzconfig.h
+PATHS ${_directories}
+PATH_SUFFIXES ${_includeSuffixes}
 )
 
 find_library( BLITZ_LIBRARIES blitz
@@ -31,6 +37,10 @@ find_library( BLITZ_LIBRARIES blitz
 
 if( BLITZ_INCLUDE_DIRS AND BLITZ_LIBRARIES )
   set( BLITZ_FOUND "YES" )
+  if( BLITZ_CONFIG_INCLUDE_DIR )
+    set( BLITZ_INCLUDE_DIRS
+      "${BLITZ_INCLUDE_DIRS}" "${BLITZ_CONFIG_INCLUDE_DIR}")
+  endif()
 endif()
 
 if( NOT BLITZ_FOUND )

@@ -74,6 +74,7 @@ endfunction()
 
 
 set( CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_BINARY_DIR}" )
+include_directories( "${CMAKE_BINARY_DIR}/include" )
 
 # Set default Qt desired version
 set( DESIRED_QT_VERSION 4 CACHE STRING "Pick a version of QT to use: 3 or 4" )
@@ -119,6 +120,12 @@ if( reset_projects )
       set( components "${BRAINVISA_ALL_COMPONENTS_${project}}" )
     else()
       set( components ${project} )
+      foreach( path $ENV{BRAINVISA_SOURCES} )
+        file( GLOB possibleComponents RELATIVE "${path}/${project}" "${path}/${project}/*" )
+        foreach( component ${possibleComponents} )
+          set( components ${components} "${component}" )
+        endforeach()
+      endforeach()
     endif()
     foreach( component ${components} )
       BRAINVISA_FIND_COMPONENT_SOURCES( ${project} ${component} )
@@ -144,7 +151,6 @@ endforeach()
 if( stop )
   return()
 endif()
-
 
 if( BRAINVISA_PACKAGING )
   set( BRAINVISA_THIRDPARTY_COMPONENTS "" CACHE INTERNAL "" )

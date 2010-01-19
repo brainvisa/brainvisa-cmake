@@ -4,6 +4,8 @@ cmake_policy( SET CMP0009 NEW )
 if( NOT BRAINVISA_CMAKE_CONFIG_DONE )
   set( BRAINVISA_CMAKE_CONFIG_DONE YES )
   
+  option( CMAKE_OVERRIDE_COMPILER_MISMATCH "Avoid CMake to completely erase the cache if a compiler mismatch is detected (for instance with find_package( VTK ))" ON )
+  
   # Include code specific to a platform or site
   if( EXISTS /etc/mandriva-release )
     include( "${brainvisa-cmake_DIR}/specific/linux_distribution/mandriva.cmake" )

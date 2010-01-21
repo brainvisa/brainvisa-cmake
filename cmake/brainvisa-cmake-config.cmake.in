@@ -660,7 +660,7 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
   foreach(_file ${_nonPythonSources})
     set( _fileBuild "${CMAKE_BINARY_DIR}/${_destDir}/${_file}" )
     add_custom_command( OUTPUT "${_fileBuild}"
-      COMMAND ${CMAKE_COMMAND} -E copy "${_pythonDirectory}/${_file}" "${_fileBuild}"
+      COMMAND "${CMAKE_COMMAND}" -E copy "${_pythonDirectory}/${_file}" "${_fileBuild}"
       DEPENDS "${_pythonDirectory}/${_file}" )
     # Install source file and byte compiled files
     get_filename_component( _path "${_file}" PATH )
@@ -798,7 +798,7 @@ MACRO( BRAINVISA_GENERATE_DOXYGEN_DOC _inputVariable )
     BRAINVISA_GENERATE_TARGET_NAME( _target )
     ADD_CUSTOM_TARGET( ${_target} 
                       DEPENDS "${_doxygenBinaryDir}/Doxyfile" ${_generatedFiles}
-                      COMMAND ${CMAKE_COMMAND} -E make_directory "${DOXYFILE_OUTPUT_DIRECTORY}"
+                      COMMAND "${CMAKE_COMMAND}" -E make_directory "${DOXYFILE_OUTPUT_DIRECTORY}"
                       COMMAND "${DOXYGEN_EXECUTABLE}" "${_doxygenBinaryDir}/Doxyfile" )
     # Make sure doc target exists, I do not know if it is clean
     add_dependencies( ${PROJECT_NAME}-doc ${_target} )
@@ -857,7 +857,7 @@ function( BRAINVISA_GENERATE_EPYDOC_DOC  )
     endif()
     add_custom_command( OUTPUT "${CMAKE_BINARY_DIR}/${outputDirectory}/index.html"
                         DEPENDS ${pythonFiles}
-                        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/${outputDirectory}"
+                        COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/${outputDirectory}"
                         COMMAND "${EPYDOC_EXECUTABLE}" 
                           --html
                           --name "${PROJECT_NAME} ${${PROJECT_NAME}_VERSION}"
@@ -925,7 +925,7 @@ function( BRAINVISA_ADD_COMPONENT _component )
   cpack_add_component( ${_component}
                        ${ARGN} )
   add_custom_target( install-${_component}
-                     COMMAND ${CMAKE_COMMAND} -DCOMPONENT=${_component} -P "${CMAKE_BINARY_DIR}/cmake_install.cmake" )
+                     COMMAND "${CMAKE_COMMAND}" -DCOMPONENT=${_component} -P "${CMAKE_BINARY_DIR}/cmake_install.cmake" )
   add_dependencies( install-${_group} install-${_component} )
 endfunction()
 
@@ -1055,8 +1055,8 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
     # Sip can generate less files than requested. The touch
     # command make sure that all the files are created (necessary)
     # for dependencies).
-    COMMAND ${CMAKE_COMMAND} -E remove ${_sipOutputFiles}
-    COMMAND ${SIP_EXECUTABLE}
+    COMMAND "${CMAKE_COMMAND}" -E remove ${_sipOutputFiles}
+    COMMAND "${SIP_EXECUTABLE}"
             -j ${_sipSplitGeneratedCode}
             ${_sipIncludeOptions}
             -c "${CMAKE_CURRENT_BINARY_DIR}"
@@ -1064,7 +1064,7 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
             ${_sipFlags}
             -x VendorID -x Qt_STYLE_WINDOWSXP -x Qt_STYLE_INTERLACE -x Qt_STYLE_WINDOWSXP
             ${_mainSipFile}
-    COMMAND ${CMAKE_COMMAND} -E touch ${_sipOutputFiles}
+    COMMAND "${CMAKE_COMMAND}" -E touch ${_sipOutputFiles}
     DEPENDS ${_mainSipFile} ${_SIP_SOURCES}
   )
 

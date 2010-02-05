@@ -88,7 +88,14 @@ ELSE(WIN32)
       SET(GSL_INCLUDE_DIR ${GSL_PREFIX}/include CACHE STRING INTERNAL)
 
       # set link libraries and link flags
-      SET(GSL_LIBRARIES "`${GSL_CONFIG} --libs`")
+      EXEC_PROGRAM(${GSL_CONFIG}
+        ARGS --libs
+        OUTPUT_VARIABLE GSL_LIBRARIES)
+#      SET(GSL_INCLUDE_DIR ${GSL_PREFIX}/include CACHE STRING INTERNAL)
+
+#      SET(GSL_LIBRARIES "`${GSL_CONFIG} --libs`")
+# Hacked by C. Poupon the previous does not work on linux and is replaced by
+# the following execution of the GSL_CONFIG command
       
       # extract link dirs for rpath  
       EXEC_PROGRAM(${GSL_CONFIG}

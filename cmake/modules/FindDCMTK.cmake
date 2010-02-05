@@ -13,6 +13,7 @@
 #
 # Written for VXL by Amitha Perera. -> Hacked by P. Fillard
 # Hacked again by Yann Cointepas
+# Hacked again by Cyril Poupon
 
 
 set( _directories
@@ -80,7 +81,27 @@ else()
     PATH_SUFFIXES ${_includeSuffixes}
   )
 
-  find_path( DCMTK_dcmimgle_INCLUDE_DIR dcmtk/dcmimgle/dcmimage.h
+  find_path( DCMTK_dcmnet_INCLUDE_DIR dcmtk/dcmnet/dcmtrans.h
+    ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
+  )
+
+  find_path( DCMTK_dcmtls_INCLUDE_DIR dcmtk/dcmtls/tlslayer.h
+    ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
+  )
+
+  find_path( DCMTK_dcmimagedb_INCLUDE_DIR dcmtk/dcmimagedb/dcmimage.h
+    ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
+  )
+
+  find_path( DCMTK_dcmimgle_INCLUDE_DIR dcmtk/dcmimgle/dcicoimg.h
+    ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
+  )
+
+  find_path( DCMTK_dcmjpeg_INCLUDE_DIR dcmtk/dcmjpeg/djdijg16.h
     ${_directories}
     PATH_SUFFIXES ${_includeSuffixes}
   )
@@ -97,6 +118,16 @@ find_library( DCMTK_dcmdata_LIBRARY dcmdata
     PATH_SUFFIXES ${_librarySuffixes}
 )
 
+find_library( DCMTK_dcmnet_LIBRARY dcmnet
+    ${_directories}
+    PATH_SUFFIXES ${_librarySuffixes}
+)
+
+find_library( DCMTK_dcmtls_LIBRARY dcmtls
+    ${_directories}
+    PATH_SUFFIXES ${_librarySuffixes}
+)
+
 find_library( DCMTK_dcmimgle_LIBRARY dcmimgle
     ${_directories}
     PATH_SUFFIXES ${_librarySuffixes}
@@ -107,9 +138,25 @@ find_library(DCMTK_imagedb_LIBRARY imagedb
   PATH_SUFFIXES ${_pathSuffixes}
 )
 
-find_library(DCMTK_dcmnet_LIBRARY dcmnet
-    ${_directories}
-    PATH_SUFFIXES ${_librarySuffixes}
+find_library(DCMTK_dcmjpeg_LIBRARY dcmjpeg
+  ${_libraryDirectories}
+  PATH_SUFFIXES ${_pathSuffixes}
+)
+
+find_library(DCMTK_ijg8_LIBRARY ijg8
+  ${_libraryDirectories}
+  PATH_SUFFIXES ${_pathSuffixes}
+)
+
+find_library(DCMTK_ijg12_LIBRARY ijg12
+  ${_libraryDirectories}
+  PATH_SUFFIXES ${_pathSuffixes}
+)
+
+
+find_library(DCMTK_ijg16_LIBRARY ijg16
+  ${_libraryDirectories}
+  PATH_SUFFIXES ${_pathSuffixes}
 )
 
 
@@ -135,7 +182,11 @@ if( DCMTK_config_INCLUDE_DIR AND
       ${DCMTK_config_INCLUDE_DIR}/dcmtk/config
       ${DCMTK_ofstd_INCLUDE_DIR}/dcmtk/ofstd
       ${DCMTK_dcmdata_INCLUDE_DIR}/dcmtk/dcmdata
+      ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtk/dcmnet
+      ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtk/dcmtls
+      ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtk/dcmimagedb
       ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtk/dcmimgle
+      ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtk/dcmjpeg
     )
   ENDIF( DCMTK_PRE_353 )
 
@@ -151,15 +202,42 @@ if( DCMTK_config_INCLUDE_DIR AND
 
   IF(DCMTK_imagedb_LIBRARY)
    SET(DCMTK_LIBRARIES
-   ${DCMTK_LIBRARIES}
    ${DCMTK_imagedb_LIBRARY}
+   ${DCMTK_LIBRARIES}
    )
   ENDIF(DCMTK_imagedb_LIBRARY)
 
+  IF(DCMTK_dcmjpeg_LIBRARY)
+   SET(DCMTK_LIBRARIES
+   ${DCMTK_LIBRARIES}
+   ${DCMTK_dcmjpeg_LIBRARY}
+   )
+  ENDIF(DCMTK_dcmjpeg_LIBRARY)
+
+  IF(DCMTK_ijg8_LIBRARY)
+   SET(DCMTK_LIBRARIES
+   ${DCMTK_LIBRARIES}
+   ${DCMTK_ijg8_LIBRARY}
+   )
+  ENDIF(DCMTK_ijg8_LIBRARY)
+  IF(DCMTK_ijg12_LIBRARY)
+   SET(DCMTK_LIBRARIES
+   ${DCMTK_LIBRARIES}
+   ${DCMTK_ijg12_LIBRARY}
+   )
+  ENDIF(DCMTK_ijg12_LIBRARY)
+
+  IF(DCMTK_ijg16_LIBRARY)
+   SET(DCMTK_LIBRARIES
+   ${DCMTK_LIBRARIES}
+   ${DCMTK_ijg16_LIBRARY}
+   )
+  ENDIF(DCMTK_ijg16_LIBRARY)
+
   IF(DCMTK_dcmnet_LIBRARY)
    SET( DCMTK_LIBRARIES
-   ${DCMTK_LIBRARIES}
    ${DCMTK_dcmnet_LIBRARY}
+   ${DCMTK_LIBRARIES}
    )
    IF(EXISTS /etc/debian_version AND EXISTS /lib/libwrap.so.0)
      SET( DCMTK_LIBRARIES
@@ -167,12 +245,29 @@ if( DCMTK_config_INCLUDE_DIR AND
      /lib/libwrap.so.0
      )
    ENDIF(EXISTS /etc/debian_version AND EXISTS /lib/libwrap.so.0)
+   IF(EXISTS /etc/redhat-release AND EXISTS /usr/lib/libwrap.so.0)
+     SET( DCMTK_LIBRARIES
+     ${DCMTK_LIBRARIES}
+     /usr/lib/libwrap.so.0
+     )
+   ENDIF(EXISTS /etc/redhat-release AND EXISTS /usr/lib/libwrap.so.0)
    
   ENDIF(DCMTK_dcmnet_LIBRARY)
+
+  IF(DCMTK_dcmtls_LIBRARY)
+   SET( DCMTK_LIBRARIES
+   ${DCMTK_dcmtls_LIBRARY}
+   ${DCMTK_LIBRARIES}
+   )
+  ENDIF(DCMTK_dcmtls_LIBRARY)
 
   IF( WIN32 )
     SET( DCMTK_LIBRARIES ${DCMTK_LIBRARIES} netapi32 )
   ENDIF( WIN32 )
+
+  IF( UNIX )
+    SET( DCMTK_LIBRARIES ${DCMTK_LIBRARIES} z )
+  ENDIF( UNIX )
 
 endif()
 

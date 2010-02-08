@@ -91,12 +91,7 @@ else()
     PATH_SUFFIXES ${_includeSuffixes}
   )
 
-  find_path( DCMTK_dcmimagedb_INCLUDE_DIR dcmtk/dcmimagedb/dcmimage.h
-    ${_directories}
-    PATH_SUFFIXES ${_includeSuffixes}
-  )
-
-  find_path( DCMTK_dcmimgle_INCLUDE_DIR dcmtk/dcmimgle/dcicoimg.h
+  find_path( DCMTK_dcmimgle_INCLUDE_DIR dcmtk/dcmimgle/dcmimage.h
     ${_directories}
     PATH_SUFFIXES ${_includeSuffixes}
   )
@@ -131,11 +126,6 @@ find_library( DCMTK_dcmtls_LIBRARY dcmtls
 find_library( DCMTK_dcmimgle_LIBRARY dcmimgle
     ${_directories}
     PATH_SUFFIXES ${_librarySuffixes}
-)
-
-find_library(DCMTK_imagedb_LIBRARY imagedb
-  ${_libraryDirectories}
-  PATH_SUFFIXES ${_pathSuffixes}
 )
 
 find_library(DCMTK_dcmjpeg_LIBRARY dcmjpeg
@@ -184,7 +174,6 @@ if( DCMTK_config_INCLUDE_DIR AND
       ${DCMTK_dcmdata_INCLUDE_DIR}/dcmtk/dcmdata
       ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtk/dcmnet
       ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtk/dcmtls
-      ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtk/dcmimagedb
       ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtk/dcmimgle
       ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtk/dcmjpeg
     )
@@ -199,13 +188,6 @@ if( DCMTK_config_INCLUDE_DIR AND
   IF( APPLE )
     SET( DCMTK_LIBRARIES ${DCMTK_LIBRARIES} z )
   ENDIF( APPLE )
-
-  IF(DCMTK_imagedb_LIBRARY)
-   SET(DCMTK_LIBRARIES
-   ${DCMTK_imagedb_LIBRARY}
-   ${DCMTK_LIBRARIES}
-   )
-  ENDIF(DCMTK_imagedb_LIBRARY)
 
   IF(DCMTK_dcmjpeg_LIBRARY)
    SET(DCMTK_LIBRARIES

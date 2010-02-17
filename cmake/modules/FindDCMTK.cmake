@@ -221,19 +221,34 @@ if( DCMTK_config_INCLUDE_DIR AND
    ${DCMTK_dcmnet_LIBRARY}
    ${DCMTK_LIBRARIES}
    )
-   IF(EXISTS /etc/debian_version AND EXISTS /lib/libwrap.so.0)
+   IF(EXISTS /etc/debian_version AND EXISTS /lib64/libwrap.so.0)
      SET( DCMTK_LIBRARIES
      ${DCMTK_LIBRARIES}
-     /lib/libwrap.so.0
+     /lib64/libwrap.so.0
      )
-   ENDIF(EXISTS /etc/debian_version AND EXISTS /lib/libwrap.so.0)
-   IF(EXISTS /etc/redhat-release AND EXISTS /usr/lib/libwrap.so.0)
-     SET( DCMTK_LIBRARIES
-     ${DCMTK_LIBRARIES}
-     /usr/lib/libwrap.so.0
-     )
-   ENDIF(EXISTS /etc/redhat-release AND EXISTS /usr/lib/libwrap.so.0)
-   
+   ELSE()
+    IF(EXISTS /etc/redhat-release AND EXISTS /usr/lib64/libwrap.so.0)
+      SET( DCMTK_LIBRARIES
+      ${DCMTK_LIBRARIES}
+      /usr/lib64/libwrap.so.0
+      )
+    ELSE()
+      IF(EXISTS /etc/debian_version AND EXISTS /lib/libwrap.so.0)
+        SET( DCMTK_LIBRARIES
+        ${DCMTK_LIBRARIES}
+        /lib/libwrap.so.0
+        )
+      ELSE()
+        IF(EXISTS /etc/redhat-release AND EXISTS /usr/lib/libwrap.so.0)
+          SET( DCMTK_LIBRARIES
+          ${DCMTK_LIBRARIES}
+          /usr/lib/libwrap.so.0
+          )
+        ENDIF(EXISTS /etc/redhat-release AND EXISTS /usr/lib/libwrap.so.0)
+      ENDIF(EXISTS /etc/debian_version AND EXISTS /lib/libwrap.so.0)
+    ENDIF()
+   ENDIF()
+
   ENDIF(DCMTK_dcmnet_LIBRARY)
 
   IF(DCMTK_dcmtls_LIBRARY)

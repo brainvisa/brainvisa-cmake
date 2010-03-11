@@ -64,10 +64,10 @@ FIND_LIBRARY(PYTHON_LIBRARY
   PATHS
     "${_prefix}/lib"
     [HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${_version}\\InstallPath]/libs
-  PATH_SUFFIXES
-    python${_version}/config
-  # Avoid finding the .dll in the PATH.  We want the .lib.
-  NO_SYSTEM_ENVIRONMENT_PATH
+#  PATH_SUFFIXES
+#    python${_version}/config
+#  # Avoid finding the .dll in the PATH.  We want the .lib.
+#  NO_SYSTEM_ENVIRONMENT_PATH
 )
 mark_as_advanced( PYTHON_LIBRARY )
 

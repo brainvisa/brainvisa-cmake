@@ -21,12 +21,7 @@ else( SIP_VERSION )
     DOC "Path to sip executable" )
   
   if( SIP_EXECUTABLE )
-    if( NOT PYTHONINTERP_FOUND )
-      find_package( PythonInterp REQUIRED )
-    endif( NOT PYTHONINTERP_FOUND )
-    if( NOT PYTHONLIBS_FOUND )
-      find_package( PythonLibs REQUIRED )
-    endif( NOT PYTHONLIBS_FOUND )
+    find_package( python REQUIRED )
     
     mark_as_advanced( SIP_EXECUTABLE )
     execute_process( COMMAND ${SIP_EXECUTABLE} -V OUTPUT_VARIABLE SIP_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE )

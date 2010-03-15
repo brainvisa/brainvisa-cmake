@@ -251,12 +251,12 @@ if( DCMTK_config_INCLUDE_DIR AND
 
   ENDIF(DCMTK_dcmnet_LIBRARY)
 
-  IF(DCMTK_dcmtls_LIBRARY)
-   SET( DCMTK_LIBRARIES
-   ${DCMTK_dcmtls_LIBRARY}
-   ${DCMTK_LIBRARIES}
-   )
-  ENDIF(DCMTK_dcmtls_LIBRARY)
+  if( DCMTK_dcmtls_LIBRARY )
+    find_package( OpenSSL )
+    if( OPENSSL_FOUND )
+      set( DCMTK_LIBRARIES ${OPENSSL_LIBRARIES} "${DCMTK_dcmtls_LIBRARY}" ${DCMTK_LIBRARIES} )
+    endif()
+  endif()
 
   IF( WIN32 )
     SET( DCMTK_LIBRARIES ${DCMTK_LIBRARIES} netapi32 )

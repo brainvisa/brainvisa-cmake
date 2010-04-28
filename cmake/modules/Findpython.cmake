@@ -45,6 +45,13 @@ else()
     NAMES Python.h
     PATHS
       "${_prefix}/include"
+    PATH_SUFFIXES
+      python${_version}
+    NO_DEFAULT_PATH
+  )
+  find_path( PYTHON_INCLUDE_PATH
+    NAMES Python.h
+    PATHS
       ${PYTHON_FRAMEWORK_INCLUDES}
       [HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${_version}\\InstallPath]/include
     PATH_SUFFIXES

@@ -135,7 +135,7 @@ class SubversionClient( object ):
   def initialize( self ):
     if not os.path.exists( self.directory ):
       os.mkdir( self.directory )
-    clientFile = open( os.path.join( self.directory, 'bv_svn.cfg' ), 'w' )
+    clientFile = open( os.path.join( self.directory, 'bv_maker.cfg' ), 'w' )
     print >> clientFile, '\n'.join( self.rules )
     
     repositoryDirectory = os.path.join( self.directory, '.repository' )
@@ -233,7 +233,7 @@ class SubversionClient( object ):
 
 
   def updateExternals( self ):
-    externalsFileName = os.path.join( self.directory, 'bv_svn.externals' )
+    externalsFileName = os.path.join( self.directory, 'bv_maker.externals' )
     externalsFile = open( externalsFileName, 'w' )
     self.clients = {}
     for url, component_version in self.componentVersioPerURL.iteritems():
@@ -257,7 +257,7 @@ class SubversionClient( object ):
 
 
   def updateCMake( self ):
-    cmakeFile = os.path.join( self.directory, 'bv_svn.cmake' )
+    cmakeFile = os.path.join( self.directory, 'bv_maker.cmake' )
     out = open( cmakeFile, 'w' )
     components = set()
     projects = set()
@@ -297,7 +297,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
     build_directory = os.path.join( self.directory, build_directory )
     if not os.path.exists( build_directory ):
       os.mkdir( build_directory )
-    system( 'cmake', '-C', os.path.join( self.directory, 'bv_svn.cmake' ), self.directory, cwd= build_directory )
+    system( 'cmake', '-C', os.path.join( self.directory, 'bv_maker.cmake' ), self.directory, cwd= build_directory )
     make_options = self.options.get( 'make_options', [] )
     if make_options:
       make_options = make_options.split()
@@ -446,7 +446,7 @@ parser.add_option( '-v', '--verbose', dest='verbose', action='store_true',
 
     
 # Read config file
-configFile = os.path.join( os.environ[ 'HOME' ], '.brainvisa', 'bv_svn.cfg' )
+configFile = os.path.join( os.environ[ 'HOME' ], '.brainvisa', 'bv_maker.cfg' )
 packages = []
 lineCount = 0
 client = None

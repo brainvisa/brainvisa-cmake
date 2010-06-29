@@ -77,3 +77,14 @@ add_custom_command( OUTPUT "${packageName}"
 )
 add_custom_target( "package" DEPENDS "${packageName}" )
 
+install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/python"
+         DESTINATION "${CMAKE_INSTALL_PREFIX}"
+         USE_SOURCE_PERMISSIONS
+         PATTERN ".svn" EXCLUDE
+         PATTERN "*~" EXCLUDE )
+
+install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
+         DESTINATION "${CMAKE_INSTALL_PREFIX}"
+         USE_SOURCE_PERMISSIONS
+         PATTERN ".svn" EXCLUDE
+         PATTERN "*~" EXCLUDE )

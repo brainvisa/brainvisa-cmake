@@ -92,7 +92,7 @@ groupsDefinition = {
     'anatomist/*',
     'axon/*',
     'axon_web/*',
-    'brainrat/*',
+    'brainrat/brainrat-gpl',
     'communication/*',
     'connectomist/*',
     'cortical_surface/*',

@@ -1,0 +1,300 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+#  This software and supporting documentation are distributed by
+#      Institut Federatif de Recherche 49
+#      CEA/NeuroSpin, Batiment 145,
+#      91191 Gif-sur-Yvette cedex
+#      France
+#
+# This software is governed by the CeCILL-B license under
+# French law and abiding by the rules of distribution of free software.
+# You can  use, modify and/or redistribute the software under the 
+# terms of the CeCILL-B license as circulated by CEA, CNRS
+# and INRIA at the following URL "http://www.cecill.info". 
+#
+# As a counterpart to the access to the source code and  rights to copy,
+# modify and redistribute granted by the license, users are provided only
+# with a limited warranty  and the software's author,  the holder of the
+# economic rights,  and the successive licensors  have only  limited
+# liability.
+#
+# In this respect, the user's attention is drawn to the risks associated
+# with loading,  using,  modifying and/or developing or reproducing the
+# software by the user in light of its specific status of free software,
+# that may mean  that it is complicated to manipulate,  and  that  also
+# therefore means  that it is reserved for developers  and  experienced
+# professionals having in-depth computer knowledge. Users are therefore
+# encouraged to load and test the software's suitability as regards their
+# requirements in conditions enabling the security of their systems and/or 
+# data to be ensured and,  more generally, to use and operate it in the 
+# same conditions as regards security.
+#
+# The fact that you are presently reading this means that you have had
+# knowledge of the CeCILL-B license and that you accept its terms.
+import os, sys, time, re
+from fnmatch import fnmatch
+from optparse import OptionParser
+from pprint import pprint
+
+from brainvisa.maker.bioproj_parser import BRAINVISA_SVN_URL, find_branches_and_tags, projects, projectPerComponent, componentsPerProject, groupsDefinition, system
+
+usage = '''%prog [options] 
+
+Use internal information and parse BrainVISA Subversion repository (''' + BRAINVISA_SVN_URL + ''') to update brainvisa-cmake a files containing information about projects, components, branches and tags. This command also update sources_views directories on BrainVISA's Subversion repository. All modification are put in a temporary Subversion directory and must be commited manually with the commands that are printed.'''
+
+parser = OptionParser(usage=usage)
+#parser.add_option( '-l', '--language', dest='language',
+                   #help='target language for output. Possible values are cmake or python. Default is cmake.', metavar='language', default='cmake' )
+#parser.add_option( '-o', '--output', dest='output',
+                   #help='output file name', metavar='FILE', default='' )
+#parser.add_option( '-b', '--branch', dest='branches', action='store_true',
+                   #help='include information on branches', default=False )
+#parser.add_option( '-t', '--tags', dest='tags', action='store_true',
+                   #help='include information on tags', default=False )
+#parser.add_option( '-u', '--url', dest='url', action='store_true',
+                   #help='include information about BioProj URL for each component', default=False )
+#parser.add_option( '-g', '--groups', dest='groups', action='store_true',
+                   #help='include information on groups of components', default=False )
+#parser.add_option( '-s', '--svn', dest='svn', action='store_true',
+                   #help='check if projects lists have changed on subversion', default=False )
+(options, args) = parser.parse_args()
+if len( args ) != 0:
+  parser.error( 'Too many options' )
+#if options.language not in ( 'cmake', 'python' ):
+  #parser.error( 'Unknown language: ' + options.language )
+
+#if options.svn:
+tmp = '/tmp/bv_bioproj_projects'
+print 'Create directory', repr( tmp )
+if os.path.exists( tmp ):
+  print >> sys.stderr, 'Directory', repr( tmp ), 'exists. You must erase it before using --svn option.'
+  sys.exit( 1 )
+os.mkdir( tmp )
+#else:
+  #if options.output:
+    #output = open( options.output, 'w' )
+  #else:
+    #output = sys.stdout
+
+
+branchesPerComponent = {}
+tagsPerComponent = {}
+urlPerComponent = {}
+componentsPerGroup = {}
+
+print 'Scanning BrainVISA subversion repository...'
+for project, component, url, branches, tags in find_branches_and_tags():
+  if component is None:
+    component = project
+  if project not in projects:
+    projects.append( project )
+  p = projectPerComponent.setdefault( component, project )
+  if p != project:
+    raise RuntimeError( 'Component ' + component + ' is declared or found in two projects, ' + p + ' and ' + project )
+  if branches:
+    branchesPerComponent[ component ] = branches
+  if tags:
+    tagsPerComponent[ component ] = tags
+  if url:
+    urlPerComponent[ component ] = url
+  projectComponents = componentsPerProject.setdefault( project, [] )
+  if component not in projectComponents:
+    projectComponents.append( component )
+  
+  projectAndComponent = project + '/' + component
+  componentsPerGroup.setdefault( 'all', [] ).append( component )
+  for group, include in groupsDefinition.iteritems():
+    for i in include:
+      if fnmatch( projectAndComponent, i ):
+        componentsPerGroup.setdefault( group, [] ).append( component )
+        break
+  
+  
+def generate_cmake( output ):
+  print >> output, '# This file had been generated by bv_bioproj_project command on ' + time.asctime() + '\n'
+  print >> output, 'set( BRAINVISA_ALL_PROJECTS "' + ';'.join( projects ) + '" )\n'
+  for project in projects:
+    print >> output, 'set( BRAINVISA_ALL_COMPONENTS_' + project + ' "' + ';'.join( componentsPerProject[ project ] ) + '" )'
+  print >> output
+  for project in projects:
+    for component in componentsPerProject[ project ]:
+      print >> output, 'set( BRAINVISA_PROJECT_' + component + ' "' + projectPerComponent[ component ] + '" )'
+  
+  ## Branches
+  #print >> output
+  #for project in projects:
+    #for component in componentsPerProject[ project ]:
+      #print >> output, 'set( BRAINVISA_BRANCHES_' + component + ' "' + ';'.join( branchesPerComponent.get( component, () ) ) + '" )'
+  ## Tags
+  #print >> output
+  #for project in projects:
+    #for component in componentsPerProject[ project ]:
+      #print >> output, 'set( BRAINVISA_TAGS_' + component + ' "' + ';'.join( tagsPerComponent.get( component, () ) ) + '" )'
+  
+  ## Groups
+  #print >> output
+  #print >> output, 'set( BRAINVISA_COMPONENTS_GROUP "' + ';'.join( componentsPerGroup ) + '" )'
+  #for group, components in componentsPerGroup.iteritems():
+      #print >> output, 'set( BRAINVISA_COMPONENTS_GROUP_' + group + ' "' + ';'.join( components ) + '" )'
+
+
+def generate_python( output ):
+  print >> output, '# -*- coding: utf-8 -*-\n\n# This module had been generated by bv_bioproj_project command on ' + time.asctime() + '\n'
+  output.write( 'brainvisaProjects =' )
+  pprint( projects, stream=output )
+  print >> output
+  output.write( 'brainvisaComponentsPerProject =' )
+  pprint( componentsPerProject, stream=output )
+  print >> output
+  output.write( 'brainvisaProjectPerComponent =' )
+  pprint( projectPerComponent, stream=output )
+  print >> output
+  output.write( 'brainvisaBranchesPerComponent =' )
+  pprint( branchesPerComponent, stream=output )
+  print >> output
+  output.write( 'brainvisaTagsPerComponent =' )
+  pprint( tagsPerComponent, stream=output )
+  print >> output
+  output.write( 'brainvisaURLPerComponent =' )
+  pprint( urlPerComponent, stream=output )
+  print >> output
+  output.write( 'brainvisaComponentsPerGroup =' )
+  pprint( componentsPerGroup, stream=output )
+
+_remove_comments = re.compile( '#.*\n' )
+def compare( first, second ):
+  return _remove_comments.sub( '', first ) == _remove_comments.sub( '', second )
+
+
+todo = []
+
+cmake_projects = os.path.join( tmp, 'cmake_projects' )
+generate_cmake( open( cmake_projects, 'w' ) )
+print 'Checking', BRAINVISA_SVN_URL + '/development/brainvisa-cmake/trunk/cmake/brainvisa-projects.cmake'
+system( 'svn', 'co', BRAINVISA_SVN_URL + '/development/brainvisa-cmake/trunk/cmake', os.path.join( tmp, 'cmake' ) )
+cmake_projects_svn = os.path.join( tmp, 'cmake', 'brainvisa-projects.cmake' )
+if not compare( open( cmake_projects ).read(), open( cmake_projects_svn ).read() ):
+  print '--> updating',BRAINVISA_SVN_URL + '/development/brainvisa-cmake/trunk/cmake/brainvisa-projects.cmake'
+  open( cmake_projects_svn, 'w' ).write( open( cmake_projects ).read() )
+  todo.append( [ 'svn', 'commit', os.path.join( tmp, 'cmake' ), '-m', 'updated BrainVISA projects and components lists.' ] )
+
+python_projects = os.path.join( tmp, 'python_projects' )
+generate_python( open( python_projects, 'w' ) )
+print 'Checking', BRAINVISA_SVN_URL + '/development/brainvisa-cmake/trunk/python/brainvisa/maker/brainvisa_projects.py'
+system( 'svn', 'co', BRAINVISA_SVN_URL + '/development/brainvisa-cmake/trunk/python/brainvisa/maker', os.path.join( tmp, 'python' ) )
+python_projects_svn = os.path.join( tmp, 'python', 'brainvisa_projects.py' )
+if not compare( open( python_projects ).read(), open( python_projects_svn ).read() ):
+  print '--> updating', BRAINVISA_SVN_URL + '/development/brainvisa-cmake/trunk/python/brainvisa/maker/brainvisa_projects.py'
+  open( python_projects_svn, 'w' ).write( open( python_projects ).read() )
+  todo.append( [ 'svn', 'commit', os.path.join( tmp, 'python' ), '-m', 'updated BrainVISA projects and components lists.' ] )
+
+print 'Checking externals'
+source_views = os.path.join( tmp, 'source_views' )
+system( 'svn', 'co', '--ignore-externals', BRAINVISA_SVN_URL + '/source_views', source_views )
+updateExternals = False
+for g in os.listdir( source_views ):
+  if g == '.svn': continue
+  if g not in componentsPerGroup:
+    print '--> removing', BRAINVISA_SVN_URL + '/source_views/' + g
+    system( 'svn', 'delete', os.path.join( source_views, g ) )
+    updateExternals = True
+for g in componentsPerGroup:
+  trunkDir = os.path.join( source_views, g, 'development' )
+  trunkClient = [  '# This file had been generated by "bv_bioproj_project --svn" command on ' + time.asctime() ]
+  if not os.path.exists( trunkDir ):
+    print '--> creating', BRAINVISA_SVN_URL + '/source_views/' + g + '/development'
+    system( 'svn', 'mkdir', '--parents', trunkDir )
+    updateExternals = True
+  currentProject = None
+  for component in componentsPerGroup[ g ]:
+    project = projectPerComponent[ component ]
+    if project != currentProject:
+      if trunkClient[ -1 ]: trunkClient.append( '' )
+      currentProject = project
+    trunkClient.append( urlPerComponent[ component ][ len( BRAINVISA_SVN_URL ) + 1 : ] + '/trunk' + ' ' + urlPerComponent[ component ] + '/trunk' )
+  trunkClient = '\n'.join( trunkClient )
+  trunkClientFile =  os.path.join( trunkDir, 'client.txt' )
+  if not os.path.exists( trunkClientFile ):
+    print '--> creating', BRAINVISA_SVN_URL + '/source_views/' + g + '/development/client.txt'
+    open( trunkClientFile, 'w' ).write( trunkClient )
+    system( 'svn', 'add', trunkClientFile )
+    system( 'svn', 'propset', 'svn:externals', '--file', trunkClientFile, trunkDir )
+    updateExternals = True
+  elif not compare( open( trunkClientFile ).read(), trunkClient ):
+    print '--> updating', BRAINVISA_SVN_URL + '/source_views/' + g + '/development/client.txt'
+    open( trunkClientFile, 'w' ).write( trunkClient )
+    system( 'svn', 'propset', 'svn:externals', '--file', trunkClientFile, trunkDir )
+    updateExternals = True
+  
+  stableDir = os.path.join( source_views, g, 'bugfix' )
+  stableClient = [  '# This file had been generated by "bv_bioproj_project --svn" command on ' + time.asctime() ]
+  if not os.path.exists( stableDir ):
+    print '--> creating', BRAINVISA_SVN_URL + '/source_views/' + g + '/bugfix'
+    system( 'svn', 'mkdir', '--parents', stableDir )
+    updateExternals = True
+  currentProject = None
+  for component in componentsPerGroup[ g ]:
+    project = projectPerComponent[ component ]
+    if project != currentProject:
+      if stableClient[ -1 ]: stableClient.append( '' )
+      currentProject = project
+    branches = branchesPerComponent.get( component )
+    if branches:
+      branch = branches[ -1 ]
+      stableClient.append( urlPerComponent[ component ][ len( BRAINVISA_SVN_URL ) + 1 : ] + '/' + branch + ' ' + urlPerComponent[ component ] + '/' + branch )
+  stableClient = '\n'.join( stableClient )
+  stableClientFile =  os.path.join( stableDir, 'client.txt' )
+  if not os.path.exists( stableClientFile ):
+    print '--> creating', BRAINVISA_SVN_URL + '/source_views/' + g + '/bugfix/client.txt'
+    open( stableClientFile, 'w' ).write( stableClient )
+    system( 'svn', 'add', stableClientFile )
+    system( 'svn', 'propset', 'svn:externals', '--file', stableClientFile, stableDir )
+    updateExternals = True
+  elif not compare( open( stableClientFile ).read(), stableClient ):
+    print '--> updating', BRAINVISA_SVN_URL + '/source_views/' + g + '/bugfix/client.txt'
+    open( stableClientFile, 'w' ).write( stableClient )
+    system( 'svn', 'propset', 'svn:externals', '--file', stableClientFile, stableDir )
+    updateExternals = True
+  
+  tagDir = os.path.join( source_views, g, 'latest_release' )
+  tagClient = [  '# This file had been generated by "bv_bioproj_project --svn" command on ' + time.asctime() ]
+  if not os.path.exists( tagDir ):
+    print '--> creating', BRAINVISA_SVN_URL + '/source_views/' + g + '/latest_release'
+    system( 'svn', 'mkdir', '--parents', tagDir )
+    updateExternals = True
+  currentProject = None
+  for component in componentsPerGroup[ g ]:
+    project = projectPerComponent[ component ]
+    if project != currentProject:
+      if tagClient[ -1 ]: tagClient.append( '' )
+      currentProject = project
+    tags = tagsPerComponent.get( component )
+    if tags:
+      tag = tags[ -1 ]
+      tagClient.append( urlPerComponent[ component ][ len( BRAINVISA_SVN_URL ) + 1 : ] + '/' + tag + ' ' + urlPerComponent[ component ] + '/' + tag )
+  tagClient = '\n'.join( tagClient )
+  tagClientFile =  os.path.join( tagDir, 'client.txt' )
+  if not os.path.exists( tagClientFile ):
+    print '--> creating', BRAINVISA_SVN_URL + '/source_views/' + g + '/latest_release/client.txt'
+    open( tagClientFile, 'w' ).write( tagClient )
+    system( 'svn', 'add', tagClientFile )
+    system( 'svn', 'propset', 'svn:externals', '--file', tagClientFile, tagDir )
+    updateExternals = True
+  elif not compare( open( tagClientFile ).read(), tagClient ):
+    print '--> updating', BRAINVISA_SVN_URL + '/source_views/' + g + '/latest_release/client.txt'
+    open( tagClientFile, 'w' ).write( tagClient )
+    system( 'svn', 'propset', 'svn:externals', '--file', tagClientFile, tagDir )
+    updateExternals = True
+
+if updateExternals:
+  todo.append( [ 'svn', 'commit', os.path.join( tmp, 'source_views' ), '-m', 'updated BrainVISA projects and components lists.' ] )
+
+if todo:
+  print
+  print '!!! Some files have been updated. Use the following commands to submit changes'
+  print
+  print '\n'.join( ( ' '.join( ( repr(i) for i in j ) ) for j in todo ) )
+else:
+  print 'Everything is up to date on BioProj'
+    

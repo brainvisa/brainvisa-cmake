@@ -38,7 +38,7 @@ from optparse import OptionParser
 from fnmatch import fnmatchcase
 
 from brainvisa.maker.brainvisa_projects import *
-from brainvisa.maker.bioproj_parser import BRAINVISA_SVN_URL
+from brainvisa.maker.bioproj_parser import BRAINVISA_SVN_URL, SVN_URL
 
 def system( *args, **kwargs ):
   print ' '.join( args )
@@ -63,23 +63,18 @@ def environmentVariablesSubstitution( path ):
 
 
 
-class SubversionClient( object ):
+class SourceDirectory( object ):
   def __init__( self, directory, username='' ):
     self.directory = os.path.normpath( os.path.abspath( directory ) )
     if options.verbose:
       print 'Opening client:', self.directory
     self.username = username
     self.rules = []
-    self.options = {
-      'build_type': None,
-      'build_directory': None,
-      'make_options': None }
-    self.componentVersioPerURL = {}
+    self.componentVersionPerURL = {}
+    self.otherComponentsDirectory = set()
   
   
   def addRule( self, line ):
-    if options.verbose:
-      print '  processing line:', repr( line )
     l = line.split()
     if len(l) < 2 or len( l ) > 3:
       raise SyntaxError()
@@ -93,10 +88,10 @@ class SubversionClient( object ):
       if '/' in componentsPattern:
         if versionPattern or '*' in componentsPattern:
           raise SyntaxError()
-        url = BRAINVISA_SVN_URL + '/' + componentsPattern
+        url = SVN_URL + '/' + componentsPattern
         if options.verbose:
           print '    adding url:', url
-        componentVersioPerURL[ url ] = ( None, None )
+        self.otherComponentsDirectory.add( componentsPattern )
       else:
         if versionPattern is None:
           raise SyntaxError()
@@ -106,7 +101,7 @@ class SubversionClient( object ):
           for url in self.getMatchingURLs( component, versionPattern ):
             if options.verbose:
               print '      adding url:', url
-            self.componentVersioPerURL[ url[2] ] = ( url[0], url[1] )
+            self.componentVersionPerURL[ url[2] ] = ( url[0], url[1] )
     elif sign == '-':
       if '/' in componentsPattern:
         raise SyntaxError()
@@ -119,20 +114,13 @@ class SubversionClient( object ):
           for url in self.getMatchingURLs( component, versionPattern ):
             if options.verbose:
               print '      removing url:', url
-            self.componentVersioPerURL.pop( url[2], None )
+            self.componentVersionPerURL.pop( url[2], None )
     else:
-      i = line.find( '=' )
-      if i > 0:
-        option = line[ :i ].strip()
-        value = line[ i+1: ].strip()
-        if option not in self.options:
-          raise SyntaxError()
-        self.options[ option ] = value
-      else:
-        raise SyntaxError()
+      raise SyntaxError()
     self.rules.append( line )
   
-  def initialize( self ):
+  def process( self, commands ):
+    print '[ source', self.directory, ']'
     if not os.path.exists( self.directory ):
       os.mkdir( self.directory )
     clientFile = open( os.path.join( self.directory, 'bv_maker.cfg' ), 'w' )
@@ -143,10 +131,9 @@ class SubversionClient( object ):
     if not os.path.exists( repositoryDirectory ):
       system( 'svnadmin', 'create', repositoryDirectory )
       self.svncommand( 'checkout',  'file://' + os.path.splitdrive(repositoryDirectory)[1].replace(os.path.sep, "/"), self.directory )
-    self.updateExternals()
+      checkout = True
+    self.updateExternals( update=checkout or 'svn' in commands )
     self.updateCMake()
-    if self.options.get( 'build_type' ) is not None or self.options.get( 'build_directory' ):
-      self.updateBuild()
     
   
   @staticmethod
@@ -185,7 +172,7 @@ class SubversionClient( object ):
   }
   @staticmethod
   def getMatchingURLs( component, versionPattern ):
-    versionPattern = SubversionClient._urlsAlias.get( versionPattern, versionPattern )
+    versionPattern = SourceDirectory._urlsAlias.get( versionPattern, versionPattern )
     if versionPattern == 'trunk':
       versions = [ ( 'trunk', 'trunk' ) ]
     else:
@@ -232,11 +219,11 @@ class SubversionClient( object ):
 
 
 
-  def updateExternals( self ):
+  def updateExternals( self, update=True ):
     externalsFileName = os.path.join( self.directory, 'bv_maker.externals' )
     externalsFile = open( externalsFileName, 'w' )
     self.clients = {}
-    for url, component_version in self.componentVersioPerURL.iteritems():
+    for url, component_version in self.componentVersionPerURL.iteritems():
       component, version = component_version
       self.clients.setdefault( version, {} ).setdefault( brainvisaProjectPerComponent.get( component ), [] ).append( url )
     currentProject = None
@@ -249,11 +236,14 @@ class SubversionClient( object ):
         for url in urls:
           print >> externalsFile, url[ len( BRAINVISA_SVN_URL ) + 1: ], url
         print >> externalsFile
+    for d in self.otherComponentsDirectory:
+      print >> externalsFile, d, SVN_URL + '/' + d
     externalsFile.close()
 
     self.svncommand( 'propset', 'svn:externals', '--file', externalsFileName, self.directory )
     self.svncommand( 'commit', '-m', '', self.directory )
-    self.svncommand( 'update', self.directory )
+    if update:
+      self.svncommand( 'update', self.directory )
 
 
   def updateCMake( self ):
@@ -261,12 +251,14 @@ class SubversionClient( object ):
     out = open( cmakeFile, 'w' )
     components = set()
     projects = set()
-    for url, component_version in self.componentVersioPerURL.iteritems():
+    for url, component_version in self.componentVersionPerURL.iteritems():
       component, version = component_version
       components.add( component )
-      projects.add( brainvisaProjectPerComponent[ component ] )
-      self.clients.setdefault( version, {} ).setdefault( brainvisaProjectPerComponent.get( component ), [] ).append( url )
-      print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + os.path.join( self.directory, *url[ len( BRAINVISA_SVN_URL ) + 1: ].split( '/' ) ) + '" CACHE STRING "Sources directory for component ' + component + '" FORCE )'
+      if component:
+        projects.add( brainvisaProjectPerComponent[ component ] )
+        self.clients.setdefault( version, {} ).setdefault( brainvisaProjectPerComponent.get( component ), [] ).append( url )
+        #print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + os.path.join( self.directory, *url[ len( BRAINVISA_SVN_URL ) + 1: ].split( '/' ) ) + '" CACHE STRING "Sources directory for component ' + component + '" FORCE )'
+        print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + os.path.join( self.directory, *url[ len( BRAINVISA_SVN_URL ) + 1: ].split( '/' ) ) + '" CACHE STRING "Sources directory for component ' + component + '" )'
     # Order of projects and components is important
     sortedProjects = [ p for p in brainvisaProjects if p in projects ]
     sortedComponents = []
@@ -274,174 +266,86 @@ class SubversionClient( object ):
       for component in brainvisaComponentsPerProject[ project ]:
         if component in components:
           sortedComponents.append( component )
-    print >> out, 'set( BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" FORCE )'
-    print >> out, 'set( _BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" FORCE )'
-    print >> out, 'set( BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" FORCE )'
-    print >> out, 'set( _BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" FORCE )'
-    build_type = self.options.get( 'build_type' )
-    if build_type is None or build_type in ( 'None', 'Default' ):
-      build_type = ''
-    print >> out, 'set( CMAKE_BUILD_TYPE', build_type, 'CACHE STRING "Type of build" FORCE )'
+    #print >> out, 'set( BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" FORCE )'
+    #print >> out, 'set( _BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" FORCE )'
+    #print >> out, 'set( BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" FORCE )'
+    #print >> out, 'set( _BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" FORCE )'
+    print >> out, 'set( BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" )'
+    print >> out, 'set( _BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" )'
+    print >> out, 'set( BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" )'
+    print >> out, 'set( _BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" )'
+    print >> out, 'set( BRAINVISA_OTHER_SOURCE_DIRECTORIES "' + ';'.join( self.otherComponentsDirectory ) + '" CACHE STRING "Directories that may contain source for BrainVISA component" )'
+    print >> out, 'set( BRAINVISA_SOURCES "' + self.directory + '" CACHE STRING "BrainVISA source directories" )'
 
-    out = open( os.path.join( self.directory, 'CMakeLists.txt' ), 'w' )
-    print >> out, '''
+    cmakeLists = os.path.join( self.directory, 'CMakeLists.txt' )
+    if not os.path.exists( cmakeLists ):
+      out = open( cmakeLists, 'w' )
+      print >> out, '''
 cmake_minimum_required( VERSION 2.6 )
 find_package( brainvisa-cmake NO_POLICY_SCOPE )
 include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 '''
 
-  def updateBuild( self ):
-    build_directory = self.options.get( 'build_directory' )
-    if build_directory is None:
-      build_directory = 'build'
-    build_directory = os.path.join( self.directory, build_directory )
-    if not os.path.exists( build_directory ):
-      os.mkdir( build_directory )
-    system( 'cmake', '-C', os.path.join( self.directory, 'bv_maker.cmake' ), self.directory, cwd= build_directory )
-    make_options = self.options.get( 'make_options', [] )
-    if make_options:
-      make_options = make_options.split()
-    system( cwd=build_directory, *( ['make'] + make_options ) )
-    
+
+
+class BuildDirectory( object ):
+  _validOptions = set( ( 'source', 'build_type', 'make_options' ) )
+  
+  def __init__( self, directory ):
+    self.directory = os.path.normpath( os.path.abspath( directory ) )
+    self.rules = []
+    self.source = None
+    self.build_type = ''
+    self.make_options = ''
+  
+  def addRule( self, line ):
+    i = line.find( '=' )
+    if i > 0:
+      option = line[ :i ].strip()
+      value = line[ i+1: ].strip()
+      if option not in self._validOptions:
+        raise SyntaxError()
+      setattr( self, option, value )
   
   
-  #def getClientPaths(self):
-    #externals=os.popen( 'svn propget svn:externals "'+ self.clientDirectory +'"' )
-    #for line in externals.readlines():
-      #line=line.strip() # remove \n
-      #if ((line != "") and (line[0] != "#")): # ignore comments
-        #lineSplitted=line.split()
-        #if len(lineSplitted) == 2:
-          #clientDir=lineSplitted[0]
-          #clientPath=os.path.join(self.clientDirectory, clientDir)
-          #if (os.path.isdir(clientPath) and (clientDir.startswith(self.subDirectory))):
-            #yield clientPath
+  def process( self, commands ):
+    print '[ build', self.directory, ']'
+    cmake = 'cmake' in commands
+    make = 'make' in commands
+    if self.source is None:
+      raise ValueError( 'No source given for build directory "%s"' % self.directory )
+    self.source = environmentVariablesSubstitution( self.source )
+    cmakeFile = os.path.join( self.source, 'bv_maker.cmake' )
+    if not os.path.exists( cmakeFile ):
+      raise ValueError( 'Source directory "%s" does not exists or does not contain "bv_maker.cmake"' % self.source )
+    if not os.path.exists( self.directory ):
+      os.mkdir( self.directory )
+      cmake = True
+    if cmake:
+      system( 'cmake', '-DCMAKE_BUILD_TYPE:STRING=' + self.build_type, '-C', cmakeFile, self.source, cwd = self.directory )
+    if make:
+      system( cwd=self.directory, *( ['make'] + self.make_options.split() ) )
 
+  
 
-  #def getClientAndServerPaths(self):
-    #externals=os.popen( 'svn propget svn:externals "'+ self.clientDirectory +'"' )
-    #for line in externals.readlines():
-      #line=line.strip() # remove \n
-      #if ((line != "") and (line[0] != "#")): # ignore comments
-        #lineSplitted=line.split()
-        #if len(lineSplitted) == 2:
-          #clientDir=lineSplitted[0]
-          #clientPath=os.path.join(self.clientDirectory, clientDir)
-          #if (os.path.isdir(clientPath) and (clientDir.startswith(self.subDirectory))):
-            #yield ( clientPath, lineSplitted[1] )
+usage = '''%prog [svn] [cmake] [make]
 
-  #def commit( self, message=None ):
-    #self.assertValidClient()
-    #for clientPath in self.getClientPaths():
-      #if not message:
-        #raise NotImplementedError( 'Input of commit message not implemented. Use -m option.' )
-      #print 'Commit clientPath : ', clientPath
-      #self.svncommand( 'commit', clientPath, '-m', message )
+This command enables to manage source retrieval, configuration and compilation of BrainVISA projects.
 
-  #def status( self ):
-    #self.assertValidClient()
-    #for clientPath in self.getClientPaths():
-      #self.svncommand( 'status', clientPath )
-
-  #def revisionAndRepository( self, path, revstring='Revision:' ):
-    #lang = os.getenv( 'LANG', '' )
-    #os.environ[ 'LANG' ] = 'C'
-    #info = os.popen( 'svn info "' + path + '"' )
-    #rev = None
-    #repo = None
-    #reprootstring = 'Repository Root:'
-    #for l in info.xreadlines():
-      #l = l.strip()
-      #if l.startswith( reprootstring ):
-        #repo = l[len(reprootstring)+1:]
-      #elif l.startswith( revstring ):
-        #rev = int( l[len(revstring)+1:] )
-        #break
-    #info.close()
-    #if lang:
-      #os.environ[ 'LANG' ] = lang
-    #else:
-      #del os.environ[ 'LANG' ]
-    #return rev, repo
-
-  #def update( self ):
-    #self.assertValidClient()
-    #servers = {}
-    #for clientPath, serverPath in self.getClientAndServerPaths():
-      #doupdate = True
-      #rext, repo = self.revisionAndRepository( clientPath )
-      #if rext is not None and repo is not None:
-        #rev = servers.get( repo, None )
-        #if rev is None:
-          #rev, repo = self.revisionAndRepository( repo, revstring='Last Changed Rev:' )
-          #servers[ repo ] = rev
-        #if rev is not None and rext >= rev:
-          #doupdate = False # up to date
-          #print clientPath, 'is up-to-date.'
-      #if doupdate:
-        ##print 'svn update "' + clientPath + '"'
-        #self.svncommand( 'update', clientPath )
-
-usage = '''%prog <sub-command> [options] [parameters]'''
-
-#This command enables to create a custom client for a subversion repository. You can choose the subdirectories of the repository that you want to see in your client.
-#First, create the client directory using %prog create DIRECTORY.
-#Then, choose the content of your client using %prog edit [DIRECTORY]. This opens an editor with the current list of directories of the client. The format of the file is: <client path> <repository path>. Comment lines begin with #.
-#Update the client using svn update [DIRECTORY].
-
-#This command creates a local repository with an externals property that defines links to the actual repository. If there are several directory levels in the client definition, only the last directory is a work copy where svn commands are directory usable. But if you want to execute svn commands in all the client or in an intermediate directory of the client, you can use some %prog options like: %prog commit|ci [DIRECTORY] [-m MESSAGE].
-       
-       #%prog create DIRECTORY
-       #%prog edit [DIRECTORY]
-       #%prog show [DIRECTORY]
-       #%prog commit|ci [DIRECTORY] -m MESSAGE
-       #%prog status|st [DIRECTORY]
-       #%prog update|up [DIRECTORY]
-      
-#DIRECTORY can be a subdirectory of the client directory.
-
-#In order to work, the commands svn and svnadmin must be installed on your system. On some Linux systems they are in two separate packages (e.g. subversion and subversion-tools).'''
+In order to work, the commands svn and svnadmin must be installed on your system. On some Linux systems they are in two separate packages (e.g. subversion and subversion-tools).'''
 parser = OptionParser(usage=usage)
-#parser.add_option( '-m', '--message', dest='message',
-                   #help='specify log message for commit', metavar='MESSAGE',
-                   #default='' )
-#parser.add_option( '--username', dest='username',
-                   #help='specify user login to use with the svn server',
-                   #metavar='USERNAME', default='' )
+parser.add_option( '--username', dest='username',
+                   help='specify user login to use with the svn server',
+                   metavar='USERNAME', default='' )
 parser.add_option( '-v', '--verbose', dest='verbose', action='store_true',
                    help='show as much information as possible' )
 (options, args) = parser.parse_args()
-#if len( args ) == 0:
-  #parser.error( 'No command provided' )
-#elif len( args ) > 2:
-  #parser.error( 'Too many options' )
-#command = args[ 0 ]
-
-#if command == 'create':
-  #if len( args ) < 2:
-    #parser.error( 'Missing directory name' )
-  #else:
-    #if options.message:
-      #print >> sys.stderr, 'warning: spurious -m option, ignored.'
-    #client = SubversionClient( args[ 1 ], username=options.username )
-    #client.create()
-#else:
-  #if len( args ) < 2:
-    #client = SubversionClient( os.curdir, username=options.username )
-  #else:
-    #client = SubversionClient(  args[ 1 ], username=options.username )
-  #if command == 'edit':
-    #client.edit()
-  #elif command == 'ci' or command == 'commit':
-    #client.commit( options.message )
-  #elif command == 'status' or command == 'st':
-    #client.status()
-  #elif command == 'update' or command == 'up':
-    #client.update()
-  #elif command == 'show':
-    #client.show()
-  #else:
-    #parser.error( 'Invalid command: %s' % command )
+commands = set( args )
+bad_commands = commands.difference( ( 'svn', 'cmake', 'make' ) )
+if bad_commands:
+  raise ValueError( 'Bad command(s): %s' % ', '.join( bad_commands ) )
+if not commands:
+  commands = set( ('svn', 'make') )
 
 
     
@@ -449,21 +353,32 @@ parser.add_option( '-v', '--verbose', dest='verbose', action='store_true',
 configFile = os.path.join( os.environ[ 'HOME' ], '.brainvisa', 'bv_maker.cfg' )
 packages = []
 lineCount = 0
-client = None
-clients = []
+currentDirectoryObject = None
+directoryObjects = []
 for line in open( configFile ):
   lineCount += 1
   line = line.strip()
-  if not line or line[0] == '#': continue
+  if not line or line[0] == '#' or line.startswith( '//' ): continue
   try:
     if line[0] == '[':
       if line[-1] != ']': raise SyntaxError()
-      client = SubversionClient( environmentVariablesSubstitution( line[ 1:-1 ].strip() ) )
-      clients.append( client )
+      l = line[1:-1].split( None, 1 )
+      if len( l ) != 2:
+        raise SyntaxError()
+      if l[ 0 ] == 'source':
+        currentDirectoryObject = SourceDirectory( environmentVariablesSubstitution( l[ 1 ].strip() ), username=options.username )
+        directoryObjects.append( currentDirectoryObject )
+      elif l[ 0 ] == 'build':
+        currentDirectoryObject = BuildDirectory( environmentVariablesSubstitution( l[ 1 ].strip() ) )
+        directoryObjects.append( currentDirectoryObject )
+      else:
+        raise SyntaxError()
     else:
-      if client is None: raise SyntaxError()
-      client.addRule( line )
+      if currentDirectoryObject is None: raise SyntaxError()
+      if options.verbose:
+        print '  processing line:', repr( line )
+      currentDirectoryObject.addRule( line )
   except SyntaxError:
     raise SyntaxError( 'Syntax error in ' + repr( configFile ) + ' on line ' + str( lineCount ) )
-for client in clients:
-  client.initialize()
+for d in directoryObjects:
+  d.process( commands )

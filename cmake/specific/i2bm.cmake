@@ -5,7 +5,7 @@ if( IS_DIRECTORY /i2bm )
     list( FIND CMAKE_PREFIX_PATH "/i2bm/research/${output}" result )
     if( result EQUAL -1 )
       set( CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/i2bm/research/${output}" )
-      foreach( soft dcmtk gsl vtkinria3d )
+      foreach( soft dcmtk gsl vtkinria3d/lib )
         set( CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/i2bm/research/${output}/${soft}" )
       endforeach()
       # Force to use VTK version installed in /i2bm/research by default

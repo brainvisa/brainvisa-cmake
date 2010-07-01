@@ -41,7 +41,7 @@ if os.path.isabs( sys.argv[0] ):
   this_script = sys.argv[0]
 else:
   this_script = None
-  for p in os.environ.get( 'PATH', '' ).split( os.pathsep ):
+  for p in os.environ.get( 'PATH', '' ).split( os.pathsep ) + [ os.curdir ]:
     s = os.path.join( p, sys.argv[0] )
     if os.path.exists( s ):
       this_script = s

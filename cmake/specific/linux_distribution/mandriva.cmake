@@ -5,3 +5,8 @@ if( DESIRED_QT_VERSION EQUAL 4 AND NOT ENV{QTDIR} AND IS_DIRECTORY /usr/lib/qt4 
     set( CMAKE_PREFIX_PATH /usr/lib/qt4 ${CMAKE_PREFIX_PATH} )
   endif()
 endif()
+file( GLOB ITK_PREFIX "/usr/lib*/itk-*" )
+if( ITK_PREFIX )
+  set( ITK_DIR ${ITK_PREFIX} CACHE PATH "The directory containing ITKConfig.cmake." )
+endif()
+unset( ITK_PREFIX )

@@ -136,7 +136,7 @@ class SourceDirectory( object ):
   def process( self, commands ):
     print '[ source', self.directory, ']'
     if not os.path.exists( self.directory ):
-      os.mkdir( self.directory )
+      os.makedirs( self.directory )
     clientFile = open( os.path.join( self.directory, 'bv_maker.cfg' ), 'w' )
     print >> clientFile, '\n'.join( self.rules )
     
@@ -333,7 +333,7 @@ class BuildDirectory( object ):
     if not os.path.exists( cmakeFile ):
       raise ValueError( 'Source directory "%s" does not exists or does not contain "bv_maker.cmake"' % self.source )
     if not os.path.exists( self.directory ):
-      os.mkdir( self.directory )
+      os.makedirs( self.directory )
       cmake = True
     if cmake:
       system( 'cmake', '-DCMAKE_BUILD_TYPE:STRING=' + self.build_type, '-C', cmakeFile, self.source, cwd = self.directory )

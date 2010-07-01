@@ -63,13 +63,13 @@ projects = [
 ]
 
 excludeProjects = set()
-excludeComponents = set( ('brainvisa-cmake', ) )
+excludeComponents = set()
 
 # If component order inside a project is important, it is possible to
 # declare them in componentsPerProject. Components not listed but present
 # in BioProj will be added in an unknown order.
 componentsPerProject = {
- 'development': [ 'brainvisa-svn' ],
+ 'development': [ 'brainvisa-cmake', 'brainvisa-svn' ],
  'aims': [ 'aims-free', 'aims-gpl' ],
  'anatomist': [ 'anatomist-free', 'anatomist-gpl' ],
  'brainrat': [ 'brainrat-gpl', 'brainrat-private', 'bioprocessing' ],

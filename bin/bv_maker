@@ -37,6 +37,20 @@ import sys, os, re, pprint, subprocess
 from optparse import OptionParser
 from fnmatch import fnmatchcase
 
+if os.path.isabs( sys.argv[0] ):
+  this_script = sys.argv[0]
+else:
+  this_script = None
+  for p in os.environ.get( 'PATH', '' ).split( os.pathsep ):
+    s = os.path.join( p, sys.argv[0] )
+    if os.path.exists( s ):
+      this_script = s
+      break
+if this_script:
+  python_modules = os.path.join( os.path.dirname( os.path.dirname( this_script ) ), 'python' )
+  if os.path.isdir( python_modules ):
+    sys.path.insert( 0, python_modules )
+
 from brainvisa.maker.brainvisa_projects import *
 from brainvisa.maker.bioproj_parser import BRAINVISA_SVN_URL, SVN_URL
 

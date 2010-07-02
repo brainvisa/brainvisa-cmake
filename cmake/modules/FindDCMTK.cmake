@@ -186,7 +186,10 @@ if( DCMTK_config_INCLUDE_DIR AND
     ${DCMTK_config_LIBRARY}
   )
   IF( APPLE )
-    SET( DCMTK_LIBRARIES ${DCMTK_LIBRARIES} z )
+    find_package( ZLIB )
+    if( ZLIB_FOUND )
+      SET( DCMTK_LIBRARIES ${DCMTK_LIBRARIES} ${ZLIB_LIBRARIES} )
+    endif( ZLIB_FOUND )
   ENDIF( APPLE )
 
   IF(DCMTK_dcmjpeg_LIBRARY)
@@ -259,11 +262,15 @@ if( DCMTK_config_INCLUDE_DIR AND
   endif()
 
   IF( WIN32 )
-    SET( DCMTK_LIBRARIES ${DCMTK_LIBRARIES} netapi32 )
+    find_library(netapi32 netapi32.dll)
+    SET( DCMTK_LIBRARIES ${DCMTK_LIBRARIES} ${netapi32} )
   ENDIF( WIN32 )
 
   IF( UNIX )
-    SET( DCMTK_LIBRARIES ${DCMTK_LIBRARIES} z )
+    find_package( ZLIB REQUIRED)
+    if( ZLIB_FOUND )
+      SET( DCMTK_LIBRARIES ${DCMTK_LIBRARIES} ${ZLIB_LIBRARIES} )
+    endif( ZLIB_FOUND )
   ENDIF( UNIX )
 
 endif()

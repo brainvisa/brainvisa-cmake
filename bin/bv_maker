@@ -100,12 +100,12 @@ class SourceDirectory( object ):
       versionPattern = None
     if sign == '+':
       if '/' in componentsPattern:
-        if versionPattern or '*' in componentsPattern:
+        if '*' in componentsPattern:
           raise SyntaxError()
         url = SVN_URL + '/' + componentsPattern
         if options.verbose:
           print '    adding url:', url
-        self.otherComponentsDirectory.add( componentsPattern )
+        self.otherComponentsDirectory.add( ( componentsPattern, versionPattern )  )
       else:
         if versionPattern is None:
           raise SyntaxError()
@@ -238,6 +238,7 @@ class SourceDirectory( object ):
     externalsFile = open( externalsFileName, 'w' )
     self.clients = {}
     hasBrainvisacmake = False
+    
     for url, component_version in self.componentVersionPerURL.iteritems():
       component, version = component_version
       self.clients.setdefault( version, {} ).setdefault( brainvisaProjectPerComponent.get( component ), [] ).append( url )
@@ -269,8 +270,8 @@ class SourceDirectory( object ):
         for url in urls:
           print >> externalsFile, url[ len( BRAINVISA_SVN_URL ) + 1: ], url
         print >> externalsFile
-    for d in self.otherComponentsDirectory:
-      print >> externalsFile, d, SVN_URL + '/' + d
+    for source, dest in self.otherComponentsDirectory:
+      print >> externalsFile, dest, SVN_URL + '/' + source
     externalsFile.close()
 
     self.svncommand( 'propset', 'svn:externals', '--file', externalsFileName, self.directory )
@@ -290,8 +291,8 @@ class SourceDirectory( object ):
       if component:
         projects.add( brainvisaProjectPerComponent[ component ] )
         self.clients.setdefault( version, {} ).setdefault( brainvisaProjectPerComponent.get( component ), [] ).append( url )
-        #print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + os.path.join( self.directory, *url[ len( BRAINVISA_SVN_URL ) + 1: ].split( '/' ) ) + '" CACHE STRING "Sources directory for component ' + component + '" FORCE )'
-        print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + os.path.join( self.directory, *url[ len( BRAINVISA_SVN_URL ) + 1: ].split( '/' ) ) + '" CACHE STRING "Sources directory for component ' + component + '" )'
+        print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + os.path.join( self.directory, *url[ len( BRAINVISA_SVN_URL ) + 1: ].split( '/' ) ) + '" CACHE STRING "Sources directory for component ' + component + '" FORCE )'
+        #print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + os.path.join( self.directory, *url[ len( BRAINVISA_SVN_URL ) + 1: ].split( '/' ) ) + '" CACHE STRING "Sources directory for component ' + component + '" )'
     # Order of projects and components is important
     sortedProjects = [ p for p in brainvisaProjects if p in projects ]
     sortedComponents = []
@@ -299,16 +300,18 @@ class SourceDirectory( object ):
       for component in brainvisaComponentsPerProject[ project ]:
         if component in components:
           sortedComponents.append( component )
-    #print >> out, 'set( BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" FORCE )'
-    #print >> out, 'set( _BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" FORCE )'
-    #print >> out, 'set( BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" FORCE )'
-    #print >> out, 'set( _BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" FORCE )'
-    print >> out, 'set( BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" )'
-    print >> out, 'set( _BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" )'
-    print >> out, 'set( BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" )'
-    print >> out, 'set( _BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" )'
-    print >> out, 'set( BRAINVISA_OTHER_SOURCE_DIRECTORIES "' + ';'.join( self.otherComponentsDirectory ) + '" CACHE STRING "Directories that may contain source for BrainVISA component" )'
-    print >> out, 'set( BRAINVISA_SOURCES "' + self.directory + '" CACHE STRING "BrainVISA source directories" )'
+    print >> out, 'set( BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" FORCE )'
+    print >> out, 'set( _BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" FORCE )'
+    print >> out, 'set( BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" FORCE )'
+    print >> out, 'set( _BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" FORCE )'
+    print >> out, 'set( BRAINVISA_OTHER_SOURCE_DIRECTORIES "' + ';'.join( (i[1] for i in self.otherComponentsDirectory) ) + '" CACHE STRING "Directories that may contain source for BrainVISA component" FORCE )'
+    print >> out, 'set( BRAINVISA_SOURCES "' + self.directory + '" CACHE STRING "BrainVISA source directories" FORCE )'
+    #print >> out, 'set( BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" )'
+    #print >> out, 'set( _BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" )'
+    #print >> out, 'set( BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" )'
+    #print >> out, 'set( _BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" )'
+    #print >> out, 'set( BRAINVISA_OTHER_SOURCE_DIRECTORIES "' + ';'.join( (i[1] for i in self.otherComponentsDirectory) ) + '" CACHE STRING "Directories that may contain source for BrainVISA component" )'
+    #print >> out, 'set( BRAINVISA_SOURCES "' + self.directory + '" CACHE STRING "BrainVISA source directories" )'
 
     cmakeLists = os.path.join( self.directory, 'CMakeLists.txt' )
     if not os.path.exists( cmakeLists ):

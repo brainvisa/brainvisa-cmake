@@ -33,7 +33,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
-import sys, os, re, pprint, subprocess
+import sys, os, re, pprint, subprocess, glob
 from optparse import OptionParser
 from fnmatch import fnmatchcase
 
@@ -178,7 +178,7 @@ class SourceDirectory( object ):
   
   _urlsAlias = {
     'development': 'trunk',
-    'bugfix': 'branch:-1',
+    'bug_fix': 'branch:-1',
     'latest_release': 'tag:-1',
     'tag': 'tag:-1',
     'branch': 'branch:-1',
@@ -237,9 +237,28 @@ class SourceDirectory( object ):
     externalsFileName = os.path.join( self.directory, 'bv_maker.externals' )
     externalsFile = open( externalsFileName, 'w' )
     self.clients = {}
+    hasBrainvisacmake = False
     for url, component_version in self.componentVersionPerURL.iteritems():
       component, version = component_version
       self.clients.setdefault( version, {} ).setdefault( brainvisaProjectPerComponent.get( component ), [] ).append( url )
+      if component == 'brainvisa-cmake':
+        hasBrainvisacmake = True
+    if not hasBrainvisacmake:
+      tags = brainvisaTagsPerComponent.get( 'brainvisa-cmake' )
+      if tags:
+        version = 'tag'
+        versionPath = 'tags/' + tags[ -1 ]
+      else:
+        branches = brainvisaBranchesPerComponent.get( 'brainvisa-cmake' )
+        if branches:
+          version = 'branch'
+          versionPath = 'branches/' + branches[ -1 ]
+        else:
+          version = 'trunk'
+          versionPath = 'trunk'
+      url = BRAINVISA_SVN_URL + '/' + 'development/brainvisa-cmake/' + versionPath
+      self.clients.setdefault( version, {} )[ 'brainvisa-cmake' ] = [ url ]
+      
     currentProject = None
     for version, content in self.clients.iteritems():
       if version:
@@ -296,6 +315,7 @@ class SourceDirectory( object ):
       out = open( cmakeLists, 'w' )
       print >> out, '''
 cmake_minimum_required( VERSION 2.6 )
+set( CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}" ${CMAKE_PREFIX_PATH} )
 find_package( brainvisa-cmake NO_POLICY_SCOPE )
 include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 '''
@@ -336,6 +356,21 @@ class BuildDirectory( object ):
       os.makedirs( self.directory )
       cmake = True
     if cmake:
+      path = os.path.join( self.source, 'development', 'brainvisa-cmake' )
+      source_bvcmake = glob.glob( os.path.join( path, 'tags', '*' ) )
+      if source_bvcmake:
+        source_bvcmake = source_bvcmake[0]
+      else:
+        source_bvcmake = glob.glob( os.path.join( path, 'branches', '*' ) )
+        if source_bvcmake:
+          source_bvcmake = source_bvcmake[0]
+        else:
+          source_bvcmake = os.path.join( path, 'trunk' )
+      build_bvcmake = os.path.join( self.directory, 'build_files', 'brainvisa-cmake' )
+      if not os.path.exists( build_bvcmake ):
+        os.makedirs( build_bvcmake )
+      system( 'cmake', '-DCMAKE_INSTALL_PREFIX:PATH=' + self.directory, source_bvcmake, cwd=build_bvcmake )
+      system( 'make', 'install', cwd=build_bvcmake )
       system( 'cmake', '-DCMAKE_BUILD_TYPE:STRING=' + self.build_type, '-C', cmakeFile, self.source, cwd = self.directory )
     if make:
       system( cwd=self.directory, *( ['make'] + self.make_options.split() ) )

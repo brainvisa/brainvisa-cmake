@@ -183,7 +183,7 @@ foreach( component ${BRAINVISA_COMPONENTS} )
     set( ${component}_IS_BEING_COMPILED TRUE CACHE BOOL INTERNAL )
     message( STATUS "Configuring component ${component} from source directory \"${BRAINVISA_SOURCES_${component}}\"" )
     if( component STREQUAL brainvisa-cmake )
-     file( MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/build_files/${component}" )
+      file( MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/build_files/${component}" )
       execute_process( COMMAND "${CMAKE_COMMAND}" "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}" "${BRAINVISA_SOURCES_${component}}"
         WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/build_files/${component}" )
       execute_process( COMMAND "${CMAKE_BUILD_TOOL}" install

@@ -354,7 +354,7 @@ class BuildDirectory( object ):
       raise ValueError( 'Source directory "%s" does not exists or does not contain "bv_maker.cmake"' % self.source )
     if not os.path.exists( self.directory ):
       os.makedirs( self.directory )
-      cmake = True
+      cmake = cmake or make
     if cmake:
       path = os.path.join( self.source, 'development', 'brainvisa-cmake' )
       source_bvcmake = glob.glob( os.path.join( path, 'tags', '*' ) )

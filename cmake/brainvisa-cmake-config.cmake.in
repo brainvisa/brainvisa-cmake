@@ -1050,6 +1050,7 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
   else()
     string( REPLACE " " ";" _sipFlags "${PYQT4_SIP_FLAGS}" )
   endif()
+  set( _sipFlags ${SIP_FLAGS} ${_sipFlags} )
   add_custom_command(
     OUTPUT ${_sipOutputFiles}
     # Sip can generate less files than requested. The touch

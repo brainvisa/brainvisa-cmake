@@ -43,3 +43,15 @@ else( SIP_VERSION )
     endif( SIP_FIND_REQUIRED )
   endif( SIP_EXECUTABLE )
 endif( SIP_VERSION )
+
+if( SIP_FOUND )
+  if( ( ${SIP_VERSION} VERSION_GREATER 4.7.4 ) AND
+      ( ${SIP_VERSION} VERSION_LESS 4.7.7 ) )
+    # this flag is used in pyaims/pyanatomist to work around buggy throw
+    # statements which make sip segfault
+    set( SIP_FLAGS "-t" "SIP_THROW_BUG" CACHE STRING "options passed to SIP program" )
+  else()
+    set( SIP_FLAGS "" CACHE STRING "options passed to SIP program" )
+  endif()
+endif()
+

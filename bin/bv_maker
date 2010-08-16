@@ -77,18 +77,126 @@ def environmentVariablesSubstitution( path ):
 
 
 
+
+
+
+
+class GlobalConfiguration( object ):
+  def __init__( self, argv ):
+    usage = '''%prog [options] [ command [command options] ]...
+    
+    This program is for the management of source retrieval, configuration and compilation of BrainVISA projects.
+    
+    In order to work, the commands svn and svnadmin must be installed on your system. On some Linux systems they are in two separate packages (e.g. subversion and subversion-tools).
+    
+    Commands:
+      sources: Create or updated selected sources directories from Subversion repository.
+      configure: Create and configure selected build directories with CMake.
+      compile: compile all selected build directories.
+    
+    To get help for a specific command, use -h option of the command. Example: "%prog compile -h".
+    '''
+    defaultConfigurationFile = os.path.join( os.environ[ 'HOME' ], '.brainvisa', 'bv_maker.cfg' )
+    parser = OptionParser(usage=usage)
+    parser.add_option( '-d', '--directory', dest='directories',
+                      help='Restrict actions to a selected directory. May be used several times to process several directories.',
+                      metavar='DIR', action='append', default=[] )
+    parser.add_option( '-c', '--config', dest='configuration_file',
+                      help='specify configuration file. Default ="' + defaultConfigurationFile + '"',
+                      metavar='USERNAME', default=defaultConfigurationFile )
+    parser.add_option( '--username', dest='username',
+                      help='specify user login to use with the svn server',
+                      metavar='USERNAME', default='' )
+    parser.add_option( '-v', '--verbose', dest='verbose', action='store_true',
+                      help='show as much information as possible' )
+    
+    (options, args) = parser.parse_args( argv )
+    if args:
+      raise ValueError( 'Invalid option: %s' % args[0] )
+  
+    for i in ( 'configuration_file', 'username', 'verbose' ):
+      setattr( self, i, getattr( options, i ) )
+    
+    # Read configuration file
+    packages = []
+    lineCount = 0
+    currentDirectoryObject = None
+    self.sourcesDirectories = {}
+    self.buildDirectories = {}
+    for line in open( options.configuration_file ):
+      lineCount += 1
+      line = line.strip()
+      if not line or line[0] == '#' or line.startswith( '//' ): continue
+      try:
+        if line[0] == '[':
+          if line[-1] != ']': raise SyntaxError()
+          l = line[1:-1].split( None, 1 )
+          if len( l ) != 2:
+            raise SyntaxError()
+          if l[ 0 ] == 'source':
+            pass
+            currentDirectoryObject = SourceDirectory( environmentVariablesSubstitution( l[ 1 ].strip() ), self )
+            self.sourcesDirectories[ currentDirectoryObject.directory ] = currentDirectoryObject
+          elif l[ 0 ] == 'build':
+            pass
+            currentDirectoryObject = BuildDirectory( environmentVariablesSubstitution( l[ 1 ].strip() ), self )
+            self.buildDirectories[ currentDirectoryObject.directory ] = currentDirectoryObject
+          else:
+            raise SyntaxError()
+        else:
+          if currentDirectoryObject is None: raise SyntaxError()
+          if self.verbose:
+            print '  processing line:', repr( line )
+          currentDirectoryObject.addConfigurationLine( line )
+      except SyntaxError:
+        raise SyntaxError( 'Syntax error in ' + repr( options.configuration_file ) + ' on line ' + str( lineCount ) )
+
+
+class SourcesCommand( object ):
+  def __init__( self, argv, configuration ):
+    usage = '''%prog [global options] sources [options]
+    
+    Create or updated selected sources directories from Subversion repository.'''
+    parser = OptionParser(usage=usage)
+    (options, args) = parser.parse_args( argv )
+    if args:
+      raise ValueError( 'Invalid option: %s' % args[0] )
+  
+  
+  def __call__( self ):
+    for d, o in configuration.sourcesDirectories.iteritems():
+      o.process()
+
+
+class ConfigureCommand( object ):
+  def __init__( self, argv, configuration ):
+    pass
+  
+  def __call__( self ):
+    pass
+
+
+class CompileCommand( object ):
+  def __init__( self, argv, configuration ):
+    pass
+  
+  def __call__( self ):
+    pass
+
+
+
 class SourceDirectory( object ):
-  def __init__( self, directory, username='' ):
+  def __init__( self, directory, configuration ):
+    self.configuration = configuration
     self.directory = os.path.normpath( os.path.abspath( directory ) )
-    if options.verbose:
-      print 'Opening client:', self.directory
-    self.username = username
+    if self.configuration.verbose:
+      print 'Source directory:', self.directory
     self.rules = []
     self.componentVersionPerURL = {}
     self.otherComponentsDirectory = set()
   
   
-  def addRule( self, line ):
+  def addConfigurationLine( self, line ):
     l = line.split()
     if len(l) < 2 or len( l ) > 3:
       raise SyntaxError()
@@ -103,17 +211,17 @@ class SourceDirectory( object ):
         if '*' in componentsPattern:
           raise SyntaxError()
         url = SVN_URL + '/' + componentsPattern
-        if options.verbose:
+        if self.configuration.verbose:
           print '    adding url:', url
-        self.otherComponentsDirectory.add( ( componentsPattern, versionPattern )  )
+        self.otherComponentsDirectory.add( ( componentsPattern, versionPattern or componentsPattern )  )
       else:
         if versionPattern is None:
           raise SyntaxError()
         for component in self.getBrainVISAComponents( componentsPattern ):
-          if options.verbose:
+          if self.configuration.verbose:
             print '    considering component:', component
           for url in self.getMatchingURLs( component, versionPattern ):
-            if options.verbose:
+            if self.configuration.verbose:
               print '      adding url:', url
             self.componentVersionPerURL[ url[2] ] = ( url[0], url[1] )
     elif sign == '-':
@@ -123,17 +231,18 @@ class SourceDirectory( object ):
         if versionPattern is None:
           versionPattern = '*'
         for component in self.getBrainVISAComponents( componentsPattern ):
-          if options.verbose:
+          if self.configuration.verbose:
             print '    considering component:', component
           for url in self.getMatchingURLs( component, versionPattern ):
-            if options.verbose:
+            if self.configuration.verbose:
               print '      removing url:', url
             self.componentVersionPerURL.pop( url[2], None )
     else:
       raise SyntaxError()
     self.rules.append( line )
   
-  def process( self, commands ):
+  
+  def process( self ):
     print '[ source', self.directory, ']'
     if not os.path.exists( self.directory ):
       os.makedirs( self.directory )
@@ -146,8 +255,8 @@ class SourceDirectory( object ):
       system( 'svnadmin', 'create', repositoryDirectory )
       self.svncommand( 'checkout',  'file://' + os.path.splitdrive(repositoryDirectory)[1].replace(os.path.sep, "/"), self.directory )
       checkout = True
-    self.updateExternals( update=checkout or 'svn' in commands )
-    self.updateCMake()
+    self.updateExternals()
+    self.svncommand( 'update', self.directory )
     
   
   @staticmethod
@@ -226,39 +335,39 @@ class SourceDirectory( object ):
 
   def svncommand( self, *svnargs ):
     cmd = [ 'svn' ]
-    if self.username:
-      cmd += [ ' --username', self.username ]
+    if self.configuration.username:
+      cmd += [ ' --username', self.configuration.username ]
     cmd.extend( svnargs )
     system( *cmd )
 
 
 
-  def updateExternals( self, update=True ):
+  def updateExternals( self ):
     externalsFileName = os.path.join( self.directory, 'bv_maker.externals' )
     externalsFile = open( externalsFileName, 'w' )
     self.clients = {}
-    hasBrainvisacmake = False
+    #hasBrainvisacmake = False
     
     for url, component_version in self.componentVersionPerURL.iteritems():
       component, version = component_version
       self.clients.setdefault( version, {} ).setdefault( brainvisaProjectPerComponent.get( component ), [] ).append( url )
-      if component == 'brainvisa-cmake':
-        hasBrainvisacmake = True
-    if not hasBrainvisacmake:
-      tags = brainvisaTagsPerComponent.get( 'brainvisa-cmake' )
-      if tags:
-        version = 'tag'
-        versionPath = 'tags/' + tags[ -1 ]
-      else:
-        branches = brainvisaBranchesPerComponent.get( 'brainvisa-cmake' )
-        if branches:
-          version = 'branch'
-          versionPath = 'branches/' + branches[ -1 ]
-        else:
-          version = 'trunk'
-          versionPath = 'trunk'
-      url = BRAINVISA_SVN_URL + '/' + 'development/brainvisa-cmake/' + versionPath
-      self.clients.setdefault( version, {} )[ 'brainvisa-cmake' ] = [ url ]
+      #if component == 'brainvisa-cmake':
+        #hasBrainvisacmake = True
+    #if not hasBrainvisacmake:
+      #tags = brainvisaTagsPerComponent.get( 'brainvisa-cmake' )
+      #if tags:
+        #version = 'tag'
+        #versionPath = 'tags/' + tags[ -1 ]
+      #else:
+        #branches = brainvisaBranchesPerComponent.get( 'brainvisa-cmake' )
+        #if branches:
+          #version = 'branch'
+          #versionPath = 'branches/' + branches[ -1 ]
+        #else:
+          #version = 'trunk'
+          #versionPath = 'trunk'
+      #url = BRAINVISA_SVN_URL + '/' + 'development/brainvisa-cmake/' + versionPath
+      #self.clients.setdefault( version, {} )[ 'brainvisa-cmake' ] = [ url ]
       
     currentProject = None
     for version, content in self.clients.iteritems():
@@ -276,11 +385,31 @@ class SourceDirectory( object ):
 
     self.svncommand( 'propset', 'svn:externals', '--file', externalsFileName, self.directory )
     self.svncommand( 'commit', '-m', '', self.directory )
-    if update:
-      self.svncommand( 'update', self.directory )
 
 
-  def updateCMake( self ):
+
+
+class BuildDirectory( object ):
+  _validOptions = set( ( 'source', 'build_type', 'make_options' ) )
+  
+  def __init__( self, directory, configuration ):
+    self.directory = os.path.normpath( os.path.abspath( directory ) )
+    self.rules = []
+    self.source = None
+    self.build_type = ''
+    self.make_options = ''
+  
+  def addConfigurationLine( self, line ):
+    i = line.find( '=' )
+    if i > 0:
+      option = line[ :i ].strip()
+      value = line[ i+1: ].strip()
+      if option not in self._validOptions:
+        raise SyntaxError()
+      setattr( self, option, value )
+  
+  
+  def configure( self ):
     cmakeFile = os.path.join( self.directory, 'bv_maker.cmake' )
     out = open( cmakeFile, 'w' )
     components = set()
@@ -306,12 +435,6 @@ class SourceDirectory( object ):
     print >> out, 'set( _BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" FORCE )'
     print >> out, 'set( BRAINVISA_OTHER_SOURCE_DIRECTORIES "' + ';'.join( (i[1] for i in self.otherComponentsDirectory) ) + '" CACHE STRING "Directories that may contain source for BrainVISA component" FORCE )'
     print >> out, 'set( BRAINVISA_SOURCES "' + self.directory + '" CACHE STRING "BrainVISA source directories" FORCE )'
-    #print >> out, 'set( BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" )'
-    #print >> out, 'set( _BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" )'
-    #print >> out, 'set( BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" )'
-    #print >> out, 'set( _BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" )'
-    #print >> out, 'set( BRAINVISA_OTHER_SOURCE_DIRECTORIES "' + ';'.join( (i[1] for i in self.otherComponentsDirectory) ) + '" CACHE STRING "Directories that may contain source for BrainVISA component" )'
-    #print >> out, 'set( BRAINVISA_SOURCES "' + self.directory + '" CACHE STRING "BrainVISA source directories" )'
 
     cmakeLists = os.path.join( self.directory, 'CMakeLists.txt' )
     if not os.path.exists( cmakeLists ):
@@ -322,30 +445,8 @@ set( CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}" ${CMAKE_PREFIX_PATH} )
 find_package( brainvisa-cmake NO_POLICY_SCOPE )
 include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 '''
-
-
-
-class BuildDirectory( object ):
-  _validOptions = set( ( 'source', 'build_type', 'make_options' ) )
   
-  def __init__( self, directory ):
-    self.directory = os.path.normpath( os.path.abspath( directory ) )
-    self.rules = []
-    self.source = None
-    self.build_type = ''
-    self.make_options = ''
-  
-  def addRule( self, line ):
-    i = line.find( '=' )
-    if i > 0:
-      option = line[ :i ].strip()
-      value = line[ i+1: ].strip()
-      if option not in self._validOptions:
-        raise SyntaxError()
-      setattr( self, option, value )
-  
-  
-  def process( self, commands ):
+  def compile( self, commands ):
     print '[ build', self.directory, ']'
     cmake = 'cmake' in commands
     make = 'make' in commands
@@ -380,57 +481,37 @@ class BuildDirectory( object ):
 
   
 
-usage = '''%prog [svn] [cmake] [make]
-
-This command enables to manage source retrieval, configuration and compilation of BrainVISA projects.
-
-In order to work, the commands svn and svnadmin must be installed on your system. On some Linux systems they are in two separate packages (e.g. subversion and subversion-tools).'''
-parser = OptionParser(usage=usage)
-parser.add_option( '--username', dest='username',
-                   help='specify user login to use with the svn server',
-                   metavar='USERNAME', default='' )
-parser.add_option( '-v', '--verbose', dest='verbose', action='store_true',
-                   help='show as much information as possible' )
-(options, args) = parser.parse_args()
-commands = set( args )
-bad_commands = commands.difference( ( 'svn', 'cmake', 'make' ) )
-if bad_commands:
-  raise ValueError( 'Bad command(s): %s' % ', '.join( bad_commands ) )
-if not commands:
-  commands = set( ('svn', 'make') )
+commands = {
+  'sources': SourcesCommand,
+  'configure': ConfigureCommand,
+  'compile': CompileCommand,
+}
+options_by_command = { None: [] }
+command = None
+for i in sys.argv[1:]:
+  if i in commands:
+    command = i
+    if command in options_by_command:
+      raise ValueError( 'Command %s used twice' % command )
+    options_by_command[ command ] = []
+  else:
+    options_by_command[ command ].append( i )
 
 
-    
-# Read config file
-configFile = os.path.join( os.environ[ 'HOME' ], '.brainvisa', 'bv_maker.cfg' )
-packages = []
-lineCount = 0
-currentDirectoryObject = None
-directoryObjects = []
-for line in open( configFile ):
-  lineCount += 1
-  line = line.strip()
-  if not line or line[0] == '#' or line.startswith( '//' ): continue
-  try:
-    if line[0] == '[':
-      if line[-1] != ']': raise SyntaxError()
-      l = line[1:-1].split( None, 1 )
-      if len( l ) != 2:
-        raise SyntaxError()
-      if l[ 0 ] == 'source':
-        currentDirectoryObject = SourceDirectory( environmentVariablesSubstitution( l[ 1 ].strip() ), username=options.username )
-        directoryObjects.append( currentDirectoryObject )
-      elif l[ 0 ] == 'build':
-        currentDirectoryObject = BuildDirectory( environmentVariablesSubstitution( l[ 1 ].strip() ) )
-        directoryObjects.append( currentDirectoryObject )
-      else:
-        raise SyntaxError()
-    else:
-      if currentDirectoryObject is None: raise SyntaxError()
-      if options.verbose:
-        print '  processing line:', repr( line )
-      currentDirectoryObject.addRule( line )
-  except SyntaxError:
-    raise SyntaxError( 'Syntax error in ' + repr( configFile ) + ' on line ' + str( lineCount ) )
-for d in directoryObjects:
-  d.process( commands )
+# Initialize global configuration
+configuration = GlobalConfiguration( options_by_command[ None ] )
+
+
+# Parse commands options and prepare them for processing in the correct order
+todo = []
+if len( options_by_command ) == 1:
+  # No command selected => do all commands
+  for i in commands:
+    options_by_command[ i ] = []
+for command in [ 'sources', 'configure', 'compile' ]:
+  if command in options_by_command:
+    todo.append( commands[ command ]( options_by_command[ command ], configuration ) )
+
+# Execute selected commands
+for f in todo:
+  f()

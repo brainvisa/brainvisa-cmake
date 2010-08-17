@@ -17,9 +17,13 @@ foreach( component ${BRAINVISA_COMPONENTS} )
     if( component STREQUAL brainvisa-cmake )
       file( MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/build_files/${component}" )
       execute_process( COMMAND "${CMAKE_COMMAND}" "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}" "${BRAINVISA_SOURCES_${component}}"
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/build_files/${component}" )
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/build_files/${component}"
+        OUTPUT_QUIET 
+        ERROR_QUIET )
       execute_process( COMMAND "${CMAKE_BUILD_TOOL}" install
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/build_files/${component}" )
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/build_files/${component}"
+        OUTPUT_QUIET 
+        ERROR_QUIET )
     else()
       add_subdirectory( "${BRAINVISA_SOURCES_${component}}" "build_files/${component}" )
     endif()

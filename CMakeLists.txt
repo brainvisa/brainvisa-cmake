@@ -88,3 +88,24 @@ install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
          USE_SOURCE_PERMISSIONS
          PATTERN ".svn" EXCLUDE
          PATTERN "*~" EXCLUDE )
+
+# Generate a list of all brainvisa-cmake installed files
+# so that bv_maker can copy and already installed brainvisa-cmake
+if( NOT DISABLE_FILE_INSTALLATION_LIST )
+  set( tmp "${CMAKE_BINARY_DIR}/tmp" )
+  execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${tmp}" )
+  execute_process( COMMAND "${CMAKE_COMMAND}" -DDISABLE_FILE_INSTALLATION_LIST=YES "-DCMAKE_INSTALL_PREFIX:STRING=${tmp}" "${CMAKE_CURRENT_SOURCE_DIR}"
+                  WORKING_DIRECTORY "${tmp}" 
+                  OUTPUT_QUIET 
+                  ERROR_QUIET )
+  execute_process( COMMAND "${CMAKE_MAKE_PROGRAM}" install
+                  WORKING_DIRECTORY "${tmp}" 
+                  OUTPUT_QUIET 
+                  ERROR_QUIET )
+  file( READ "${tmp}/install_manifest.txt" manifest )
+  execute_process( COMMAND "${CMAKE_COMMAND}" -E remove_directory "${tmp}" )
+  string( REPLACE "${tmp}/" "" manifest "${manifest}" )
+  file( WRITE "${CMAKE_BINARY_DIR}/installed_files.txt" "${manifest}" )
+  install( FILES "${CMAKE_BINARY_DIR}/installed_files.txt"
+           DESTINATION "${CMAKE_INSTALL_PREFIX}/python/brainvisa/maker" )
+endif()

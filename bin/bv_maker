@@ -186,10 +186,18 @@ class ConfigureCommand( object ):
 
 class CompileCommand( object ):
   def __init__( self, argv, configuration ):
-    pass
+    usage = '''%prog [global options] configure [options]
+    
+    Create or updated selected build directories.'''
+    parser = OptionParser(usage=usage)
+    (options, args) = parser.parse_args( argv )
+    if args:
+      raise ValueError( 'Invalid option: %s' % args[0] )
+  
   
   def __call__( self ):
-    pass
+    for d, o in configuration.buildDirectories.iteritems():
+      o.compile()
 
 
 
@@ -500,40 +508,29 @@ cmake_minimum_required( VERSION 2.6 )
 find_package( brainvisa-cmake NO_POLICY_SCOPE )
 include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 '''
+    system( 'cmake', '-DCMAKE_BUILD_TYPE:STRING=' + self.build_type, '-C', cmakeFile, self.directory, cwd = self.directory )
   
-  def compile( self, commands ):
-    return
-    print '[ build', self.directory, ']'
-    cmake = 'cmake' in commands
-    make = 'make' in commands
-    if self.source is None:
-      raise ValueError( 'No source given for build directory "%s"' % self.directory )
-    self.source = environmentVariablesSubstitution( self.source )
-    cmakeFile = os.path.join( self.source, 'bv_maker.cmake' )
-    if not os.path.exists( cmakeFile ):
-      raise ValueError( 'Source directory "%s" does not exists or does not contain "bv_maker.cmake"' % self.source )
-    if not os.path.exists( self.directory ):
-      os.makedirs( self.directory )
-      cmake = cmake or make
-    if cmake:
-      path = os.path.join( self.source, 'development', 'brainvisa-cmake' )
-      source_bvcmake = glob.glob( os.path.join( path, 'tags', '*' ) )
-      if source_bvcmake:
-        source_bvcmake = source_bvcmake[0]
-      else:
-        source_bvcmake = glob.glob( os.path.join( path, 'branches', '*' ) )
-        if source_bvcmake:
-          source_bvcmake = source_bvcmake[0]
-        else:
-          source_bvcmake = os.path.join( path, 'trunk' )
-      build_bvcmake = os.path.join( self.directory, 'build_files', 'brainvisa-cmake' )
-      if not os.path.exists( build_bvcmake ):
-        os.makedirs( build_bvcmake )
-      system( 'cmake', '-DCMAKE_INSTALL_PREFIX:PATH=' + self.directory, source_bvcmake, cwd=build_bvcmake )
-      system( 'make', 'install', cwd=build_bvcmake )
-      system( 'cmake', '-DCMAKE_BUILD_TYPE:STRING=' + self.build_type, '-C', cmakeFile, self.source, cwd = self.directory )
-    if make:
-      system( cwd=self.directory, *( ['make'] + self.make_options.split() ) )
+  
+  def compile( self ):
+    #if not os.path.exists( self.directory ) or not os.path.exists( cmakeFile ):
+      #self.configure()
+    #if cmake:
+      #path = os.path.join( self.source, 'development', 'brainvisa-cmake' )
+      #source_bvcmake = glob.glob( os.path.join( path, 'tags', '*' ) )
+      #if source_bvcmake:
+        #source_bvcmake = source_bvcmake[0]
+      #else:
+        #source_bvcmake = glob.glob( os.path.join( path, 'branches', '*' ) )
+        #if source_bvcmake:
+          #source_bvcmake = source_bvcmake[0]
+        #else:
+          #source_bvcmake = os.path.join( path, 'trunk' )
+      #build_bvcmake = os.path.join( self.directory, 'build_files', 'brainvisa-cmake' )
+      #if not os.path.exists( build_bvcmake ):
+        #os.makedirs( build_bvcmake )
+      #system( 'cmake', '-DCMAKE_INSTALL_PREFIX:PATH=' + self.directory, source_bvcmake, cwd=build_bvcmake )
+      #system( 'make', 'install', cwd=build_bvcmake )
+    system( cwd=self.directory, *( ['make'] + self.make_options.split() ) )
 
   
 

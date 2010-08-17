@@ -170,10 +170,18 @@ class SourcesCommand( object ):
 
 class ConfigureCommand( object ):
   def __init__( self, argv, configuration ):
-    pass
+    usage = '''%prog [global options] configure [options]
+    
+    Create or updated selected build directories.'''
+    parser = OptionParser(usage=usage)
+    (options, args) = parser.parse_args( argv )
+    if args:
+      raise ValueError( 'Invalid option: %s' % args[0] )
+  
   
   def __call__( self ):
-    pass
+    for d, o in configuration.buildDirectories.iteritems():
+      o.configure()
 
 
 class CompileCommand( object ):
@@ -185,13 +193,84 @@ class CompileCommand( object ):
 
 
 
+def getBrainVISAComponents( componentsPattern ):
+  components = brainvisaComponentsPerGroup.get( componentsPattern )
+  if components is None:
+    components = brainvisaComponentsPerProject.get( componentsPattern )
+    if components is None:
+      if componentsPattern in brainvisaProjectPerComponent:
+        components = [ componentsPattern ]
+      else:
+        l = componentsPattern.split( ':' )
+        if len( l ) > 2:
+          raise SyntaxError()
+        if len( l ) == 1:
+          projectPattern = '*'
+          componentPattern = l[ 0 ]
+        else:
+          projectPattern, componentPattern = l
+        components = []
+        for project, projectComponents in brainvisaComponentsPerProject.iteritems():
+          if fnmatchcase( project, projectPattern ):
+            for component in projectComponents:
+              if fnmatchcase( component, componentPattern ):
+                components.append( component )
+  return components
+
+
+_urlsAlias = {
+  'development': 'trunk',
+  'bug_fix': 'branch:-1',
+  'latest_release': 'tag:-1',
+  'tag': 'tag:-1',
+  'branch': 'branch:-1',
+  'stable': 'branch:-1',
+}
+def getMatchingURLs( component, versionPattern ):
+  versionPattern = _urlsAlias.get( versionPattern, versionPattern )
+  if versionPattern == 'trunk':
+    versions = [ ( 'trunk', 'trunk' ) ]
+  else:
+    l = versionPattern.split( ':' )
+    if len( l ) == 1:
+      if fnmatchcase( 'trunk', versionPattern ):
+        versions = [ ( 'trunk', 'trunk' ) ]
+      else:
+        versions = []
+      for branch in brainvisaBranchesPerComponent.get( component, [] ):
+        if fnmatchcase( branch, versionPattern ):
+          versions.append( ( 'branch', 'branches/' + branch ) )
+      for tag in brainvisaTagsPerComponent.get( component, [] ):
+        if fnmatchcase( tag, versionPattern ):
+          versions.append( ( 'tag', 'tags/' + tag  ) )
+    elif len( l ) == 2:
+      try:
+        index = int( l[1] )
+      except ValueError:
+        raise SyntaxError()
+      if l[0] == 'branch':
+        try:
+          versions = [ ( 'branch', 'branches/' + brainvisaBranchesPerComponent.get( component, [] )[ index ] ) ]
+        except IndexError:
+          versions = []
+      elif l[0] == 'tag':
+        try:
+          versions = [ ( 'tag', 'tags/' + brainvisaTagsPerComponent.get( component, [] )[ index ] ) ]
+        except IndexError:
+          versions = []
+      else:
+        raise SyntaxError() 
+    else:
+      raise SyntaxError()
+  return [ ( component, i[0], brainvisaURLPerComponent[ component ] + '/' + i[1] ) for i in versions ]
+
+
+
 class SourceDirectory( object ):
   def __init__( self, directory, configuration ):
     self.configuration = configuration
     self.directory = os.path.normpath( os.path.abspath( directory ) )
-    if self.configuration.verbose:
-      print 'Source directory:', self.directory
-    self.rules = []
+    self.configurationLines = []
     self.componentVersionPerURL = {}
     self.otherComponentsDirectory = set()
   
@@ -217,10 +296,10 @@ class SourceDirectory( object ):
       else:
         if versionPattern is None:
           raise SyntaxError()
-        for component in self.getBrainVISAComponents( componentsPattern ):
+        for component in getBrainVISAComponents( componentsPattern ):
           if self.configuration.verbose:
             print '    considering component:', component
-          for url in self.getMatchingURLs( component, versionPattern ):
+          for url in getMatchingURLs( component, versionPattern ):
             if self.configuration.verbose:
               print '      adding url:', url
             self.componentVersionPerURL[ url[2] ] = ( url[0], url[1] )
@@ -230,24 +309,23 @@ class SourceDirectory( object ):
       else:
         if versionPattern is None:
           versionPattern = '*'
-        for component in self.getBrainVISAComponents( componentsPattern ):
+        for component in getBrainVISAComponents( componentsPattern ):
           if self.configuration.verbose:
             print '    considering component:', component
-          for url in self.getMatchingURLs( component, versionPattern ):
+          for url in getMatchingURLs( component, versionPattern ):
             if self.configuration.verbose:
               print '      removing url:', url
             self.componentVersionPerURL.pop( url[2], None )
     else:
       raise SyntaxError()
-    self.rules.append( line )
+    self.configurationLines.append( line )
   
   
   def process( self ):
-    print '[ source', self.directory, ']'
     if not os.path.exists( self.directory ):
       os.makedirs( self.directory )
     clientFile = open( os.path.join( self.directory, 'bv_maker.cfg' ), 'w' )
-    print >> clientFile, '\n'.join( self.rules )
+    print >> clientFile, '\n'.join( self.configurationLines )
     
     repositoryDirectory = os.path.join( self.directory, '.repository' )
     checkout = False
@@ -257,81 +335,8 @@ class SourceDirectory( object ):
       checkout = True
     self.updateExternals()
     self.svncommand( 'update', self.directory )
-    
-  
-  @staticmethod
-  def getBrainVISAComponents( componentsPattern ):
-    components = brainvisaComponentsPerGroup.get( componentsPattern )
-    if components is None:
-      components = brainvisaComponentsPerProject.get( componentsPattern )
-      if components is None:
-        if componentsPattern in brainvisaProjectPerComponent:
-          components = [ componentsPattern ]
-        else:
-          l = componentsPattern.split( ':' )
-          if len( l ) > 2:
-            raise SyntaxError()
-          if len( l ) == 1:
-            projectPattern = '*'
-            componentPattern = l[ 0 ]
-          else:
-            projectPattern, componentPattern = l
-          components = []
-          for project, projectComponents in brainvisaComponentsPerProject.iteritems():
-            if fnmatchcase( project, projectPattern ):
-              for component in projectComponents:
-                if fnmatchcase( component, componentPattern ):
-                  components.append( component )
-    return components
   
   
-  _urlsAlias = {
-    'development': 'trunk',
-    'bug_fix': 'branch:-1',
-    'latest_release': 'tag:-1',
-    'tag': 'tag:-1',
-    'branch': 'branch:-1',
-    'stable': 'branch:-1',
-  }
-  @staticmethod
-  def getMatchingURLs( component, versionPattern ):
-    versionPattern = SourceDirectory._urlsAlias.get( versionPattern, versionPattern )
-    if versionPattern == 'trunk':
-      versions = [ ( 'trunk', 'trunk' ) ]
-    else:
-      l = versionPattern.split( ':' )
-      if len( l ) == 1:
-        if fnmatchcase( 'trunk', versionPattern ):
-          versions = [ ( 'trunk', 'trunk' ) ]
-        else:
-          versions = []
-        for branch in brainvisaBranchesPerComponent.get( component, [] ):
-          if fnmatchcase( branch, versionPattern ):
-            versions.append( ( 'branch', 'branches/' + branch ) )
-        for tag in brainvisaTagsPerComponent.get( component, [] ):
-          if fnmatchcase( tag, versionPattern ):
-            versions.append( ( 'tag', 'tags/' + tag  ) )
-      elif len( l ) == 2:
-        try:
-          index = int( l[1] )
-        except ValueError:
-          raise SyntaxError()
-        if l[0] == 'branch':
-          try:
-            versions = [ ( 'branch', 'branches/' + brainvisaBranchesPerComponent.get( component, [] )[ index ] ) ]
-          except IndexError:
-            versions = []
-        elif l[0] == 'tag':
-          try:
-            versions = [ ( 'tag', 'tags/' + brainvisaTagsPerComponent.get( component, [] )[ index ] ) ]
-          except IndexError:
-            versions = []
-        else:
-          raise SyntaxError() 
-      else:
-        raise SyntaxError()
-    return [ ( component, i[0],brainvisaURLPerComponent[ component ] + '/' + i[1] ) for i in versions ]
-
 
   def svncommand( self, *svnargs ):
     cmd = [ 'svn' ]
@@ -390,14 +395,18 @@ class SourceDirectory( object ):
 
 
 class BuildDirectory( object ):
-  _validOptions = set( ( 'source', 'build_type', 'make_options' ) )
+  _validOptions = set( ( 'build_type', 'make_options' ) )
   
   def __init__( self, directory, configuration ):
+    self.configuration = configuration
     self.directory = os.path.normpath( os.path.abspath( directory ) )
-    self.rules = []
-    self.source = None
+    self.configurationLines = []
+    self.configurationDirectories = []
+    self.projects = set()
+    self.components = {}
     self.build_type = ''
     self.make_options = ''
+  
   
   def addConfigurationLine( self, line ):
     i = line.find( '=' )
@@ -407,46 +416,93 @@ class BuildDirectory( object ):
       if option not in self._validOptions:
         raise SyntaxError()
       setattr( self, option, value )
-  
+    elif line[ 0 ] == '+':
+        if '*' in line:
+          raise SyntaxError()
+        self.configurationDirectories.append( os.path.normpath( os.path.abspath( environmentVariablesSubstitution( line[ 1: ].strip() ) ) ) )
+    elif line[ 0 ] == '-':
+      componentsPattern = line[ 1: ].strip()
+      for component in getBrainVISAComponents( componentsPattern ):
+        self.components.pop( component, None )
+    else:
+      l = line.split( None, 2 )
+      if len(l) != 3:
+        raise SyntaxError()
+      componentsPattern, versionPattern, sourceDirectory = l
+      sourceDirectory = os.path.normpath( os.path.abspath( environmentVariablesSubstitution( sourceDirectory ) ) )
+      for component in getBrainVISAComponents( componentsPattern ):
+        for component, version, url in getMatchingURLs( component, versionPattern ):
+          componentSourcesDirectory = os.path.join( sourceDirectory, url[ len( BRAINVISA_SVN_URL ) + 1: ] )
+          self.components[ component ] = componentSourcesDirectory
+          self.projects.add( brainvisaProjectPerComponent[ component ] )
+    self.configurationLines.append( line )
+
+
+
+
   
   def configure( self ):
+    for directory in self.configurationDirectories:
+      os.stat( directory ) # Raise appropriate error if directory does not exist
+      project_info = os.path.join( directory, 'project_info.cmake' )
+      if os.path.exists( project_info ):
+        project = None
+        component = None
+        p = re.compile( r'\s*set\(\s*([^ \t]*)\s*(.*[^ \t])\s*\)' )
+        for line in open( project_info ):
+          match = p.match( line )
+          if match:
+            variable, value = match.groups()
+            if variable == 'BRAINVISA_PACKAGE_NAME':
+              component = value
+            elif variable == 'BRAINVISA_PACKAGE_MAIN_PROJECT':
+              project = value
+        if project:
+          self.projects.add( project )
+        if component:
+          self.components[ component ] = directory
+      else:
+        print >> sys.stderr, "WARNING: ignoring directory '%s' because it does not contain project_info.cmake" % directory
+      
+    if not os.path.exists( self.directory ):
+      os.makedirs( self.directory )
     cmakeFile = os.path.join( self.directory, 'bv_maker.cmake' )
     out = open( cmakeFile, 'w' )
-    components = set()
-    projects = set()
-    for url, component_version in self.componentVersionPerURL.iteritems():
-      component, version = component_version
-      components.add( component )
-      if component:
-        projects.add( brainvisaProjectPerComponent[ component ] )
-        self.clients.setdefault( version, {} ).setdefault( brainvisaProjectPerComponent.get( component ), [] ).append( url )
-        print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + os.path.join( self.directory, *url[ len( BRAINVISA_SVN_URL ) + 1: ].split( '/' ) ) + '" CACHE STRING "Sources directory for component ' + component + '" FORCE )'
-        #print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + os.path.join( self.directory, *url[ len( BRAINVISA_SVN_URL ) + 1: ].split( '/' ) ) + '" CACHE STRING "Sources directory for component ' + component + '" )'
-    # Order of projects and components is important
-    sortedProjects = [ p for p in brainvisaProjects if p in projects ]
+    
+    for component, directory in self.components.items():
+      if not os.path.exists( os.path.join( directory, 'project_info.cmake' ) ):
+        del self.components[ component ]
+    
+    # Order of projects and components is important for dependencies
+    sortedProjects = [ p for p in brainvisaProjects if p in self.projects ]
     sortedComponents = []
+    components = set( self.components )
     for project in sortedProjects:
       for component in brainvisaComponentsPerProject[ project ]:
         if component in components:
           sortedComponents.append( component )
+          components.remove( component )
+    sortedComponents.extend( components )
     print >> out, 'set( BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" FORCE )'
     print >> out, 'set( _BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" FORCE )'
     print >> out, 'set( BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" FORCE )'
     print >> out, 'set( _BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" FORCE )'
-    print >> out, 'set( BRAINVISA_OTHER_SOURCE_DIRECTORIES "' + ';'.join( (i[1] for i in self.otherComponentsDirectory) ) + '" CACHE STRING "Directories that may contain source for BrainVISA component" FORCE )'
-    print >> out, 'set( BRAINVISA_SOURCES "' + self.directory + '" CACHE STRING "BrainVISA source directories" FORCE )'
+    print >> out
+    for component, directory in self.components.iteritems():
+      print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + directory + '" CACHE STRING "Sources directory for component ' + component + '" FORCE )'
 
     cmakeLists = os.path.join( self.directory, 'CMakeLists.txt' )
     if not os.path.exists( cmakeLists ):
       out = open( cmakeLists, 'w' )
       print >> out, '''
 cmake_minimum_required( VERSION 2.6 )
-set( CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}" ${CMAKE_PREFIX_PATH} )
+# set( CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}" ${CMAKE_PREFIX_PATH} )
 find_package( brainvisa-cmake NO_POLICY_SCOPE )
 include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 '''
   
   def compile( self, commands ):
+    return
     print '[ build', self.directory, ']'
     cmake = 'cmake' in commands
     make = 'make' in commands

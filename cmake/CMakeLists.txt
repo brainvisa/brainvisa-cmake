@@ -3,4 +3,4 @@
 # tree.
 cmake_minimum_required( VERSION 2.6 )
 find_package( brainvisa-cmake NO_POLICY_SCOPE )
-include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
+include( "${brainvisa-cmake_DIR}/brainvisa-find-components.cmake" )

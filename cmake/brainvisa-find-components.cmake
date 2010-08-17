@@ -73,9 +73,6 @@ function( BRAINVISA_FIND_COMPONENT_SOURCES project component )
 endfunction()
 
 
-set( CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_BINARY_DIR}" )
-include_directories( "${CMAKE_BINARY_DIR}/include" )
-
 if( NOT DEFINED BRAINVISA_SOURCES )
   file( TO_CMAKE_PATH "$ENV{BRAINVISA_SOURCES}" BRAINVISA_SOURCES )
   set( BRAINVISA_SOURCES "${BRAINVISA_SOURCES}" CACHE PATH "Directories where to look for sources." )

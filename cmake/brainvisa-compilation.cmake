@@ -1,6 +1,9 @@
 # Set default Qt desired version
 set( DESIRED_QT_VERSION 4 CACHE STRING "Pick a version of QT to use: 3 or 4" )
 
+set( CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_BINARY_DIR}" )
+include_directories( "${CMAKE_BINARY_DIR}/include" )
+
 if( BRAINVISA_PACKAGING )
   set( BRAINVISA_THIRDPARTY_COMPONENTS "" CACHE INTERNAL "" )
 endif()

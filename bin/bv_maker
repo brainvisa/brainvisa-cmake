@@ -500,6 +500,7 @@ class BuildDirectory( object ):
       print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + directory + '" CACHE STRING "Sources directory for component ' + component + '" FORCE )'
 
     cmakeLists = os.path.join( self.directory, 'CMakeLists.txt' )
+    out.close()
     if not os.path.exists( cmakeLists ):
       out = open( cmakeLists, 'w' )
       print >> out, '''
@@ -508,6 +509,7 @@ cmake_minimum_required( VERSION 2.6 )
 find_package( brainvisa-cmake NO_POLICY_SCOPE )
 include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 '''
+      out.close()
     system( 'cmake', '-DCMAKE_BUILD_TYPE:STRING=' + self.build_type, '-C', cmakeFile, self.directory, cwd = self.directory )
   
   

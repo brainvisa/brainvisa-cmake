@@ -6,6 +6,12 @@
 # BLITZ_LIBRARIES    - the blitz libraries
 #
 
+if(NOT BLITZ_DIR)
+  find_package(PkgConfig)
+  PKG_CHECK_MODULES(BLITZ blitz)
+  set(BLITZ_DIR ${BLITZ_PREFIX})
+endif(NOT BLITZ_DIR)
+
 set( _directories
   "${BLITZ_DIR}"
 )
@@ -29,11 +35,12 @@ PATHS ${_directories}
 PATH_SUFFIXES ${_includeSuffixes}
 )
 
-find_library( BLITZ_LIBRARIES blitz
+
+find_library( libs blitz
     PATHS ${_directories}
     PATH_SUFFIXES ${_librarySuffixes}
 )
-
+set(BLITZ_LIBRARIES ${libs})
 
 if( BLITZ_INCLUDE_DIR AND BLITZ_LIBRARIES )
   set( BLITZ_FOUND "YES" )

@@ -486,8 +486,7 @@ class BuildDirectory( object ):
     
     if not os.path.exists( self.directory ):
       os.makedirs( self.directory )
-    if 'brainvisa-cmake' not in self.components:
-      copy_brainvisa_cmake( self.directory )
+    copy_brainvisa_cmake( self.directory )
     cmakeFile = os.path.join( self.directory, 'bv_maker.cmake' )
     out = open( cmakeFile, 'w' )
     
@@ -515,15 +514,14 @@ class BuildDirectory( object ):
 
     cmakeLists = os.path.join( self.directory, 'CMakeLists.txt' )
     out.close()
-    if not os.path.exists( cmakeLists ):
-      out = open( cmakeLists, 'w' )
-      print >> out, '''
+    out = open( cmakeLists, 'w' )
+    print >> out, '''
 cmake_minimum_required( VERSION 2.6 )
-# set( CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}" ${CMAKE_PREFIX_PATH} )
+set( CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}" ${CMAKE_PREFIX_PATH} )
 find_package( brainvisa-cmake NO_POLICY_SCOPE )
 include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 '''
-      out.close()
+    out.close()
     system( 'cmake', '-DCMAKE_BUILD_TYPE:STRING=' + self.build_type, '-C', cmakeFile, self.directory, cwd = self.directory )
   
   

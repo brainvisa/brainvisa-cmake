@@ -94,18 +94,21 @@ install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
 if( NOT DISABLE_FILE_INSTALLATION_LIST )
   set( tmp "${CMAKE_BINARY_DIR}/tmp" )
   execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${tmp}" )
-  execute_process( COMMAND "${CMAKE_COMMAND}" -DDISABLE_FILE_INSTALLATION_LIST=YES "-DCMAKE_INSTALL_PREFIX:STRING=${tmp}" "${CMAKE_CURRENT_SOURCE_DIR}"
-                  WORKING_DIRECTORY "${tmp}" 
-                  OUTPUT_QUIET 
-                  ERROR_QUIET )
+  execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${tmp}/install" )
+  execute_process( COMMAND "${CMAKE_COMMAND}" -DDISABLE_FILE_INSTALLATION_LIST=YES "-DCMAKE_INSTALL_PREFIX:STRING=${tmp}/install" "${CMAKE_CURRENT_SOURCE_DIR}"
+                   WORKING_DIRECTORY "${tmp}" 
+                   OUTPUT_QUIET 
+                   ERROR_QUIET )
   execute_process( COMMAND "${CMAKE_MAKE_PROGRAM}" install
-                  WORKING_DIRECTORY "${tmp}" 
-                  OUTPUT_QUIET 
-                  ERROR_QUIET )
-  file( READ "${tmp}/install_manifest.txt" manifest )
+                   WORKING_DIRECTORY "${tmp}" 
+                   OUTPUT_QUIET 
+                   ERROR_QUIET )
+  file( GLOB_RECURSE installed_files RELATIVE "${tmp}/install" "${tmp}/install/*" )
   execute_process( COMMAND "${CMAKE_COMMAND}" -E remove_directory "${tmp}" )
-  string( REPLACE "${tmp}/" "" manifest "${manifest}" )
-  file( WRITE "${CMAKE_BINARY_DIR}/installed_files.txt" "${manifest}" )
+  file( WRITE "${CMAKE_BINARY_DIR}/installed_files.txt" "" )
+  foreach( i ${installed_files} )
+    file( APPEND "${CMAKE_BINARY_DIR}/installed_files.txt" "${i}\n" )
+  endforeach()
   install( FILES "${CMAKE_BINARY_DIR}/installed_files.txt"
            DESTINATION "${CMAKE_INSTALL_PREFIX}/python/brainvisa/maker" )
 endif()

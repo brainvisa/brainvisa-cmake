@@ -11,16 +11,17 @@ ELSE(EXISTS Sigc++2_INCLUDE_DIR)
   # use pkg-config to get the directories and then use these values
   # in the FIND_PATH() and FIND_LIBRARY() calls
   FIND_PACKAGE(PkgConfig)
-  PKG_CHECK_MODULES(Sigc++2 sigc++-2.0)
+  PKG_CHECK_MODULES(SIGCPP2 sigc++-2.0)
 
-  IF(Sigc++2_FOUND)
-    FIND_LIBRARY( libs ${Sigc++2_LIBRARIES} )
-    SET(Sigc++2_LIBRARIES ${libs})
+  IF(SIGCPP2_FOUND)
+    FIND_LIBRARY( Sigc++2_LIBRARIES ${SIGCPP2_LIBRARIES} )
     FIND_PATH( Sigc++2_INCLUDE_DIR sigc++/sigc++.h /usr/include/sigc++-2.0 NO_DEFAULT_PATH )
     FIND_PATH( Sigc++2_INCLUDE_DIR sigc++/sigc++.h )
     FIND_PATH( Sigc++2_CONFIG_DIR  sigc++config.h  PATHS /usr/lib/sigc++-2.0/include NO_DEFAULT_PATH )
     FIND_PATH( Sigc++2_CONFIG_DIR  sigc++config.h )
-  ELSE(Sigc++2_FOUND)
+    SET(Sigc++2_FOUND TRUE)
+    SET(Sigc++2_VERSION ${SIGCPP2_VERSION})
+  ELSE(SIGCPP2_FOUND)
     FIND_PATH( Sigc++2_INCLUDE_DIR sigc++/sigc++.h /usr/include/sigc++-2.0 NO_DEFAULT_PATH )
     FIND_PATH( Sigc++2_INCLUDE_DIR sigc++/sigc++.h )
     FIND_PATH( Sigc++2_CONFIG_DIR  sigc++config.h  PATHS /usr/lib/sigc++-2.0/include NO_DEFAULT_PATH )
@@ -43,7 +44,7 @@ ELSE(EXISTS Sigc++2_INCLUDE_DIR)
 
     SET( Sigc++2_LIBRARIES "${Sigc++2_LIBRARIES}" CACHE PATH "Sigc++2 libraries" )
     SET( Sigc++2_INCLUDE_DIRS "${Sigc++2_INCLUDE_DIR}" "${Sigc++2_CONFIG_DIR}" )
-  ENDIF(Sigc++2_FOUND)
+  ENDIF(SIGCPP2_FOUND)
 
 ENDIF(EXISTS Sigc++2_INCLUDE_DIR)
 

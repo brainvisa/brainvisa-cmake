@@ -16,6 +16,11 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   BRAINVISA_INSTALL( FILES ${libs}
     DESTINATION "lib"
     COMPONENT "${component}" )
+  # install plugins
+  FILE(GLOB plugin "${QT_PLUGINS_DIR}/accessible/*qtaccessiblecompatwidgets*")
+  BRAINVISA_INSTALL( FILES ${plugin}
+    DESTINATION "lib/qt-plugins/accessible"
+    COMPONENT "${component}" )
 endfunction()
 
 

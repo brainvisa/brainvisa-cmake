@@ -16,6 +16,11 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   BRAINVISA_INSTALL( FILES ${libs}
     DESTINATION "lib"
     COMPONENT "${component}" )
+  # install plugins
+  BRAINVISA_INSTALL_DIRECTORY( "${QT_PLUGINS_DIR}/codecs"
+                          "lib/qt-plugins/codecs"
+                          "${component}" )
+
 endfunction()
 
 

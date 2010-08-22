@@ -7,6 +7,7 @@
 IF(EXISTS Sigc++2_INCLUDE_DIR)
   # already found  
   SET(Sigc++2_FOUND TRUE)
+  SET( Sigc++2_INCLUDE_DIRS "${Sigc++2_INCLUDE_DIR}" "${Sigc++2_CONFIG_DIR}" )
 ELSE(EXISTS Sigc++2_INCLUDE_DIR)
   # use pkg-config to get the directories and then use these values
   # in the FIND_PATH() and FIND_LIBRARY() calls
@@ -43,8 +44,9 @@ ELSE(EXISTS Sigc++2_INCLUDE_DIR)
     ENDIF(NOT Sigc++2_FOUND)
 
     SET( Sigc++2_LIBRARIES "${Sigc++2_LIBRARIES}" CACHE PATH "Sigc++2 libraries" )
-    SET( Sigc++2_INCLUDE_DIRS "${Sigc++2_INCLUDE_DIR}" "${Sigc++2_CONFIG_DIR}" )
   ENDIF(SIGCPP2_FOUND)
+
+  SET( Sigc++2_INCLUDE_DIRS "${Sigc++2_INCLUDE_DIR}" "${Sigc++2_CONFIG_DIR}" )
 
 ENDIF(EXISTS Sigc++2_INCLUDE_DIR)
 

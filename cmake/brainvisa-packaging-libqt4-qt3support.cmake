@@ -6,6 +6,26 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO package_name package_maintainer pac
   set( ${package_version} "${QT_VERSION_MAJOR}.${QT_VERSION_MINOR}.${QT_VERSION_PATCH}" PARENT_SCOPE )
 endfunction()
 
+function( BRAINVISA_PACKAGING_DEPENDENCIES component )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN libqt4-designer RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" DEV libqt4-designer DEV )
+  
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN libqt4-network RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" DEV libqt4-network DEV )
+  
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN libqt4-sql RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" DEV libqt4-sql DEV )
+ 
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN libqt4-xml RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" DEV libqt4-xml DEV )
+  
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN libqtcore4 RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" DEV libqtcore4 DEV )
+  
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN libqtgui4 RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" DEV libqtgui4 DEV )
+
+endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")

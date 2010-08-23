@@ -6,6 +6,14 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO package_name package_maintainer pac
   set( ${package_version} "${QT_VERSION_MAJOR}.${QT_VERSION_MINOR}.${QT_VERSION_PATCH}" PARENT_SCOPE )
 endfunction()
 
+# function that defines the dependencies of this package that need to be packaged
+function( BRAINVISA_PACKAGING_DEPENDENCIES component )
+  if( UNIX )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN libstdc++6 RUN )
+  endif()
+  
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN libgcc1 RUN )
+endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")

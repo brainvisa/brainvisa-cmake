@@ -1,20 +1,18 @@
 find_package( Qt4 COMPONENTS QtGui REQUIRED )
 
-function( BRAINVISA_PACKAGING_COMPONENT_INFO package_name package_maintainer package_version )
+function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )
   set( ${package_name} brainvisa-libqtgui4 PARENT_SCOPE )
   set( ${package_maintainer} "IFR 49" PARENT_SCOPE )
   set( ${package_version} "${QT_VERSION_MAJOR}.${QT_VERSION_MINOR}.${QT_VERSION_PATCH}" PARENT_SCOPE )
-endfunction()
 
-function( BRAINVISA_PACKAGING_DEPENDENCIES component )
-  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN libqtcore4 RUN )
-  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" DEV libqtcore4 DEV )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqtcore4 RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" DEV DEPENDS libqtcore4 DEV )
   
-  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN fontconfig1 RUN )
-  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" DEV fontconfig1 DEV )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS fontconfig1 RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" DEV DEPENDS fontconfig1 DEV )
   
-  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN libpng12-0 RUN )
-  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" DEV libpng12-0 DEV )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libpng12-0 RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" DEV DEPENDS libpng12-0 DEV )
 endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )

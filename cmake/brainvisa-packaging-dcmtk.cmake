@@ -1,6 +1,6 @@
 find_package( DCMTK REQUIRED )
 
-function( BRAINVISA_PACKAGING_COMPONENT_INFO package_name package_maintainer package_version )
+function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )
   set( ${package_name} brainvisa-dcmtk PARENT_SCOPE )
   set( ${package_maintainer} "IFR 49" PARENT_SCOPE )
   # Find version

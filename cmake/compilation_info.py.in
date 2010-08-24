@@ -1,0 +1,5 @@
+build_directory = '@CMAKE_BINARY_DIR@'
+compiled_packages = set()
+thirdparty_packages = set()
+packages_dependencies = {}
+

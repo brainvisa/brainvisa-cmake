@@ -250,15 +250,15 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
           
           # Package type specific initialization for component
           BRAINVISA_PACKAGING_INITIALIZE_THIRDPARTY_COMPONENT( ${component} "${package_name}" "${package_maintainer}" "${package_version}" )
-          
+          BRAINVISA_ADD_COMPONENT("${component}" 
+                                  GROUP "${BRAINVISA_PACKAGE_NAME}-thirdparty")
+
           # Call component specific functions that create install rules
           BRAINVISA_PACKAGING_COMPONENT_RUN( "${component}" )
           BRAINVISA_PACKAGING_COMPONENT_DEV( "${component}" )
           BRAINVISA_PACKAGING_COMPONENT_DOC( "${component}" )
           BRAINVISA_PACKAGING_COMPONENT_DEVDOC( "${component}" )
           BRAINVISA_PACKAGING_COMPONENT_SRC( "${component}" )
-          BRAINVISA_ADD_COMPONENT("${component}" 
-                                  GROUP "${BRAINVISA_PACKAGE_NAME}-thirdparty")
           
           # Third party components packaging rules can be created immediately because
           # their dependencies are fixed
@@ -1165,3 +1165,55 @@ function( BRAINVISA_FIND_RUNTIME_LIBRARIES result )
   set( ${result} ${librariesToInstall} PARENT_SCOPE )
 endfunction( BRAINVISA_FIND_RUNTIME_LIBRARIES )
 
+# BRAINVISA_INSTALL_RUNTIME_LIBRARIES
+#   Checks and creates install rules for the libraries of the given component. 
+#   A list of library files is given in parameter, and the function gets the absolute path of these files, check existance, 
+#   and check that it is a dynamic library. The library files are set in an install rule for the component.
+#   The symlinks that point to the library are found and created in the install directory via a custom command attached to the install target of the component.
+#
+# Usage:
+#
+#   BRAINVISA_INSTALL_RUNTIME_LIBRARIES( <component> <list of library files> )
+#
+# Example:
+#    find_package(LibXml2)
+#    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( libxml2 ${LIBXML2_LIBRARIES} )
+#
+function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
+  set( librariesToInstall )
+  foreach( lib ${ARGN} )
+    get_filename_component( real "${lib}" REALPATH )
+    get_filename_component( ext "${lib}" EXT )
+    if(EXISTS ${real})
+      # check if it is a dynamic library: if it is a static library, no need to package it.
+      if(ext MATCHES ${CMAKE_SHARED_LIBRARY_SUFFIX})
+        # Recreate in the lib install directory the symlinks on the library file
+        if( UNIX OR APPLE )
+          # get the link with version number
+          file( GLOB othernames "${lib}*" )
+          #message("othernames of the lib : ${othernames}")
+          foreach(link ${othernames})
+            get_filename_component(realname ${real} NAME)
+            get_filename_component(linkname ${link} NAME)
+            get_filename_component(linkreal ${link} REALPATH)
+            if(NOT link STREQUAL linkreal AND NOT linkname STREQUAL realname) # if it is really a symlink and it has a name different from the name of the lib
+              add_custom_command( TARGET install-${component} POST_BUILD
+                      COMMAND "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}"
+                      WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}/lib")
+#              message("Create symlink ${CMAKE_INSTALL_PREFIX}/lib/${linkname} -> ${CMAKE_INSTALL_PREFIX}/lib/${realname}")
+            endif()
+          endforeach()
+        endif( UNIX OR APPLE )
+        set( librariesToInstall ${librariesToInstall} ${real} )
+      endif(ext MATCHES ${CMAKE_SHARED_LIBRARY_SUFFIX})
+    else(EXISTS ${real}) 
+      message(SEND_ERROR "The library file ${lib} doesn't exist.")
+    endif(EXISTS ${real}) 
+  endforeach( lib ${ARGN} )
+  # install libraries
+  #message("libraries to install : ${librariesToInstall}")
+  BRAINVISA_INSTALL( FILES ${librariesToInstall}
+      DESTINATION "lib"
+      COMPONENT "${component}"
+      PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
+endfunction( BRAINVISA_INSTALL_RUNTIME_LIBRARIES )

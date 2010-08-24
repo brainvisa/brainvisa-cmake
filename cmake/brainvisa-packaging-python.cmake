@@ -12,7 +12,9 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     DESTINATION "bin"
     COMPONENT "${component}" )
   BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${PYTHON_LIBRARY} )
-  BRAINVISA_INSTALL_DIRECTORY( "${PYTHON_MODULES_PATH}" "python" "${component}" )
+  # all python modules are copied in install directory but in theory, we should not copy site-packages subdirectory
+  # the content of site-packages should be described in different packages.
+  BRAINVISA_INSTALL_DIRECTORY( "${PYTHON_MODULES_PATH}" "lib/python${PYTHON_SHORT_VERSION}" "${component}" )
 endfunction()
 
 

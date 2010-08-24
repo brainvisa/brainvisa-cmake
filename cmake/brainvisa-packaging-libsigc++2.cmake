@@ -17,10 +17,7 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  BRAINVISA_FIND_RUNTIME_LIBRARIES( libs ${Sigc++2_LIBRARIES} )
-  BRAINVISA_INSTALL( FILES ${libs}
-    DESTINATION "lib"
-    COMPONENT "${component}" )
+  BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${Sigc++2_LIBRARIES} )
 endfunction()
 
 

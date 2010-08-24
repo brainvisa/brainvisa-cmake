@@ -8,12 +8,7 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  BRAINVISA_FIND_RUNTIME_LIBRARIES( libs ${EXPAT_LIBRARIES} )
-  if(libs)
-    BRAINVISA_INSTALL( FILES ${libs}
-      DESTINATION "lib"
-      COMPONENT "${component}" )
-  endif()
+  BRAINVISA_install_RUNTIME_LIBRARIES( ${component} ${EXPAT_LIBRARIES} )
 endfunction()
 
 

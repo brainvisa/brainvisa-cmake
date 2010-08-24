@@ -19,10 +19,7 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  BRAINVISA_FIND_RUNTIME_LIBRARIES( libs ${DCMTK_LIBRARIES} )
-  BRAINVISA_INSTALL( FILES ${libs}
-    DESTINATION "lib"
-    COMPONENT "${component}" )
+  BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${DCMTK_LIBRARIES} )
 endfunction()
 
 

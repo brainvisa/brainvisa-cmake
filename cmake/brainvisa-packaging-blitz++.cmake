@@ -13,12 +13,7 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  BRAINVISA_FIND_RUNTIME_LIBRARIES( libs ${BLITZ_LIBRARIES} )
-  if(libs)
-    BRAINVISA_INSTALL( FILES ${libs}
-      DESTINATION "lib"
-      COMPONENT "${component}" )
-  endif()
+  BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${BLITZ_LIBRARIES} )
 endfunction()
 
 

@@ -4,12 +4,14 @@
 # This module defines
 #  NUMPY_INCLUDE_DIR, where to find numpy/arrayobject.h, etc.
 #  NUMPY_FOUND, If false, do not try to use numpy headers.
+#  NUMPY_VERSION
 
 if (NUMPY_INCLUDE_DIR)
   # in cache already
   set (NUMPY_FIND_QUIETLY TRUE)
 endif (NUMPY_INCLUDE_DIR)
 
+find_package(python REQUIRED)
 EXEC_PROGRAM ("${PYTHON_EXECUTABLE}"
   ARGS "-c" "'import numpy; print numpy.get_include()'"
   OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
@@ -18,6 +20,9 @@ EXEC_PROGRAM ("${PYTHON_EXECUTABLE}"
 if (NUMPY_INCLUDE_DIR)
   set (NUMPY_FOUND TRUE)
   set (NUMPY_INCLUDE_DIR ${NUMPY_INCLUDE_DIR} CACHE STRING "Numpy include path")
+  EXEC_PROGRAM ("${PYTHON_EXECUTABLE}"
+    ARGS "-c" "'import numpy; print numpy.version.version'"
+    OUTPUT_VARIABLE NUMPY_VERSION)
 else (NUMPY_INCLUDE_DIR)
   set(NUMPY_FOUND FALSE)
 endif (NUMPY_INCLUDE_DIR)

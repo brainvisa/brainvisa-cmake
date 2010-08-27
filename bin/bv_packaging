@@ -33,7 +33,71 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
+import sys
 from brainvisa.compilation_info import *
+
+
+class PackageSelection( object ):
+  def __init__( self ):
+    pass
+  
+  def isSelected( self, package_info ):
+    pass
+  
+  def addRule( self, rule ):
+    pass
+
+usage = '''bv_package [options] <package_type> [ <selection_rule> ... ]
+
+This program is for the creation of packages and dependency graph for build directories.
+
+Package types:
+  list: Only list selected packages
+  dot: Create a Graphviz dependency graph for selected packages
+  dir: Create a single directory containing all selected packages
+  deb: Create a debian package for each selected packages
+
+Selection rule:
+  +<selection_pattern>: Adds all packages corresponding to the selection pattern
+  -<selection_pattern>: Remove all packages corresponding to the selection pattern
+
+Selection pattern:
+  <property>=<pattern>[,<property>=<pattern>...]: matc all packages where every selected property match the corresponding pattern
+  <pattern>: equivalent to name=<pattern>
+
+Packages properties:
+  name: Name of the package
+  type: Type of the package
+  version: Package version
+  project: Name of the project containing the package.
+  maintainer: Name of the maintainer of the package
+
+Package types:
+  run: Runtime package
+  dev: Development package
+  doc: Documentation package
+  thirdparty: Package corresponding to a thirdparty project not compiled in the build directory
+
+Default selection rule:
+  +type=run: select all 
+
+Examples:
+  Create a dependency graph for runtime packages
+    bv_package -o /tmp/dependency-run.dot dot
+  
+  Create a dependency graph for development packages
+    bv_package -o /tmp/dependency-dev.dot dot +type=dev
+  
+  Create debian packages for all runtime packages in soma project
+    bv_package deb +project=soma,type=run
+    
+  Create debian packages for all runtime packages except brainvisa-system:
+    bv_package deb +type=run -name=brainvisa-system
+'''
+
+if '-h' in sys.argv or '--help' in sys.argv:
+  print usage
+  sys.exit()
 
 nodes = {}
 print 'digraph packages_dependencies {'

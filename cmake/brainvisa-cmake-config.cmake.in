@@ -121,6 +121,10 @@ macro( BRAINVISA_PROJECT )
   set( ${PROJECT_NAME}_VERSION_PATCH ${BRAINVISA_PACKAGE_VERSION_PATCH} PARENT_SCOPE )
   set( ${PROJECT_NAME}_VERSION "${BRAINVISA_PACKAGE_VERSION}" PARENT_SCOPE )
 
+  file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info = {\n  'name': '${PROJECT_NAME}',\n  'type': 'run',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n}\n" )
+  file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info = {\n  'name': '${PROJECT_NAME}-dev',\n  'type': 'dev',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n}\n" )
+  file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info = {\n  'name': '${PROJECT_NAME}-doc',\n  'type': 'doc',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n}\n" )
+
   include( CPack )
   
   set( ${PROJECT_NAME}_TARGET_COUNT 0 CACHE INTERNAL "Used to generate new targets" )
@@ -270,11 +274,12 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
       if( EXISTS "${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake" )
         # Define a default empty function for thirdparty dependencies definition
         include( "${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake" )
-        
+          
         message( STATUS "Packaging rules for ${component}" )
         
         # Get component information
         BRAINVISA_PACKAGING_COMPONENT_INFO( ${component} package_name package_maintainer package_version )
+        file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info = {\n  'name': '${package_name}',\n  'type': 'thirdparty',\n  'version': '${package_version}',\n  'project': 'thirdparty',\n  'maintainer': '${package_maintainer}',\n}\n" )
         
         # Package type specific initialization for component
 #         BRAINVISA_PACKAGING_INITIALIZE_THIRDPARTY_COMPONENT( ${component} "${package_name}" "${package_maintainer}" "${package_version}" )

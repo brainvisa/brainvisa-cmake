@@ -529,24 +529,6 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
   
   
   def compile( self ):
-    #if not os.path.exists( self.directory ) or not os.path.exists( cmakeFile ):
-      #self.configure()
-    #if cmake:
-      #path = os.path.join( self.source, 'development', 'brainvisa-cmake' )
-      #source_bvcmake = glob.glob( os.path.join( path, 'tags', '*' ) )
-      #if source_bvcmake:
-        #source_bvcmake = source_bvcmake[0]
-      #else:
-        #source_bvcmake = glob.glob( os.path.join( path, 'branches', '*' ) )
-        #if source_bvcmake:
-          #source_bvcmake = source_bvcmake[0]
-        #else:
-          #source_bvcmake = os.path.join( path, 'trunk' )
-      #build_bvcmake = os.path.join( self.directory, 'build_files', 'brainvisa-cmake' )
-      #if not os.path.exists( build_bvcmake ):
-        #os.makedirs( build_bvcmake )
-      #system( 'cmake', '-DCMAKE_INSTALL_PREFIX:PATH=' + self.directory, source_bvcmake, cwd=build_bvcmake )
-      #system( 'make', 'install', cwd=build_bvcmake )
     system( cwd=self.directory, *( ['make'] + self.make_options.split() ) )
 
   

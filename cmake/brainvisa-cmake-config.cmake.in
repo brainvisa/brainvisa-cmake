@@ -278,7 +278,9 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
         
         # Package type specific initialization for component
 #         BRAINVISA_PACKAGING_INITIALIZE_THIRDPARTY_COMPONENT( ${component} "${package_name}" "${package_maintainer}" "${package_version}" )
-        
+        BRAINVISA_ADD_COMPONENT( "${component}" 
+                        GROUP "${BRAINVISA_PACKAGE_NAME}-thirdparty")
+
         # Call component specific functions that create install rules
         if ( BRAINVISA_PACKAGING AND BRAINVISA_PACKAGING_THIRDPARTY )
           BRAINVISA_PACKAGING_COMPONENT_RUN( "${component}" )
@@ -286,8 +288,6 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
           BRAINVISA_PACKAGING_COMPONENT_DOC( "${component}" )
           BRAINVISA_PACKAGING_COMPONENT_DEVDOC( "${component}" )
           BRAINVISA_PACKAGING_COMPONENT_SRC( "${component}" )
-          BRAINVISA_ADD_COMPONENT( "${component}" 
-                                  GROUP "${BRAINVISA_PACKAGE_NAME}-thirdparty")
         
           # Third party components packaging rules can be created immediately because
           # their dependencies are fixed
@@ -1242,7 +1242,7 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
         if( UNIX OR APPLE )
           # get the link with version number
           file( GLOB othernames "${lib}*" )
-          #message("othernames of the lib : ${othernames}")
+#           message("othernames of the lib : ${othernames}")
           foreach(link ${othernames})
             get_filename_component(realname ${real} NAME)
             get_filename_component(linkname ${link} NAME)
@@ -1251,7 +1251,7 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
               add_custom_command( TARGET install-${component} POST_BUILD
                       COMMAND "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}"
                       WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}/lib")
-#              message("Create symlink ${CMAKE_INSTALL_PREFIX}/lib/${linkname} -> ${CMAKE_INSTALL_PREFIX}/lib/${realname}")
+#               message("Create symlink ${CMAKE_INSTALL_PREFIX}/lib/${linkname} -> ${CMAKE_INSTALL_PREFIX}/lib/${realname}")
             endif()
           endforeach()
         endif( UNIX OR APPLE )
@@ -1262,7 +1262,7 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
     endif(EXISTS ${real}) 
   endforeach( lib ${ARGN} )
   # install libraries
-  #message("libraries to install : ${librariesToInstall}")
+#   message("libraries to install : ${librariesToInstall}")
   BRAINVISA_INSTALL( FILES ${librariesToInstall}
       DESTINATION "lib"
       COMPONENT "${component}"

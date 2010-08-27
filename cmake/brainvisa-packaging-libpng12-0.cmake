@@ -1,4 +1,4 @@
-find_library(PNG12 REQUIRED)
+find_package(PNG12 REQUIRED)
 
 function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )
   set( ${package_name} brainvisa-${component} PARENT_SCOPE )

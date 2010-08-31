@@ -33,21 +33,10 @@ if( NOT BRAINVISA_CMAKE_CONFIG_DONE )
   set( BRAINVISA_COMPILATION_INFO "${CMAKE_BINARY_DIR}/python/brainvisa/compilation_info.py" )
   execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/python/brainvisa" )
   configure_file( "${brainvisa-cmake_DIR}/compilation_info.py.in" "${BRAINVISA_COMPILATION_INFO}" @ONLY )
-  foreach( component ${BRAINVISA_COMPONENTS} )
-    file( APPEND "${BRAINVISA_COMPILATION_INFO}" "compiled_packages.add( '${component}' )\n" )
-    file( APPEND "${BRAINVISA_COMPILATION_INFO}" "compiled_packages.add( '${component}-dev' )\n" )
-    file( APPEND "${BRAINVISA_COMPILATION_INFO}" "compiled_packages.add( '${component}-doc' )\n" )
-  endforeach()
   
   # Initialize default package type
   unset( BRAINVISA_THIRDPARTY_COMPONENTS CACHE )
-# # #   set( BRAINVISA_DEPENDENCY_GRAPH "${CMAKE_BINARY_DIR}/dependency_graph.dot" CACHE PATH "File where Graphviz dependency graph will be generated" )
-  unset( BRAINVISA_DEPENDENCY_PACKAGES CACHE )
-# # #   if( BRAINVISA_DEPENDENCY_GRAPH )
-# # #     file( WRITE "${BRAINVISA_DEPENDENCY_GRAPH}" "digraph packages_dependencies {\n" )
-# # #   endif()
-  option( BRAINVISA_PACKAGING "Create rules for packaging" OFF )
-  option( BRAINVISA_PACKAGING_THIRDPARTY "Include third-party software in packaging" ON )
+  option( BRAINVISA_PACKAGING_THIRDPARTY "Include packaging rules for third-party software" OFF )
   mark_as_advanced( BRAINVISA_PACKAGING )
   set( BRAINVISA_PACKAGE_TYPE "deb" CACHE STRING "Type of package to create. Possible values are \"deb\" or \"tar.bz2\"." )
   mark_as_advanced( BRAINVISA_PACKAGE_TYPE )
@@ -121,9 +110,9 @@ macro( BRAINVISA_PROJECT )
   set( ${PROJECT_NAME}_VERSION_PATCH ${BRAINVISA_PACKAGE_VERSION_PATCH} PARENT_SCOPE )
   set( ${PROJECT_NAME}_VERSION "${BRAINVISA_PACKAGE_VERSION}" PARENT_SCOPE )
 
-  file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info = {\n  'name': '${PROJECT_NAME}',\n  'type': 'run',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n}\n" )
-  file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info = {\n  'name': '${PROJECT_NAME}-dev',\n  'type': 'dev',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n}\n" )
-  file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info = {\n  'name': '${PROJECT_NAME}-doc',\n  'type': 'doc',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n}\n" )
+  file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${PROJECT_NAME}' ] = {\n  'name': '${PROJECT_NAME}',\n  'type': 'run',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n}\n" )
+  file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${PROJECT_NAME}-dev' ] = {\n  'name': '${PROJECT_NAME}-dev',\n  'type': 'dev',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n}\n" )
+  file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${PROJECT_NAME}-doc' ] = {\n  'name': '${PROJECT_NAME}-doc',\n  'type': 'doc',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n}\n" )
 
   include( CPack )
   
@@ -240,7 +229,17 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
   
   # Check if component is external or not
   list( FIND BRAINVISA_COMPONENTS "${component}" is_brainvisa )
-  if( BRAINVISA_COMPILATION_INFO )
+  if( is_brainvisa EQUAL -1 )
+    # Component is not in BRAINVISA_COMPONENTS, it is considered as a third party component
+    BRAINVISA_DECLARE_THIRDPARTY_COMPONENT( "${component}" )
+    if( "${component_pack_type}" STREQUAL "DEV" )
+      set( dest_package "${BRAINVISA_PACKAGE_NAME_${component}}-dev" )
+    elseif( "${component_pack_type}" STREQUAL "DOC" )
+      set( dest_package "${BRAINVISA_PACKAGE_NAME_${component}}-doc" )
+    else()
+      set( dest_package "${BRAINVISA_PACKAGE_NAME_${component}}" )
+    endif()
+  else()
     if( "${component_pack_type}" STREQUAL "DEV" )
       set( dest_package "${component}-dev" )
     elseif( "${component_pack_type}" STREQUAL "DOC" )
@@ -248,13 +247,8 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
     else()
       set( dest_package "${component}" )
     endif()
-    if( is_brainvisa EQUAL -1 )
-      list( FIND BRAINVISA_DEPENDENCY_PACKAGES ${dest_package} result )
-      if( result EQUAL -1 )
-        set( BRAINVISA_DEPENDENCY_PACKAGES ${BRAINVISA_DEPENDENCY_PACKAGES} ${dest_package} )
-        file( APPEND "${BRAINVISA_COMPILATION_INFO}" "thirdparty_packages.add( '${dest_package}' )\n" )
-      endif()
-    endif()
+  endif()
+  if( BRAINVISA_COMPILATION_INFO )
     if( "${pack_type}" STREQUAL "DEV" )
       set( source_package "${PROJECT_NAME}-dev" )
     elseif( "${pack_type}" STREQUAL "DOC" )
@@ -263,69 +257,6 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
       set( source_package "${PROJECT_NAME}" )
     endif()
     file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_dependencies.setdefault( '${source_package}', set() ).add( ( '${dependency_type}', '${dest_package}', '${version_ranges}', ${binary_independent}) )\n" )
-  endif()
-  if( is_brainvisa EQUAL -1 )
-    # Component is not in BRAINVISA_COMPONENTS, it is considered as a third party component
-    set( destNodeAttributes ", color=orange" )
-    # Check if third party component has already been considered
-    list( FIND BRAINVISA_THIRDPARTY_COMPONENTS "${component}" result )
-    if( result EQUAL -1 )
-      set( BRAINVISA_THIRDPARTY_COMPONENTS "${BRAINVISA_THIRDPARTY_COMPONENTS}" "${component}" CACHE INTERNAL "" )
-      if( EXISTS "${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake" )
-        # Define a default empty function for thirdparty dependencies definition
-        include( "${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake" )
-          
-        message( STATUS "Packaging rules for ${component}" )
-        
-        # Get component information
-        BRAINVISA_PACKAGING_COMPONENT_INFO( ${component} package_name package_maintainer package_version )
-        file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info = {\n  'name': '${package_name}',\n  'type': 'thirdparty',\n  'version': '${package_version}',\n  'project': 'thirdparty',\n  'maintainer': '${package_maintainer}',\n}\n" )
-        
-        # Package type specific initialization for component
-#         BRAINVISA_PACKAGING_INITIALIZE_THIRDPARTY_COMPONENT( ${component} "${package_name}" "${package_maintainer}" "${package_version}" )
-        BRAINVISA_ADD_COMPONENT( "${component}" 
-                        GROUP "${BRAINVISA_PACKAGE_NAME}-thirdparty")
-
-        # Call component specific functions that create install rules
-        if ( BRAINVISA_PACKAGING AND BRAINVISA_PACKAGING_THIRDPARTY )
-          BRAINVISA_PACKAGING_COMPONENT_RUN( "${component}" )
-          BRAINVISA_PACKAGING_COMPONENT_DEV( "${component}" )
-          BRAINVISA_PACKAGING_COMPONENT_DOC( "${component}" )
-          BRAINVISA_PACKAGING_COMPONENT_DEVDOC( "${component}" )
-          BRAINVISA_PACKAGING_COMPONENT_SRC( "${component}" )
-        
-          # Third party components packaging rules can be created immediately because
-          # their dependencies are fixed
-          if( "${component_pack_type}" STREQUAL "RUN" )
-            BRAINVISA_CREATE_RUN_PACKAGE( ${component} "${package_name}" "${package_maintainer}" "${package_version}" )
-            add_dependencies( thirdparty-packages ${component}-package-run )
-          elseif( "${component_pack_type}" STREQUAL "DEV" )
-            BRAINVISA_CREATE_DEV_PACKAGE( ${component} "${package_name}" "${package_maintainer}" "${package_version}" )
-            add_dependencies( thirdparty-packages ${component}-package-dev )
-          elseif( "${component_pack_type}" STREQUAL "SRC" )
-            BRAINVISA_CREATE_SRC_PACKAGE( ${component} "${package_name}" "${package_maintainer}" "${package_version}" )
-          elseif( "${component_pack_type}" STREQUAL "DOC" )
-            BRAINVISA_CREATE_DOC_PACKAGE( ${component} "${package_name}" "${package_maintainer}" "${package_version}" )
-          elseif( "${component_pack_type}" STREQUAL "DEVDOC" )
-            BRAINVISA_CREATE_DEVDOC_PACKAGE( ${component} "${package_name}" "${package_maintainer}" "${package_version}" )
-          else()
-            message( SEND_ERROR "Unknown component package type \"${component_pack_type}\"" )
-          endif()
-          
-          # Call package type specific dependency definition
-          BRAINVISA_PACKAGING_DEPENDENCY( ${pack_type} ${dependency_type} ${component} ${component_pack_type} "${version_ranges}" ${binary_independent} )
-        endif()
-      elseif( BRAINVISA_PACKAGING AND BRAINVISA_PACKAGING_THIRDPARTY )
-        message( "WARNING: Impossible to package third party component ${component} because file \"${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake\" does not exist." )
-      endif()
-    endif()
-  else()
-    # Component is a brainvisa-cmake component
-    set( destNodeAttributes )
-    if( BRAINVISA_PACKAGING )
-      # Call package type specific code to handle dependencies
-      BRAINVISA_PACKAGING_DEPENDENCY( ${pack_type} ${dependency_type} ${component} ${component_pack_type} "${version_ranges}" ${binary_independent} )
-    endif()
   endif()
 endfunction()
 
@@ -337,7 +268,6 @@ endfunction()
 # Examples:
 #    BRAINVISA_THIRDPARTY_DEPENDENCY( libqtgui4 RUN DEPENDS libqtcore4 RUN )
 #    BRAINVISA_THIRDPARTY_DEPENDENCY( libqtgui4 DEV DEPENDS libqtcore4 DEV )
-
 function( BRAINVISA_THIRDPARTY_DEPENDENCY source_component source_pack_type dependency_type dest_component dest_pack_type  )
   # Parse optional arguments
   if( "${ARGV5}" STREQUAL "BINARY_INDEPENDENT" )
@@ -357,32 +287,64 @@ function( BRAINVISA_THIRDPARTY_DEPENDENCY source_component source_pack_type depe
     endif()
   endif()
   
+  BRAINVISA_DECLARE_THIRDPARTY_COMPONENT( "${source_component}" )
+  if( "${source_pack_type}" STREQUAL "DEV" )
+    set( source_package "${BRAINVISA_PACKAGE_NAME_${source_component}}-dev" )
+  elseif( "${source_pack_type}" STREQUAL "DOC" )
+    set( source_package "${BRAINVISA_PACKAGE_NAME_${source_component}}-doc" )
+  else()
+    set( source_package "${BRAINVISA_PACKAGE_NAME_${source_component}}" )
+  endif()
+  BRAINVISA_DECLARE_THIRDPARTY_COMPONENT( "${dest_component}" )
+  if( "${dest_pack_type}" STREQUAL "DEV" )
+    set( dest_package "${BRAINVISA_PACKAGE_NAME_${dest_component}}-dev" )
+  elseif( "${dest_pack_type}" STREQUAL "DOC" )
+    set( dest_package "${BRAINVISA_PACKAGE_NAME_${dest_component}}-doc" )
+  else()
+    set( dest_package "${BRAINVISA_PACKAGE_NAME_${dest_component}}" )
+  endif()
+  
   if( BRAINVISA_COMPILATION_INFO )
-    if( "${source_pack_type}" STREQUAL "DEV" )
-      set( source_package "${source_component}-dev" )
-    elseif( "${source_pack_type}" STREQUAL "DOC" )
-      set( source_package "${source_component}-doc" )
-    else()
-      set( source_package "${source_component}" )
-    endif()
-    if( "${dest_pack_type}" STREQUAL "DEV" )
-      set( dest_package "${dest_component}-dev" )
-    elseif( "${dest_pack_type}" STREQUAL "DOC" )
-      set( dest_package "${dest_component}-doc" )
-    else()
-      set( dest_package "${dest_component}" )
-    endif()
-    list( FIND BRAINVISA_DEPENDENCY_PACKAGES ${source_package} result )
-    if( result EQUAL -1 )
-      set( BRAINVISA_DEPENDENCY_PACKAGES ${BRAINVISA_DEPENDENCY_PACKAGES} ${source_package} )
-      file( APPEND "${BRAINVISA_COMPILATION_INFO}" "thirdparty_packages.add( '${source_package}' )\n" )
-    endif()
-    list( FIND BRAINVISA_DEPENDENCY_PACKAGES ${dest_package} result )
-    if( result EQUAL -1 )
-      set( BRAINVISA_DEPENDENCY_PACKAGES ${BRAINVISA_DEPENDENCY_PACKAGES} ${dest_package} )
-      file( APPEND "${BRAINVISA_COMPILATION_INFO}" "thirdparty_packages.add( '${dest_package}' )\n" )
-    endif()
     file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_dependencies.setdefault( '${source_package}', set() ).add( ( '${dependency_type}', '${dest_package}', '${version_ranges}', ${binary_independent}) )\n" )
+  endif()
+endfunction()
+
+
+# BRAINVISA_DECLARE_THIRDPARTY_COMPONENT
+# Private macro
+function( BRAINVISA_DECLARE_THIRDPARTY_COMPONENT component )
+  # Check if third party component has already been considered
+  list( FIND BRAINVISA_THIRDPARTY_COMPONENTS "${component}" result )
+  if( result EQUAL -1 )
+    set( BRAINVISA_THIRDPARTY_COMPONENTS "${BRAINVISA_THIRDPARTY_COMPONENTS}" "${component}" CACHE INTERNAL "" )
+    if( EXISTS "${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake" )
+      # Define a default empty function for thirdparty dependencies definition
+      include( "${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake" )
+        
+      message( STATUS "Packaging and dependency rules for ${component}" )
+      # Get component information
+      BRAINVISA_PACKAGING_COMPONENT_INFO( ${component} package_name package_maintainer package_version )
+      if( BRAINVISA_COMPILATION_INFO )
+        file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${package_name}' ] = {\n  'name': '${package_name}',\n  'type': 'thirdparty',\n  'version': '${package_version}',\n  'project': 'thirdparty',\n  'maintainer': '${package_maintainer}',\n}\n" )
+      endif()
+      
+      set( BRAINVISA_PACKAGE_NAME_${component} "${package_name}" CACHE INTERNAL "" )
+      
+      # Package type specific initialization for component
+      BRAINVISA_ADD_COMPONENT( "${component}" 
+                      GROUP "${BRAINVISA_PACKAGE_NAME}-thirdparty")
+
+      # Call component specific functions that create install rules
+      if ( BRAINVISA_PACKAGING_THIRDPARTY )
+        BRAINVISA_PACKAGING_COMPONENT_RUN( "${component}" )
+      endif()
+    else()
+      message( "WARNING: Impossible to package third party component ${component} because file \"${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake\" does not exist." )
+      if( BRAINVISA_COMPILATION_INFO )
+        file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${component}' ] = {\n  'name': '${component}',\n  'type': 'thirdparty',\n  'version': '<unknown>',\n  'project': 'thirdparty',\n  'maintainer': '<unknown>',\n}\n" )
+      endif()
+      set( BRAINVISA_PACKAGE_NAME_${component} "${component}" CACHE INTERNAL "" )
+    endif()
   endif()
 endfunction()
 

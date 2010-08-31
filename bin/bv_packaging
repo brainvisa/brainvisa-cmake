@@ -99,23 +99,45 @@ if '-h' in sys.argv or '--help' in sys.argv:
   print usage
   sys.exit()
 
-nodes = {}
-print 'digraph packages_dependencies {'
-for package in compiled_packages:
-  if package.endswith( '-dev' ) or package.endswith( '-doc' ): continue
-  node = nodes.setdefault( package, str( len( nodes ) ) )
-  print '  %s [ label="%s" ]' % ( node, package )
-for package in thirdparty_packages:
-  node = nodes.setdefault( package, str( len( nodes ) ) )
-  print '  %s [ label="%s", color=orange ]' % ( node, package )
-for source_package, dependencies in packages_dependencies.iteritems():
-  if source_package.endswith( '-dev' ): continue
-  for dependency_type, dest_package, version_ranges, binary_independent in dependencies:
-    if dependency_type == 'DEPENDS':
-      color='black'
-    elif dependency_type == 'RECOMMENDS':
-      color='green'
-    else:
-      color='blue'
-    print '  %s -> %s [ color=%s ]' % ( nodes[ source_package ], nodes[ dest_package ], color )
-print '}'
+def dot():
+  out = sys.stdout
+  nodes = {}
+  print >> out, 'digraph packages_dependencies {'
+  done = set()
+  todo = [ package[ 'name' ] for package in packages_info.itervalues() if package[ 'type' ] == 'run' and package[ 'project' ] != 'thirdparty' ]
+  while todo:
+    source_package = todo.pop( 0 )
+    if source_package in done:
+      continue
+    done.add( source_package )
+    source_package = packages_info[ source_package ]
+    source_node = nodes.get( source_package[ 'name' ] )
+    if source_node is None:
+      source_node = str( len( nodes ) )
+      nodes[ source_package[ 'name' ] ] = source_node
+      if source_package[ 'project' ] == 'thirdparty':
+        print '  %s [ label="%s", color=orange ]' % ( source_node, source_package[ 'name' ] )
+      else:
+        print '  %s [ label="%s" ]' % ( source_node, source_package[ 'name' ] )
+    for dependency_type, dest_package, version_ranges, binary_independent  in packages_dependencies.get( source_package[ 'name' ], () ):
+      todo.append( dest_package )
+      dest_package = packages_info[ dest_package ]
+      dest_node = nodes.get( dest_package[ 'name' ] )
+      if dest_node is None:
+        dest_node = str( len( nodes ) )
+        nodes[ dest_package[ 'name' ] ] = dest_node
+        if dest_package[ 'project' ] == 'thirdparty':
+          print '  %s [ label="%s", color=orange ]' % ( dest_node, dest_package[ 'name' ] )
+        else:
+          print '  %s [ label="%s" ]' % ( dest_node, dest_package[ 'name' ] )
+      if dependency_type == 'DEPENDS':
+        color='black'
+      elif dependency_type == 'RECOMMENDS':
+        color='green'
+      else:
+        color='blue'
+      print '  %s -> %s [ color=%s ]' % ( source_node, dest_node, color )
+  print '}'
+
+
+dot()

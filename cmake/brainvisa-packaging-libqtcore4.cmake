@@ -13,7 +13,7 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND QT_QTCORE_LIBRARY_DEBUG)
     set(libs ${QT_QTCORE_LIBRARY_DEBUG})
   else()
     set(libs ${QT_QTCORE_LIBRARY_RELEASE})

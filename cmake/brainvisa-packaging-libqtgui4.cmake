@@ -11,7 +11,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
 endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND QT_QTGUI_LIBRARY_DEBUG)
     set(libs ${QT_QTGUI_LIBRARY_DEBUG})
   else()
     set(libs ${QT_QTGUI_LIBRARY_RELEASE})

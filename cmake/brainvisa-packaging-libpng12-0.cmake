@@ -4,7 +4,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   set( ${package_name} ${component} PARENT_SCOPE )
   set( ${package_maintainer} "IFR 49" PARENT_SCOPE )
   # Find version
-  set( ${package_version} "no_version" PARENT_SCOPE )
+  set( ${package_version} "0.0.0" PARENT_SCOPE )
   if(PNG12_VERSION)
     set( ${package_version} "${PNG12_VERSION}" PARENT_SCOPE )
   else(PNG12_VERSION)

@@ -1146,43 +1146,6 @@ function( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
   endif()
 endfunction()
 
-
-# BRAINVISA_FIND_RUNTIME_LIBRARIES
-#   Returns a list of runtime libraries files. This is useful to create rules to package runtime libraries (dynamically linked).
-#   A list of library files is given in parameter, and the function gets the absolute path of these files, check existance, 
-#   and check that it is a dynamic library and add to the list the symbolic links on each file.
-#
-# Usage:
-#
-#   BRAINVISA_FIND_RUNTIME_LIBRARIES( result <list of library files> )
-#
-# Example:
-#    find_package(DCMTK)
-#    BRAINVISA_FIND_RUNTIME_LIBRARIES( libs ${DCMTK_LIBRARIES} )
-#
-function( BRAINVISA_FIND_RUNTIME_LIBRARIES result )
-  set( librariesToInstall )
-  foreach( lib ${ARGN} )
-    get_filename_component( lib "${lib}" REALPATH )
-    get_filename_component( ext "${lib}" EXT )
-    if(EXISTS ${lib})
-      # check if it is a dynamic library: if it is a static library, no need to package it.
-      if(ext MATCHES ${CMAKE_SHARED_LIBRARY_SUFFIX})
-        # TODO: Find a way to recreate in the lib install directory the symlinks on the library file
-#         if( UNIX OR APPLE )
-#           # get the link with version number
-#           file( GLOB lib "${lib}*" )
-#         endif( UNIX OR APPLE )
-        set( librariesToInstall ${librariesToInstall} ${lib} )
-      endif(ext MATCHES ${CMAKE_SHARED_LIBRARY_SUFFIX})
-    else(EXISTS ${lib}) 
-      message(SEND_ERROR "The library file ${lib} doesn't exist.")
-    endif(EXISTS ${lib}) 
-  endforeach( lib ${ARGN} )
-  set( ${result} ${librariesToInstall} PARENT_SCOPE )
-endfunction( BRAINVISA_FIND_RUNTIME_LIBRARIES )
-
-
 # BRAINVISA_INSTALL_RUNTIME_LIBRARIES
 #   Checks and creates install rules for the libraries of the given component. 
 #   A list of library files is given in parameter, and the function gets the absolute path of these files, check existance, 

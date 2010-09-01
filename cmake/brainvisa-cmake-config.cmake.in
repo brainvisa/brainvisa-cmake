@@ -336,6 +336,7 @@ function( BRAINVISA_DECLARE_THIRDPARTY_COMPONENT component )
 
       # Call component specific functions that create install rules
       if ( BRAINVISA_PACKAGING_THIRDPARTY )
+        include( "${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake" )
         BRAINVISA_PACKAGING_COMPONENT_RUN( "${component}" )
       endif()
     else()

@@ -1,4 +1,4 @@
-find_package( GCC REQUIRED ) 
+find_package( GCC ) 
 
 function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )
   set( ${package_name} ${component} PARENT_SCOPE )
@@ -14,5 +14,7 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${GCC_LIBRARIES} )
+  if( GCC_FOUND )
+    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${GCC_LIBRARIES} )
+  endif()
 endfunction()

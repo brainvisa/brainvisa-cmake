@@ -33,78 +33,75 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
-import sys
-from brainvisa.compilation_info import *
+import sys, os, re, fnmatch, subprocess, tempfile, shutil
+from brainvisa.compilation_info import packages_info, packages_dependencies, build_directory
 
-
-class PackageSelection( object ):
-  def __init__( self ):
-    pass
-  
-  def isSelected( self, package_info ):
-    pass
-  
-  def addRule( self, rule ):
-    pass
-
-usage = '''bv_package [options] <package_type> [ <selection_rule> ... ]
-
-This program is for the creation of packages and dependency graph for build directories.
-
-Package types:
-  list: Only list selected packages
-  dot: Create a Graphviz dependency graph for selected packages
-  dir: Create a single directory containing all selected packages
-  deb: Create a debian package for each selected packages
-
-Selection rule:
-  +<selection_pattern>: Adds all packages corresponding to the selection pattern
-  -<selection_pattern>: Remove all packages corresponding to the selection pattern
-
-Selection pattern:
-  <property>=<pattern>[,<property>=<pattern>...]: matc all packages where every selected property match the corresponding pattern
-  <pattern>: equivalent to name=<pattern>
-
-Packages properties:
-  name: Name of the package
-  type: Type of the package
-  version: Package version
-  project: Name of the project containing the package.
-  maintainer: Name of the maintainer of the package
-
-Package types:
-  run: Runtime package
-  dev: Development package
-  doc: Documentation package
-  thirdparty: Package corresponding to a thirdparty project not compiled in the build directory
-
-Default selection rule:
-  +type=run: select all 
-
-Examples:
-  Create a dependency graph for runtime packages
-    bv_package -o /tmp/dependency-run.dot dot
-  
-  Create a dependency graph for development packages
-    bv_package -o /tmp/dependency-dev.dot dot +type=dev
-  
-  Create debian packages for all runtime packages in soma project
-    bv_package deb +project=soma,type=run
+def packages_selection( rules ):
+  if not rules:
+    rules = [ '+type=run', '-project=thirdparty' ]
+  packages = set()
+  for rule in rules:
+    if not rule: continue
+    if rule[ 0 ] in ( '+', '-' ):
+      attributes={}
+      for attribute_selection in rule[1:].split( ',' ):
+        if not attribute_selection: continue
+        try:
+          attribute, pattern = attribute_selection.split( '=', 1 )
+        except ValueError:
+          attribute = 'name'
+          pattern = attribute_selection
+        attributes[ attribute ] = re.compile( fnmatch.translate( pattern ) )
+      for package_info in packages_info.itervalues():
+        selected = True
+        for attribute, pattern in attributes.iteritems():
+          value = package_info.get( attribute )
+          if value is None:
+            raise SyntaxError( 'Unknown attribute %s in rule %s' % ( repr( attribute ), repr( rule ) ) )
+          if not pattern.match( value ):
+            selected = False
+            break
+        if selected:
+          if rule[ 0 ] == '+':
+            packages.add( package_info[ 'name' ] )
+          else:
+            packages.discard( package_info[ 'name' ] )
+    else:
+      raise SyntaxError( 'A package selection rule must start with + or -: %s' % repr( rule ) )
     
-  Create debian packages for all runtime packages except brainvisa-system:
-    bv_package deb +type=run -name=brainvisa-system
-'''
+    dependencies = set()
+    for package in packages:
+      for type, name, version, binary_independent in packages_dependencies.get( package, () ):
+        if name not in packages:
+          dependencies.add( name )
+    return ( packages, dependencies )
 
-if '-h' in sys.argv or '--help' in sys.argv:
-  print usage
-  sys.exit()
 
-def dot():
-  out = sys.stdout
+def list_selected_packages( options, selected_packages, dependencies ):
+  if options.output is None:
+    out = sys.stdout
+  else:
+    out = open( options.output, 'w' )
+  if options.dependencies and dependencies:
+    print >> out, 'Selected packages:'
+    indent = '  '
+  else:
+    indent = ''
+  print >> out, indent + ('\n'+indent).join( selected_packages )
+  if options.dependencies and dependencies:
+    print >> out, '\nDependencies packages:'
+    print >> out, '  ' + '\n  '.join( dependencies )
+
+
+def create_graphviz_dependencies( options, selected_packages, dependencies ):
+  if options.output is None:
+    out = sys.stdout
+  else:
+    out = open( options.output, 'w' )
   nodes = {}
   print >> out, 'digraph packages_dependencies {'
   done = set()
-  todo = [ package[ 'name' ] for package in packages_info.itervalues() if package[ 'type' ] == 'run' and package[ 'project' ] != 'thirdparty' ]
+  todo = list( selected_packages )
   while todo:
     source_package = todo.pop( 0 )
     if source_package in done:
@@ -116,10 +113,12 @@ def dot():
       source_node = str( len( nodes ) )
       nodes[ source_package[ 'name' ] ] = source_node
       if source_package[ 'project' ] == 'thirdparty':
-        print '  %s [ label="%s", color=orange ]' % ( source_node, source_package[ 'name' ] )
+        print >> out, '  %s [ label="%s", color=orange ]' % ( source_node, source_package[ 'name' ] )
       else:
-        print '  %s [ label="%s" ]' % ( source_node, source_package[ 'name' ] )
+        print >> out, '  %s [ label="%s" ]' % ( source_node, source_package[ 'name' ] )
     for dependency_type, dest_package, version_ranges, binary_independent  in packages_dependencies.get( source_package[ 'name' ], () ):
+      if not options.dependencies and dest_package not in selected_packages:
+        continue
       todo.append( dest_package )
       dest_package = packages_info[ dest_package ]
       dest_node = nodes.get( dest_package[ 'name' ] )
@@ -127,17 +126,179 @@ def dot():
         dest_node = str( len( nodes ) )
         nodes[ dest_package[ 'name' ] ] = dest_node
         if dest_package[ 'project' ] == 'thirdparty':
-          print '  %s [ label="%s", color=orange ]' % ( dest_node, dest_package[ 'name' ] )
+          print >> out, '  %s [ label="%s", color=orange ]' % ( dest_node, dest_package[ 'name' ] )
         else:
-          print '  %s [ label="%s" ]' % ( dest_node, dest_package[ 'name' ] )
+          print >> out, '  %s [ label="%s" ]' % ( dest_node, dest_package[ 'name' ] )
       if dependency_type == 'DEPENDS':
         color='black'
       elif dependency_type == 'RECOMMENDS':
         color='green'
       else:
         color='blue'
-      print '  %s -> %s [ color=%s ]' % ( source_node, dest_node, color )
-  print '}'
+      print >> out, '  %s -> %s [ color=%s ]' % ( source_node, dest_node, color )
+  print >> out, '}'
 
 
-dot()
+def create_directory_package( options, selected_packages, dependencies ):
+  if not options.output:
+    raise SyntaxError( 'Ouput directory must be given for this command' )
+  install_directory = options.output
+  if not os.path.exists( install_directory ):
+    os.makedirs( install_directory )
+  for package in ( selected_packages.union( dependencies ) if options.dependencies else selected_packages ):
+    command = [ options.cmake, '-DCMAKE_INSTALL_PREFIX=' + install_directory, '-DCOMPONENT=' + package, '-P', os.path.join( build_directory, 'cmake_install.cmake' ) ]
+    subprocess.check_call( command )
+
+  
+def create_compressed_package( options, selected_packages, dependencies ):
+  if not options.output:
+    raise SyntaxError( 'Ouput file name must be given for this command' )
+  install_directory = tempfile.mkdtemp()
+  try:
+    output = options.output
+    options.output = install_directory
+    create_directory_package( options, selected_packages, dependencies )
+    options.output = output
+    print 'Compressing %s in %s' % (repr(install_directory), repr(output) )
+    subprocess.check_call( [ 'tar', 'jcf', output ] + os.listdir( install_directory ), cwd=install_directory )
+  finally:
+    print 'Removing %s' % repr(install_directory)
+    shutil.rmtree( install_directory )
+
+
+def create_debian_packages( options, selected_packages, dependencies ):
+  print >> sys.stderr, 'Debian packaging is not implemented yet'
+  sys.exit( 1 )
+
+
+commands = {
+  'list': list_selected_packages,
+  'dot': create_graphviz_dependencies,
+  'dir': create_directory_package,
+  'pack': create_compressed_package,
+  'deb': create_debian_packages
+}
+
+if __name__ == '__main__':
+  # Command line options cannot be parsed with optparse.OptionParser because
+  # non-option values starting with '-' are not supported. So let's parse
+  # options in the old way.
+  class Empty:
+    pass
+  options = Empty()
+  options.help = False
+  options.output = None
+  options.dependencies = True
+  options.cmake = 'cmake'
+
+  usage = '''bv_packaging [options] <package_type> [ <selection_rule> ... ]
+
+  This program is for the creation of packages and dependency graph for build directories.
+
+  Package types:
+    list: Only list selected packages
+    dot: Create a Graphviz dependency graph for selected packages
+    dir: Create a single directory containing all selected packages
+    pack: Like "dir" but compress the result in a *.tar.bz2 archive
+    deb: Create a debian package for each selected packages
+
+  Selection rule:
+    +<selection_pattern>: Adds all packages corresponding to the selection pattern
+    -<selection_pattern>: Remove all packages corresponding to the selection pattern
+
+  Selection pattern:
+    <property>=<pattern>[,<property>=<pattern>...]: matc all packages where every selected property match the corresponding pattern
+    <pattern>: equivalent to name=<pattern>
+
+  Packages properties:
+    name: Name of the package
+    type: Type of the package
+    version: Package version
+    project: Name of the project containing the package.
+    maintainer: Name of the maintainer of the package
+
+  Package types:
+    run: Runtime package
+    dev: Development package
+    doc: Documentation package
+    thirdparty: Package corresponding to a thirdparty project not compiled in the build directory
+
+  Default selection rule:
+    +type=run: select all 
+
+  Examples:
+    Create a dependency graph for runtime packages
+      bv_packaging -o /tmp/dependency-run.dot dot
+    
+    Create a dependency graph for development packages
+      bv_packaging -o /tmp/dependency-dev.dot dot +type=dev
+    
+    Create debian packages for all runtime packages in soma project
+      bv_packaging deb +project=soma,type=run
+      
+    Create debian packages for all runtime packages except brainvisa-system:
+      bv_packaging deb +type=run -name=brainvisa-system
+    
+    List all packages whose name start with "a" excludind development packages
+    without their dependent packages:
+      bv_packaging --no-deps list '+a*'
+
+Options:
+  -h, --help            show this help message and exit
+  -o OUTPUT, --output=OUTPUT
+                        File or directory where output will be stored.
+  --no-deps             Do not include dependencies packages.
+  --tmp DIRECTORY       Location of temporary directory (default is %(tmp)s).
+  --cmake CMAKE_EXE     Location of cmake executable (default = %(cmake)s).
+''' % { 'tmp': repr( tempfile.gettempdir() ),
+        'cmake': repr( options.cmake ) }
+
+  args = sys.argv[ 1: ]
+  index = 0
+  while index < len( args ):
+    if args[ index ] in ( '-h', '--help' ):
+      options.help = True
+      print usage
+      sys.exit( 0 )
+    elif args[ index ] in ( '-o', '--output' ):
+      del args[ index ]
+      if index == len( args ):
+        print >> sys.stderr, 'Missing output file or directory name'
+        sys.exit( 1 )
+      options.output = args[ index ]
+      del args[ index ]
+    elif args[ index ] == '--no-deps':
+      options.dependencies = False
+      del args[ index ]
+    elif args[ index ] == '--cmake':
+      del args[ index ]
+      if index == len( args ):
+        print >> sys.stderr, 'Missing cmake location'
+        sys.exit( 1 )
+      options.cmake = args[ index ]
+      del args[ index ]
+    elif args[ index ] == '--tmp':
+      del args[ index ]
+      if index == len( args ):
+        print >> sys.stderr, 'Missing temporary directory name'
+        sys.exit( 1 )
+      tempfile.tempdir = args[ index ]
+      del args[ index ]
+    else:
+      index += 1
+  
+  if len( args ) < 1:
+    print >> sys.stderr, 'No command given (use -h option to get help)'
+    sys.exit( 1 )
+  command = commands.get( args[ 0 ] )
+  if command is None:
+    print >> sys.stderr, 'Unknown command "%s" (use -h option to get help)' % args[0]
+    sys.exit( 1 )
+  
+  try:
+    packages, dependencies = packages_selection( args[ 1: ] )
+    command( options, packages, dependencies )
+  except SyntaxError, e:
+    print >> sys.stderr, str( e )
+    sys.exit( 1 )
+  

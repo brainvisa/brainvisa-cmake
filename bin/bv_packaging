@@ -91,7 +91,7 @@ def packages_selection( rules ):
       for type, name, version, binary_independent in packages_dependencies.get( package, () ):
         if name not in packages:
           dependencies.add( name )
-    return ( packages, dependencies )
+  return ( packages, dependencies )
 
 
 def list_selected_packages( options, selected_packages, dependencies ):

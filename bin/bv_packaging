@@ -36,7 +36,7 @@
 import sys, os, re, fnmatch, subprocess, tempfile, shutil
 from brainvisa.compilation_info import packages_info, packages_dependencies, build_directory
 
-def system_call( options, command, cwd=None ):
+def system_call( options, command, cwd=None, env=None ):
   if options.verbose:
     print
     print '->',' '.join( ( repr(i) for i in command ) )
@@ -47,7 +47,7 @@ def system_call( options, command, cwd=None ):
     stdout = subprocess.PIPE
     stderr = subprocess.STDOUT
   popen = subprocess.Popen( command,
-                            stdout=stdout, stderr=stderr, cwd=cwd  )
+                            stdout=stdout, stderr=stderr, cwd=cwd, env=env  )
   popen.communicate()
   if popen.returncode:
     subprocess.CalledProcessError( popen.returncode, ' '.join( ( repr(i) for i in command ) ) )
@@ -87,10 +87,13 @@ def packages_selection( rules ):
       raise SyntaxError( 'A package selection rule must start with + or -: %s' % repr( rule ) )
     
     dependencies = set()
-    for package in packages:
+    todo = set( packages )
+    while todo:
+      package = todo.pop()
       for type, name, version, binary_independent in packages_dependencies.get( package, () ):
-        if name not in packages:
+        if name not in packages and name not in dependencies:
           dependencies.add( name )
+          todo.add( name )
   return ( packages, dependencies )
 
 
@@ -169,7 +172,18 @@ def create_directory_package( options, selected_packages, dependencies ):
   axon = os.path.join( install_directory, 'bin', 'brainvisa' )
   if os.path.exists( axon ):
     print 'Generating Axon processes documentation'
-    system_call( options, [ 'sh', axon, '-b', '--ignoreValidation', '--updateDocumentation' ] )
+    env = os.environ.copy()
+    env[ 'BRAINVISA_SHARE' ] = os.path.join( install_directory, 'share' )
+    for variable, value in ( 
+      ( 'PATH', os.path.join( install_directory, 'bin' ) ),
+      ( 'PYTHONPATH', os.path.join( install_directory, 'python' ) ),
+      ( 'LD_LIBRARY_PATH', os.path.join( install_directory, 'lib' ) ) ):
+      path = env.get( variable )
+      if path:
+        env[ variable ] = value + os.pathsep + path
+      else:
+        env[ variable ] = path
+    system_call( options, [ 'sh', axon, '-b', '--ignoreValidation', '--updateDocumentation' ], env=env )
 
 
 def create_compressed_package( options, selected_packages, dependencies ):

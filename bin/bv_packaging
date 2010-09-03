@@ -50,7 +50,16 @@ def system_call( options, command, cwd=None, env=None ):
                             stdout=stdout, stderr=stderr, cwd=cwd, env=env  )
   popen.communicate()
   if popen.returncode:
-    subprocess.CalledProcessError( popen.returncode, ' '.join( ( repr(i) for i in command ) ) )
+    raise subprocess.CalledProcessError( popen.returncode, ' '.join( ( repr(i) for i in command ) ) )
+
+
+def recursive_listdir( directory ):
+  for i in os.listdir( directory ):
+    item = os.path.join( directory, i )
+    yield item
+    if os.path.isdir( item ):
+      for j in recursive_listdir( item ):
+       yield j
 
 
 def packages_selection( rules ):
@@ -74,7 +83,7 @@ def packages_selection( rules ):
         for attribute, pattern in attributes.iteritems():
           value = package_info.get( attribute )
           if value is None:
-            raise SyntaxError( 'Unknown attribute %s in rule %s' % ( repr( attribute ), repr( rule ) ) )
+            raise SyntaxWarning( 'Unknown attribute %s in rule %s' % ( repr( attribute ), repr( rule ) ) )
           if not pattern.match( value ):
             selected = False
             break
@@ -84,7 +93,7 @@ def packages_selection( rules ):
           else:
             packages.discard( package_info[ 'name' ] )
     else:
-      raise SyntaxError( 'A package selection rule must start with + or -: %s' % repr( rule ) )
+      raise SyntaxWarning( 'A package selection rule must start with + or -: %s' % repr( rule ) )
     
     dependencies = set()
     todo = set( packages )
@@ -159,16 +168,24 @@ def create_graphviz_dependencies( options, selected_packages, dependencies ):
   print >> out, '}'
 
 
-def create_directory_package( options, selected_packages, dependencies ):
+def create_directory_package( options, selected_packages, dependencies, list_installed_paths=False ):
   if not options.output:
-    raise SyntaxError( 'Ouput directory must be given for this command' )
+    raise UserWarning( 'Ouput directory must be given for this command' )
   install_directory = options.output
   if not os.path.exists( install_directory ):
     os.makedirs( install_directory )
+  else:
+    if list_installed_paths and os.listdir( install_directory ):
+      raise UserWarning( 'This command cannot be done on an existing and non empty directory: %s' % repr( install_directory ) )
+  installed_paths = {}
   for package in ( selected_packages.union( dependencies ) if options.dependencies else selected_packages ):
     print 'Installing', package
     command = [ options.cmake, '-DCMAKE_INSTALL_PREFIX=' + install_directory, '-DCOMPONENT=' + package, '-P', os.path.join( build_directory, 'cmake_install.cmake' ) ]
     system_call( options, command )
+    if list_installed_paths:
+      print 'List files installed by', package
+      for i in ( j for j in recursive_listdir( install_directory ) if j not in installed_paths):
+        installed_paths[ i ] = package
   axon = os.path.join( install_directory, 'bin', 'brainvisa' )
   if os.path.exists( axon ):
     print 'Generating Axon processes documentation'
@@ -184,11 +201,22 @@ def create_directory_package( options, selected_packages, dependencies ):
       else:
         env[ variable ] = path
     system_call( options, [ 'sh', axon, '-b', '--ignoreValidation', '--updateDocumentation' ], env=env )
+    if list_installed_paths:
+      print 'List generated files for Axon processes documentation'
+      for i in ( j for j in recursive_listdir( install_directory ) if j not in installed_paths):
+        installed_paths[ i ] = 'axon'
+  if list_installed_paths:
+    result = {}
+    for path, package in  (( i[len(install_directory)+1:], j ) for i,j in installed_paths.iteritems() ):
+      result.setdefault( package, [] ).append( path )
+  else:
+    result = None
+  return result
 
 
 def create_compressed_package( options, selected_packages, dependencies ):
   if not options.output:
-    raise SyntaxError( 'Ouput file name must be given for this command' )
+    raise UserWarning( 'Ouput file name must be given for this command' )
   install_directory = tempfile.mkdtemp()
   try:
     output = options.output
@@ -203,9 +231,24 @@ def create_compressed_package( options, selected_packages, dependencies ):
 
 
 def create_debian_packages( options, selected_packages, dependencies ):
-  print >> sys.stderr, 'Debian packaging is not implemented yet'
-  sys.exit( 1 )
-
+  if not options.output:
+    output = os.getcwd()
+  else:
+    output = options.output
+  if not os.path.exists( output ):
+    os.makedirs( output )
+  install_directory = tempfile.mkdtemp()
+  try:
+    options.output = install_directory
+    installed_paths = create_directory_package( options, selected_packages, dependencies, list_installed_paths=True )
+    options.output = output
+    for package, paths in installed_paths.iteritems():
+      out = open( os.path.join( output, package + '.deb' ), 'w' )
+      print >> out, '\n'.join( paths )
+  finally:
+    print 'Removing %s' % repr(install_directory)
+    shutil.rmtree( install_directory )
+  raise RuntimeWarning( 'Debian packaging not implemented. *.deb files contains only a list of files to install per package' )
 
 commands = {
   'list': list_selected_packages,
@@ -339,7 +382,7 @@ Options:
   try:
     packages, dependencies = packages_selection( args[ 1: ] )
     command( options, packages, dependencies )
-  except SyntaxError, e:
+  except Warning, e:
     print >> sys.stderr, str( e )
     sys.exit( 1 )
   

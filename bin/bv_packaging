@@ -36,6 +36,23 @@
 import sys, os, re, fnmatch, subprocess, tempfile, shutil
 from brainvisa.compilation_info import packages_info, packages_dependencies, build_directory
 
+def system_call( options, command, cwd=None ):
+  if options.verbose:
+    print
+    print '->',' '.join( ( repr(i) for i in command ) )
+    print
+    stdout = None
+    stderr = None
+  else:
+    stdout = subprocess.PIPE
+    stderr = subprocess.STDOUT
+  popen = subprocess.Popen( command,
+                            stdout=stdout, stderr=stderr, cwd=cwd  )
+  popen.communicate()
+  if popen.returncode:
+    subprocess.CalledProcessError( popen.returncode, ' '.join( ( repr(i) for i in command ) ) )
+
+
 def packages_selection( rules ):
   if not rules:
     rules = [ '+type=run', '-project=thirdparty' ]
@@ -146,10 +163,15 @@ def create_directory_package( options, selected_packages, dependencies ):
   if not os.path.exists( install_directory ):
     os.makedirs( install_directory )
   for package in ( selected_packages.union( dependencies ) if options.dependencies else selected_packages ):
+    print 'Installing', package
     command = [ options.cmake, '-DCMAKE_INSTALL_PREFIX=' + install_directory, '-DCOMPONENT=' + package, '-P', os.path.join( build_directory, 'cmake_install.cmake' ) ]
-    subprocess.check_call( command )
+    system_call( options, command )
+  axon = os.path.join( install_directory, 'bin', 'brainvisa' )
+  if os.path.exists( axon ):
+    print 'Generating Axon processes documentation'
+    system_call( options, [ 'sh', axon, '-b', '--ignoreValidation', '--updateDocumentation' ] )
 
-  
+
 def create_compressed_package( options, selected_packages, dependencies ):
   if not options.output:
     raise SyntaxError( 'Ouput file name must be given for this command' )
@@ -160,7 +182,7 @@ def create_compressed_package( options, selected_packages, dependencies ):
     create_directory_package( options, selected_packages, dependencies )
     options.output = output
     print 'Compressing %s in %s' % (repr(install_directory), repr(output) )
-    subprocess.check_call( [ 'tar', 'jcf', output ] + os.listdir( install_directory ), cwd=install_directory )
+    system_call( options, [ 'tar', 'jcf', output ] + os.listdir( install_directory ), cwd=install_directory )
   finally:
     print 'Removing %s' % repr(install_directory)
     shutil.rmtree( install_directory )
@@ -190,7 +212,8 @@ if __name__ == '__main__':
   options.output = None
   options.dependencies = True
   options.cmake = 'cmake'
-
+  options.verbose = False
+  
   usage = '''bv_packaging [options] <package_type> [ <selection_rule> ... ]
 
   This program is for the creation of packages and dependency graph for build directories.
@@ -244,7 +267,8 @@ if __name__ == '__main__':
       bv_packaging --no-deps list '+a*'
 
 Options:
-  -h, --help            show this help message and exit
+  -h, --help            Show this help message and exit
+  -v, --verbose         Show verbose information
   -o OUTPUT, --output=OUTPUT
                         File or directory where output will be stored.
   --no-deps             Do not include dependencies packages.
@@ -260,6 +284,9 @@ Options:
       options.help = True
       print usage
       sys.exit( 0 )
+    elif args[ index ] in ( '-v', '--verbose' ):
+      options.verbose = True
+      del args[ index ]
     elif args[ index ] in ( '-o', '--output' ):
       del args[ index ]
       if index == len( args ):

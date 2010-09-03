@@ -1,4 +1,4 @@
-find_package( Stdc++6 REQUIRED ) 
+find_package( Stdc++6 ) 
 
 function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )
   set( ${package_name} ${component} PARENT_SCOPE )
@@ -14,5 +14,11 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${STDCPP_LIBRARIES} )
+  if(NOT APPLE AND NOT WIN32)# packaged only on linux
+    if(STDCPP_FOUND )
+      BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${STDCPP_LIBRARIES} )
+    else()
+      MESSAGE( SEND_ERROR "Impossible to create packaging rules for ${component} : the package was not found." )
+    endif()
+  endif()
 endfunction()

@@ -1,4 +1,4 @@
-find_package( Qt3 REQUIRED )
+find_package( Qt3 )
 find_package( QtVersion )
 
 function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )

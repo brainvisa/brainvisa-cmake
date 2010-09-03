@@ -1,4 +1,4 @@
-find_package( Qt4 COMPONENTS QtGui REQUIRED )
+find_package( Qt4 COMPONENTS QtGui )
 
 function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )
   set( ${package_name} ${component} PARENT_SCOPE )

@@ -1,4 +1,4 @@
-find_package( Qt4 COMPONENTS QtSql REQUIRED )
+find_package( Qt4 COMPONENTS QtSql )
 
 function( BRAINVISA_PACKAGING_COMPONENT_INFO cmake package_name package_maintainer package_version )
   set( ${package_name} ${component} PARENT_SCOPE )

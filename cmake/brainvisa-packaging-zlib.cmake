@@ -1,10 +1,10 @@
-find_package( ZLIB REQUIRED )
+find_package( ZLIB )
 
 function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )
   set( ${package_name} ${component} PARENT_SCOPE )
   set( ${package_maintainer} "IFR 49" PARENT_SCOPE )
   # Find version
-  set( ${package_version} "no_version" PARENT_SCOPE )
+  set( ${package_version} "0.0.0" PARENT_SCOPE )
   if( EXISTS "${ZLIB_INCLUDE_DIR}/zlib.h" )
     file( READ "${ZLIB_INCLUDE_DIR}/zlib.h" header )
     string( REGEX MATCH "#define[ \\t]*ZLIB_VERSION[ \\t]*\"([^\"]*)\"" match "${header}" )
@@ -16,5 +16,11 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${ZLIB_LIBRARIES} )
+  if(WIN32)
+    if (ZLIB_FOUND)
+      BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${ZLIB_LIBRARIES} )
+    else()
+      MESSAGE( SEND_ERROR "Impossible to create packaging rules for ${component} : the package was not found." )
+    endif()
+  endif()
 endfunction()

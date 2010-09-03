@@ -1,4 +1,4 @@
-find_package(PNG12 REQUIRED)
+find_package(PNG12)
 
 function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )
   set( ${package_name} ${component} PARENT_SCOPE )
@@ -20,5 +20,9 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${PNG12_LIBRARIES} )
+  if(PNG12_FOUND)
+    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${PNG12_LIBRARIES} )
+  else()
+    MESSAGE( SEND_ERROR "Impossible to create packaging rules for ${component} : the package was not found." )
+  endif()
 endfunction()

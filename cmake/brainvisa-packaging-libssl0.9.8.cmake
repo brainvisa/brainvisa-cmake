@@ -15,7 +15,11 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
 endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  if( OPENSSL_FOUND )
-    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${OPENSSL_LIBRARIES} )
+  if(NOT APPLE AND NOT WIN32 ) # packaged only on linux
+    if( OPENSSL_FOUND)
+      BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${OPENSSL_LIBRARIES} )
+    else()
+      MESSAGE( SEND_ERROR "Impossible to create packaging rules for ${component} : the package was not found." )
+    endif()
   endif()
 endfunction()

@@ -29,31 +29,26 @@ if( NOT BRAINVISA_CMAKE_CONFIG_DONE )
   # Requires CPack for its argument parsing macro
   include( CPack )
   
+  unset( BRAINVISA_THIRDPARTY_COMPONENTS CACHE )
+  option( BRAINVISA_PACKAGING_THIRDPARTY "Include packaging rules for third-party software" OFF )
+  mark_as_advanced( BRAINVISA_PACKAGING_THIRDPARTY )
+  if( NOT DEFINED BRAINVISA_SYSTEM_IDENTIFICATION )
+    execute_process( COMMAND "${brainvisa-cmake_DIR}/../../../bin/bv_system_info" -s 
+      OUTPUT_VARIABLE output OUTPUT_STRIP_TRAILING_WHITESPACE
+      RESULT_VARIABLE result )
+    if( output AND result EQUAL 0 )
+      set( BRAINVISA_SYSTEM_IDENTIFICATION "${output}" )
+    else()
+      set( BRAINVISA_SYSTEM_IDENTIFICATION "${CMAKE_SYSTEM_NAME}" )
+    endif()
+    set( BRAINVISA_SYSTEM_IDENTIFICATION "${BRAINVISA_SYSTEM_IDENTIFICATION}" CACHE STRING "Suffix for system identification in packages name" )
+  endif()
+
   # Initialize python module containing compilation information
   set( BRAINVISA_COMPILATION_INFO "${CMAKE_BINARY_DIR}/python/brainvisa/compilation_info.py" )
   execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/python/brainvisa" )
   configure_file( "${brainvisa-cmake_DIR}/compilation_info.py.in" "${BRAINVISA_COMPILATION_INFO}" @ONLY )
   
-  # Initialize default package type
-  unset( BRAINVISA_THIRDPARTY_COMPONENTS CACHE )
-  option( BRAINVISA_PACKAGING_THIRDPARTY "Include packaging rules for third-party software" OFF )
-  mark_as_advanced( BRAINVISA_PACKAGING )
-  set( BRAINVISA_PACKAGE_TYPE "deb" CACHE STRING "Type of package to create. Possible values are \"deb\" or \"tar.bz2\"." )
-  mark_as_advanced( BRAINVISA_PACKAGE_TYPE )
-  if( BRAINVISA_PACKAGING )
-    if( NOT DEFINED BRAINVISA_PACKAGING_SUFFIX )
-      execute_process( COMMAND systemIdentification 
-        OUTPUT_VARIABLE output OUTPUT_STRIP_TRAILING_WHITESPACE
-        RESULT_VARIABLE result )
-      if( output AND result EQUAL 0 )
-        set( BRAINVISA_PACKAGING_SUFFIX "${output}" )
-      else()
-        set( BRAINVISA_PACKAGING_SUFFIX "${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}" )
-      endif()
-      set( BRAINVISA_PACKAGING_SUFFIX "${BRAINVISA_PACKAGING_SUFFIX}" CACHE STRING "Suffix for system identification in generated packages name" )
-    endif()
-    include( "${brainvisa-cmake_DIR}/packaging-${BRAINVISA_PACKAGE_TYPE}.cmake" )
-  endif()
 endif()
 
 # 
@@ -139,7 +134,7 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
     BRAINVISA_ADD_COMPONENT_GROUP( runtime
                                    DISPLAY_NAME "Runtime"
                                    DESCRIPTION "All elements necessary to use ${PROJECT_NAME} at runtime without developpement files such as C++ headers." )
-    BRAINVISA_ADD_COMPONENT_GROUP( devel
+    BRAINVISA_ADD_COMPONENT_GROUP( dev
                                    DISPLAY_NAME "Developpement"
                                    DESCRIPTION "All elements necessary to compile libraries and programs that uses ${PROJECT_NAME} (such as C++ headers)." )
     BRAINVISA_ADD_COMPONENT_GROUP( doc
@@ -149,11 +144,11 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
                                    DISPLAY_NAME "Thirdparty"
                                    DESCRIPTION "External dependencies : qt, sigc++, libxml..." )
 
-    add_dependencies( install-devel install-runtime )
+    add_dependencies( install-dev install-runtime )
     add_custom_target( doc )
     add_dependencies( install-doc doc )
     add_custom_target( install-nodoc )
-    add_dependencies( install-nodoc install-runtime install-devel )
+    add_dependencies( install-nodoc install-runtime install-dev )
 
     if( BRAINVISA_PACKAGING )
       set( runPackages )
@@ -179,8 +174,8 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
   BRAINVISA_ADD_COMPONENT( ${PROJECT_NAME}
                            GROUP runtime
                            DESCRIPTION "runtime files for ${PROJECT_NAME}" )
-  BRAINVISA_ADD_COMPONENT( ${PROJECT_NAME}-devel 
-                           GROUP devel
+  BRAINVISA_ADD_COMPONENT( ${PROJECT_NAME}-dev 
+                           GROUP dev
                            DESCRIPTION "Developpement files for ${PROJECT_NAME}"
                            DEPENDS ${PROJECT_NAME} )
   BRAINVISA_ADD_COMPONENT( ${PROJECT_NAME}-doc
@@ -446,7 +441,7 @@ function( BRAINVISA_COPY_AND_INSTALL_HEADERS _headersVariable _includeDir target
     get_filename_component( _path "${_currentHeader}" PATH )
     BRAINVISA_INSTALL( FILES ${_currentHeader}
                        DESTINATION include/${_includeDir}/${_path}
-                       COMPONENT ${PROJECT_NAME}-devel )
+                       COMPONENT ${PROJECT_NAME}-dev )
   endforeach()
   BRAINVISA_GENERATE_TARGET_NAME( target )
   add_custom_target( ${target} ALL
@@ -1049,7 +1044,7 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
   endforeach()
 
   # Build install rules for sip files
-  BRAINVISA_COPY_FILES( ${PROJECT_NAME}-devel
+  BRAINVISA_COPY_FILES( ${PROJECT_NAME}-dev
     ${_mainSipFile} ${_SIP_SOURCES}
     DESTINATION "${_SIP_INSTALL}"
     IMMEDIATE )
@@ -1138,7 +1133,7 @@ function( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
           "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake"
           "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-use.cmake"
           DESTINATION "${_prefixForCmakeFiles}"
-          COMPONENT ${PROJECT_NAME}-devel )
+          COMPONENT ${PROJECT_NAME}-dev )
 
   if( BRAINVISA_PACKAGING )
     # Create packaging rules

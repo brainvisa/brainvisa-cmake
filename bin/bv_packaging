@@ -34,7 +34,7 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 
 import sys, os, re, fnmatch, subprocess, tempfile, shutil
-from brainvisa.compilation_info import packages_info, packages_dependencies, build_directory, build_processor
+from brainvisa.compilation_info import packages_info, packages_dependencies, build_directory, build_system, build_processor
 
 def system_call( options, command, cwd=None, env=None, return_output=False ):
   if options.verbose and not return_output:
@@ -184,7 +184,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
     command = [ options.cmake, '-DCMAKE_INSTALL_PREFIX=' + install_directory, '-DCOMPONENT=' + package, '-P', os.path.join( build_directory, 'cmake_install.cmake' ) ]
     system_call( options, command )
     if list_installed_paths:
-      print 'List files installed by', package
+      # List files installed by package
       for i in ( j for j in recursive_listdir( install_directory ) if j not in installed_paths):
         installed_paths[ i ] = package
   axon = os.path.join( install_directory, 'bin', 'brainvisa' )
@@ -256,33 +256,39 @@ def create_debian_packages( options, selected_packages, dependencies ):
     os.mkdir( debs_directory )
     for package, paths in installed_paths.iteritems():
       package_info = packages_info[ package ]
+      deb_file = os.path.join( options.output, package + '-' + package_info[ 'version' ] + '-' + build_system + '-' + architecture + '.deb' )
+      print 'Creating package', deb_file
       deb_directory = os.path.join( debs_directory, package )
       os.mkdir( deb_directory )
-      os.mkdir( os.path.join( deb_directory, 'DEBIAN' ) )
       
       # Create Debian control file
-      control = open( os.path.join( deb_directory, 'DEBIAN', 'control' ) )
-      print >> control, '''Package: %s
-Version: %(name)s
+      os.mkdir( os.path.join( deb_directory, 'DEBIAN' ) )
+      control = open( os.path.join( deb_directory, 'DEBIAN', 'control' ), 'w' )
+      print >> control, ('''Package: %(name)s
+Version: %(version)s
 Maintainer: %(maintainer)s
 Architecture: ''' + architecture + '''
 Description: %(type)s package for component %(name)s
 Priority: optional
 Section: multiverse/science
-''' % package_info
+''') % package_info
       control.close()
 
       # Move files installed for this package in deb_directory
-      out = open( os.path.join( deb_directory, content.txt ), 'w' )
-      print >> out, '\n'.join( paths )
-      out.close()
-
+      for path in paths:
+        source = os.path.join( install_directory, path )
+        if os.path.isfile( source ):
+          p, f = os.path.split( path )
+          dest_directory = os.path.join( deb_directory, 'usr', 'local', p )
+          if not os.path.exists( dest_directory ):
+            os.makedirs( dest_directory )
+          os.rename( source, os.path.join( dest_directory, f ) )
+      
       # Creating *.deb file
-      system_call( ( 'dpkg', '--build', deb_directory, os.path.join( options.output, package + '-' + package_info[ 'version' ] + '-' + build_system_identification ) ) )
+      system_call( options, ( 'dpkg', '--build', deb_directory, deb_file ) )
   finally:
     print 'Removing %s' % repr(install_directory)
     shutil.rmtree( install_directory )
-  raise RuntimeWarning( 'Debian packaging not implemented. *.deb files contains only a list of files to install per package' )
 
 commands = {
   'list': list_selected_packages,

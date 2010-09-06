@@ -231,6 +231,10 @@ def create_compressed_package( options, selected_packages, dependencies ):
     shutil.rmtree( install_directory )
 
 
+def validDebianPackageName( package ):
+  # Debian package names only accepts alphanumeric or +- characters
+  return package.replace( '_', '-' )
+
 def create_debian_packages( options, selected_packages, dependencies ):
   if not options.output:
     output = os.getcwd()
@@ -256,7 +260,9 @@ def create_debian_packages( options, selected_packages, dependencies ):
     os.mkdir( debs_directory )
     for package, paths in installed_paths.iteritems():
       package_info = packages_info[ package ]
-      deb_file = os.path.join( options.output, package + '-' + package_info[ 'version' ] + '-' + build_system + '-' + architecture + '.deb' )
+      debian_name = validDebianPackageName( package )
+      package_info[ 'debian_name' ] = debian_name
+      deb_file = os.path.join( options.output, debian_name + '-' + package_info[ 'version' ] + '-' + build_system + '-' + architecture + '.deb' )
       print 'Creating package', deb_file
       deb_directory = os.path.join( debs_directory, package )
       os.mkdir( deb_directory )
@@ -264,14 +270,24 @@ def create_debian_packages( options, selected_packages, dependencies ):
       # Create Debian control file
       os.mkdir( os.path.join( deb_directory, 'DEBIAN' ) )
       control = open( os.path.join( deb_directory, 'DEBIAN', 'control' ), 'w' )
-      print >> control, ('''Package: %(name)s
+      print >> control, ('''Package: %(debian_name)s
 Version: %(version)s
 Maintainer: %(maintainer)s
 Architecture: ''' + architecture + '''
-Description: %(type)s package for component %(name)s
+Description: %(type)s package for BrainVISA component %(name)s.
 Priority: optional
-Section: multiverse/science
-''') % package_info
+Section: multiverse/science''') % package_info
+      dependencies = {}
+      for dependency_type, dest_package, version_ranges, binary_independent  in packages_dependencies.get( package, () ):
+        for version_range in version_ranges.split( ';' ):
+          dependencies.setdefault( dependency_type, [] ).append( validDebianPackageName( dest_package ) + ( ' ( ' + version_range + ' )' if version_ranges else '' ) )
+      for dependency_type in ( 'DEPENDS', 'RECOMMENDS', 'SUGGESTS', 'ENHANCES' ):
+        deps = dependencies.get( dependency_type )
+        if deps:
+          print >> control, dependency_type.capitalize() + ':', ', '.join( deps )
+      deps = dependencies.get( 'RECOMMENDS' )
+      if deps:
+        print >> control, 'Depends:', ', '.join( deps )
       control.close()
 
       # Move files installed for this package in deb_directory
@@ -279,13 +295,18 @@ Section: multiverse/science
         source = os.path.join( install_directory, path )
         if os.path.isfile( source ):
           p, f = os.path.split( path )
-          dest_directory = os.path.join( deb_directory, 'usr', 'local', p )
+          dest_directory = os.path.join( deb_directory, 'usr', p )
           if not os.path.exists( dest_directory ):
             os.makedirs( dest_directory )
           os.rename( source, os.path.join( dest_directory, f ) )
       
       # Creating *.deb file
-      system_call( options, ( 'dpkg', '--build', deb_directory, deb_file ) )
+      try:
+        system_call( options, ( 'dpkg', '--build', deb_directory, deb_file ) )
+      except subprocess.CalledProcessError:
+        print >> sys.stderr, '\nDebian control file for %s' % package
+        sys.stderr.write( open( control.name ).read() )
+        raise
   finally:
     print 'Removing %s' % repr(install_directory)
     shutil.rmtree( install_directory )

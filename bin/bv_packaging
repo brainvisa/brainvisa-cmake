@@ -34,6 +34,23 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 
 import sys, os, re, fnmatch, subprocess, tempfile, shutil
+
+if os.path.exists( sys.argv[0] ):
+  this_script = sys.argv[0]
+else:
+  this_script = None
+  for p in os.environ.get( 'PATH', '' ).split( os.pathsep ) + [ os.curdir ]:
+    s = os.path.join( p, sys.argv[0] )
+    if os.path.exists( s ):
+      this_script = s
+      break
+if this_script:
+  this_script = os.path.normpath( os.path.abspath( this_script ) )
+  python_modules = os.path.join( os.path.dirname( os.path.dirname( this_script ) ), 'python' )
+  if os.path.isdir( python_modules ):
+    sys.path.insert( 0, python_modules )
+
+
 from brainvisa.compilation_info import packages_info, packages_dependencies, build_directory, build_system, build_processor
 
 def system_call( options, command, cwd=None, env=None, return_output=False ):

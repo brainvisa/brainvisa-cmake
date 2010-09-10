@@ -21,6 +21,12 @@ endfunction()
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   if(DCMTK_FOUND)
     BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${DCMTK_LIBRARIES} )
+    if( EXISTS "${DCMTK_dict}" )
+      get_filename_component( dict "${DCMTK_dict}" REALPATH )
+      BRAINVISA_INSTALL( FILES "${dict}"
+        DESTINATION "lib"
+        COMPONENT "${component}" )
+    endif()
   else()
     MESSAGE( SEND_ERROR "Impossible to create packaging rules for ${component} : the package was not found." )
   endif()

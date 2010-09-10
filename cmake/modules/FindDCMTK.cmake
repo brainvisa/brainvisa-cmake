@@ -149,6 +149,10 @@ find_library(DCMTK_ijg16_LIBRARY ijg16
   PATH_SUFFIXES ${_pathSuffixes}
 )
 
+find_file( DCMTK_dict dicom.dic
+    PATHS ${_directories} ${CMAKE_LIBRARY_PATH} ${CMAKE_FRAMEWORK_PATH}
+    PATH_SUFFIXES ${_librarySuffixes}
+)
 
 if( DCMTK_config_INCLUDE_DIR AND
     DCMTK_ofstd_INCLUDE_DIR AND
@@ -275,23 +279,16 @@ if( DCMTK_config_INCLUDE_DIR AND
 
 endif()
 
-if( DCMTK_FOUND )
-#   if( NOT DCMTK_FIND_QUIETLY )
-#     if( DCMTK_PRE_353 )
-#       message( STATUS "Found dcmtk <= 3.5.3" )
-#     else( DCMTK_PRE_353 )
-#       message( STATUS "Found dcmtk >= 3.5.4" )
-#     endif( DCMTK_PRE_353 )
-#   endif( NOT DCMTK_FIND_QUIETLY )
-else( DCMTK_FOUND )
+
+if( NOT DCMTK_FOUND )
   set( DCMTK_DIR "" CACHE PATH "Root of DCMTK source tree (optional)." )
   mark_as_advanced( DCMTK_DIR )
   if( NOT DCMTK_FIND_QUIETLY )
     if( DCMTK_FIND_REQUIRED )
       message( FATAL_ERROR "dcmtk not found" )
-    else( DCMTK_FIND_REQUIRED )
+    else()
       message( STATUS "dcmtk not found" )
-    endif( DCMTK_FIND_REQUIRED )
-  endif( NOT DCMTK_FIND_QUIETLY )
-endif( DCMTK_FOUND )
+    endif()
+  endif()
+endif()
 

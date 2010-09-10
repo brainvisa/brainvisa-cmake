@@ -33,18 +33,9 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
-unset_variables = [ 'SIGRAPH_PATH', 'ANATOMIST_PATH', 'AIMS_PATH' ]
-set_variables = {
- 'LC_NUMERIC': 'C',
- 'BRAINVISA_SHARE': '$CARTOPREFIX/share',
- 'PYTHONHOME': '$CARTOPREFIX/',
-}
-path_prepend = {
-  'DCMDICTPATH': [ '$CARTOPREFIX/lib/dicom.dic' ],
-  'PYTHONPATH': [ '$CARTOPREFIX/python', '$CARTOPREFIX/lib/python2.6/site-packages' ],
-  'PATH': [ '$CARTOPREFIX/bin/commands-links', '$CARTOPREFIX/bin' ]
-  'LD_LIBRARY_PATH': [ '$CARTOPREFIX/lib' ],
-}
+import sys, os
+from glob import glob
+
 if os.path.exists( sys.argv[0] ):
   this_script = sys.argv[0]
 else:
@@ -54,4 +45,63 @@ else:
     if os.path.exists( s ):
       this_script = s
       break
+if this_script:
+  install_directory = os.path.dirname( os.path.dirname( this_script ) )
 
+# Define environment variables modifications
+unset_variables = [ 'SIGRAPH_PATH', 'ANATOMIST_PATH', 'AIMS_PATH' ]
+set_variables = {
+ 'LC_NUMERIC': 'C',
+ 'BRAINVISA_SHARE': install_directory + '/share',
+}
+path_prepend = {
+  'DCMDICTPATH': [ install_directory + '/lib/dicom.dic' ],
+  'PYTHONPATH': [ install_directory + '/python' ],
+  'PATH': [ install_directory + '/bin/real-commands', install_directory + '/bin' ],
+  'LD_LIBRARY_PATH': [ install_directory + '/lib' ],
+}
+
+# Look for Python in install_directory
+python_dirs = glob( os.path.join( install_directory, 'lib', 'python*' ) )
+if python_dirs:
+  python_version = python_dirs[ 0 ][ -3: ]
+  set_variables[ 'PYTHONHOME' ] = install_directory
+  path_prepend[ 'PYTHONPATH' ].append( install_directory + '/lib/python' + python_version + '/site-packages' )
+
+
+backup_variables = {}
+for n in unset_variables:
+  if n in os.environ:
+    backup_variables[ n ] = os.environ[ n ]
+    del os.environ[ n ]
+for n, v in set_variables.iteritems():
+  v = v.replace( '${INSTALL_DIRECTORY}', install_directory )
+  if n in os.environ and os.environ[ n ] != v:
+    backup_variables[ n ] = os.environ[ n ]
+  os.environ[ n ] = v
+for n, l in path_prepend.iteritems():
+  if n in os.environ:
+    backup_variables[ n ] = os.environ[ n ]
+    prepend = True
+  else:
+    prepend = False
+  for v in reversed( l ):
+    v = v.replace( '${INSTALL_DIRECTORY}', install_directory )
+    if prepend:
+      os.environ[ n ] = os.pathsep.join( [ v ] + os.environ[ n ].split( os.pathsep ) )
+    else:
+      os.environ[ n ] = v
+
+if len( sys.argv ) > 1:
+  for n, v in backup_variables.iteritems():
+    os.environ[ 'BRAINVISA_UNENV_' + n ] = v
+  os.execvpe( sys.argv[1], sys.argv[ 1: ], os.environ )
+else:
+  for n, v in backup_variables.iteritems():
+    print 'export BRAINVISA_UNENV_' + n + "='" + v + "'"
+  for n in unset_variables:
+    print 'unset', n
+  for n in set_variables:
+    print 'export', n + "='" + os.environ[ n ] + "'"
+  for n in path_prepend:
+    print 'export', n + "='" + os.environ[ n ] + "'"

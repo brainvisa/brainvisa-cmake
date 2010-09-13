@@ -150,25 +150,6 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
     add_custom_target( install-nodoc )
     add_dependencies( install-nodoc install-runtime install-dev )
 
-    if( BRAINVISA_PACKAGING )
-      set( runPackages )
-      set( devPackages )
-      foreach( component ${BRAINVISA_COMPONENTS} )
-        set( runPackages ${runPackages} "${component}-package-run" )
-        set( devPackages ${devPackages} "${component}-package-dev" )
-      endforeach()
-      add_custom_target( packages-run )
-      add_dependencies( packages-run ${runPackages} )
-      add_custom_target( packages-dev )
-      add_dependencies( packages-dev ${devPackages} )
-      
-      add_custom_target( brainvisa-packages )
-      add_custom_target( thirdparty-packages )
-      add_dependencies( brainvisa-packages packages-run packages-dev )
-      add_custom_target( packages )
-      add_dependencies( packages brainvisa-packages thirdparty-packages )
-    endif()
-
   endif( NOT BRAINVISA_MAIN_COMPONENTS_CREATED )
 
   BRAINVISA_ADD_COMPONENT( ${PROJECT_NAME}
@@ -1135,11 +1116,6 @@ function( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
           DESTINATION "${_prefixForCmakeFiles}"
           COMPONENT ${PROJECT_NAME}-dev )
 
-  if( BRAINVISA_PACKAGING )
-    # Create packaging rules
-    BRAINVISA_CREATE_RUN_PACKAGE( "${PROJECT_NAME}" "${BRAINVISA_PACKAGE_NAME}" "${BRAINVISA_PACKAGE_MAINTAINER}" "${BRAINVISA_PACKAGE_VERSION}" )
-    BRAINVISA_CREATE_DEV_PACKAGE( "${PROJECT_NAME}" "${BRAINVISA_PACKAGE_NAME}" "${BRAINVISA_PACKAGE_MAINTAINER}" "${BRAINVISA_PACKAGE_VERSION}" )
-  endif()
 endfunction()
 
 # BRAINVISA_INSTALL_RUNTIME_LIBRARIES

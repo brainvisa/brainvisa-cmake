@@ -353,7 +353,13 @@ class SourceDirectory( object ):
     repositoryDirectory = os.path.join( self.directory, '.repository' )
     checkout = False
     if not os.path.exists( repositoryDirectory ):
-      system( 'svnadmin', 'create', repositoryDirectory )
+      os.makedirs( repositoryDirectory )
+      # Because of a bug in svnadmin on MacOS, I cannot use an absolute name for the directory to create.
+      # When I try "svnadmin create /neurospin/brainvisa/cmake_mac/", I have the following error:
+      # svnadmin: '/neurospin/brainvisa/cmake_mac' is a subdirectory of an existing repository rooted at '/neurospin'
+      # But it works if I do "cd /neurospin/brainvisa && vnadmin create cmake_mac"
+      cwd, dir = os.path.split( repositoryDirectory )
+      system( 'svnadmin', 'create', dir, cwd=cwd )
       self.svncommand( 'checkout',  'file://' + os.path.splitdrive(repositoryDirectory)[1].replace(os.path.sep, "/"), self.directory )
       checkout = True
     self.updateExternals()

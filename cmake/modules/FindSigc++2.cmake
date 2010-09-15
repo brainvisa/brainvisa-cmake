@@ -17,7 +17,7 @@ else()
 
   if( _SIGCPP2_FOUND )
     find_library( Sigc++2_LIBRARIES ${_SIGCPP2_LIBRARIES} )
-    set( Sigc++2_INCLUDE_DIRS _SIGCPP2_INCLUDE_DIRS CACHE PATH "paths to Sigc++2 header files" )
+    set( Sigc++2_INCLUDE_DIRS ${_SIGCPP2_INCLUDE_DIRS} CACHE PATH "paths to Sigc++2 header files" )
     set( Sigc++2_VERSION "${_SIGCPP2_VERSION}" CACHE STRING "version of Sigc++2 library")
     if( Sigc++2_LIBRARIES )
       set( Sigc++2_FOUND TRUE )

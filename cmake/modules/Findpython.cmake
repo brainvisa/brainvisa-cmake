@@ -73,7 +73,7 @@ else()
   )
   mark_as_advanced( PYTHON_MODULES_PATH )
   
-  FIND_LIBRARY(PYTHON_LIBRARY
+  find_library( PYTHON_LIBRARY
     NAMES python${_versionNoDot} python${_version} python
     PATHS
       "${_prefix}/lib"

@@ -35,10 +35,13 @@ else()
   set( PYTHON_SHORT_VERSION "${_version}" CACHE STRING "Python short version (e.g. \"2.6\")" )
   
   set( PYTHON_FRAMEWORK_INCLUDES )
+  set( PYTHON_FRAMEWORK_LIBRARIES )
   if( Python_FRAMEWORKS AND NOT PYTHON_INCLUDE_PATH )
     foreach( _dir ${Python_FRAMEWORKS} )
       set( PYTHON_FRAMEWORK_INCLUDES ${PYTHON_FRAMEWORK_INCLUDES}
           "${_dir}/Versions/${_version}/include/python${_version}" )
+      set( PYTHON_FRAMEWORK_LIBRARIES ${PYTHON_FRAMEWORK_LIBRARIES}
+          "${_dir}/Versions/${_version}/lib" )
     endforeach()
   endif()
   find_path( PYTHON_INCLUDE_PATH
@@ -71,9 +74,10 @@ else()
   mark_as_advanced( PYTHON_MODULES_PATH )
   
   FIND_LIBRARY(PYTHON_LIBRARY
-    NAMES python${_versionNoDot} python${_version}
+    NAMES python${_versionNoDot} python${_version} python
     PATHS
       "${_prefix}/lib"
+      ${PYTHON_FRAMEWORK_LIBRARIES}
       [HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${_version}\\InstallPath]/libs
   #  PATH_SUFFIXES
   #    python${_version}/config

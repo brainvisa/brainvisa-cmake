@@ -200,7 +200,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
   installed_paths = {}
   for package in ( selected_packages.union( dependencies ) if options.dependencies else selected_packages ):
     print 'Installing', package
-    command = [ options.cmake, '-DCMAKE_INSTALL_PREFIX=' + install_directory, '-DCOMPONENT=' + package, '-P', os.path.join( build_directory, 'cmake_install.cmake' ) ]
+    command = [ 'make', 'BRAINVISA_INSTALL_PREFIX=' + install_directory, 'install-' + package ]
     system_call( options, command )
     if list_installed_paths:
       # List files installed by package

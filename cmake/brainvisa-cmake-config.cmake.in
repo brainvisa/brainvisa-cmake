@@ -927,7 +927,7 @@ function( BRAINVISA_ADD_COMPONENT _component )
   cpack_add_component( ${_component}
                        ${ARGN} )
   add_custom_target( install-${_component}
-                     COMMAND "${CMAKE_COMMAND}" -DCOMPONENT=${_component} -P "${CMAKE_BINARY_DIR}/cmake_install.cmake" )
+                     COMMAND "${CMAKE_COMMAND}" -DCMAKE_INSTALL_PREFIX=$(BRAINVISA_INSTALL_PREFIX) -DCOMPONENT=${_component} -P "${CMAKE_BINARY_DIR}/cmake_install.cmake" )
   add_dependencies( install-${_group} install-${_component} )
 endfunction()
 
@@ -1152,7 +1152,7 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
             if(NOT link STREQUAL linkreal AND NOT linkname STREQUAL realname) # if it is really a symlink and it has a name different from the name of the lib
               add_custom_command( TARGET install-${component} POST_BUILD
                       COMMAND "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}"
-                      WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}/lib")
+                      WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/lib")
 #               message("Create symlink ${CMAKE_INSTALL_PREFIX}/lib/${linkname} -> ${CMAKE_INSTALL_PREFIX}/lib/${realname}")
             endif()
           endforeach()

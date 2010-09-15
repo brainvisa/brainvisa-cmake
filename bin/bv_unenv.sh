@@ -9,7 +9,7 @@ if [ -z "$mktemp" ]; then
   done
   echo 'self: tmp='$tmp
 else
-  tmp=`mktemp`
+  tmp=`mktemp -t bv_unenv`
   echo 'mktemp: tmp='$tmp
 fi
 bv_unenv > "$tmp"

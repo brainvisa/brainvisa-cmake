@@ -65,7 +65,12 @@ def system( *args, **kwargs ):
 def copy_brainvisa_cmake( installDir ):
   global this_script
   sourceDir = os.path.dirname( os.path.dirname( this_script ) )
-  if os.path.samefile( sourceDir, installDir ):
+  samefile = getattr( 'samefile', os.path, None )
+  if samefile:
+    samefile = samefile( sourceDir, installDir )
+  else:
+    samefile = sourceDir == installDir
+  if samefile:
     return
   import brainvisa.maker
   for f in open( os.path.join( os.path.dirname( brainvisa.maker.__file__ ), 'installed_files.txt' ) ):

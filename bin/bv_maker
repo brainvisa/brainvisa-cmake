@@ -386,28 +386,10 @@ class SourceDirectory( object ):
     externalsFileName = os.path.join( self.directory, 'bv_maker.externals' )
     externalsFile = open( externalsFileName, 'w' )
     self.clients = {}
-    #hasBrainvisacmake = False
     
     for url, component_version in self.componentVersionPerURL.iteritems():
       component, version = component_version
       self.clients.setdefault( version, {} ).setdefault( brainvisaProjectPerComponent.get( component ), [] ).append( url )
-      #if component == 'brainvisa-cmake':
-        #hasBrainvisacmake = True
-    #if not hasBrainvisacmake:
-      #tags = brainvisaTagsPerComponent.get( 'brainvisa-cmake' )
-      #if tags:
-        #version = 'tag'
-        #versionPath = 'tags/' + tags[ -1 ]
-      #else:
-        #branches = brainvisaBranchesPerComponent.get( 'brainvisa-cmake' )
-        #if branches:
-          #version = 'branch'
-          #versionPath = 'branches/' + branches[ -1 ]
-        #else:
-          #version = 'trunk'
-          #versionPath = 'trunk'
-      #url = BRAINVISA_SVN_URL + '/' + 'development/brainvisa-cmake/' + versionPath
-      #self.clients.setdefault( version, {} )[ 'brainvisa-cmake' ] = [ url ]
       
     currentProject = None
     for version, content in self.clients.iteritems():
@@ -537,7 +519,12 @@ find_package( brainvisa-cmake NO_POLICY_SCOPE )
 include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 '''
     out.close()
-    system( 'cmake', '-DCMAKE_BUILD_TYPE:STRING=' + self.build_type, '-C', cmakeFile, self.directory, cwd = self.directory )
+    if os.platform == 'win32':
+      command = [ 'cmake', '-G', 'MSYS Makefiles' ]
+    else:
+      command = [ 'cmake' ]
+    command += [ '-DCMAKE_BUILD_TYPE:STRING=' + self.build_type, '-C', cmakeFile, self.directory ]
+    system( cwd = self.directory, *command )
   
   
   def compile( self ):

@@ -20,5 +20,23 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   BRAINVISA_INSTALL_DIRECTORY( "${QT_PLUGINS_DIR}/codecs"
                           "lib/qt-plugins/codecs"
                           "${component}" )
-
+  # qtconfig
+  BRAINVISA_INSTALL( FILES "${QT_BINARY_DIR}/qtconfig"
+    DESTINATION "bin"
+    COMPONENT "${component}"
+    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
+    
+  # create qt.conf to enable finding qt plugins
+  if(QT_VERSION_MAJOR GREATER 4 OR QT_VERSION_MAJOR EQUAL 4)
+    set(dest "bin")
+    if(WIN32)
+      set( dest "lib/python" )
+    endif()
+    set(content "[Paths]\nPrefix = ../..\nPlugins = lib/qt-plugins\n")
+    if(APPLE)
+      set(content "[Paths]\nPrefix = ../../../..\nPlugins = lib/qt-plugins\n")
+    endif()
+    BRAINVISA_INSTALL(CODE "file(WRITE \"\${CMAKE_INSTALL_PREFIX}/${dest}/qt.conf\" \"${content}\")"
+      COMPONENT "${component}")
+  endif()
 endfunction()

@@ -20,7 +20,16 @@ else()
   # Search for the python framework on Apple.
   cmake_find_frameworks( Python )
   
-  
+  # Find the usual python executable : without version number in the name
+  get_filename_component( real "${PYTHON_EXECUTABLE}" REALPATH)
+  get_filename_component( path "${real}" PATH)
+  find_file( PYTHON_EXE python PATHS ${path} NO_DEFAULT_PATH )
+  if(PYTHON_EXE)
+    get_filename_component(real_python_exe ${PYTHON_EXE} REALPATH)
+    set(PYTHON_EXECUTABLE "${PYTHON_EXE}" CACHE PATH "Python executable" FORCE)
+    unset(PYTHON_EXE CACHE)
+  endif()
+
   execute_process( COMMAND "${PYTHON_EXECUTABLE}" "-c" "import sys, os; print os.path.normpath( sys.prefix )"
     OUTPUT_VARIABLE _prefix OUTPUT_STRIP_TRAILING_WHITESPACE )
   FILE( TO_CMAKE_PATH "${_prefix}" _prefix )

@@ -13,9 +13,13 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  BRAINVISA_INSTALL( FILES "${PYTHON_EXECUTABLE}"
+  get_filename_component(PYTHON_BIN_DIR "${PYTHON_EXECUTABLE}" PATH)
+  find_file(IPYTHON_EXECUTABLE ipython ${PYTHON_BIN_DIR} NO_DEFAULT_PATH)
+  find_file(PYCOLOR_EXECUTABLE pycolor ${PYTHON_BIN_DIR} NO_DEFAULT_PATH)
+  BRAINVISA_INSTALL( FILES "${PYTHON_EXECUTABLE}" "${IPYTHON_EXECUTABLE}" "${PYCOLOR_EXECUTABLE}"
     DESTINATION "bin"
-    COMPONENT "${component}" )
+    COMPONENT "${component}"
+    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
   BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${PYTHON_LIBRARY} )
   # all python modules are copied in install directory but in theory, we should not copy site-packages subdirectory
   # the content of site-packages should be described in different packages.

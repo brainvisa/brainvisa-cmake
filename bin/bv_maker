@@ -73,7 +73,8 @@ def copy_brainvisa_cmake( installDir ):
     d = os.path.join( installDir, p )
     if not os.path.exists( d ):
       os.makedirs( d )
-    shutil.copy2( os.path.join( sourceDir, p, f ), d )
+    shutil.copy( os.path.join( sourceDir, p, f ), d )
+    
 
 
 def environmentVariablesSubstitution( path ):

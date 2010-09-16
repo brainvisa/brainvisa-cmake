@@ -198,15 +198,17 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
     if list_installed_paths and os.listdir( install_directory ):
       raise UserWarning( 'This command cannot be done on an existing and non empty directory: %s' % repr( install_directory ) )
   installed_paths = {}
+  current_dir=os.getcwd()
+  os.chdir(build_directory)
   for package in ( selected_packages.union( dependencies ) if options.dependencies else selected_packages ):
     print 'Installing', package
-    command = [ 'make', 'BRAINVISA_INSTALL_PREFIX=' + install_directory, 'install-' + package ]
+    command = [ 'make', 'BRAINVISA_INSTALL_PREFIX=' + install_directory, 'install-' + packages_info[ package ]['component'] ]
     system_call( options, command )
     if list_installed_paths:
       # List files installed by package
       for i in ( j for j in recursive_listdir( install_directory ) if j not in installed_paths):
         installed_paths[ i ] = package
-  
+  os.chdir(current_dir)
   if options.bv_env:
     bindir = os.path.join( install_directory, 'bin' )
     if not os.path.exists( bindir ):

@@ -43,6 +43,6 @@ if len( sys.argv ) > 1:
   os.execvpe( sys.argv[1], sys.argv[ 1: ], os.environ )
 else:
   for n in unenv:
-    print 'export', n[ 16: ] + "='" + os.environ[ n ] + '"'
+    print 'export', n[ 16: ] + "='" + os.environ[ n ] + "'"
   for n in unenv:
     print 'unset', n

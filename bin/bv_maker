@@ -507,6 +507,8 @@ class BuildDirectory( object ):
     print >> out, 'set( _BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" FORCE )'
     print >> out
     for component, directory in self.components.iteritems():
+      if sys.platform == 'win32':
+        directory = directory.replace( '\\', '/' )
       print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + directory + '" CACHE STRING "Sources directory for component ' + component + '" FORCE )'
 
     cmakeLists = os.path.join( self.directory, 'CMakeLists.txt' )

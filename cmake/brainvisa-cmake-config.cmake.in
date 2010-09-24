@@ -1133,8 +1133,17 @@ endfunction()
 #    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( libxml2 ${LIBXML2_LIBRARIES} )
 #
 function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
+  set(args ${ARGN})
+  set(destination "lib")
+  list( FIND args DESTINATION result )
+  if( NOT result EQUAL -1 )
+    math(EXPR index_dest "${result} + 1")
+    list(GET args ${index_dest} destination)
+    list(REMOVE_AT args ${result} ${index_dest})
+  endif()
+
   set( librariesToInstall )
-  foreach( lib ${ARGN} )
+  foreach( lib ${args} )
     get_filename_component( real "${lib}" REALPATH )
     get_filename_component( ext "${lib}" EXT )
     if(EXISTS "${real}")
@@ -1152,7 +1161,7 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
             if(NOT link STREQUAL linkreal AND NOT linkname STREQUAL realname) # if it is really a symlink and it has a name different from the name of the lib
               add_custom_command( TARGET install-${component} POST_BUILD
                       COMMAND "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}"
-                      WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/lib")
+                      WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/${destination}")
 #               message("Create symlink ${CMAKE_INSTALL_PREFIX}/lib/${linkname} -> ${CMAKE_INSTALL_PREFIX}/lib/${realname}")
             endif()
           endforeach()
@@ -1162,11 +1171,11 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
     else() 
       message( "WARNING: Cannot install non existing library file ${lib}." )
     endif() 
-  endforeach( lib ${ARGN} )
+  endforeach()
   # install libraries
 #   message("libraries to install : ${librariesToInstall}")
   BRAINVISA_INSTALL( FILES ${librariesToInstall}
-      DESTINATION "lib"
+      DESTINATION "${destination}"
       COMPONENT "${component}"
       PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
 endfunction( BRAINVISA_INSTALL_RUNTIME_LIBRARIES )

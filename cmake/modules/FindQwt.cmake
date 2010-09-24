@@ -1,3 +1,14 @@
+# Find qwt include dir and library
+# The following variables are set:
+#
+#  QWT_FOUND - Was qwt found
+#  QWT_LIBRARY -  qwt dynamic library
+#  QWT_INCLUDE_DIR - include directory where to find qwt.h
+
+if(QWT_LIBRARY AND QWT_INCLUDE_DIR)
+  set(QWT_FOUND TRUE) 
+endif()
+
 if( NOT QWT_FOUND )
   set( paths qwt-qt${DESIRED_QT_VERSION} qwt5-qt${DESIRED_QT_VERSION} qwt qwt5 )
   set( include_paths )
@@ -17,6 +28,7 @@ if( NOT QWT_FOUND )
                 PATHS ${CMAKE_PREFIX_PATH}
                 PATH_SUFFIXES ${lib_paths}
                 NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH )
+
   # Then look into all standard paths
   find_path( QWT_INCLUDE_DIR qwt.h 
              PATH_SUFFIXES ${include_paths} )

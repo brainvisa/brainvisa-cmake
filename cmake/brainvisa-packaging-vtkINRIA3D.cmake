@@ -4,8 +4,8 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   set( ${package_name} ${component} PARENT_SCOPE )
   set( ${package_maintainer} "IFR 49" PARENT_SCOPE )
   set( ${package_version} "0.0.0" PARENT_SCOPE )
-  if(VTK_MAJOR_VERSION)
-    set( ${package_version} "${vtkINRIA3D_MAJOR_VERSION}.${vtkINRIA3D_MINOR_VERSION}" PARENT_SCOPE )
+  if(vtkINRIA3D_FOUND)
+    set( ${package_version} "${vtkINRIA3D_VERSION_MAJOR}.${vtkINRIA3D_VERSION_MINOR}" PARENT_SCOPE )
   endif()
 
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libvtk5-dev RUN )

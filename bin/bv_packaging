@@ -233,9 +233,9 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
         os.rename( source, dest )
         out = open( source, 'w' )
         out.write( '''#!/bin/sh
-command=`basename $0`
 directory="$0"
-[ -L "$directory" ] && $directory="`dirname "$directory"`/`readlink "$directory"`"
+[ -L "$directory" ] && directory="`dirname "$directory"`/`readlink "$directory"`"
+command=`basename $directory`
 directory="`dirname $directory`"
 directory="`cd $directory;pwd`"
 if [ -x "$directory/bv_env" ]; then

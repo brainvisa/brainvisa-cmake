@@ -226,7 +226,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
       if command in env_commands:
         continue
       source = os.path.join( bindir, command )
-      if os.path.isfile( source ):
+      if os.path.isfile( source ) and not os.path.islink( source ):
         dest = os.path.join( realbindir, command )
         if os.path.exists( dest ):
           os.remove( dest )

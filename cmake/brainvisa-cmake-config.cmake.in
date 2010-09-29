@@ -480,6 +480,10 @@ function( BRAINVISA_COPY_FILES component )
     
   
 #     message( "=== copy: from ${_sourceDirectory} to ${_destination} : ${_files}" )
+  # Create a custom target for the files installation. The install-component target depends on this custom target
+  BRAINVISA_GENERATE_TARGET_NAME( installTarget )
+  add_custom_target( ${installTarget} )
+  add_dependencies( install-${component} ${installTarget} )
   set( _targetDepends  )
   foreach( _file ${_files} )
     if( IS_ABSOLUTE "${_file}" )
@@ -505,7 +509,8 @@ function( BRAINVISA_COPY_FILES component )
           COMMAND "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
       endif()
       
-      add_custom_command(TARGET install-${component} POST_BUILD
+      # custom command attached to the custom target created for the files installation
+      add_custom_command(TARGET ${installTarget} PRE_BUILD
           COMMAND "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "$(BRAINVISA_INSTALL_PREFIX)/${_destination}/${_file}" )
       
       set( _targetDepends ${_targetDepends} "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )

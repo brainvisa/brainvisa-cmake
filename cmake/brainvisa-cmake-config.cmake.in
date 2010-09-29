@@ -504,9 +504,10 @@ function( BRAINVISA_COPY_FILES component )
           DEPENDS "${_absoluteFile}"
           COMMAND "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
       endif()
-      BRAINVISA_INSTALL( PROGRAMS "${_absoluteFile}"
-                         DESTINATION "${_destination}/${_path}"
-                         COMPONENT  ${component} )
+      
+      add_custom_command(TARGET install-${component} POST_BUILD
+          COMMAND "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "$(BRAINVISA_INSTALL_PREFIX)/${_destination}/${_file}" )
+      
       set( _targetDepends ${_targetDepends} "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
     else()
       message( "Warning: file \"${_absoluteFile}\" does not exists" )

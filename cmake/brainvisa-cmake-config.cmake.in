@@ -155,6 +155,7 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
   BRAINVISA_ADD_COMPONENT( ${PROJECT_NAME}
                            GROUP runtime
                            DESCRIPTION "runtime files for ${PROJECT_NAME}" )
+
   BRAINVISA_ADD_COMPONENT( ${PROJECT_NAME}-dev 
                            GROUP dev
                            DESCRIPTION "Developpement files for ${PROJECT_NAME}"
@@ -1187,22 +1188,30 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
 endfunction( BRAINVISA_INSTALL_RUNTIME_LIBRARIES )
 
 # BRAINVISA_ADD_TRANSLATION
-#   Search recursively qt linguist source files (*.ts) in the directory source share directory and generates the commands to create the associated *.qm files in  the build share directory and creates associated install rules.  
+#   Search recursively qt linguist source files (*.ts) in the directory source share directory 
+#   and generates the commands to create the associated *.qm files in the build share directory 
+#   and creates associated install rules.  
 #
 # Usage:
 #
-#   BRAINVISA_INSTALL_RUNTIME_LIBRARIES( <translation files variable> <name of the source share directory where finding the *.ts files> <name of the destination share directory where writing the *.qm files> <component>)
+#   BRAINVISA_ADD_TRANSLATION( <name of the source share directory where finding the *.ts files> <name of the destination share directory where writing the *.qm files> <component>)
 #
-function( BRAINVISA_ADD_TRANSLATION translation_files source_share_dir dest_share_dir component)
+function( BRAINVISA_ADD_TRANSLATION source_share_dir dest_share_dir component)
   file(GLOB_RECURSE TR_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${source_share_dir}/po/*.ts")
   foreach(tr_source ${TR_SOURCES})
     file(RELATIVE_PATH tr_relative_name "${CMAKE_CURRENT_SOURCE_DIR}/${source_share_dir}/po" ${tr_source})
     get_filename_component(tr_relative_path ${tr_relative_name} PATH)
     set_source_files_properties(${tr_source} PROPERTIES OUTPUT_LOCATION "${CMAKE_BINARY_DIR}/${dest_share_dir}/po/${tr_relative_path}")
   endforeach()
-  QT4_ADD_TRANSLATION( ${translation_files} "${TR_SOURCES}" )
-  BRAINVISA_INSTALL( FILES ${${translation_files}}
+  QT4_ADD_TRANSLATION( TRANSLATION_FILES "${TR_SOURCES}" )
+  BRAINVISA_GENERATE_TARGET_NAME(TRANSLATION_TARGET)
+  add_custom_target(${TRANSLATION_TARGET} ALL 
+      DEPENDS ${TRANSLATION_FILES})
+  foreach(tr_file ${TRANSLATION_FILES})
+    file(RELATIVE_PATH tr_relative_name "${CMAKE_BINARY_DIR}/${dest_share_dir}/po" ${tr_file})
+    get_filename_component(tr_relative_path ${tr_relative_name} PATH)
+    BRAINVISA_INSTALL( FILES "${tr_file}"
       DESTINATION "${dest_share_dir}/po/${tr_relative_path}"
       COMPONENT ${component} )
-      message("**translation files for component ${component} : ${${translation_files}} - installed in ${dest_share_dir}/po/${tr_relative_path}")
+  endforeach()
 endfunction()

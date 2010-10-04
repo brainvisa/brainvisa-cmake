@@ -108,6 +108,8 @@ macro( BRAINVISA_PROJECT )
   file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${PROJECT_NAME}' ] = {\n  'name': '${PROJECT_NAME}',\n  'component' : '${PROJECT_NAME}',\n 'type': 'run',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n}\n" )
   file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${PROJECT_NAME}-dev' ] = {\n  'name': '${PROJECT_NAME}-dev',\n  'component' : '${PROJECT_NAME}-dev',\n 'type': 'dev',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n}\n" )
   file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${PROJECT_NAME}-doc' ] = {\n  'name': '${PROJECT_NAME}-doc',\n  'component' : '${PROJECT_NAME}-doc',\n 'type': 'doc',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n}\n" )
+  file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${PROJECT_NAME}-usrdoc' ] = {\n  'name': '${PROJECT_NAME}-usrdoc',\n  'component' : '${PROJECT_NAME}-usrdoc',\n 'type': 'usrdoc',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n}\n" )
+  file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${PROJECT_NAME}-devdoc' ] = {\n  'name': '${PROJECT_NAME}-devdoc',\n  'component' : '${PROJECT_NAME}-devdoc',\n 'type': 'devdoc',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n}\n" )
 
   include( CPack )
   
@@ -932,13 +934,13 @@ function( BRAINVISA_GENERATE_DOCBOOK_DOC )
       foreach( doc_project ${doc_projects} )
         # user doc
         BRAINVISA_GENERATE_TARGET_NAME( usrdoc_target )
-        add_custom_target( ${usrdoc_target} ALL
+        add_custom_target( ${usrdoc_target}
           COMMAND "${BUILDDOC_COMMAND}" -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m m -p "${doc_project}" --total --id --doc_ver  "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}"
           COMMAND "${BUILDDOC_COMMAND}" -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m t -p "${doc_project}" --total --id --doc_ver  "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" )
         add_dependencies(${PROJECT_NAME}-usrdoc ${usrdoc_target})
         # dev doc
         BRAINVISA_GENERATE_TARGET_NAME( devdoc_target )
-        add_custom_target( ${devdoc_target} ALL
+        add_custom_target( ${devdoc_target}
           COMMAND ${BUILDDOC_COMMAND} -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m p -p "${doc_project}" --total --id --doc_ver "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" )
         add_dependencies(${PROJECT_NAME}-devdoc ${devdoc_target})
 

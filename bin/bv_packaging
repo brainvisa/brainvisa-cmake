@@ -423,6 +423,8 @@ if __name__ == '__main__':
     run: Runtime package
     dev: Development package
     doc: Documentation package
+    usrdoc: User documentation package
+    devdoc: Developper documentation package
     thirdparty: Package corresponding to a thirdparty project not compiled in the build directory
 
   Default selection rule:

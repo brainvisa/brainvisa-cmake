@@ -45,6 +45,7 @@ projects = [
   'development',
   'installer',
   'brainvisa-share',
+  'communication',
   'soma',
   'aims', 
   'anatomist', 

@@ -549,7 +549,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
     system( cwd=self.directory, *( ['make'] + self.make_options.split() ) )
 
   def doc( self ):
-    system( cwd=self.directory, *( ['make'] + self.make_options.split() + ['doc'] ) )
+    system( cwd=self.directory, *( ['make'] + self.make_options.split() + ['-j1', 'doc'] ) )
   
 
 commands = {

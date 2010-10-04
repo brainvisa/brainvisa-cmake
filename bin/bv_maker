@@ -114,6 +114,7 @@ class GlobalConfiguration( object ):
       sources: Create or updated selected sources directories from Subversion repository.
       configure: Create and configure selected build directories with CMake.
       compile: compile all selected build directories.
+      doc: Generate documentation (docbook, epydoc, doxygen)
     
     To get help for a specific command, use -h option of the command. Example: "%prog compile -h".
     '''
@@ -219,6 +220,21 @@ class CompileCommand( object ):
   def __call__( self ):
     for d, o in configuration.buildDirectories.iteritems():
       o.compile()
+
+class DocCommand( object ):
+  def __init__( self, argv, configuration ):
+    usage = '''%prog [global options] doc [options]
+    
+    Generate documentation (docbook, epydoc, doxygen).'''
+    parser = OptionParser(usage=usage)
+    (options, args) = parser.parse_args( argv )
+    if args:
+      raise ValueError( 'Invalid option: %s' % args[0] )
+  
+  
+  def __call__( self ):
+    for d, o in configuration.buildDirectories.iteritems():
+      o.doc()
 
 
 
@@ -532,12 +548,15 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
   def compile( self ):
     system( cwd=self.directory, *( ['make'] + self.make_options.split() ) )
 
+  def doc( self ):
+    system( cwd=self.directory, *( ['make'] + self.make_options.split() + ['doc'] ) )
   
 
 commands = {
   'sources': SourcesCommand,
   'configure': ConfigureCommand,
   'compile': CompileCommand,
+  'doc' : DocCommand,
 }
 options_by_command = { None: [] }
 command = None
@@ -561,7 +580,7 @@ if len( options_by_command ) == 1:
   # No command selected => do all commands
   for i in commands:
     options_by_command[ i ] = []
-for command in [ 'sources', 'configure', 'compile' ]:
+for command in [ 'sources', 'configure', 'compile', 'doc' ]:
   if command in options_by_command:
     todo.append( commands[ command ]( options_by_command[ command ], configuration ) )
 

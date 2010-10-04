@@ -139,14 +139,27 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
                                    DESCRIPTION "All elements necessary to compile libraries and programs that uses ${PROJECT_NAME} (such as C++ headers)." )
     BRAINVISA_ADD_COMPONENT_GROUP( doc
                                    DISPLAY_NAME "Documentation"
-                                   DESCRIPTION "All documentations: doxygen, epydoc, etc." )
+                                   DESCRIPTION "All documentations: development and user." )
+    BRAINVISA_ADD_COMPONENT_GROUP( usrdoc
+                                   DISPLAY_NAME "User Documentation"
+                                   DESCRIPTION "User documentation: manual, tutorial." )
+    BRAINVISA_ADD_COMPONENT_GROUP( devdoc
+                                   DISPLAY_NAME "Development Documentation"
+                                   DESCRIPTION "Development documentations: doxygen, epydoc." )
     BRAINVISA_ADD_COMPONENT_GROUP( thirdparty
                                    DISPLAY_NAME "Thirdparty"
                                    DESCRIPTION "External dependencies : qt, sigc++, libxml..." )
 
     add_dependencies( install-dev install-runtime )
+    # targets to generate documentation
     add_custom_target( doc )
-    add_dependencies( install-doc doc )
+    add_custom_target( usrdoc )
+    add_custom_target( devdoc )
+    add_dependencies( doc usrdoc devdoc )
+    add_dependencies( install-doc install-usrdoc install-devdoc )
+    add_dependencies( install-usrdoc usrdoc )
+    add_dependencies( install-devdoc devdoc )
+     
     add_custom_target( install-nodoc )
     add_dependencies( install-nodoc install-runtime install-dev )
 
@@ -163,8 +176,22 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
   BRAINVISA_ADD_COMPONENT( ${PROJECT_NAME}-doc
                            GROUP doc
                            DESCRIPTION "Documentation of ${PROJECT_NAME}" )
+  BRAINVISA_ADD_COMPONENT( ${PROJECT_NAME}-usrdoc
+                           GROUP usrdoc
+                           DESCRIPTION "User Documentation of ${PROJECT_NAME}" )
+  BRAINVISA_ADD_COMPONENT( ${PROJECT_NAME}-devdoc
+                           GROUP devdoc
+                           DESCRIPTION "Development Documentation of ${PROJECT_NAME}" )
+
+  # targets to generate the documentation of the project
   add_custom_target( ${PROJECT_NAME}-doc )
   add_dependencies( doc ${PROJECT_NAME}-doc )
+  add_custom_target( ${PROJECT_NAME}-usrdoc )
+  add_dependencies( usrdoc ${PROJECT_NAME}-usrdoc )
+  add_custom_target( ${PROJECT_NAME}-devdoc )
+  add_dependencies( devdoc ${PROJECT_NAME}-devdoc )
+  add_dependencies( ${PROJECT_NAME}-doc ${PROJECT_NAME}-usrdoc ${PROJECT_NAME}-devdoc)
+  
   BRAINVISA_ADD_COMPONENT_GROUP( "${PROJECT_NAME}-thirdparty"
                            PARENT_GROUP thirdparty
                            DESCRIPTION "External dependencies of ${PROJECT_NAME}" )
@@ -740,7 +767,7 @@ ENDMACRO( BRAINVISA_GET_SPACED_QUOTED_LIST _listVariable _outputVariable )
 
 
 # BRAINVISA_GENERATE_DOXYGEN_DOC
-#    Add rules to generate doxygen documentation with "make doc".
+#    Add rules to generate doxygen documentation with "make doc" or "make devdoc".
 #
 # Usage:
 #   BRAINVISA_GENERATE_DOXYGEN_DOC( <input_variable> [<file to copy> ...] )
@@ -810,7 +837,7 @@ MACRO( BRAINVISA_GENERATE_DOXYGEN_DOC _inputVariable )
                       COMMAND "${CMAKE_COMMAND}" -E make_directory "${DOXYFILE_OUTPUT_DIRECTORY}"
                       COMMAND "${DOXYGEN_EXECUTABLE}" "${_doxygenBinaryDir}/Doxyfile" )
     # Make sure doc target exists, I do not know if it is clean
-    add_dependencies( ${PROJECT_NAME}-doc ${_target} )
+    add_dependencies( ${PROJECT_NAME}-devdoc ${_target} )
     # Install HTML documentation
     if( IS_ABSOLUTE "${DOXYFILE_HTML_OUTPUT}" )
       set( _directory "${DOXYFILE_HTML_OUTPUT}" )
@@ -819,13 +846,13 @@ MACRO( BRAINVISA_GENERATE_DOXYGEN_DOC _inputVariable )
     endif( IS_ABSOLUTE "${DOXYFILE_HTML_OUTPUT}" )
     BRAINVISA_INSTALL( DIRECTORY "${_directory}"
                   DESTINATION "share/doc/${PROJECT_NAME}-${DOXYFILE_PROJECT_VERSION}/doxygen"
-                  COMPONENT ${PROJECT_NAME}-doc )
+                  COMPONENT ${PROJECT_NAME}-devdoc )
   ENDIF( DOXYGEN_FOUND )
 ENDMACRO( BRAINVISA_GENERATE_DOXYGEN_DOC )
 
 
 # BRAINVISA_GENERATE_EPYDOC_DOC
-#    Add rules to generate epydoc documentation with "make doc" or "make <component>-doc".
+#    Add rules to generate epydoc documentation with "make doc" or "make <component>-doc" or "make devdoc" or "make <component>-devdoc".
 # Usage:
 #
 #   BRAINVISA_GENERATE_EPYDOC_DOC( <source directory> [ <source directory> ... ] <output directory> [ EXCLUDE <exclude list> ] )
@@ -877,14 +904,69 @@ function( BRAINVISA_GENERATE_EPYDOC_DOC  )
                           ${sourceDirectories} )
       BRAINVISA_GENERATE_TARGET_NAME( target )
       add_custom_target( ${target} DEPENDS "${CMAKE_BINARY_DIR}/${outputDirectory}/index.html" )
-      add_dependencies( ${PROJECT_NAME}-doc ${target} )
+      add_dependencies( ${PROJECT_NAME}-devdoc ${target} )
       # Install HTML documentation
       BRAINVISA_INSTALL( DIRECTORY "${CMAKE_BINARY_DIR}/${outputDirectory}"
                          DESTINATION "${outputDirectory}"
-                         COMPONENT ${PROJECT_NAME}-doc )
+                         COMPONENT ${PROJECT_NAME}-devdoc )
   endif()
 endfunction()
 
+# BRAINVISA_GENERATE_DOCBOOK_DOC
+#    Add rules to generate docbook documentation with "make doc" or "make <component>-doc" 
+#    or "make usrdoc" or "make <component>-usrdoc" if it a user manual or tutorial 
+#    or "make devdoc" or make <component>-devdoc if it is developer manual.
+#
+# Usage:
+#
+#   BRAINVISA_GENERATE_DOCBOOK_DOC(  )
+#
+function( BRAINVISA_GENERATE_DOCBOOK_DOC )
+  BRAINVISA_FIND_PACKAGE(documentation)
+  if(DOCUMENTATION_FOUND)
+    # search doc projects in docbook directory
+    set(source_directory "${CMAKE_CURRENT_SOURCE_DIR}/docbook" )
+    if(EXISTS "${source_directory}")
+      # subdirectories : doc project name
+      file(GLOB doc_projects RELATIVE "${source_directory}" "${source_directory}/[^.]*")
+      foreach( doc_project ${doc_projects} )
+        # user doc
+        BRAINVISA_GENERATE_TARGET_NAME( usrdoc_target )
+        add_custom_target( ${usrdoc_target} ALL
+          COMMAND "${BUILDDOC_COMMAND}" -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m m -p "${doc_project}" --total --id --doc_ver  "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}"
+          COMMAND "${BUILDDOC_COMMAND}" -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m t -p "${doc_project}" --total --id --doc_ver  "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" )
+        add_dependencies(${PROJECT_NAME}-usrdoc ${usrdoc_target})
+        # dev doc
+        BRAINVISA_GENERATE_TARGET_NAME( devdoc_target )
+        add_custom_target( ${devdoc_target} ALL
+          COMMAND ${BUILDDOC_COMMAND} -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m p -p "${doc_project}" --total --id --doc_ver "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" )
+        add_dependencies(${PROJECT_NAME}-devdoc ${devdoc_target})
+
+        # install rules
+        BRAINVISA_INSTALL(DIRECTORY "${CMAKE_BINARY_DIR}/share/doc/${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
+          DESTINATION share/doc
+          USE_SOURCE_PERMISSIONS
+          COMPONENT ${PROJECT_NAME}-usrdoc
+          FILES_MATCHING REGEX "_training/"
+          REGEX "_man/"
+          PATTERN "*_pg" EXCLUDE
+          )
+        BRAINVISA_INSTALL(DIRECTORY "${CMAKE_BINARY_DIR}/share/doc/${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
+          DESTINATION share/doc
+          USE_SOURCE_PERMISSIONS
+          COMPONENT ${PROJECT_NAME}-devdoc
+          FILES_MATCHING REGEX "_pg/"
+          PATTERN "*_training" EXCLUDE
+          PATTERN "*_man" EXCLUDE
+          )
+          
+      endforeach()
+    endif() # exists source directory
+  else() # documentation project not found
+    message("Documentation project not found : cannot build docbook documentation.")
+  endif()
+
+endfunction()
 
 
 #
@@ -904,7 +986,7 @@ function( BRAINVISA_ADD_COMPONENT_GROUP _group )
     endif()
   endforeach()
 
-#   message( "Create group ${_group} with parent \"${_parentGroup}\"" )
+#    message( "Create group ${_group} with parent \"${_parentGroup}\"" )
   cpack_add_component_group( ${_group} ${ARGN} )
   add_custom_target( install-${_group} )
   if( _parentGroup )
@@ -930,7 +1012,7 @@ function( BRAINVISA_ADD_COMPONENT _component )
     endif()
   endforeach()
 
-#   message( "Create component ${_component} in group ${_group}" )
+#    message( "Create component ${_component} in group ${_group}" )
   cpack_add_component( ${_component}
                        ${ARGN} )
   add_custom_target( install-${_component}

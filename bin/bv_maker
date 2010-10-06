@@ -577,9 +577,10 @@ configuration = GlobalConfiguration( options_by_command[ None ] )
 # Parse commands options and prepare them for processing in the correct order
 todo = []
 if len( options_by_command ) == 1:
-  # No command selected => do all commands
+  # No command selected => do all commands except doc
   for i in commands:
-    options_by_command[ i ] = []
+    if (i != 'doc'):
+      options_by_command[ i ] = []
 for command in [ 'sources', 'configure', 'compile', 'doc' ]:
   if command in options_by_command:
     todo.append( commands[ command ]( options_by_command[ command ], configuration ) )

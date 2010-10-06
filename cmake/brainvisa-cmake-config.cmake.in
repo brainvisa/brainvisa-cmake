@@ -773,7 +773,7 @@ ENDMACRO( BRAINVISA_GET_SPACED_QUOTED_LIST _listVariable _outputVariable )
 #    Add rules to generate doxygen documentation with "make doc" or "make devdoc".
 #
 # Usage:
-#   BRAINVISA_GENERATE_DOXYGEN_DOC( <input_variable> [<file to copy> ...] [INPUT_PREFIX <path>] )
+#   BRAINVISA_GENERATE_DOXYGEN_DOC( <input_variable> [<file to copy> ...] [INPUT_PREFIX <path>] [COMPONENT <name>] )
 #   <input_variable>: variable containing a string or a list of input sources. 
 #                     Its content will be copied in the INPUT field of the 
 #                     Doxygen configuration file.
@@ -783,6 +783,8 @@ ENDMACRO( BRAINVISA_GET_SPACED_QUOTED_LIST _listVariable _outputVariable )
 #                  ${PROJECT_BINARY_DIR}/doxygen. The doxygen configuration
 #                  file is generated in the same directory.
 #  <input prefix>: directory where finding input files
+#  <component>: component name for this doxygen documentation. it is used to create the output directory and the tag file name. 
+#   By default it is the PROJECT_NAME. but it is useful to give an alternative name when there are several libraries documented with doxygen in the same project.
 #
 #   Before calling this macro, it is possible to specify values that are going
 #   to be written in doxygen configuration file by setting variable names
@@ -793,17 +795,18 @@ ENDMACRO( BRAINVISA_GET_SPACED_QUOTED_LIST _listVariable _outputVariable )
 # Example:
 #     FIND_PACKAGE( Doxygen )
 #     IF ( DOXYGEN_FOUND )
-#       INCLUDE( SomaMacros )
-#       SET( DOXYFILE_HTML_HEADER "\"${DOXYGEN_BINARY_DIR}/head_vip.html\"" )
-#       SET( DOXYFILE_OPTIMIZE_OUTPUT_FOR_C YES )
-#       SET( DOXYFILE_BUILTIN_STL_SUPPORT NO )
-#       FILE( READ "${DOXYGEN_BINARY_DIR}/doxygenInput" _doxygenInput )
-#       BRAINVISA_GENERATE_DOXYGEN_DOC( _doxygenInput head_vip.html vip.gif )
+#       SET(component_name "cartodata")
+#       set( DOXYFILE_PREDEFINED "${AIMS_DEFINITIONS}")
+#       set( DOXYFILE_TAGFILES "cartobase.tag=../../cartobase-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/doxygen")
+#       BRAINVISA_GENERATE_DOXYGEN_DOC( _headers 
+#                                  INPUT_PREFIX "${CMAKE_BINARY_DIR}/include/${component_name}" 
+#                                  COMPONENT "${component_name}")
 #     ENDIF ( DOXYGEN_FOUND )
+#
 MACRO( BRAINVISA_GENERATE_DOXYGEN_DOC _inputVariable )
   IF( DOXYGEN_FOUND )
     set(_argn ${ARGN})
-    # Read GET_TARGET option
+    # Read INPUT_PREFIX option
     list( FIND _argn INPUT_PREFIX result )
     if( result EQUAL -1 )
       set( inputPrefix "${CMAKE_CURRENT_SOURCE_DIR}" )
@@ -812,6 +815,19 @@ MACRO( BRAINVISA_GENERATE_DOXYGEN_DOC _inputVariable )
       list( GET _argn ${result} inputPrefix )
       list( REMOVE_AT _argn ${result} )
     endif()
+    # Read DOC_NAME option
+    list( FIND _argn COMPONENT result )
+    if( result EQUAL -1 )
+      set( component "${PROJECT_NAME}" )
+    else()
+      list( REMOVE_AT _argn ${result} )
+      list( GET _argn ${result} component )
+      list( REMOVE_AT _argn ${result} )
+    endif()
+
+    SET( DOXYFILE_PROJECT_NAME "${component}" )
+    SET( DOXYFILE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/share/doc/${component}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/doxygen" )
+    set( DOXYFILE_GENERATE_TAGFILE "${CMAKE_BINARY_DIR}/share/doc/${component}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/doxygen/${component}.tag" )
 
     IF( DEFINED DOXYGEN_BINARY_DIR )
       SET( _doxygenBinaryDir "${DOXYGEN_BINARY_DIR}" )
@@ -845,7 +861,8 @@ MACRO( BRAINVISA_GENERATE_DOXYGEN_DOC _inputVariable )
     ENDFOREACH( _file ${ARGN} )
   
     CONFIGURE_FILE( "${brainvisa-cmake_DIR}/Doxyfile.in" "${_doxygenBinaryDir}/Doxyfile" @ONLY )
-    BRAINVISA_GENERATE_TARGET_NAME( _target )
+    #BRAINVISA_GENERATE_TARGET_NAME( _target )
+    set(_target "${component}-doxygen")
     ADD_CUSTOM_TARGET( ${_target} 
                       DEPENDS "${_doxygenBinaryDir}/Doxyfile" ${_generatedFiles}
                       COMMAND "${CMAKE_COMMAND}" -E make_directory "${DOXYFILE_OUTPUT_DIRECTORY}"

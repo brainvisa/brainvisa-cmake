@@ -116,8 +116,12 @@ macro( BRAINVISA_PROJECT )
   set( ${PROJECT_NAME}_TARGET_COUNT 0 CACHE INTERNAL "Used to generate new targets" )
   BRAINVISA_CREATE_MAIN_COMPONENTS()
   
-  set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
-  set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
+  set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
+  if ( NOT DEFINED WIN32 )
+    set( CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib" )
+  else()
+    set( CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
+  endif()
   
   # Initialize dependency variables
   if( "${BRAINVISA_PACKAGE_TYPE}" STREQUAL "deb" )
@@ -1197,7 +1201,7 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
                 LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python/${_modulePath}"
                 PREFIX "" )
   if( WIN32 )
-    set_target_properties( ${_moduleName} PROPERTIES SUFFIX "pyd" )
+    set_target_properties( ${_moduleName} PROPERTIES SUFFIX ".pyd" )
   endif( WIN32 )
   BRAINVISA_INSTALL( TARGETS ${_moduleName} 
                      DESTINATION "python/${_modulePath}"

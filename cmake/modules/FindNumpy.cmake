@@ -13,8 +13,9 @@ endif (NUMPY_INCLUDE_DIR)
 
 find_package(python REQUIRED)
 EXEC_PROGRAM ("${PYTHON_EXECUTABLE}"
-  ARGS "-c" "'import numpy; print numpy.get_include()'"
+  ARGS "-c" "\"import numpy; print numpy.get_include()\""
   OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
+  ERROR_QUIET
   RETURN_VALUE NUMPY_NOT_FOUND)
 
 if (NUMPY_INCLUDE_DIR)

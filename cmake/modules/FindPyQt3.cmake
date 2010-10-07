@@ -47,6 +47,7 @@ else( PYQT3_VERSION )
 
   set( PYQT3_VERSION "${PYQT3_VERSION}" CACHE STRING "PyQt 3 version" )
   mark_as_advanced(PYQT3_VERSION)
+  file( TO_CMAKE_PATH "${PYQT3_SIP_DIR}" PYQT3_SIP_DIR )
   set( PYQT3_SIP_DIR "${PYQT3_SIP_DIR}" CACHE FILEPATH "PyQt 3 sip path" )
   mark_as_advanced(PYQT3_SIP_DIR)
 

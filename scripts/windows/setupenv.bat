@@ -3,6 +3,7 @@
 REM #------------------------------------------------------------------------------
 REM # set local variables
 REM #------------------------------------------------------------------------------
+if not defined BRAINVISA_BUILD (
 if not defined HOME (
   set HOME=%HOMEDRIVE%%HOMEPATH%
 )
@@ -23,6 +24,7 @@ if not defined SOMA_MODE (
 call "%~d0%~p0library.bat" i2bm_get_osid
 call "%~d0%~p0library.bat" i2bm_pathvar_find "%BRAINVISA_SOURCES%" "build-%SOMA_VERSION%-%result%-%SOMA_MODE%"
 set BRAINVISA_BUILD=%result:~1,-1%
+)
 
 call "%~d0%~p0library.bat" i2bm_get_pythonexedir
 set PYTHONEXE_DIR=%result:~1,-1%

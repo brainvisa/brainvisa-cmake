@@ -953,7 +953,7 @@ endfunction()
 #   BRAINVISA_GENERATE_DOCBOOK_DOC(  )
 #
 function( BRAINVISA_GENERATE_DOCBOOK_DOC )
-  BRAINVISA_FIND_PACKAGE(documentation)
+  BRAINVISA_FIND_PACKAGE(documentation QUIET)
   if(DOCUMENTATION_FOUND)
     # search doc projects in docbook directory
     set(source_directory "${CMAKE_CURRENT_SOURCE_DIR}/docbook" )

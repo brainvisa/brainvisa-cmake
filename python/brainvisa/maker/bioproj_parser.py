@@ -59,6 +59,7 @@ projects = [
   'cortical_surface',
   'brainrat',
   'nuclear_processing',
+  'pyhrf',
   'fmri',
   'famis',
 ]
@@ -83,6 +84,7 @@ componentsPerProject = {
  'sulci': [ 'sulci-private', 'sulci-gpl', 'sulci-data' ],
  't1mri': [ 't1mri-private', 't1mri-gpl' ],
  'famis': [ 'famis-private', 'famis-gpl' ],
+ 'pyhrf': [ 'pyhrf-free', 'pyhrf-gpl' ],
 }
 
 
@@ -106,6 +108,7 @@ groupsDefinition = {
     'soma/*',
     'sulci/*',
     't1mri/*',
+    'pyhrf/*',
   ],
   'opensource': [
     'aims/*',
@@ -126,6 +129,7 @@ groupsDefinition = {
     'soma/*',
     'sulci/*-gpl',
     't1mri/*-gpl',
+    'pyhrf/*',
   ],
 }
 

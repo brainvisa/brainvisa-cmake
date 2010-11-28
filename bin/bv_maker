@@ -113,10 +113,10 @@ class GlobalConfiguration( object ):
     Commands:
       sources: Create or updated selected sources directories from Subversion repository.
       configure: Create and configure selected build directories with CMake.
-      compile: compile all selected build directories.
+      build: compile all selected build directories.
       doc: Generate documentation (docbook, epydoc, doxygen)
     
-    To get help for a specific command, use -h option of the command. Example: "%prog compile -h".
+    To get help for a specific command, use -h option of the command. Example: "%prog build -h".
     '''
     defaultConfigurationFile = os.path.join( os.environ[ 'HOME' ], '.brainvisa', 'bv_maker.cfg' )
     parser = OptionParser(usage=usage)
@@ -208,9 +208,16 @@ class ConfigureCommand( object ):
 
 class CompileCommand( object ):
   def __init__( self, argv, configuration ):
+    command = [ ( 'build' if i == 'compile' else i ) for i in sys.argv ]
+    raise ValueError( 'Command "compile" have been renamed to "build". Please use the following command-line: %s' % ' '.join( ( repr(i) for i in command ) ) )
+  
+
+
+class BuildCommand( object ):
+  def __init__( self, argv, configuration ):
     usage = '''%prog [global options] configure [options]
     
-    Create or updated selected build directories.'''
+    Compile selected build directories.'''
     parser = OptionParser(usage=usage)
     (options, args) = parser.parse_args( argv )
     if args:
@@ -219,7 +226,7 @@ class CompileCommand( object ):
   
   def __call__( self ):
     for d, o in configuration.buildDirectories.iteritems():
-      o.compile()
+      o.build()
 
 class DocCommand( object ):
   def __init__( self, argv, configuration ):
@@ -545,7 +552,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
     system( cwd = self.directory, *command )
   
   
-  def compile( self ):
+  def build( self ):
     system( cwd=self.directory, *( ['make'] + self.make_options.split() ) )
 
   def doc( self ):
@@ -555,8 +562,9 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 commands = {
   'sources': SourcesCommand,
   'configure': ConfigureCommand,
+  'build': BuildCommand,
+  'doc': DocCommand,
   'compile': CompileCommand,
-  'doc' : DocCommand,
 }
 options_by_command = { None: [] }
 command = None
@@ -569,7 +577,6 @@ for i in sys.argv[1:]:
   else:
     options_by_command[ command ].append( i )
 
-
 # Initialize global configuration
 configuration = GlobalConfiguration( options_by_command[ None ] )
 
@@ -581,7 +588,7 @@ if len( options_by_command ) == 1:
   for i in commands:
     if (i != 'doc'):
       options_by_command[ i ] = []
-for command in [ 'sources', 'configure', 'compile', 'doc' ]:
+for command in [ 'compile', 'sources', 'configure', 'build', 'doc' ]:
   if command in options_by_command:
     todo.append( commands[ command ]( options_by_command[ command ], configuration ) )
 

@@ -444,17 +444,34 @@ ENDMACRO( BRAINVISA_GET_FILE_LIST_FROM_PRO )
 # BRAINVISA_COPY_AND_INSTALL_HEADERS
 #
 # Usage:
-#   BRAINVISA_COPY_AND_INSTALL_HEADERS( <headers list> <include directory> <install component> )
+#   BRAINVISA_COPY_AND_INSTALL_HEADERS( <headers list> <include directory> <install component> [NO_SYMLINKS] )
 #
 # Example:
 #
 function( BRAINVISA_COPY_AND_INSTALL_HEADERS _headersVariable _includeDir targetVariable )
+  if( "${ARGV3}" STREQUAL "NO_SYMLINKS" )
+    set( symlinks FALSE )
+  else()
+    set( symlinks TRUE )
+  endif()
+
   set( destHeaders )
   foreach( _currentHeader ${${_headersVariable}} )
-    add_custom_command( 
-      OUTPUT "${CMAKE_BINARY_DIR}/include/${_includeDir}/${_currentHeader}"
-      DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}"
-      COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}" "${CMAKE_BINARY_DIR}/include/${_includeDir}/${_currentHeader}" )
+    if( symlinks AND ( UNIX OR APPLE ) )
+      # Make a symlink instead of copying Python source allows to
+      # execute code from the build tree and directly benefit from
+      # modifications in the source tree (without typing make)
+      add_custom_command(
+        OUTPUT "${CMAKE_BINARY_DIR}/include/${_includeDir}/${_currentHeader}"
+        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}"
+        COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/include/${_includeDir}"
+        COMMAND "${CMAKE_COMMAND}" -E create_symlink "${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}" "${CMAKE_BINARY_DIR}/include/${_includeDir}/${_currentHeader}" )
+    else()
+      add_custom_command(
+        OUTPUT "${CMAKE_BINARY_DIR}/include/${_includeDir}/${_currentHeader}"
+        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}"
+        COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}" "${CMAKE_BINARY_DIR}/include/${_includeDir}/${_currentHeader}" )
+    endif()
     set( destHeaders ${destHeaders}  "${CMAKE_BINARY_DIR}/include/${_includeDir}/${_currentHeader}" )
     get_filename_component( _path "${_currentHeader}" PATH )
     BRAINVISA_INSTALL( FILES ${_currentHeader}
@@ -471,7 +488,7 @@ endfunction()
 # BRAINVISA_COPY_FILES
 #
 # Usage:
-#  BRAINVISA_COPY_FILES( <component> <source files> [SOURCE_DIRECTORY <directory>] DESTINATION <destination directory>  [IMMEDIATE] [GET_TARGET <target variable>] )
+#  BRAINVISA_COPY_FILES( <component> <source files> [SOURCE_DIRECTORY <directory>] DESTINATION <destination directory>  [IMMEDIATE] [GET_TARGET <target variable>] [NO_SYMLINKS] )
 #
 function( BRAINVISA_COPY_FILES component )
   set( _files "${ARGN}" )
@@ -514,8 +531,17 @@ function( BRAINVISA_COPY_FILES component )
     set( immediate TRUE )
     list( REMOVE_AT _files ${result} )
   endif()
-    
-  
+
+  # Read NO_SYMLINKS option
+  list( FIND _files NO_SYMLINKS result )
+  if( result EQUAL -1 )
+    set( symlinks TRUE )
+  else()
+    set( symlinks FALSE )
+    list( REMOVE_AT _files ${result} )
+  endif()
+
+
 #     message( "=== copy: from ${_sourceDirectory} to ${_destination} : ${_files}" )
   # Create a custom target for the files installation. The install-component target depends on this custom target
   BRAINVISA_GENERATE_TARGET_NAME( installTarget )
@@ -540,16 +566,26 @@ function( BRAINVISA_COPY_FILES component )
                         "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
                         COPYONLY )
       else()
-        add_custom_command( 
-          OUTPUT "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
-          DEPENDS "${_absoluteFile}"
-          COMMAND "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
+        if( symlinks AND ( UNIX OR APPLE ) )
+          # Make a symlink instead of copying Python source allows to
+          # execute code from the build tree and directly benefit from
+          # modifications in the source tree (without typing make)
+          add_custom_command(
+            OUTPUT "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
+            COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/${_destination}"
+            COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_absoluteFile}" "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
+        else()
+          add_custom_command(
+            OUTPUT "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
+            DEPENDS "${_absoluteFile}"
+            COMMAND "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
+        endif()
       endif()
-      
+
       # custom command attached to the custom target created for the files installation
       add_custom_command(TARGET ${installTarget} PRE_BUILD
           COMMAND "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "$(BRAINVISA_INSTALL_PREFIX)/${_destination}/${_file}" )
-      
+
       set( _targetDepends ${_targetDepends} "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
     else()
       message( "Warning: file \"${_absoluteFile}\" does not exists" )
@@ -570,7 +606,7 @@ endfunction()
 #  CMakeLists.txt, *~ or */.svn/*.
 #
 # Usage:
-#  BRAINVISA_COPY_DIRECTORY( <source directory> <destination directory> <component> [IMMEDIATE] [GET_TARGET <target variable>] )
+#  BRAINVISA_COPY_DIRECTORY( <source directory> <destination directory> <component> [IMMEDIATE] [GET_TARGET <target variable>] [NO_SYMLINKS] )
 #
 function( BRAINVISA_COPY_DIRECTORY _directory _destination _component )
   set( _argn "${ARGN}" )
@@ -593,7 +629,16 @@ function( BRAINVISA_COPY_DIRECTORY _directory _destination _component )
     list( GET _argn ${result} targetVariable )
     list( REMOVE_AT _argn ${result} )
   endif()
-  
+
+  # Read NO_SYMLINKS option
+  list( FIND _argn NO_SYMLINKS result )
+  if( result EQUAL -1 )
+    set( symlinks TRUE )
+  else()
+    set( symlinks FALSE )
+    list( REMOVE_AT _argn ${result} )
+  endif()
+
   file( GLOB_RECURSE _selectedFiles RELATIVE "${_directory}" "${_directory}/*" )
   set( i 0 )
   list( LENGTH _selectedFiles l )
@@ -608,6 +653,9 @@ function( BRAINVISA_COPY_DIRECTORY _directory _destination _component )
       math( EXPR i "${i} + 1" )
     endif()
   endwhile()
+  if( NOT symlinks )
+    set( _selectedFiles ${_selectedFiles} "NO_SYMLINKS" )
+  endif()
   if( immediate )
     BRAINVISA_COPY_FILES( ${_component} ${_selectedFiles} SOURCE_DIRECTORY "${_directory}" DESTINATION "${_destination}" IMMEDIATE GET_TARGET "${targetVariable}" )
   else()
@@ -622,7 +670,7 @@ endfunction()
 #
 # Usage:
 #   BRAINVISA_COPY_PYTHON_DIRECTORY( <python directory> <component> 
-#                               <destination directory> )
+#                               <destination directory> [NO_SYMLINKS] )
 #     <python directory>: python directory to copy
 #     <component>: name of the component passed to BRAINVISA_INSTALL.
 #     <destination directory>: directory where the wiles will be copied
@@ -635,11 +683,22 @@ endfunction()
 #   BRAINVISA_COPY_PYTHON_DIRECTORY(  ${CMAKE_CURRENT_SOURCE_DIR}/python brainvisa_python )
 #
 function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
-  if( ${ARGC} GREATER 2 )
-    set( _destDir "${ARGV2}" )
-  else( ${ARGC} GREATER 2 )
+  set( _args "${ARGN}" )
+  # Read NO_SYMLINKS option
+  list( FIND _args NO_SYMLINKS result )
+  if( result EQUAL -1 )
+    set( symlinks TRUE )
+  else()
+    set( symlinks FALSE )
+    list( REMOVE_AT _args ${result} )
+  endif()
+
+  list( LENGTH _args _argc )
+  if( ${_argc} GREATER 2 )
+    list( GET _args 2 _destDir )
+  else()
     get_filename_component( _destDir "${_pythonDirectory}" NAME )
-  endif( ${ARGC} GREATER 2 )
+  endif()
 
   # Make sure Python can be executed
   if( NOT DEFINED PYTHON_EXECUTABLE )
@@ -704,9 +763,20 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
   # Copy other files
   foreach(_file ${_nonPythonSources})
     set( _fileBuild "${CMAKE_BINARY_DIR}/${_destDir}/${_file}" )
-    add_custom_command( OUTPUT "${_fileBuild}"
-      COMMAND "${CMAKE_COMMAND}" -E copy "${_pythonDirectory}/${_file}" "${_fileBuild}"
-      DEPENDS "${_pythonDirectory}/${_file}" )
+    if( UNIX OR APPLE )
+      # Make a symlink instead of copying Python source allows to
+      # execute code from the build tree and directly benefit from
+      # modifications in the source tree (without typing make)
+      get_filename_component( _path "${_fileBuild}" PATH )
+      add_custom_command( OUTPUT "${_fileBuild}"
+                          COMMAND "${CMAKE_COMMAND}" -E make_directory "${_path}"
+                          COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_pythonDirectory}/${_file}" "${_fileBuild}"
+                          DEPENDS "${_pythonDirectory}/${_file}" )
+    else()
+      add_custom_command( OUTPUT "${_fileBuild}"
+        COMMAND "${CMAKE_COMMAND}" -E copy "${_pythonDirectory}/${_file}" "${_fileBuild}"
+        DEPENDS "${_pythonDirectory}/${_file}" )
+    endif()
     # Install source file and byte compiled files
     get_filename_component( _path "${_file}" PATH )
     BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}"

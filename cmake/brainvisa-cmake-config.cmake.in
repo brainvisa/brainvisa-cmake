@@ -457,22 +457,24 @@ function( BRAINVISA_COPY_AND_INSTALL_HEADERS _headersVariable _includeDir target
 
   set( destHeaders )
   foreach( _currentHeader ${${_headersVariable}} )
+    set( _destFile "${CMAKE_BINARY_DIR}/include/${_includeDir}/${_currentHeader}" )
     if( symlinks AND ( UNIX OR APPLE ) )
       # Make a symlink instead of copying Python source allows to
       # execute code from the build tree and directly benefit from
       # modifications in the source tree (without typing make)
+      get_filename_component( _path "${_destFile}" PATH )
       add_custom_command(
-        OUTPUT "${CMAKE_BINARY_DIR}/include/${_includeDir}/${_currentHeader}"
+        OUTPUT "${_destFile}"
         DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}"
-        COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/include/${_includeDir}"
-        COMMAND "${CMAKE_COMMAND}" -E create_symlink "${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}" "${CMAKE_BINARY_DIR}/include/${_includeDir}/${_currentHeader}" )
+        COMMAND "${CMAKE_COMMAND}" -E make_directory "${_path}"
+        COMMAND "${CMAKE_COMMAND}" -E create_symlink "${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}" "${_destFile}" )
     else()
       add_custom_command(
-        OUTPUT "${CMAKE_BINARY_DIR}/include/${_includeDir}/${_currentHeader}"
+        OUTPUT "${_destFile}"
         DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}"
-        COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}" "${CMAKE_BINARY_DIR}/include/${_includeDir}/${_currentHeader}" )
+        COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}" "${_destFile}" )
     endif()
-    set( destHeaders ${destHeaders}  "${CMAKE_BINARY_DIR}/include/${_includeDir}/${_currentHeader}" )
+    set( destHeaders ${destHeaders}  "${_destFile}" )
     get_filename_component( _path "${_currentHeader}" PATH )
     BRAINVISA_INSTALL( FILES ${_currentHeader}
                        DESTINATION include/${_includeDir}/${_path}

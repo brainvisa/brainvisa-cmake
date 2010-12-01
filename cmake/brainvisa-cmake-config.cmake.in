@@ -572,9 +572,10 @@ function( BRAINVISA_COPY_FILES component )
           # Make a symlink instead of copying Python source allows to
           # execute code from the build tree and directly benefit from
           # modifications in the source tree (without typing make)
+          get_filename_component( _path_file "${_file}" PATH )
           add_custom_command(
             OUTPUT "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
-            COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/${_destination}"
+            COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/${_destination}/${_path_file}"
             COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_absoluteFile}" "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
         else()
           add_custom_command(

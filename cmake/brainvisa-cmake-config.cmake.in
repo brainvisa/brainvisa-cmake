@@ -664,6 +664,10 @@ function( BRAINVISA_COPY_DIRECTORY _directory _destination _component )
   else()
     BRAINVISA_COPY_FILES( ${_component} ${_selectedFiles} SOURCE_DIRECTORY "${_directory}" DESTINATION "${_destination}" GET_TARGET "${targetVariable}" )
   endif()
+  if( targetVariable )
+    set( ${targetVariable} "${${targetVariable}}" PARENT_SCOPE )
+  endif()
+
 endfunction()
 
 

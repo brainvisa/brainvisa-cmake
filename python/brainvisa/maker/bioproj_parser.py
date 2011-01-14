@@ -45,7 +45,6 @@ projects = [
   'development',
   'installer',
   'brainvisa-share',
-  'communication',
   'soma',
   'aims', 
   'anatomist', 
@@ -63,6 +62,8 @@ projects = [
   'pyhrf',
   'fmri',
   'famis',
+  'sandbox',
+  'communication',
 ]
 
 excludeProjects = set()

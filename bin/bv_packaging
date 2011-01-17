@@ -247,25 +247,6 @@ fi
         out.close()
         os.chmod( source, os.stat( dest ).st_mode )
         
-  axon = os.path.join( install_directory, 'bin', 'brainvisa' )
-  if os.path.exists( axon ):
-    print 'Generating Axon processes documentation'
-    env = os.environ.copy()
-    env[ 'BRAINVISA_SHARE' ] = os.path.join( install_directory, 'share' )
-    for variable, value in ( 
-      ( 'PATH', os.path.join( install_directory, 'bin' ) ),
-      ( 'PYTHONPATH', os.path.join( install_directory, 'python' ) ),
-      ( 'LD_LIBRARY_PATH', os.path.join( install_directory, 'lib' ) ) ):
-      path = env.get( variable )
-      if path:
-        env[ variable ] = value + os.pathsep + path
-      else:
-        env[ variable ] = path
-    system_call( options, [ 'sh', axon, '-b', '--ignoreValidation', '--updateDocumentation' ], env=env )
-    if list_installed_paths:
-      print 'List generated files for Axon processes documentation'
-      for i in ( j for j in recursive_listdir( install_directory ) if j not in installed_paths):
-        installed_paths[ i ] = 'axon'
   if list_installed_paths:
     result = {}
     for path, package in  (( i[len(install_directory)+1:], j ) for i,j in installed_paths.iteritems() ):

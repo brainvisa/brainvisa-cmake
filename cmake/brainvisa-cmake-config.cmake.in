@@ -332,9 +332,9 @@ function( BRAINVISA_DECLARE_THIRDPARTY_COMPONENT component )
     set( BRAINVISA_THIRDPARTY_COMPONENTS "${BRAINVISA_THIRDPARTY_COMPONENTS}" "${component}" CACHE INTERNAL "" )
     if( EXISTS "${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake" )
       # Define a default empty function for thirdparty dependencies definition
-      include( "${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake" )
-        
       message( STATUS "Packaging and dependency rules for ${component}" )
+      include( "${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake" )
+
       # Get component information
       BRAINVISA_PACKAGING_COMPONENT_INFO( ${component} package_name package_maintainer package_version )
       if( BRAINVISA_COMPILATION_INFO )
@@ -648,7 +648,7 @@ function( BRAINVISA_COPY_DIRECTORY _directory _destination _component )
   while( ${i} LESS ${l} )
     list( GET _selectedFiles ${i} file )
     get_filename_component( f "${file}" NAME )
-    string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*\\.svn/.*)$" _match "${file}" )
+    string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*\\.svn/.*)|(.*\\.od[tp])|(.*\\.doc)|(.*\\.s[dx]w)$" _match "${file}" )
     if( _match )
       list( REMOVE_AT _selectedFiles ${i} )
       math( EXPR l "${l} - 1" )

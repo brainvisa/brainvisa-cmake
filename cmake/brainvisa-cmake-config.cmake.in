@@ -1069,15 +1069,14 @@ function( BRAINVISA_GENERATE_DOCBOOK_DOC )
           COMPONENT ${PROJECT_NAME}-usrdoc
           FILES_MATCHING REGEX "_training/"
           REGEX "_man/"
-          PATTERN "*_pg" EXCLUDE
+          PATTERN "doxygen" EXCLUDE
           )
         BRAINVISA_INSTALL(DIRECTORY "${CMAKE_BINARY_DIR}/share/doc/${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
           DESTINATION share/doc
           USE_SOURCE_PERMISSIONS
           COMPONENT ${PROJECT_NAME}-devdoc
           FILES_MATCHING REGEX "_pg/"
-          PATTERN "*_training" EXCLUDE
-          PATTERN "*_man" EXCLUDE
+          PATTERN "doxygen" EXCLUDE
           )
           
       endforeach()

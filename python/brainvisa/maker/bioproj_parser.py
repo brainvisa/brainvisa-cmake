@@ -63,6 +63,7 @@ projects = [
   'fmri',
   'famis',
   'sandbox',
+  'ptk',
   'communication',
 ]
 
@@ -88,6 +89,7 @@ componentsPerProject = {
  't1mri': [ 't1mri-private', 't1mri-gpl' ],
  'famis': [ 'famis-private', 'famis-gpl' ],
  'pyhrf': [ 'pyhrf-free', 'pyhrf-gpl' ],
+ 'communication', [ 'bibliography', 'latex', 'web', 'documentation' ],
 }
 
 

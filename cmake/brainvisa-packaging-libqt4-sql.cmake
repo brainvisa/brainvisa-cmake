@@ -15,5 +15,9 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     set(libs ${QT_QTSQL_LIBRARY_RELEASE})
   endif()
   BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${libs} )
+  BRAINVISA_INSTALL_DIRECTORY( "${QT_PLUGINS_DIR}/sqldrivers"
+                          "lib/qt-plugins/sqldrivers"
+                          "${component}" )
+
 endfunction()
 

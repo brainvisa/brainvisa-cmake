@@ -1,4 +1,5 @@
 find_package( PyQt4 )
+find_package( Qt4 )
 
 function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )
   set( ${package_name} ${component} PARENT_SCOPE )
@@ -14,6 +15,11 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  # nothing to package, it is already in python package
+
+  FILE(GLOB plugin "${QT_PLUGINS_DIR}/designer/*pythonplugin*")
+  BRAINVISA_INSTALL( FILES ${plugin}
+                     DESTINATION "lib/qt-plugins/designer"
+                     COMPONENT "${component}" )
+
 endfunction()
 

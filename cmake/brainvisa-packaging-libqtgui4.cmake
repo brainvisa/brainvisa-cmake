@@ -22,7 +22,13 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   BRAINVISA_INSTALL( FILES ${plugin}
                      DESTINATION "lib/qt-plugins/accessible"
                      COMPONENT "${component}" )
-  BRAINVISA_INSTALL_DIRECTORY( "${QT_PLUGINS_DIR}/imageformats"
-                          "lib/qt-plugins/imageformats"
-                          "${component}" )
+  BRAINVISA_INSTALL( DIRECTORY "${QT_PLUGINS_DIR}/imageformats"
+                     DESTINATION "lib/qt-plugins"
+                     USE_SOURCE_PERMISSIONS
+                     COMPONENT "${component}" )
+  BRAINVISA_INSTALL( DIRECTORY "${QT_PLUGINS_DIR}/inputmethods"
+                     DESTINATION "lib/qt-plugins"
+                     USE_SOURCE_PERMISSIONS
+                     COMPONENT "${component}" )
+
 endfunction()

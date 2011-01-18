@@ -28,9 +28,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   foreach(lib ${DOT_LIBRARIES})
     get_filename_component(libdir ${lib} PATH)
     if( EXISTS "${libdir}/graphviz" )
-      BRAINVISA_INSTALL_DIRECTORY( "${libdir}/graphviz"
-                          "lib/graphviz"
-                          "${component}" )
+      BRAINVISA_INSTALL( DIRECTORY "${libdir}/graphviz"
+                         DESTINATION "lib"
+                         USE_SOURCE_PERMISSIONS
+                         COMPONENT "${component}" )
       break()
     endif()
   endforeach()

@@ -17,9 +17,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   endif()
   BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${libs} )
   # install plugins
-  BRAINVISA_INSTALL_DIRECTORY( "${QT_PLUGINS_DIR}/codecs"
-                          "lib/qt-plugins/codecs"
-                          "${component}" )
+  BRAINVISA_INSTALL( DIRECTORY "${QT_PLUGINS_DIR}/codecs"
+                     DESTINATION "lib/qt-plugins"
+                     USE_SOURCE_PERMISSIONS
+                     COMPONENT "${component}" )
 
   # qtconfig: it can be a link to qtconfig-qt4 for example
   get_filename_component(qtconfig_realpath "${QT_BINARY_DIR}/qtconfig" REALPATH)

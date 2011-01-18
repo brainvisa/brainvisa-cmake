@@ -23,5 +23,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   BRAINVISA_INSTALL( FILES ${plugin}
     DESTINATION "lib/qt-plugins/accessible"
     COMPONENT "${component}" )
+  FILE(GLOB plugin "${QT_PLUGINS_DIR}/designer/*qt3supportwidgets*")
+  BRAINVISA_INSTALL( FILES ${plugin}
+    DESTINATION "lib/qt-plugins/designer"
+    COMPONENT "${component}" )
+
 endfunction()
 

@@ -17,5 +17,9 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     set(libs ${QT_QTOPENGL_LIBRARY_RELEASE})
   endif()
   BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${libs} )
+  BRAINVISA_INSTALL( DIRECTORY "${QT_PLUGINS_DIR}/graphicssystems"
+                     DESTINATION "lib/qt-plugins"
+                     USE_SOURCE_PERMISSIONS
+                     COMPONENT "${component}" )
 endfunction()
 

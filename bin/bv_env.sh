@@ -18,7 +18,7 @@ else
   tmp=`mktemp -t bv_env`
 fi
 
-if [ -e "$0" ]; then
+if [ "`basename "$0"`" = "bv_env.sh" ]; then
   bv_env="`dirname "$0"`"
   if [ -z "$bv_env" -o "$bv_env" = "." ]; then
     bv_env="$PWD/bv_env"

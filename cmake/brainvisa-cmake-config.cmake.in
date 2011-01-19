@@ -966,6 +966,7 @@ MACRO( BRAINVISA_GENERATE_DOXYGEN_DOC _inputVariable )
     endif( IS_ABSOLUTE "${DOXYFILE_HTML_OUTPUT}" )
     BRAINVISA_INSTALL( DIRECTORY "${_directory}"
                   DESTINATION "share/doc/${component}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
+                  USE_SOURCE_PERMISSIONS
                   COMPONENT ${PROJECT_NAME}-devdoc )
   ENDIF( DOXYGEN_FOUND )
 ENDMACRO( BRAINVISA_GENERATE_DOXYGEN_DOC )
@@ -1028,6 +1029,7 @@ function( BRAINVISA_GENERATE_EPYDOC_DOC  )
       # Install HTML documentation
       BRAINVISA_INSTALL( DIRECTORY "${CMAKE_BINARY_DIR}/${outputDirectory}"
                          DESTINATION "${outputDirectory}"
+                         USE_SOURCE_PERMISSIONS
                          COMPONENT ${PROJECT_NAME}-devdoc )
   endif()
 endfunction()

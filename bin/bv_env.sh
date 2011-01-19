@@ -4,6 +4,8 @@ exists() {
   type -t $1 > /dev/null
 }
 
+python="python"
+
 mktemp=`type -t mktemp`
 if [ -z "$mktemp" ]; then
   i=0
@@ -26,9 +28,9 @@ if [ -e "$0" ]; then
 else
   bv_env=bv_env
   # Try to find bv_env location in the shell history
-  exists history && exists tail && exists python
+  exists history && exists tail && exists "$python"
   if [ $? -eq 0 ]; then
-    bv_env="`history | tail -n 1 | python -c 'import sys,os; print os.path.abspath( os.path.join( os.path.dirname( sys.stdin.readline().split( None, 3 )[ 2 ] ),"bv_env" ) )' 2>/dev/null`"
+    bv_env="`history | tail -n 1 | "$python" -c 'import sys,os,subprocess; subprocess.call( [ "sh", "-c", "echo " + os.path.abspath( os.path.join( os.path.dirname( sys.stdin.readline().split( None, 3 )[ 2 ] ),"bv_env" ) ) ] )' 2>/dev/null`"
     if [ ! -x "$bv_env" ]; then
       bv_env=bv_env
     fi

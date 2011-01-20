@@ -1041,11 +1041,20 @@ endfunction()
 #
 # Usage:
 #
-#   BRAINVISA_GENERATE_DOCBOOK_DOC(  )
+#   BRAINVISA_GENERATE_DOCBOOK_DOC( [EXCLUDE docbook_project_name] )
 #
 function( BRAINVISA_GENERATE_DOCBOOK_DOC )
   BRAINVISA_FIND_PACKAGE(documentation QUIET)
   if(DOCUMENTATION_FOUND)
+    set( args "${ARGN}" )
+    list( FIND args EXCLUDE result )
+    set( exclude )
+    if( NOT result EQUAL -1 )
+      list( REMOVE_AT args ${result} )
+      list( GET args ${result} exclude )
+      list( REMOVE_AT args ${result} )
+    endif()
+
     # search doc projects in docbook directory
     set(source_directory "${CMAKE_CURRENT_SOURCE_DIR}/docbook" )
     if(EXISTS "${source_directory}")
@@ -1053,34 +1062,38 @@ function( BRAINVISA_GENERATE_DOCBOOK_DOC )
       file(GLOB doc_projects RELATIVE "${source_directory}" "${source_directory}/[^.]*")
       foreach( doc_project ${doc_projects} )
         # user doc
-        BRAINVISA_GENERATE_TARGET_NAME( usrdoc_target )
+        #BRAINVISA_GENERATE_TARGET_NAME( usrdoc_target )
+        set(usrdoc_target ${doc_project}-usrdocbook)
         add_custom_target( ${usrdoc_target}
           COMMAND "${BUILDDOC_COMMAND}" -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m m -p "${doc_project}" --total --id --doc_ver  "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}"
           COMMAND "${BUILDDOC_COMMAND}" -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m t -p "${doc_project}" --total --id --doc_ver  "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" )
         add_dependencies(${PROJECT_NAME}-usrdoc ${usrdoc_target})
         # dev doc
-        BRAINVISA_GENERATE_TARGET_NAME( devdoc_target )
+        #BRAINVISA_GENERATE_TARGET_NAME( devdoc_target )
+        set(devdoc_target ${doc_project}-devdocbook)
         add_custom_target( ${devdoc_target}
           COMMAND ${BUILDDOC_COMMAND} -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m p -p "${doc_project}" --total --id --doc_ver "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" )
         add_dependencies(${PROJECT_NAME}-devdoc ${devdoc_target})
-
-        # install rules
-        BRAINVISA_INSTALL(DIRECTORY "${CMAKE_BINARY_DIR}/share/doc/${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
-          DESTINATION share/doc
-          USE_SOURCE_PERMISSIONS
-          COMPONENT ${PROJECT_NAME}-usrdoc
-          FILES_MATCHING REGEX "_training/"
-          REGEX "_man/"
-          PATTERN "doxygen" EXCLUDE
-          )
-        BRAINVISA_INSTALL(DIRECTORY "${CMAKE_BINARY_DIR}/share/doc/${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
-          DESTINATION share/doc
-          USE_SOURCE_PERMISSIONS
-          COMPONENT ${PROJECT_NAME}-devdoc
-          FILES_MATCHING REGEX "_pg/"
-          PATTERN "doxygen" EXCLUDE
-          )
-          
+        
+        list( FIND exclude ${doc_project} result )
+        if (result EQUAL -1) # if the docbook project is not in exclude list, create install rules
+          # install rules
+          BRAINVISA_INSTALL(DIRECTORY "${CMAKE_BINARY_DIR}/share/doc/${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
+            DESTINATION share/doc
+            USE_SOURCE_PERMISSIONS
+            COMPONENT ${PROJECT_NAME}-usrdoc
+            FILES_MATCHING REGEX "_training/"
+            REGEX "_man/"
+            PATTERN "doxygen" EXCLUDE
+            )
+          BRAINVISA_INSTALL(DIRECTORY "${CMAKE_BINARY_DIR}/share/doc/${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
+            DESTINATION share/doc
+            USE_SOURCE_PERMISSIONS
+            COMPONENT ${PROJECT_NAME}-devdoc
+            FILES_MATCHING REGEX "_pg/"
+            PATTERN "doxygen" EXCLUDE
+            )
+        endif()
       endforeach()
     endif() # exists source directory
   else() # documentation project not found

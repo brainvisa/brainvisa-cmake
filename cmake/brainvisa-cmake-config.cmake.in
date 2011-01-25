@@ -1027,7 +1027,7 @@ function( BRAINVISA_GENERATE_EPYDOC_DOC  )
       add_custom_target( ${target} DEPENDS "${CMAKE_BINARY_DIR}/${outputDirectory}/index.html" )
       add_dependencies( ${PROJECT_NAME}-devdoc ${target} )
       # Install HTML documentation
-      BRAINVISA_INSTALL( DIRECTORY "${CMAKE_BINARY_DIR}/${outputDirectory}"
+      BRAINVISA_INSTALL( DIRECTORY "${CMAKE_BINARY_DIR}/${outputDirectory}/"
                          DESTINATION "${outputDirectory}"
                          USE_SOURCE_PERMISSIONS
                          COMPONENT ${PROJECT_NAME}-devdoc )

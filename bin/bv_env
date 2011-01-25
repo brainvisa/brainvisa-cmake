@@ -82,15 +82,14 @@ for n, v in set_variables.iteritems():
 for n, l in path_prepend.iteritems():
   if n in os.environ:
     backup_variables[ n ] = os.environ[ n ]
-    prepend = True
+    content = os.environ[ n ].split( os.pathsep )
   else:
-    prepend = False
+    content = []
+  
   for v in reversed( l ):
     v = v.replace( '${INSTALL_DIRECTORY}', install_directory )
-    if prepend:
-      os.environ[ n ] = os.pathsep.join( [ v ] + os.environ[ n ].split( os.pathsep ) )
-    else:
-      os.environ[ n ] = v
+    content.insert( 0, v )
+  os.environ[ n ] = os.pathsep.join( ( i for i in content if os.path.exists( i ) ) )
 
 if len( sys.argv ) > 1:
   for n, v in backup_variables.iteritems():
@@ -104,4 +103,6 @@ else:
   for n in set_variables:
     print 'export', n + "='" + os.environ[ n ] + "'"
   for n in path_prepend:
-    print 'export', n + "='" + os.environ[ n ] + "'"
+    v = os.environ[ n ]
+    if v:
+      print 'export', n + "='" + v + "'"

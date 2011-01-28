@@ -888,6 +888,7 @@ ENDMACRO( BRAINVISA_GET_SPACED_QUOTED_LIST _listVariable _outputVariable )
 #
 MACRO( BRAINVISA_GENERATE_DOXYGEN_DOC _inputVariable )
   IF( DOXYGEN_FOUND )
+
     set(_argn ${ARGN})
     # Read INPUT_PREFIX option
     list( FIND _argn INPUT_PREFIX result )
@@ -931,13 +932,14 @@ MACRO( BRAINVISA_GENERATE_DOXYGEN_DOC _inputVariable )
         set( _newList ${_newList} "${inputPrefix}/${_item}" )
       endforeach( _item ${${_inputVariable}} )
       BRAINVISA_GET_SPACED_QUOTED_LIST( _newList _input )
+      set(_inputList ${_newList})
     else( NOT EXISTS "${_item}" )
       BRAINVISA_GET_SPACED_QUOTED_LIST( ${_inputVariable} _input )
+      set(_inputList ${${_inputVariable}})
     endif( NOT EXISTS "${_item}" )
 
     SET( DOXYFILE_INPUT "${_input}" )
     INCLUDE( "${brainvisa-cmake_DIR}/DoxyfileDefaultValues.cmake" )
-
     SET( _generatedFiles )
     FOREACH( _file ${_argn} )
       CONFIGURE_FILE( "${CMAKE_CURRENT_SOURCE_DIR}/${_file}" 
@@ -952,10 +954,15 @@ MACRO( BRAINVISA_GENERATE_DOXYGEN_DOC _inputVariable )
     CONFIGURE_FILE( "${brainvisa-cmake_DIR}/Doxyfile.in" "${_doxygenBinaryDir}/Doxyfile" @ONLY )
     #BRAINVISA_GENERATE_TARGET_NAME( _target )
     set(_target "${component}-doxygen")
-    ADD_CUSTOM_TARGET( ${_target} 
-                      DEPENDS "${_doxygenBinaryDir}/Doxyfile" ${_generatedFiles}
+    set( doxydeps "${_doxygenBinaryDir}/Doxyfile" )
+    set( doxydeps ${_generatedFiles} ${doxydeps} )
+    set( doxydeps ${_inputList} ${doxydeps} )
+    ADD_CUSTOM_COMMAND( OUTPUT ${DOXYFILE_OUTPUT_DIRECTORY}/index.html
+                      DEPENDS ${doxydeps}
                       COMMAND "${CMAKE_COMMAND}" -E make_directory "${DOXYFILE_OUTPUT_DIRECTORY}"
                       COMMAND "${DOXYGEN_EXECUTABLE}" "${_doxygenBinaryDir}/Doxyfile" )
+    ADD_CUSTOM_TARGET( ${_target}
+      DEPENDS ${DOXYFILE_OUTPUT_DIRECTORY}/index.html )
     # Make sure doc target exists, I do not know if it is clean
     add_dependencies( ${PROJECT_NAME}-devdoc ${_target} )
     # Install HTML documentation

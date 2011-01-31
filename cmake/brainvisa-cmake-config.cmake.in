@@ -586,6 +586,9 @@ function( BRAINVISA_COPY_FILES component )
       endif()
 
       # custom command attached to the custom target created for the files installation
+      if( NOT BRAINVISA_INSTALL_PREFIX )
+        set( BRAINVISA_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" )
+      endif()
       add_custom_command(TARGET ${installTarget} PRE_BUILD
           COMMAND "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "$(BRAINVISA_INSTALL_PREFIX)/${_destination}/${_file}" )
 
@@ -1156,6 +1159,9 @@ function( BRAINVISA_ADD_COMPONENT _component )
 #    message( "Create component ${_component} in group ${_group}" )
   cpack_add_component( ${_component}
                        ${ARGN} )
+  if( NOT BRAINVISA_INSTALL_PREFIX )
+    set( BRAINVISA_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" )
+  endif()
   add_custom_target( install-${_component}
                      COMMAND "${CMAKE_COMMAND}" -DCMAKE_INSTALL_PREFIX=$(BRAINVISA_INSTALL_PREFIX) -DCOMPONENT=${_component} -P "${CMAKE_BINARY_DIR}/cmake_install.cmake" )
   add_dependencies( install-${_group} install-${_component} )
@@ -1370,6 +1376,10 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
     math(EXPR index_dest "${result} + 1")
     list(GET args ${index_dest} destination)
     list(REMOVE_AT args ${result} ${index_dest})
+  endif()
+
+  if( NOT BRAINVISA_INSTALL_PREFIX )
+    set( BRAINVISA_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" )
   endif()
 
   set( librariesToInstall )

@@ -389,7 +389,12 @@ class SourceDirectory( object ):
       # But it works if I do "cd /neurospin/brainvisa && vnadmin create cmake_mac"
       cwd, dir = os.path.split( repositoryDirectory )
       system( 'svnadmin', 'create', dir, cwd=cwd )
-      self.svncommand( 'checkout',  'file://' + os.path.splitdrive(repositoryDirectory)[1].replace(os.path.sep, "/"), self.directory )
+      
+      if len( os.path.splitdrive(repositoryDirectory)[0] ) > 0:
+        # This is for windows absolute pathes
+        repositoryDirectory = '/' + repositoryDirectory.replace(os.path.sep, "/")
+        
+      self.svncommand( 'checkout',  'file://' + repositoryDirectory, self.directory )
       checkout = True
     self.updateExternals()
     self.svncommand( 'update', self.directory )

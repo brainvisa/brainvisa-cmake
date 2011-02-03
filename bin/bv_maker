@@ -125,7 +125,13 @@ class GlobalConfiguration( object ):
                       metavar='DIR', action='append', default=[] )
     parser.add_option( '-c', '--config', dest='configuration_file',
                       help='specify configuration file. Default ="' + defaultConfigurationFile + '"',
-                      metavar='USERNAME', default=defaultConfigurationFile )
+                      metavar='USERNAME', default=None )
+    parser.add_option( '-s', '--sources', dest='sources_directory',
+                      help='directory containing sources',
+                      metavar='DIR', default=None )
+    parser.add_option( '-b', '--build', dest='build_directory',
+                      help='build directory',
+                      metavar='DIR', default=None )
     parser.add_option( '--username', dest='username',
                       help='specify user login to use with the svn server',
                       metavar='USERNAME', default='' )
@@ -139,39 +145,48 @@ class GlobalConfiguration( object ):
     for i in ( 'configuration_file', 'username', 'verbose' ):
       setattr( self, i, getattr( options, i ) )
     
-    # Read configuration file
     packages = []
     lineCount = 0
     currentDirectoryObject = None
     self.sourcesDirectories = {}
     self.buildDirectories = {}
-    for line in open( options.configuration_file ):
-      lineCount += 1
-      line = line.strip()
-      if not line or line[0] == '#' or line.startswith( '//' ): continue
-      try:
-        if line[0] == '[':
-          if line[-1] != ']': raise SyntaxError()
-          l = line[1:-1].split( None, 1 )
-          if len( l ) != 2:
-            raise SyntaxError()
-          if l[ 0 ] == 'source':
-            pass
-            currentDirectoryObject = SourceDirectory( environmentVariablesSubstitution( l[ 1 ].strip() ), self )
-            self.sourcesDirectories[ currentDirectoryObject.directory ] = currentDirectoryObject
-          elif l[ 0 ] == 'build':
-            pass
-            currentDirectoryObject = BuildDirectory( environmentVariablesSubstitution( l[ 1 ].strip() ), self )
-            self.buildDirectories[ currentDirectoryObject.directory ] = currentDirectoryObject
+
+    if options.sources_directory and options.build_directory:
+      bd = BuildDirectory( environmentVariablesSubstitution( options.build_directory ), self )
+      self.buildDirectories[ bd.directory ] = bd
+      bd.addConfigurationLine( 'all * ' + options.sources_directory )
+    elif not options.configuration_file:
+      options.configuration_file = defaultConfigurationFile
+      
+    if options.configuration_file:
+      # Read configuration file
+      for line in open( options.configuration_file ):
+        lineCount += 1
+        line = line.strip()
+        if not line or line[0] == '#' or line.startswith( '//' ): continue
+        try:
+          if line[0] == '[':
+            if line[-1] != ']': raise SyntaxError()
+            l = line[1:-1].split( None, 1 )
+            if len( l ) != 2:
+              raise SyntaxError()
+            if l[ 0 ] == 'source':
+              pass
+              currentDirectoryObject = SourceDirectory( environmentVariablesSubstitution( l[ 1 ].strip() ), self )
+              self.sourcesDirectories[ currentDirectoryObject.directory ] = currentDirectoryObject
+            elif l[ 0 ] == 'build':
+              pass
+              currentDirectoryObject = BuildDirectory( environmentVariablesSubstitution( l[ 1 ].strip() ), self )
+              self.buildDirectories[ currentDirectoryObject.directory ] = currentDirectoryObject
+            else:
+              raise SyntaxError()
           else:
-            raise SyntaxError()
-        else:
-          if currentDirectoryObject is None: raise SyntaxError()
-          if self.verbose:
-            print '  processing line:', repr( line )
-          currentDirectoryObject.addConfigurationLine( line )
-      except SyntaxError:
-        raise SyntaxError( 'Syntax error in ' + repr( options.configuration_file ) + ' on line ' + str( lineCount ) )
+            if currentDirectoryObject is None: raise SyntaxError()
+            if self.verbose:
+              print '  processing line:', repr( line )
+            currentDirectoryObject.addConfigurationLine( line )
+        except SyntaxError:
+          raise SyntaxError( 'Syntax error in ' + repr( options.configuration_file ) + ' on line ' + str( lineCount ) )
 
 
 class SourcesCommand( object ):
@@ -476,10 +491,15 @@ class BuildDirectory( object ):
       componentsPattern, versionPattern, sourceDirectory = l
       sourceDirectory = os.path.normpath( os.path.abspath( environmentVariablesSubstitution( sourceDirectory ) ) )
       for component in getBrainVISAComponents( componentsPattern ):
+        if self.configuration.verbose:
+          print '  considering component:', component
         for component, version, url in getMatchingURLs( component, versionPattern ):
           componentSourcesDirectory = os.path.join( sourceDirectory, url[ len( BRAINVISA_SVN_URL ) + 1: ] )
-          self.components[ component ] = componentSourcesDirectory
-          self.projects.add( brainvisaProjectPerComponent[ component ] )
+          if os.path.exists( componentSourcesDirectory ):
+            self.components[ component ] = componentSourcesDirectory
+            if self.configuration.verbose:
+              print "    " + component + " source directory '" + componentSourcesDirectory + "'"
+            self.projects.add( brainvisaProjectPerComponent[ component ] )
     self.configurationLines.append( line )
 
 

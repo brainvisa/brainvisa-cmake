@@ -151,7 +151,9 @@ class GlobalConfiguration( object ):
     self.sourcesDirectories = {}
     self.buildDirectories = {}
 
-    if options.sources_directory and options.build_directory:
+    if options.build_directory:
+      if not options.sources_directory:
+        options.sources_directory = os.path.dirname( os.path.dirname( this_script ) )
       bd = BuildDirectory( environmentVariablesSubstitution( options.build_directory ), self )
       self.buildDirectories[ bd.directory ] = bd
       bd.addConfigurationLine( 'all * ' + options.sources_directory )

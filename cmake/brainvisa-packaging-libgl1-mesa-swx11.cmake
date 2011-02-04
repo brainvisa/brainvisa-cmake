@@ -20,6 +20,9 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   if(MESA_LIBRARIES)
     BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${MESA_LIBRARIES} 
       DESTINATION "lib/mesa")
+    set(${component}_PACKAGED TRUE PARENT_SCOPE)
+  else()
+    set(${component}_PACKAGED FALSE PARENT_SCOPE)
   endif()
 endfunction()
 

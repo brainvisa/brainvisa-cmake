@@ -12,16 +12,21 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
 endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  # libraries
-  set(vtkINRIA3D_LIBRARIES)
-  foreach( library "vtkVisuManagement" "vtkDataManagement"
-      "vtkHWShading" "vtkRenderingAddOn" "vtkHelpers")
-      find_library(vtkINRIA3D_lib "${library}")
-      if(vtkINRIA3D_lib)
-        set( vtkINRIA3D_LIBRARIES ${vtkINRIA3D_LIBRARIES} "${vtkINRIA3D_lib}" )
-      endif()
-      unset(vtkINRIA3D_lib)
-      unset(vtkINRIA3D_lib CACHE)
-  endforeach()
-  BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${vtkINRIA3D_LIBRARIES} )
+  if(vtkINRIA3D_FOUND)
+    # libraries
+    set(vtkINRIA3D_LIBRARIES)
+    foreach( library "vtkVisuManagement" "vtkDataManagement"
+        "vtkHWShading" "vtkRenderingAddOn" "vtkHelpers")
+        find_library(vtkINRIA3D_lib "${library}")
+        if(vtkINRIA3D_lib)
+          set( vtkINRIA3D_LIBRARIES ${vtkINRIA3D_LIBRARIES} "${vtkINRIA3D_lib}" )
+        endif()
+        unset(vtkINRIA3D_lib)
+        unset(vtkINRIA3D_lib CACHE)
+    endforeach()
+    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${vtkINRIA3D_LIBRARIES} )
+    set(${component}_PACKAGED TRUE PARENT_SCOPE)
+  else()
+    set(${component}_PACKAGED FALSE PARENT_SCOPE)
+  endif()
 endfunction()

@@ -17,19 +17,24 @@ endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   # libraries
-  set(VTK_LIBRARIES)
-  foreach( library "vtkverdict" "vtkCommon" "vtkDICOMParser"
-      "vtkexoIIc" "vtkexpat" "vtkFiltering" "vtkfreetype" "vtkftgl"
-      "vtkGenericFiltering" "vtkGraphics" "vtkHybrid" "vtkImaging"
-      "vtkInfovis" "vtkIO" "vtkjpeg" "vtklibxml2" "vtkmetaio"
-      "vtkNetCDF" "vtkpng" "vtkRendering" "vtksys" "vtktiff"
-      "vtkViews" "vtkVolumeRendering" "vtkWidgets" "vtkzlib" "vtksqlite" "vtkParallel")
-      find_library(vtk_lib ${library} ${VTK_LIBRARY_DIRS})
-      if(vtk_lib)
-        set( VTK_LIBRARIES ${VTK_LIBRARIES} "${vtk_lib}" )
-      endif()
-      unset(vtk_lib)
-      unset(vtk_lib CACHE)
-  endforeach()
-  BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${VTK_LIBRARIES} )
+  if(VTK_FOUND)
+    set(VTK_LIBRARIES)
+    foreach( library "vtkverdict" "vtkCommon" "vtkDICOMParser"
+        "vtkexoIIc" "vtkexpat" "vtkFiltering" "vtkfreetype" "vtkftgl"
+        "vtkGenericFiltering" "vtkGraphics" "vtkHybrid" "vtkImaging"
+        "vtkInfovis" "vtkIO" "vtkjpeg" "vtklibxml2" "vtkmetaio"
+        "vtkNetCDF" "vtkpng" "vtkRendering" "vtksys" "vtktiff"
+        "vtkViews" "vtkVolumeRendering" "vtkWidgets" "vtkzlib" "vtksqlite" "vtkParallel")
+        find_library(vtk_lib ${library} ${VTK_LIBRARY_DIRS})
+        if(vtk_lib)
+          set( VTK_LIBRARIES ${VTK_LIBRARIES} "${vtk_lib}" )
+        endif()
+        unset(vtk_lib)
+        unset(vtk_lib CACHE)
+    endforeach()
+    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${VTK_LIBRARIES} )
+    set(${component}_PACKAGED TRUE PARENT_SCOPE)
+  else()
+    set(${component}_PACKAGED FALSE PARENT_SCOPE)
+  endif()
 endfunction()

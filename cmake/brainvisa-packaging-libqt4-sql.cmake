@@ -9,16 +9,20 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND QT_QTSQL_LIBRARY_DEBUG) 
-    set(libs ${QT_QTSQL_LIBRARY_DEBUG})
+  if(QT_QTSQL_FOUND)
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND QT_QTSQL_LIBRARY_DEBUG) 
+      set(libs ${QT_QTSQL_LIBRARY_DEBUG})
+    else()
+      set(libs ${QT_QTSQL_LIBRARY_RELEASE})
+    endif()
+    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${libs} )
+    BRAINVISA_INSTALL( DIRECTORY "${QT_PLUGINS_DIR}/sqldrivers"
+                      DESTINATION "lib/qt-plugins"
+                      USE_SOURCE_PERMISSIONS
+                      COMPONENT "${component}" )
+    set(${component}_PACKAGED TRUE PARENT_SCOPE)
   else()
-    set(libs ${QT_QTSQL_LIBRARY_RELEASE})
+    set(${component}_PACKAGED FALSE PARENT_SCOPE)
   endif()
-  BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${libs} )
-  BRAINVISA_INSTALL( DIRECTORY "${QT_PLUGINS_DIR}/sqldrivers"
-                     DESTINATION "lib/qt-plugins"
-                     USE_SOURCE_PERMISSIONS
-                     COMPONENT "${component}" )
-
 endfunction()
 

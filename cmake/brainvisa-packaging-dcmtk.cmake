@@ -27,8 +27,9 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         DESTINATION "lib"
         COMPONENT "${component}" )
     endif()
+    set(${component}_PACKAGED TRUE PARENT_SCOPE)
   else()
-    MESSAGE( SEND_ERROR "Impossible to create packaging rules for ${component} : the package was not found." )
+    set(${component}_PACKAGED FALSE PARENT_SCOPE)
   endif()
 endfunction()
 

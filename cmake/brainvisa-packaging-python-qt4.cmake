@@ -15,11 +15,14 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-
-  FILE(GLOB plugin "${QT_PLUGINS_DIR}/designer/*pythonplugin*")
-  BRAINVISA_INSTALL( FILES ${plugin}
-                     DESTINATION "lib/qt-plugins/designer"
-                     COMPONENT "${component}" )
-
+  if(PYQT4_FOUND)
+    FILE(GLOB plugin "${QT_PLUGINS_DIR}/designer/*pythonplugin*")
+    BRAINVISA_INSTALL( FILES ${plugin}
+                      DESTINATION "lib/qt-plugins/designer"
+                      COMPONENT "${component}" )
+    set(${component}_PACKAGED TRUE PARENT_SCOPE)
+  else()
+    set(${component}_PACKAGED FALSE PARENT_SCOPE)
+  endif()
 endfunction()
 

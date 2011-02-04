@@ -15,25 +15,30 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  if( DOT_EXECUTABLE )
-    BRAINVISA_INSTALL( FILES "${DOT_EXECUTABLE}"
-      DESTINATION "bin"
-      COMPONENT "${component}"
-      PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
-  endif()
-  if( DOT_LIBRARIES )
-    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${DOT_LIBRARIES} )
-  endif()
-  # Plugins
-  foreach(lib ${DOT_LIBRARIES})
-    get_filename_component(libdir ${lib} PATH)
-    if( EXISTS "${libdir}/graphviz" )
-      BRAINVISA_INSTALL( DIRECTORY "${libdir}/graphviz"
-                         DESTINATION "lib"
-                         USE_SOURCE_PERMISSIONS
-                         COMPONENT "${component}" )
-      break()
+  if(Dot_FOUND)
+    set(${component}_PACKAGED TRUE PARENT_SCOPE)
+    if( DOT_EXECUTABLE )
+      BRAINVISA_INSTALL( FILES "${DOT_EXECUTABLE}"
+        DESTINATION "bin"
+        COMPONENT "${component}"
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
     endif()
-  endforeach()
+    if( DOT_LIBRARIES )
+      BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${DOT_LIBRARIES} )
+    endif()
+    # Plugins
+    foreach(lib ${DOT_LIBRARIES})
+      get_filename_component(libdir ${lib} PATH)
+      if( EXISTS "${libdir}/graphviz" )
+        BRAINVISA_INSTALL( DIRECTORY "${libdir}/graphviz"
+                          DESTINATION "lib"
+                          USE_SOURCE_PERMISSIONS
+                          COMPONENT "${component}" )
+        break()
+      endif()
+    endforeach()
+  else()
+    set(${component}_PACKAGED FALSE PARENT_SCOPE)
+  endif()
 endfunction()
 

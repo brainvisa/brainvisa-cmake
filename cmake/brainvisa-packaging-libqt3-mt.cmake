@@ -9,5 +9,10 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${QT_LIBRARIES} )
+  if(QT_FOUND)
+    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${QT_LIBRARIES} )
+    set(${component}_PACKAGED TRUE PARENT_SCOPE)
+  else()
+    set(${component}_PACKAGED FALSE PARENT_SCOPE)
+  endif()
 endfunction()

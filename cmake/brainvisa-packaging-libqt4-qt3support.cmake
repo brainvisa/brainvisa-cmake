@@ -12,21 +12,25 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND QT_QT3SUPPORT_LIBRARY_DEBUG)
-    set(libs ${QT_QT3SUPPORT_LIBRARY_DEBUG})
+  if(QT_QT3SUPPORT_FOUND)
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND QT_QT3SUPPORT_LIBRARY_DEBUG)
+      set(libs ${QT_QT3SUPPORT_LIBRARY_DEBUG})
+    else()
+      set(libs ${QT_QT3SUPPORT_LIBRARY_RELEASE})
+    endif()
+    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${libs} )
+    # install plugins
+    FILE(GLOB plugin "${QT_PLUGINS_DIR}/accessible/*qtaccessiblecompatwidgets*")
+    BRAINVISA_INSTALL( FILES ${plugin}
+      DESTINATION "lib/qt-plugins/accessible"
+      COMPONENT "${component}" )
+    FILE(GLOB plugin "${QT_PLUGINS_DIR}/designer/*qt3supportwidgets*")
+    BRAINVISA_INSTALL( FILES ${plugin}
+      DESTINATION "lib/qt-plugins/designer"
+      COMPONENT "${component}" )
+    set(${component}_PACKAGED TRUE PARENT_SCOPE)
   else()
-    set(libs ${QT_QT3SUPPORT_LIBRARY_RELEASE})
+    set(${component}_PACKAGED FALSE PARENT_SCOPE)
   endif()
-  BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${libs} )
-  # install plugins
-  FILE(GLOB plugin "${QT_PLUGINS_DIR}/accessible/*qtaccessiblecompatwidgets*")
-  BRAINVISA_INSTALL( FILES ${plugin}
-    DESTINATION "lib/qt-plugins/accessible"
-    COMPONENT "${component}" )
-  FILE(GLOB plugin "${QT_PLUGINS_DIR}/designer/*qt3supportwidgets*")
-  BRAINVISA_INSTALL( FILES ${plugin}
-    DESTINATION "lib/qt-plugins/designer"
-    COMPONENT "${component}" )
-
 endfunction()
 

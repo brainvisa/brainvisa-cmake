@@ -8,7 +8,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libsqlite3-0 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libssl RUN )
   # dependency due to matplotlib: some backends are linked to cairo
-  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libcairo2 RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libcairo2 RUN )
 endfunction()
 
 

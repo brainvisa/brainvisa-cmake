@@ -138,6 +138,12 @@ groupsDefinition = {
     't1mri/*-gpl',
     'pyhrf/*',
   ],
+  'anatomist': [
+    'aims/*',
+    'brainvisa-share/*',
+    'anatomist/*',
+    'development/brainvisa-cmake',
+  ],
 }
 
 projectPerComponent = {}

@@ -1,0 +1,50 @@
+#! /bin/sh
+
+project=anatomist
+version=trunk
+
+# Compilation options
+make_options="-j2"
+
+# Directory wher the sources will be downloaded
+sources="$HOME/sources"
+
+# Build directory
+build="$HOME/build"
+
+# Install directory
+install="$HOME/install"
+
+# Subversion login
+username=brainvisa
+password=Soma2009
+
+
+# Download brainvisa-cmake
+bvcmake=`mktemp -d`
+svn --username "$username" --password "$password" export --force https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/trunk "$bvcmake"
+# Install brainvisa-cmake in sources
+cd "$bvcmake"
+cmake -DCMAKE_INSTALL_PREFIX="$sources" .
+make install
+rm -Rf "$bvcmake"
+
+# Download sources
+svn export --force https://bioproj.extra.cea.fr/neurosvn/brainvisa/source_views/$project/$version "$sources"
+
+
+# At this point the source directory is ready for compilation and can be put in a tarball somewhere
+
+
+# Configure build directory
+"$sources/bin/bv_maker" --build "$build" configure
+
+
+# Compilation
+cd "$build"
+make $make_options
+
+
+# Installation
+"$build/bin/bv_packaging" dir -o "$install" --no-deps  --bv_env
+

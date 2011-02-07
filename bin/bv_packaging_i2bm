@@ -1,0 +1,182 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+#  This software and supporting documentation are distributed by
+#      Institut Federatif de Recherche 49
+#      CEA/NeuroSpin, Batiment 145,
+#      91191 Gif-sur-Yvette cedex
+#      France
+#
+# This software is governed by the CeCILL-B license under
+# French law and abiding by the rules of distribution of free software.
+# You can  use, modify and/or redistribute the software under the 
+# terms of the CeCILL-B license as circulated by CEA, CNRS
+# and INRIA at the following URL "http://www.cecill.info". 
+#
+# As a counterpart to the access to the source code and  rights to copy,
+# modify and redistribute granted by the license, users are provided only
+# with a limited warranty  and the software's author,  the holder of the
+# economic rights,  and the successive licensors  have only  limited
+# liability.
+#
+# In this respect, the user's attention is drawn to the risks associated
+# with loading,  using,  modifying and/or developing or reproducing the
+# software by the user in light of its specific status of free software,
+# that may mean  that it is complicated to manipulate,  and  that  also
+# therefore means  that it is reserved for developers  and  experienced
+# professionals having in-depth computer knowledge. Users are therefore
+# encouraged to load and test the software's suitability as regards their
+# requirements in conditions enabling the security of their systems and/or 
+# data to be ensured and,  more generally, to use and operate it in the 
+# same conditions as regards security.
+#
+# The fact that you are presently reading this means that you have had
+# knowledge of the CeCILL-B license and that you accept its terms.
+import sys, os, time, tempfile, platform, shutil, string
+
+def whoIsLogged():
+  if platf == 'linux':
+    pts = os.readlink( '/proc/self/fd/1' )
+    for l in [i.split() for i in os.popen( 'who' )]:
+      if pts == '/dev/' + l[ 1 ]:
+        return l[ 0 ]
+    return '<unknown>'
+  else:
+    return os.getenv( 'USER' )
+
+platf = sys.platform
+if platf[:5] == 'linux':
+  platf = 'linux'
+elif platf[:6] == 'sunos5':
+  platf = 'solaris'
+elif platf[:4] == 'irix':
+  platf = 'irix'
+elif platf[:4] == 'osf1':
+  platf = 'tru64'
+elif platf[:5] == 'win32':
+  platf = 'windows'
+elif platf[:6] == 'darwin':
+  platf = 'darwin'
+elif platf[:6] == 'cygwin':
+  platf = 'cygwin'
+else:
+  print >> sys.stderr, 'WARNING: Unsupported platform', platf
+
+
+home = os.environ.get( 'BRAINVISA_SOURCES', None )
+if home is None:
+  home = os.environ[ 'HOME' ]
+
+# Check system for installation
+systemidentificationpath = os.path.join( os.path.dirname( sys.argv[0] ), 
+  'bv_system_info' )
+system = os.popen( 'python ' + systemidentificationpath ).read()[ :-1 ]
+
+from optparse import OptionParser
+
+parser = OptionParser( usage='%prog [options] version', 
+  version='%prog 1.0',
+  description = 'Creates a BrainVISA package.' )
+parser.add_option( '-i', '--i2bm',
+                   action='store_true', dest='i2bm', default=False,
+                   help = 'Creates a package for I2BM users, some private packages are included.' )
+parser.add_option( '-n', '--no-compression',
+                   action='store_false', dest='compression', default=True,
+                   help = 'Do not compress and erase the final package directory.' )
+parser.add_option( '-v', '--verbose',
+                   action='store_true', dest='verbose', default=False,
+                   help = 'Verbose output.' )
+parser.add_option( '-o', '--output', action='store', type='string', dest='packdir',
+                   default="/tmp", help='Package base directory (default: /tmp)' )
+
+options, args = parser.parse_args()
+if len( args ) != 1:
+  parser.error( 'Invalid arguments. Try "' + sys.argv[ 0 ] + ' --help" to get some help.' )
+
+version = args[ 0 ]
+date = time.strftime( '%Y_%m_%d' )
+
+if version == 'stable':
+  version='stable'
+  packVersion = '4.0.2-' + date
+  shortVersion = '4.0'
+  setupOptions = ''
+  # for separate distribution, fmri is not in this list
+  packages="+type=run +type=usrdoc -project=pyhrf -project=fmri -project=famis -project=sandbox -name='web*' -project=axon_web -project=installer"
+  if not options.i2bm:
+    packages += " -project=nuclear_processing -project=data_storage_client"
+elif version == 'trunk' or version == 'devel':
+  version='trunk'
+  packVersion = 'devel_4.1-' + date
+  shortVersion = '4.1'
+  setupOptions = ' --binSuffix=-' + date
+  packages="+type=run +type=usrdoc -project=famis -project=sandbox -name='web*' -project=axon_web -project=installer"
+  if not options.i2bm:
+    packages += " -project=nuclear_processing -project=data_storage_client"
+else:
+  parser.error( 'Invalid version. Possible values are: "stable" and "trunk"' )
+
+packBaseName = 'brainvisa-' + system
+packName = packBaseName + '-' + packVersion
+if options.i2bm: packName += 'i2bm'
+
+if options.packdir:
+  packDir = options.packdir
+else:
+  packDir="/tmp"
+
+count = 0
+packName0 = packBaseName + '-' + packVersion
+while os.path.exists( os.path.join( packDir, packName ) ):
+  print >> sys.stderr, 'Warning: package "' + os.path.join( packDir, packName ) + '" exists'
+  count += 1
+  packName = packName0 + '-' + str( count )
+  if options.i2bm:
+    packName += 'i2bm'
+if count:
+  packVersion += '-' + str( count )
+
+lock = open( os.path.join( packDir, packName+'_info.txt' ), 'w' )
+
+if options.verbose:
+  for n in ( 'packName', 'packDir' ):
+    print n, '=', repr( locals()[ n ] )
+try:
+  print >> lock, 'package name:', packName
+  print >> lock, 'user:', whoIsLogged()
+  print >> lock, 'starting time:', time.asctime()
+  print >> lock, 'host:', os.environ.get( 'HOSTNAME', '<unknown>' )
+  print >> lock, 'system:', system
+  try:
+    print >> lock, 'packager:', parser.expand_prog_name( parser.version )
+  except AttributeError:
+    print >> lock, 'packager:', sys.argv[0], parser.version
+  print >> lock, 'options:', ' '.join( [repr(i) for i in sys.argv[1:] ] )
+  print >> lock, 'package directory:', packDir
+  print >> lock, '-' * 80
+  lock.flush()
+  
+  # Create package with bv_packaging
+  bv_packaging = 'python ' + os.path.join( os.path.dirname( sys.argv[0] ), 
+    'bv_packaging' )
+  command = bv_packaging 
+  if options.compression:
+    dest = os.path.join( packDir, packName+".tar.bz2" )
+    command = bv_packaging + " pack "
+  else:
+    dest = os.path.join( packDir, packName )
+    command = bv_packaging + " dir "
+  command = command + ' -o ' + dest + " --bv_env " + packages
+  
+  if lock is not None:
+    print >> lock, command
+  print command
+  sys.stdout.flush()
+  
+  os.system( command )
+  
+finally:
+  if lock is not None:
+    lock.close()
+
+

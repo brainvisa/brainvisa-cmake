@@ -24,18 +24,20 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
                       COMPONENT "${component}" )
   
     # qtconfig: it can be a link to qtconfig-qt4 for example
-    get_filename_component(qtconfig_realpath "${QT_BINARY_DIR}/qtconfig" REALPATH)
-    get_filename_component(qtconfig_name "${qtconfig_realpath}" NAME )
-    BRAINVISA_INSTALL( FILES "${qtconfig_realpath}"
-      DESTINATION "bin"
-      COMPONENT "${component}"
-      PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
-    if(NOT qtconfig_name STREQUAL "qtconfig")
-      add_custom_command( TARGET install-${component} POST_BUILD
-                        COMMAND "${CMAKE_COMMAND}" -E create_symlink "${qtconfig_name}" "qtconfig"
-                        WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/bin")
+    if( EXISTS "${QT_BINARY_DIR}/qtconfig" )
+      get_filename_component(qtconfig_realpath "${QT_BINARY_DIR}/qtconfig" REALPATH)
+      get_filename_component(qtconfig_name "${qtconfig_realpath}" NAME )
+      BRAINVISA_INSTALL( FILES "${qtconfig_realpath}"
+        DESTINATION "bin"
+        COMPONENT "${component}"
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
+      if(NOT qtconfig_name STREQUAL "qtconfig")
+        add_custom_command( TARGET install-${component} POST_BUILD
+                          COMMAND "${CMAKE_COMMAND}" -E create_symlink "${qtconfig_name}" "qtconfig"
+                          WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/bin")
+      endif()
     endif()
-  
+
     # create qt.conf to enable finding qt plugins
     if(QT_VERSION_MAJOR GREATER 4 OR QT_VERSION_MAJOR EQUAL 4)
       set(dest "bin")

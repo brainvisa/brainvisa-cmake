@@ -1075,7 +1075,7 @@ endfunction()
 #
 function( BRAINVISA_GENERATE_DOCBOOK_DOC )
   BRAINVISA_FIND_PACKAGE(documentation QUIET)
-  if(DOCUMENTATION_FOUND)
+  if(DOCUMENTATION_FOUND AND DOCUMENTATION_DOCBOOK)
     set( args "${ARGN}" )
     list( FIND args EXCLUDE result )
     set( exclude )
@@ -1084,7 +1084,6 @@ function( BRAINVISA_GENERATE_DOCBOOK_DOC )
       list( GET args ${result} exclude )
       list( REMOVE_AT args ${result} )
     endif()
-
     # search doc projects in docbook directory
     set(source_directory "${CMAKE_CURRENT_SOURCE_DIR}/docbook" )
     if(EXISTS "${source_directory}")
@@ -1095,14 +1094,14 @@ function( BRAINVISA_GENERATE_DOCBOOK_DOC )
         #BRAINVISA_GENERATE_TARGET_NAME( usrdoc_target )
         set(usrdoc_target ${doc_project}-usrdocbook)
         add_custom_target( ${usrdoc_target}
-          COMMAND "${BUILDDOC_COMMAND}" -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m m -p "${doc_project}" --total --id --doc_ver  "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" --base_dir "${documentation_SOURCE_DIR}"
-          COMMAND "${BUILDDOC_COMMAND}" -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m t -p "${doc_project}" --total --id --doc_ver  "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" --base_dir "${documentation_SOURCE_DIR}" )
+          COMMAND "${BUILDDOC_COMMAND}" -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m m -p "${doc_project}" --total --id --doc_ver  "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" --base_dir "${documentation_SOURCE_DIR}" --xalan "${XALAN_EXECUTABLE}" --xsl_stylesheet "${DOCBOOK_XSL_STYLESHEET}" --dtd "${DOCBOOK_DTD}"
+          COMMAND "${BUILDDOC_COMMAND}" -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m t -p "${doc_project}" --total --id --doc_ver  "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" --base_dir "${documentation_SOURCE_DIR}" --xalan "${XALAN_EXECUTABLE}" --xsl_stylesheet "${DOCBOOK_XSL_STYLESHEET}" --dtd "${DOCBOOK_DTD}" )
         add_dependencies(${PROJECT_NAME}-usrdoc ${usrdoc_target})
         # dev doc
         #BRAINVISA_GENERATE_TARGET_NAME( devdoc_target )
         set(devdoc_target ${doc_project}-devdocbook)
         add_custom_target( ${devdoc_target}
-          COMMAND ${BUILDDOC_COMMAND} -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m p -p "${doc_project}" --total --id --doc_ver "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" --base_dir "${documentation_SOURCE_DIR}" )
+          COMMAND ${BUILDDOC_COMMAND} -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m p -p "${doc_project}" --total --id --doc_ver "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" --base_dir "${documentation_SOURCE_DIR}" --xalan "${XALAN_EXECUTABLE}" --xsl_stylesheet "${DOCBOOK_XSL_STYLESHEET}" --dtd "${DOCBOOK_DTD}" )
         add_dependencies(${PROJECT_NAME}-devdoc ${devdoc_target})
         
         list( FIND exclude ${doc_project} result )
@@ -1127,7 +1126,7 @@ function( BRAINVISA_GENERATE_DOCBOOK_DOC )
       endforeach()
     endif() # exists source directory
   else() # documentation project not found
-    message("Documentation project not found : cannot build docbook documentation.")
+    message("WARNING: Documentation project not found or docbook not available : cannot build docbook documentation.")
   endif()
 
 endfunction()

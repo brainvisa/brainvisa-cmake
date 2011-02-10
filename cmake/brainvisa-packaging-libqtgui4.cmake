@@ -20,7 +20,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${libs} )
     # install plugins
     FILE(GLOB plugin "${QT_PLUGINS_DIR}/accessible/*qtaccessiblewidgets*")
-    if( ${plugin} )
+    if( plugin )
       BRAINVISA_INSTALL( FILES ${plugin}
                         DESTINATION "lib/qt-plugins/accessible"
                         COMPONENT "${component}" )

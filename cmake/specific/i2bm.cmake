@@ -1,6 +1,6 @@
 if( IS_DIRECTORY /i2bm )
   message( STATUS "Add specific paths for CEA - I2BM research labs" )
-  execute_process( COMMAND bv_system_info RESULT_VARIABLE result OUTPUT_VARIABLE output OUTPUT_STRIP_TRAILING_WHITESPACE )
+  execute_process( COMMAND "${CMAKE_BINARY_DIR}/bin/bv_system_info" RESULT_VARIABLE result OUTPUT_VARIABLE output OUTPUT_STRIP_TRAILING_WHITESPACE )
   if( result EQUAL 0 )
     list( FIND CMAKE_PREFIX_PATH "/i2bm/brainvisa/${output}" result )
     if( result EQUAL -1 )

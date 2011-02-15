@@ -580,7 +580,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
       command = [ 'cmake' ]
 
     command += [ '-DCMAKE_BUILD_TYPE:STRING=' + self.build_type, '-C', cmake_path( cmakeFile ), cmake_path( self.directory ) ]
-    system( cwd = os.path.dirname( sys.argv[0] ), *command )
+    system( cwd = self.directory, *command )
   
   
   def build( self ):

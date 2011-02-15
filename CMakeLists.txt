@@ -100,7 +100,6 @@ if( NOT DISABLE_FILE_INSTALLATION_LIST )
                    OUTPUT_QUIET 
                    ERROR_QUIET )
   execute_process( COMMAND "${CMAKE_MAKE_PROGRAM}" install
-                   WORKING_DIRECTORY "${tmp}" 
                    OUTPUT_QUIET 
                    ERROR_QUIET )
   file( GLOB_RECURSE installed_files RELATIVE "${tmp}/install" "${tmp}/install/*" )

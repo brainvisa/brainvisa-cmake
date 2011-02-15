@@ -1480,3 +1480,77 @@ function( BRAINVISA_ADD_TRANSLATION source_share_dir dest_share_dir component)
       COMPONENT ${component} )
   endforeach()
 endfunction()
+
+# BRAINVISA_FIND_FSENTRY
+#   Find file system entries from PATHS using search PATTERNS.
+#
+# Usage:
+#
+#   BRAINVISA_FIND_FSENTRY( output_variable PATTERNS [ <pattern> ... ] PATHS [ <path> ... ] )
+#
+# Example:
+#    BRAINVISA_FIND_FSENTRY( real_files PATTERNS *.so PATHS /usr/lib/ )
+#    foreach( file ${real_files} )
+#      message( "${file}" )
+#    endforeach()
+function( BRAINVISA_FIND_FSENTRY output_variable )
+  set(_argn ${ARGN})
+  
+  # Read options
+  set( arg_index 0 )
+  foreach( _arg ${_argn} )
+  
+    if( "${_arg}" STREQUAL "PATTERNS" OR 
+        "${_arg}" STREQUAL "PATHS" )
+      set(_currentarg "${_arg}")
+      
+    elseif( "${_currentarg}" STREQUAL "PATTERNS" )
+      list( GET _argn ${arg_index} result )
+      set( _patterns ${_patterns} ${result} )
+      
+    elseif( "${_currentarg}" STREQUAL "PATHS" )
+      list( GET _argn ${arg_index} result )
+      set( _paths ${_paths} ${result} )
+      
+    endif()
+    
+    math(EXPR arg_index "${arg_index} + 1")
+  endforeach()
+  
+  # Set default option values
+  list( LENGTH _patterns _len)
+  if( _len EQUAL 0 )
+    set( _patterns "*" )
+  endif()
+    
+  list( LENGTH _paths _len)
+  if( _len EQUAL 0 )
+    set( _paths "${CMAKE_CURRENT_SOURCE_DIR}" $ENV{PATH} )
+  endif()
+  
+  set( result )    
+  foreach( _path ${_paths} )
+    string( LENGTH "${_path}" _path_len )
+    foreach( _pattern ${_patterns} )
+      string( LENGTH "${_pattern}" _pattern_len )
+      if ( _path_len EQUAL 0 )
+        set( _path "${_pattern}" )
+      elseif ( _pattern_len EQUAL 0 )
+        set( _path "${_path}" )
+      else()
+        set( _path "${_path}/${_pattern}" )
+      endif()
+      file( TO_CMAKE_PATH "${_path}" _path )      
+      file( GLOB glob_result "${_path}" )
+      
+      BRAINVISA_REAL_PATHS( _realpaths ${glob_result} )
+      foreach( _realpath ${_realpaths} )
+        list( FIND result ${_realpath} _pathfound )
+        if( _pathfound EQUAL -1 )
+          set( result ${result} "${_realpath}" )
+        endif()
+      endforeach()
+    endforeach()
+  endforeach()
+  set( ${output_variable} ${result} PARENT_SCOPE )
+endfunction()

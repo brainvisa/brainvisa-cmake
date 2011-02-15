@@ -16,6 +16,10 @@ else()
       file( GLOB LIBGFORTRAN /usr/lib/libgfortran.so.? )
     endif()
   endif()
+  if( WIN32 AND NOT LIBGFORTRAN )
+    BRAINVISA_FIND_FSENTRY( LIBGFORTRAN PATTERNS "libgfortran*" PATHS $ENV{PATH} )
+  endif()
+  
   # g2c doesn't mean to be mandatory on ubuntu or macos
   find_library( LIBG2C g2c )
   if( NOT LIBG2C )

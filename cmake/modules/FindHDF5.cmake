@@ -1,4 +1,4 @@
-# Try to find the minc library
+# Try to find the hdf5 library
 # Once done this will define
 #
 # HDF5_FOUND        - system has minc and it can be used

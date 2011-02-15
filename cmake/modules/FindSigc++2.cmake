@@ -31,6 +31,21 @@ else()
     find_library( Sigc++2_LIBRARIES sigc-2.0 )
     if( Sigc++2_INCLUDE_DIR AND Sigc++2_INCLUDE_CONFIG_DIR AND Sigc++2_LIBRARIES )
       set( Sigc++2_FOUND TRUE )
+    elseif( WIN32 )
+      brainvisa_find_fsentry( Sigc++2_LIBRARIES PATTERNS "libsigc-2.0*" PATHS $ENV{PATH} )
+      if ( Sigc++2_LIBRARIES )
+        get_filename_component( result "${Sigc++2_LIBRARIES}" PATH )
+        find_path( Sigc++2_INCLUDE_DIR sigc++/sigc++.h  
+          PATHS "${result}/../include"
+          PATH_SUFFIXES sigc++-2.0 )
+        find_path( Sigc++2_INCLUDE_CONFIG_DIR sigc++config.h
+          PATHS "${result}/../lib"
+          PATH_SUFFIXES sigc++-2.0 sigc++-2.0/include )
+          
+        if (Sigc++2_INCLUDE_DIR AND Sigc++2_INCLUDE_CONFIG_DIR)
+          set( Sigc++2_FOUND TRUE )
+        endif()
+      endif()
     endif()
     
     set( Sigc++2_INCLUDE_DIRS "${Sigc++2_INCLUDE_DIR}" "${Sigc++2_CONFIG_INCLUDE_DIR}" CACHE PATH "paths to Sigc++2 header files" )

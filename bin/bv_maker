@@ -61,7 +61,12 @@ def system( *args, **kwargs ):
   if result != 0:
     raise OSError( 'Command failed: ' + ' '.join( ( repr(i) for i in args ) ) )
 
-
+def cmake_path( path ):
+  if sys.platform == 'win32':
+    return path.replace( '\\', '/' )
+  else :
+    return path
+    
 def copy_brainvisa_cmake( installDir ):
   global this_script
   sourceDir = os.path.dirname( os.path.dirname( this_script ) )
@@ -557,9 +562,7 @@ class BuildDirectory( object ):
     print >> out, 'set( _BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" FORCE )'
     print >> out
     for component, directory in self.components.iteritems():
-      if sys.platform == 'win32':
-        directory = directory.replace( '\\', '/' )
-      print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + directory + '" CACHE STRING "Sources directory for component ' + component + '" FORCE )'
+      print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + cmake_path( directory ) + '" CACHE STRING "Sources directory for component ' + component + '" FORCE )'
 
     cmakeLists = os.path.join( self.directory, 'CMakeLists.txt' )
     out.close()
@@ -575,8 +578,9 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
       command = [ 'cmake', '-G', 'MSYS Makefiles' ]
     else:
       command = [ 'cmake' ]
-    command += [ '-DCMAKE_BUILD_TYPE:STRING=' + self.build_type, '-C', cmakeFile, self.directory ]
-    system( cwd = self.directory, *command )
+
+    command += [ '-DCMAKE_BUILD_TYPE:STRING=' + self.build_type, '-C', cmake_path( cmakeFile ), cmake_path( self.directory ) ]
+    system( cwd = os.path.dirname( sys.argv[0] ), *command )
   
   
   def build( self ):

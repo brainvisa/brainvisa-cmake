@@ -92,6 +92,11 @@ install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
 # Generate a list of all brainvisa-cmake installed files
 # so that bv_maker can copy and already installed brainvisa-cmake
 if( NOT DISABLE_FILE_INSTALLATION_LIST )
+  # Must remove the CMakeCache before configuring again brainvisa-cmake into a new tmp build directory, 
+  # else the source directory is considered as a build directory and the build files are not copied into tmp directory
+  if( EXISTS "${CMAKE_BINARY_DIR}/CMakeCache.txt" )
+    execute_process( COMMAND "${CMAKE_COMMAND}" -E remove "${CMAKE_BINARY_DIR}/CMakeCache.txt" )
+  endif()
   set( tmp "${CMAKE_BINARY_DIR}/tmp" )
   execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${tmp}" )
   execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${tmp}/install" )
@@ -100,6 +105,7 @@ if( NOT DISABLE_FILE_INSTALLATION_LIST )
                    OUTPUT_QUIET 
                    ERROR_QUIET )
   execute_process( COMMAND "${CMAKE_MAKE_PROGRAM}" install
+                   WORKING_DIRECTORY "${tmp}" 
                    OUTPUT_QUIET 
                    ERROR_QUIET )
   file( GLOB_RECURSE installed_files RELATIVE "${tmp}/install" "${tmp}/install/*" )

@@ -12,6 +12,7 @@ if( DOCBOOK_XSL_STYLESHEET AND DOCBOOK_DTD)
 else()
   
   find_file(xsl NAMES catalog.xml
+  PATHS ENV XSL_STYLESHEET
   PATH_SUFFIXES docbook-xsl share/docbook-xsl share/xml/docbook/stylesheet/docbook-xsl)
   
   if(xsl)
@@ -20,6 +21,7 @@ else()
   unset(xsl CACHE)
   
   find_file(dtd NAMES docbookx.dtd
+    PATHS ENV DTD
     PATH_SUFFIXES share/xml/docbook/schema/dtd/4.4 share/sgml/docbook/xml-dtd-4.4)
   if(dtd)
     get_filename_component(DOCBOOK_DTD ${dtd} PATH CACHE)

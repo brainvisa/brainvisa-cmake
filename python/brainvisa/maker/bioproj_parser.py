@@ -43,6 +43,7 @@ BRAINVISA_SVN_URL = SVN_URL + '/brainvisa'
 # will be added at the end of this list in an unknown order.
 projects = [ 
   'development',
+  'comunication', 
   'installer',
   'brainvisa-share',
   'soma',
@@ -63,8 +64,7 @@ projects = [
   'fmri',
   'famis',
   'sandbox',
-  'ptk',
-  'communication',
+  'ptk'
 ]
 
 excludeProjects = set()
@@ -75,6 +75,7 @@ excludeComponents = set()
 # in BioProj will be added in an unknown order.
 componentsPerProject = {
  'development': [ 'brainvisa-cmake', 'brainvisa-svn' ],
+ 'communication': [ 'documentation', 'bibliography', 'latex', 'web' ],
  'aims': [ 'aims-free', 'aims-gpl' ],
  'anatomist': [ 'anatomist-free', 'anatomist-gpl' ],
  'brainrat': [ 'brainrat-gpl', 'brainrat-private', 'bioprocessing' ],
@@ -89,7 +90,6 @@ componentsPerProject = {
  't1mri': [ 't1mri-private', 't1mri-gpl' ],
  'famis': [ 'famis-private', 'famis-gpl' ],
  'pyhrf': [ 'pyhrf-free', 'pyhrf-gpl' ],
- 'communication': [ 'bibliography', 'latex', 'web', 'documentation' ],
 }
 
 

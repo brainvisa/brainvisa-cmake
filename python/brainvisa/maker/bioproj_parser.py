@@ -43,7 +43,7 @@ BRAINVISA_SVN_URL = SVN_URL + '/brainvisa'
 # will be added at the end of this list in an unknown order.
 projects = [ 
   'development',
-  'comunication', 
+  'communication', 
   'installer',
   'brainvisa-share',
   'soma',

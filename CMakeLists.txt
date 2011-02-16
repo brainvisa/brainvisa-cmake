@@ -100,7 +100,12 @@ if( NOT DISABLE_FILE_INSTALLATION_LIST )
   set( tmp "${CMAKE_BINARY_DIR}/tmp" )
   execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${tmp}" )
   execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${tmp}/install" )
-  execute_process( COMMAND "${CMAKE_COMMAND}" -DDISABLE_FILE_INSTALLATION_LIST=YES "-DCMAKE_INSTALL_PREFIX:STRING=${tmp}/install" "${CMAKE_CURRENT_SOURCE_DIR}"
+  if(WIN32)
+    set( adding_option "-G" "MSYS Makefiles" )
+  else()
+    set( adding_option "" )
+  endif()
+  execute_process( COMMAND "${CMAKE_COMMAND}" ${adding_option} -DDISABLE_FILE_INSTALLATION_LIST=YES "-DCMAKE_INSTALL_PREFIX:STRING=${tmp}/install" "${CMAKE_CURRENT_SOURCE_DIR}"
                    WORKING_DIRECTORY "${tmp}" 
                    OUTPUT_QUIET 
                    ERROR_QUIET )

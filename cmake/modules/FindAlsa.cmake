@@ -10,7 +10,7 @@ if( ALSA_LIBRARIES )
   set( ALSA_FOUND true )
 
 else()
-  FIND_PATH( ALSA_INCLUDE_DIR alsa/libasound.h )
+  FIND_PATH( ALSA_INCLUDE_DIR alsa/asoundlib.h )
 
   find_library( ALSA_LIBRARIES asound )
 

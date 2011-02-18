@@ -57,7 +57,7 @@ set_variables = {
 path_prepend = {
   'DCMDICTPATH': [ install_directory + '/lib/dicom.dic' ],
   'PYTHONPATH': [ install_directory + '/python' ],
-  'PATH': [ install_directory + '/bin/real-commands', install_directory + '/bin' ],
+  'PATH': [ install_directory + '/bin/real-bin', install_directory + '/bin' ],
   'LD_LIBRARY_PATH': [ install_directory + '/lib' ],
 }
 

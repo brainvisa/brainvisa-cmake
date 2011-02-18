@@ -246,6 +246,10 @@ fi
 ''' )
         out.close()
         os.chmod( source, os.stat( dest ).st_mode )
+      elif os.path.islink(source):
+        # copy the symlink into real-bin
+        dest=os.readlink(source)
+        os.symlink(dest, os.path.join(realbindir, os.path.basename(source)))
         
   if list_installed_paths:
     result = {}

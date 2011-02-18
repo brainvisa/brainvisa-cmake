@@ -1,0 +1,253 @@
+#!/bin/sh
+
+if [ -f /etc/profile ]; then
+  # Load global profile to have minimal environment variables
+  . /etc/profile
+fi
+# do not suppress the logs
+dellogs=1
+sendmail=1
+
+LIBRARY_PATHVAR=LD_LIBRARY_PATH
+binary_dir=`dirname $0`
+os="$($binary_dir/bv_system_info -p)"
+
+svn_update=0
+if [ $# -gt 0 ]; then
+  if [ $1 = '--update' ]; then
+    svn_update=1
+    
+  elif [ $1 = '--help' -o $1 = '-h' ]; then
+    echo $0 " : Runs bv_maker configure build doc and send an email if there are errors. "
+    echo "Options : "
+    echo "   --update : update svn repository with bv_maker sources "
+    exit 0
+  fi
+  # remove the arg to avoid passing it to the profile script that is sourced later
+  shift
+fi
+
+case ${os} in
+  linux | windows | macos)
+    case ${os} in
+      windows)
+        LIBRARY_PATHVAR=PATH
+        ;;
+      macos)
+        LIBRARY_PATHVAR=DYLD_LIBRARY_PATH
+        ;;
+    esac
+
+    # Setup i2bm profile
+    . /i2bm/local/etc/profile
+    
+    # choose the qt version used for compilation
+    export I2BM_QT=4
+
+    i2bm_setup_devel
+  
+    # remove distcc on linux
+    i2bm_pathvar_remove PATH /usr/lib64/distcc/bin
+    i2bm_pathvar_remove PATH /usr/lib/distcc/bin
+
+    case ${os} in
+      macos)
+        . ${HOME}/.bashrc
+        ;;
+    esac
+    ;;
+  *)
+    exit 1
+    ;;
+esac
+
+date=`date '+%Y%m%d'`
+startime=`date '+%Y/%m/%d %H:%M'`
+
+log="/tmp/buildlog-$date.tmp"
+rm -f "$log"
+
+bv_configure()
+{
+  stderr="/tmp/buildout-configure-$date.tmp"
+  # delete log if it already exists
+  rm -f "$stderr"
+  echo "Configure "
+  $binary_dir/bv_maker configure >"$stderr" 2>&1
+  
+  # if errors detected copy output file into log
+  if grep '^[ \t]*Error' "$stderr" >/dev/null 2>&1
+  then
+    echo "==================================================" >>"$log"
+    echo " bv_maker configure" >>"$log"
+    echo "==================================================" >>"$log"
+    echo >>"$log"
+    echo "PATH: "$PATH >>"$log"
+    echo "${LIBRARY_PATHVAR}: "${!LIBRARY_PATHVAR} >>"$log"
+    echo >>"$log"
+    cat "$stderr" >>"$log"
+    echo >>"$log"
+    echo >>"$log"
+  fi
+  [ $dellogs = 0 ] || (
+    # delete output file
+    rm -f "$stderr"
+  )
+}
+
+bv_build() {
+  stderr="/tmp/buildout-build-$date.tmp"
+  # delete log if it already exists
+  rm -f "$stderr"
+  # build target, redirecting all output
+  echo "Build "
+  $binary_dir/bv_maker build >"$stderr" 2>&1
+
+  status=$?
+  # if errors detected copy output file into log
+  if [ $status -ne 0 ]
+  then
+    echo "==================================================" >>"$log"
+    echo "     command: bv_maker build " >>"$log"
+    echo "==================================================" >>"$log"
+    echo >>"$log"
+    echo "PATH: "$PATH >>"$log"
+    echo "${LIBRARY_PATHVAR}: "${!LIBRARY_PATHVAR} >>"$log"
+    echo >>"$log"
+    cat "$stderr" >>"$log"
+    echo >>"$log"
+    echo >>"$log"
+  fi
+  [ $dellogs = 0 ] || (
+    # delete output file
+    rm -f "$stderr"
+  )
+}
+
+
+bv_doc() {
+  stderr="/tmp/buildout-doc-$date.tmp"
+  rm -f "$stderr"
+  # rm -f "$stdout"
+  # build documentation, redirecting all output
+  echo "Doc "
+  $binary_dir/bv_maker doc 1>/dev/null 2>"$stderr"
+  status=$?
+  # if errors detected copy output file into log
+  if [ $status -ne 0 ]
+  then
+    echo "==================================================" >>"$log"
+    echo "   documentation:" >>"$log"
+    echo "         command: bv_maker doc" >>"$log"
+    echo "==================================================" >>"$log"
+    echo >>"$log"
+    echo "PATH: "$PATH >>"$log"
+    echo "${LIBRARY_PATHVAR}: "${!LIBRARY_PATHVAR} >>"$log"
+    echo >>"$log"
+    cat "$stderr" >>"$log"
+    echo >>"$log"
+    echo >>"$log"
+  fi
+
+  [ $dellogs = 0 ] || (
+    # delete output file
+    rm -f "$stderr"
+  )
+}
+
+if [ $svn_update -eq 1 ]; then
+  # add package name and date to output file
+  stderr="/tmp/buildout-update-$date.tmp"
+  
+  $binary_dir/bv_maker sources 2>&1 >/dev/null | cat >>"$stderr"
+  
+  # if errors detected copy output file into log
+  if [ -s "$stderr" ]
+  then
+      echo "==================================================" >>"$log"
+      echo "          Updating svn repository" >>"$log"
+      echo "==================================================" >>"$log"
+      echo >> "$log"
+      echo "PATH: "$PATH >>"$log"
+      echo "${LIBRARY_PATHVAR}: "${!LIBRARY_PATHVAR} >>"$log"
+      echo >>"$log"
+      cat "$stderr" >> "$log"
+      echo >> "$log"
+      echo >> "$log"
+  fi
+  # delete output file
+  [ $dellogs = 0 ] || (
+    # delete output file
+    rm -f "$stderr"
+  )
+fi
+
+bv_configure
+bv_build
+bv_doc
+
+echo "End compile and doc "
+
+buildlog="$HOME/builds.log"
+if [ ! -f "$buildlog" ]
+then
+    touch "$buildlog"
+fi
+
+stoptime=`date '+%Y/%m/%d %H:%M'`
+# Get current machine without its domain name
+machine=$(uname -n | sed "s/\([^\.]\)\..*/\1/" | awk '{print tolower($1)}')
+# Get current user without its domain name on windows
+user=$(whoami | sed "s/[^\\]*\\\\\(.*\)/\1/")
+from="${user}-$machine"
+if [ -n "${I2BM_SERVICE}" ]; then
+  from="${from}-${I2BM_SERVICE}"
+fi
+from="${from}@intra.cea.fr"
+replyto="appli@saxifrage.saclay.cea.fr"
+buildmessage="/tmp/buildlog-$date.msg"
+
+if [ -s "$log" ]
+then
+  echo "Error - build started $startime, stopped $stoptime on $machine ($os)" >>"$buildlog"
+
+  # send error message
+  to="appli@saxifrage.saclay.cea.fr"
+  
+  # create error message in temporary file
+  (
+    echo "MIME-Version: 1.0"
+    echo "Content-Transfer-Encoding: 8bit"
+    echo "Content-Type: text/plain; charset=\"utf-8\""
+    echo "Reply-To: ${replyto}"
+    echo "Subject: Error - build `date '+%Y/%m/%d'` on $machine ($os)"
+    echo
+    cat "$log"
+  ) > "${buildmessage}"
+else
+  echo "Success - build started $startime, stopped $stoptime on $machine ($os), log file = $log" >>"$buildlog"
+
+  # send success message
+  to="nicolas.souedet@cea.fr"
+
+  # create success message in temporary file
+  (
+    echo "MIME-Version: 1.0"
+    echo "Content-Transfer-Encoding: 8bit"
+    echo "Content-Type: text/plain; charset=\"utf-8\""
+    echo "Reply-To: ${replyto}"
+    echo "Subject: Success - build `date '+%Y/%m/%d'` on $machine ($os - ${systemid})"
+    echo
+    echo "Success - build started $startime, stopped $stoptime on $machine ($os), log file = $log"
+  ) > "${buildmessage}"
+fi
+
+if [ $sendmail -gt 0 ]; then
+  $binary_dir/bv_sendmail "${from}" "${to}" "${buildmessage}"
+fi
+
+[ $dellogs = 0 ] || (
+  # delete output file
+  rm -f "${buildmessage}"
+  rm -f "$log"
+)

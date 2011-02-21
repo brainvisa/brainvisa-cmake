@@ -2,6 +2,8 @@ if( WIN32 )
   message( STATUS "Add specific paths for windows" )
   # Add path to find specific modules for windows
   set( CMAKE_MODULE_PATH "${brainvisa-cmake_DIR}/specific/windows" ${CMAKE_MODULE_PATH} )
+  set( CMAKE_CXX_STANDARD_LIBRARIES "${CMAKE_CXX_STANDARD_LIBRARIES} -lregex" CACHE STRING "Libraries linked by defalut with all C++ applications." FORCE )
+  set( CMAKE_C_STANDARD_LIBRARIES "${CMAKE_C_STANDARD_LIBRARIES} -lregex" CACHE STRING "Libraries linked by defalut with all C applications." FORCE )
   
   # Add msys/mingw default pathes to find binaries, libraries and includes
   set( MSYS_DEFAULT_ROOT "c:/msys/1.0" )

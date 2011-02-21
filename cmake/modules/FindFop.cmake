@@ -12,7 +12,7 @@ if( FOP_EXECUTABLE )
 else( FOP_EXECUTABLE )
   
   find_program( FOP_EXECUTABLE
-    NAMES fop
+    NAMES fop fop.bat
   )
   
   if( FOP_EXECUTABLE )

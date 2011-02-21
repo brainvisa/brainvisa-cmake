@@ -30,7 +30,7 @@ configure_file( cmake/brainvisa-cmake-config-version.cmake.in
 install( FILES "${CMAKE_BINARY_DIR}/${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config.cmake"
                "${CMAKE_BINARY_DIR}/${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config-version.cmake"
          DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake" )
-foreach( _dir cmake cmake/specific cmake/specific/linux_distribution )
+foreach( _dir cmake cmake/specific cmake/specific/linux_distribution cmake/specific/windows )
   file( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/${_dir}/*.cmake" )
   install( FILES ${_files}
            DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/${_dir}" )

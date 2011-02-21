@@ -7,15 +7,13 @@ if( LIBGCC_LIBRARIES )
   # already found  
   set( LIBGCC_FOUND TRUE )
 else()
-  find_library( LIBGCC_LIBRARIES gcc_s )
+  find_library( LIBGCC_LIBRARIES NAMES gcc_s gcc_s_dw2-1 )
   if( NOT LIBGCC_LIBRARIES )
     # On Ubuntu 10.4 libgcc_s is in /lib/libgcc_s.so.1 and CMake cannot find it
     # because there is no /lib/libgcc_s.so
     file( GLOB LIBGCC_LIBRARIES /lib/libgcc_s.so.? )
     if( LIBGCC_LIBRARIES )
       set( LIBGCC_LIBRARIES "${LIBGCC_LIBRARIES}" CACHE PATH "libgcc_s library" FORCE )
-    elseif( WIN32 )
-      BRAINVISA_FIND_FSENTRY( LIBGCC_LIBRARIES PATTERNS "libgcc_s*" PATHS $ENV{PATH} )
     endif()
   endif()
   if( LIBGCC_LIBRARIES )

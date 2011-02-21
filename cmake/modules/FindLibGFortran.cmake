@@ -7,7 +7,7 @@ if( LIBGFORTRAN_LIBRARIES )
   # already found  
   set( LIBGFORTRAN_FOUND TRUE )
 else()
-  find_library( LIBGFORTRAN gfortran )
+  find_library( LIBGFORTRAN gfortran gfortran-3 )
   if( NOT LIBGFORTRAN )
     # On Mandriva-2008 libgfortran is in /usr/lib/libgfortran.so.2 and CMake cannot find it
     # because there is no /usr/lib/libgfortran.so

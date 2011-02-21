@@ -11,7 +11,7 @@ if( XALAN_EXECUTABLE )
 else( )
   
   find_program( XALAN_EXECUTABLE
-    NAMES xalan
+    NAMES xalan xalan.bat
     DOC "Xalan XSLT Processor"
   )
   # if there is no xalan program, search for a jar archive for java

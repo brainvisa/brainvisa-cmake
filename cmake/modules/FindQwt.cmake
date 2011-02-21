@@ -11,21 +11,23 @@ endif()
 
 if( NOT QWT_FOUND )
   set( paths qwt-qt${DESIRED_QT_VERSION} qwt5-qt${DESIRED_QT_VERSION} qwt qwt5 )
-  set( include_paths )
-  set( lib_paths )
+  set( include_paths)
+  set( lib_paths)
   foreach( path ${paths} )
     set( include_paths ${include_paths} "${path}" "${path}/include" )
     set( lib_paths ${lib_paths} "${path}" "${path}/lib" )
   endforeach()
+  set(include_paths ${include_paths} "include")
+  set(lib_paths ${lib_paths} "lib")
 
   # First look only in paths from CMAKE_PREFIX_PATH
   find_path( QWT_INCLUDE_DIR qwt.h 
-             PATHS ${CMAKE_PREFIX_PATH}
+             PATHS ${CMAKE_PREFIX_PATH} ENV QWTDIR
              PATH_SUFFIXES ${include_paths}
              NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH )
   find_library( QWT_LIBRARY 
                 NAMES qwt5-qt${DESIRED_QT_VERSION} qwt-qt${DESIRED_QT_VERSION} qwt5 qwt
-                PATHS ${CMAKE_PREFIX_PATH}
+                PATHS ${CMAKE_PREFIX_PATH} ENV QWTDIR
                 PATH_SUFFIXES ${lib_paths}
                 NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH )
 

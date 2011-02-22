@@ -101,11 +101,11 @@ if( NOT DISABLE_FILE_INSTALLATION_LIST )
   execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${tmp}" )
   execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${tmp}/install" )
   execute_process( COMMAND "${CMAKE_COMMAND}"  "-G" "${CMAKE_GENERATOR}" -DDISABLE_FILE_INSTALLATION_LIST=YES "-DCMAKE_INSTALL_PREFIX:STRING=${tmp}/install" "${CMAKE_CURRENT_SOURCE_DIR}"
-                   WORKING_DIRECTORY "${tmp}" )
+                   WORKING_DIRECTORY "${tmp}"
                    OUTPUT_QUIET 
                    ERROR_QUIET )
   execute_process( COMMAND "${CMAKE_MAKE_PROGRAM}" install
-                   WORKING_DIRECTORY "${tmp}" )
+                   WORKING_DIRECTORY "${tmp}"
                    OUTPUT_QUIET 
                    ERROR_QUIET )
   file( GLOB_RECURSE installed_files RELATIVE "${tmp}/install" "${tmp}/install/*" )

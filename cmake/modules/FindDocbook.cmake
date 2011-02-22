@@ -11,9 +11,16 @@ if( DOCBOOK_XSL_STYLESHEET AND DOCBOOK_DTD)
 
 else()
   
+  # First we only search in environment variable
   find_file(xsl NAMES catalog.xml
   PATHS ENV XSL_STYLESHEET
-  PATH_SUFFIXES docbook-xsl share/docbook-xsl share/xml/docbook/stylesheet/docbook-xsl)
+  NO_DEFAULT_PATH )
+  
+  if( NOT xsl )
+    # Then we do a global search
+    find_file(xsl NAMES catalog.xml
+    PATH_SUFFIXES docbook-xsl share/docbook-xsl share/xml/docbook/stylesheet/docbook-xsl)
+  endif()
   
   if(xsl)
     get_filename_component(DOCBOOK_XSL_STYLESHEET ${xsl} PATH CACHE)

@@ -22,7 +22,7 @@ else( )
         PATH_SUFFIXES share/java
         DOC "Xalan jar file")
       if(xalan_jar)
-        set(XALAN_EXECUTABLE "${JAVA_RUNTIME} -jar ${xalan_jar}")
+        set(XALAN_EXECUTABLE "${JAVA_RUNTIME} -jar ${xalan_jar}" CACHE STRING "Xalan XSLT Processor command")
       endif()
     endif()
   endif()

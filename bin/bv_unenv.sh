@@ -4,8 +4,6 @@ exists() {
   type -t $1 > /dev/null
 }
 
-python="python"
-
 mktemp=`type -t mktemp`
 if [ -z "$mktemp" ]; then
   i=0
@@ -23,23 +21,36 @@ if [ $# -gt 0 ]; then
 else
   if [ "`basename "$0"`" = "bv_unenv.sh" ]; then
     bv_unenv="`dirname "$0"`"
-    if [ -z "$bv_unenv" -o "$bv_unenv" = "." ]; then
-      bv_unenv="$PWD/bv_unenv"
-    else
-      bv_unenv="$bv_unenv/bv_unenv"
-    fi
+    bv_unenv="$bv_unenv/bv_unenv"
   else
     bv_unenv=bv_unenv
     # Try to find bv_unenv location in the shell history
-    exists history && exists tail && exists "$python"
+    exists history && exists tail && exists awk
     if [ $? -eq 0 ]; then
-      bv_unenv="`history | tail -n 1 | "$python" -c 'import sys,os,subprocess; subprocess.call( [ "sh", "-c", "echo " + os.path.abspath( os.path.join( os.path.dirname( sys.stdin.readline().split( None, 3 )[ 2 ] ),"bv_unenv" ) ) ] )' 2>/dev/null`"
-      if [ ! -x "$bv_unenv" ]; then
-        bv_unenv=bv_unenv
-      fi
+      bv_unenv_command=`history | tail -n 1 | awk '{print $3}'`
+      bv_unenv=`dirname $bv_unenv_command`
+      bv_unenv="$bv_unenv/bv_unenv"
     fi
   fi
 fi
-"$bv_unenv" > "$tmp"
+# get fullpath of bv_unenv
+exists readlink
+if [ $? -eq 0 ]; then
+  bv_unenv="`readlink -f $bv_unenv`"
+fi
+if [ ! -x "$bv_unenv" ]; then
+  bv_unenv=bv_unenv
+fi
+
+# try to find python in the real-bin directory of the pack
+# this avoid looping between python and bv_unenv if the python command of the bin directory of the pack is called
+# and it is not necessary to have python on the system where the package is installed
+python="`dirname $bv_unenv`/real-bin/python"
+exists $python
+if [ ! $? -eq 0 ]; then
+  python="python"
+fi
+
+"$python" "$bv_unenv" > "$tmp"
 source "$tmp"
 \rm "$tmp"

@@ -11,8 +11,6 @@ exists() {
   type -t $1 > /dev/null
 }
 
-python="python"
-
 mktemp=`type -t mktemp`
 if [ -z "$mktemp" ]; then
   i=0
@@ -26,27 +24,43 @@ else
 fi
 
 if [ $# -gt 0 ]; then
+  # the directory of the pack is given in parameters
   bv_env="$1/bin/bv_env"
 else
   if [ "`basename "$0"`" = "bv_env.sh" ]; then
+    # the called command is bv_env.sh
     bv_env="`dirname "$0"`"
-    if [ -z "$bv_env" -o "$bv_env" = "." ]; then
-      bv_env="$PWD/bv_env"
-    else
-      bv_env="$bv_env/bv_env"
-    fi
+    bv_env="$bv_env/bv_env"
   else
+    # called source bv_env.sh
     bv_env=bv_env
     # Try to find bv_env location in the shell history
-    exists history && exists tail && exists "$python"
+    exists history && exists tail && exists awk
     if [ $? -eq 0 ]; then
-      bv_env="`history | tail -n 1 | "$python" -c 'import sys,os,subprocess; subprocess.call( [ "sh", "-c", "echo " + os.path.abspath( os.path.join( os.path.dirname( sys.stdin.readline().split( None, 3 )[ 2 ] ),"bv_env" ) ) ] )' 2>/dev/null`"
-      if [ ! -x "$bv_env" ]; then
-        bv_env=bv_env
-      fi
+      bv_env_command=`history | tail -n 1 | awk '{print $3}'`
+      bv_env=`dirname $bv_env_command`
+      bv_env="$bv_env/bv_env"
     fi
   fi
 fi
-"$bv_env" > "$tmp"
+# get fullpath of bv_env
+exists readlink
+if [ $? -eq 0 ]; then
+  bv_env="`readlink -f $bv_env`"
+fi
+if [ ! -x "$bv_env" ]; then
+  bv_env=bv_env
+fi
+
+# try to find python in the real-bin directory of the pack
+# this avoid looping between python and bv_env if the python command of the bin directory of the pack is called
+# and it is not necessary to have python on the system where the package is installed
+python="`dirname $bv_env`/real-bin/python"
+exists $python
+if [ ! $? -eq 0 ]; then
+  python="python"
+fi
+
+"$python" "$bv_env" > "$tmp"
 source "$tmp"
 \rm "$tmp"

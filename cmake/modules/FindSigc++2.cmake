@@ -33,8 +33,8 @@ else()
     if( Sigc++2_INCLUDE_DIR AND Sigc++2_INCLUDE_CONFIG_DIR AND Sigc++2_LIBRARIES )
       set( Sigc++2_FOUND TRUE )
     endif()
-    
-    set( Sigc++2_INCLUDE_DIRS "${Sigc++2_INCLUDE_DIR}" "${Sigc++2_CONFIG_INCLUDE_DIR}" CACHE PATH "paths to Sigc++2 header files" )
+
+    set( Sigc++2_INCLUDE_DIRS "${Sigc++2_INCLUDE_DIR}" "${Sigc++2_INCLUDE_CONFIG_DIR}" CACHE PATH "paths to Sigc++2 header files" )
 
     if( NOT Sigc++2_FOUND )
       if( Sigc++2_FIND_REQUIRED )

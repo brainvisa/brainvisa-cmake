@@ -1,9 +1,22 @@
 if( WIN32 )
   message( STATUS "Add specific paths for windows" )
+  
   # Add path to find specific modules for windows
   set( CMAKE_MODULE_PATH "${brainvisa-cmake_DIR}/specific/windows" ${CMAKE_MODULE_PATH} )
-  set( CMAKE_CXX_STANDARD_LIBRARIES "${CMAKE_CXX_STANDARD_LIBRARIES} -lregex" CACHE STRING "Libraries linked by defalut with all C++ applications." FORCE )
-  set( CMAKE_C_STANDARD_LIBRARIES "${CMAKE_C_STANDARD_LIBRARIES} -lregex" CACHE STRING "Libraries linked by defalut with all C applications." FORCE )
+  
+  # Add additional standard libraries
+  set( _additional_libraries "-lregex" "-lm" "-lz")
+  foreach( _item ${_additional_libraries} )
+    string( REGEX MATCH "(^|[ \t]+)${_item}([ \t]+|$)" _result "${CMAKE_CXX_STANDARD_LIBRARIES}" )
+    if( NOT _result )
+        set( CMAKE_CXX_STANDARD_LIBRARIES "${CMAKE_CXX_STANDARD_LIBRARIES} ${_item}" CACHE STRING "Libraries linked by defalut with all C++ applications." FORCE )
+    endif()
+    
+    string( REGEX MATCH "(^|[ \t]+)${_item}([ \t]+|$)" _result "${CMAKE_C_STANDARD_LIBRARIES}" )
+    if( NOT _result )
+        set( CMAKE_C_STANDARD_LIBRARIES "${CMAKE_C_STANDARD_LIBRARIES} ${_item}" CACHE STRING "Libraries linked by defalut with all C applications." FORCE )
+    endif()
+  endforeach()
   
   # Add msys/mingw default pathes to find binaries, libraries and includes
   set( MSYS_DEFAULT_ROOT "c:/msys/1.0" )

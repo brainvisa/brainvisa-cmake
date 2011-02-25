@@ -8,7 +8,6 @@ fi
 dellogs=1
 sendmail=1
 
-LIBRARY_PATHVAR=LD_LIBRARY_PATH
 binary_dir=`dirname $0`
 os="$($binary_dir/bv_system_info -p)"
 
@@ -27,16 +26,18 @@ if [ $# -gt 0 ]; then
   shift
 fi
 
+LIBRARY_PATHVAR=LD_LIBRARY_PATH
 case ${os} in
-  linux | windows | macos)
-    case ${os} in
-      windows)
-        LIBRARY_PATHVAR=PATH
-        ;;
-      macos)
-        LIBRARY_PATHVAR=DYLD_LIBRARY_PATH
-        ;;
-    esac
+  windows)
+    LIBRARY_PATHVAR=PATH
+    ;;
+  macos)
+    LIBRARY_PATHVAR=DYLD_LIBRARY_PATH
+    ;;
+esac
+
+case ${os} in
+  linux | macos)
 
     # Setup i2bm profile
     . /i2bm/local/etc/profile
@@ -55,6 +56,8 @@ case ${os} in
         . ${HOME}/.bashrc
         ;;
     esac
+    ;;
+  windows)
     ;;
   *)
     exit 1
@@ -236,7 +239,7 @@ else
     echo "Content-Transfer-Encoding: 8bit"
     echo "Content-Type: text/plain; charset=\"utf-8\""
     echo "Reply-To: ${replyto}"
-    echo "Subject: Success - build `date '+%Y/%m/%d'` on $machine ($os - ${systemid})"
+    echo "Subject: Success - build `date '+%Y/%m/%d'` on $machine ($os)"
     echo
     echo "Success - build started $startime, stopped $stoptime on $machine ($os), log file = $log"
   ) > "${buildmessage}"

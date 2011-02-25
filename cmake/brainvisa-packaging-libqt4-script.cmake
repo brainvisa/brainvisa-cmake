@@ -17,10 +17,12 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     endif()
     BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${libs} )
     # install plugins
-    BRAINVISA_INSTALL( DIRECTORY "${QT_PLUGINS_DIR}/script"
+    if( EXISTS "${QT_PLUGINS_DIR}/script" )
+      BRAINVISA_INSTALL( DIRECTORY "${QT_PLUGINS_DIR}/script"
                       DESTINATION "lib/qt-plugins"
                       USE_SOURCE_PERMISSIONS
                       COMPONENT "${component}" )
+    endif()
     set(${component}_PACKAGED TRUE PARENT_SCOPE)
   else()
     set(${component}_PACKAGED FALSE PARENT_SCOPE)

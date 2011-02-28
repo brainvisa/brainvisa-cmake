@@ -22,7 +22,7 @@ if (NUMPY_INCLUDE_DIR)
   set (NUMPY_FOUND TRUE)
   set (NUMPY_INCLUDE_DIR ${NUMPY_INCLUDE_DIR} CACHE STRING "Numpy include path")
   EXEC_PROGRAM ("${PYTHON_EXECUTABLE}"
-    ARGS "-c" "'import numpy; print numpy.version.version'"
+    ARGS "-c" "\"import numpy; print numpy.version.version\""
     OUTPUT_VARIABLE NUMPY_VERSION)
 else (NUMPY_INCLUDE_DIR)
   set(NUMPY_FOUND FALSE)

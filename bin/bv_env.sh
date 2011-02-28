@@ -27,7 +27,7 @@ if [ $# -gt 0 ]; then
   # the directory of the pack is given in parameters
   bv_env="$1/bin/bv_env"
 else
-  if [ "`basename "$0"`" = "bv_env.sh" ]; then
+  if [ "`basename "$0" 2>/dev/null`" = "bv_env.sh" ]; then
     # the called command is bv_env.sh
     bv_env="`dirname "$0"`"
     bv_env="$bv_env/bv_env"

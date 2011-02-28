@@ -1417,6 +1417,7 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
     get_filename_component( ext "${lib}" EXT )
     string(REGEX REPLACE "\\${CMAKE_SHARED_LIBRARY_SUFFIX}.*" "" realpathwe "${real}")
     get_filename_component(realnamewe "${realpathwe}" NAME)
+    get_filename_component(realdir ${real} PATH)
     get_filename_component( name "${lib}" NAME_WE)
     get_filename_component( dirname "${lib}" PATH)
     if(EXISTS "${real}")
@@ -1431,21 +1432,32 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
             # in case the realname of the lib is not the same as the link name, search with 2 glob expressions
             # ex: libsqlite3.so and libsqlite3-3.6.2.so.0
             if(realnamewe STREQUAL name)
-              file( GLOB othernames "${lib}*")
+              if(NOT realdir STREQUAL dirname)
+                file(GLOB othernames "${lib}*" "${realdir}/${realnamewe}${ext}*")
+              else()
+                file( GLOB othernames "${lib}*")
+              endif()
             else()
-              #message("search glob expressions : ${lib}* ${dirname}/${realnamewe}${ext}*")
-              file( GLOB othernames "${lib}*" "${dirname}/${realnamewe}${ext}*" )
+              #message("search glob expressions : ${lib}* ${realdir}/${realnamewe}${ext}*")
+              file( GLOB othernames "${lib}*" "${realdir}/${realnamewe}${ext}*" )
             endif()
           endif()
-          #message("othernames of the lib : ${othernames}")
+          message("othernames of the lib : ${othernames}")
+          # create linknames list to store the processed link names to avoid create several times the same link
+          set(linknames)
           foreach(link ${othernames})
             get_filename_component(linkname ${link} NAME)
-            get_filename_component(linkreal ${link} REALPATH)
-            if(NOT link STREQUAL linkreal AND NOT linkname STREQUAL realname) # if it is really a symlink and it has a name different from the name of the lib
-              add_custom_command( TARGET install-${component} POST_BUILD
-                      COMMAND "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}"
-                      WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/${destination}")
-               #message("Create symlink $(BRAINVISA_INSTALL_PREFIX)/${destination}/${linkname} -> $(BRAINVISA_INSTALL_PREFIX)/${destination}/${realname}")
+            list(FIND linknames ${linkname} link_found)
+            # check it is a new linkname
+            if(link_found EQUAL -1)
+              list(APPEND linknames ${linkname})
+              get_filename_component(linkreal ${link} REALPATH)
+              if(NOT link STREQUAL linkreal AND NOT linkname STREQUAL realname) # if it is really a symlink and it has a name different from the name of the lib
+                add_custom_command( TARGET install-${component} POST_BUILD
+                        COMMAND "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}"
+                        WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/${destination}")
+                message("Create symlink $(BRAINVISA_INSTALL_PREFIX)/${destination}/${linkname} -> $(BRAINVISA_INSTALL_PREFIX)/${destination}/${realname}")
+              endif()
             endif()
           endforeach()
         endif( UNIX OR APPLE )
@@ -1456,7 +1468,7 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
     endif() 
   endforeach()
   # install libraries
-#   message("libraries to install : ${librariesToInstall}")
+  message("libraries to install : ${librariesToInstall}")
   BRAINVISA_INSTALL( FILES ${librariesToInstall}
       DESTINATION "${destination}"
       COMPONENT "${component}"

@@ -123,6 +123,16 @@ def packages_selection( rules ):
         if name not in packages and name not in dependencies:
           dependencies.add( name )
           todo.add( name )
+  
+  # brainvisa-release component must be install after all other components, 
+  # so packages is converted into a list and brainvisa-release moved at the end of that list.
+  if ("brainvisa-release" in packages):
+    packages.remove("brainvisa-release")
+    packages=list(packages)
+    packages.append("brainvisa-release")
+  else:
+    packages=list(packages)
+  dependencies=list(dependencies)
   return ( packages, dependencies )
 
 
@@ -150,7 +160,7 @@ def create_graphviz_dependencies( options, selected_packages, dependencies ):
   nodes = {}
   print >> out, 'digraph packages_dependencies {'
   done = set()
-  todo = list( selected_packages )
+  todo = selected_packages
   while todo:
     source_package = todo.pop( 0 )
     if source_package in done:
@@ -200,7 +210,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
   installed_paths = {}
   current_dir=os.getcwd()
   os.chdir(build_directory)
-  for package in ( selected_packages.union( dependencies ) if options.dependencies else selected_packages ):
+  for package in ( selected_packages + dependencies  if options.dependencies else selected_packages ):
     print 'Installing', package
     command = [ 'make', 'BRAINVISA_INSTALL_PREFIX=' + install_directory, 'install-' + packages_info[ package ]['component'] ]
     system_call( options, command )

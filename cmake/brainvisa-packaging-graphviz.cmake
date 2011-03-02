@@ -28,7 +28,8 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     endif()
     # Plugins
     foreach(lib ${DOT_LIBRARIES})
-      get_filename_component(libdir ${lib} PATH)
+      get_filename_component(reallib ${lib} REALPATH)
+      get_filename_component(libdir ${reallib} PATH)
       if( EXISTS "${libdir}/graphviz" )
         BRAINVISA_INSTALL( DIRECTORY "${libdir}/graphviz"
                           DESTINATION "lib"

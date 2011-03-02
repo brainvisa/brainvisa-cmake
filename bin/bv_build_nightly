@@ -46,7 +46,7 @@ case ${os} in
     export I2BM_QT=4
 
     i2bm_setup_devel
-  
+
     # remove distcc on linux
     i2bm_pathvar_remove PATH /usr/lib64/distcc/bin
     i2bm_pathvar_remove PATH /usr/lib/distcc/bin
@@ -79,7 +79,8 @@ bv_configure()
   $binary_dir/bv_maker configure >"$stderr" 2>&1
   
   # if errors detected copy output file into log
-  if grep '^[ \t]*Error' "$stderr" >/dev/null 2>&1
+  status=$?
+  if [ $status -ne 0 ]
   then
     echo "==================================================" >>"$log"
     echo " bv_maker configure" >>"$log"

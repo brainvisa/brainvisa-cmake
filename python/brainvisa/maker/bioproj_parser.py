@@ -42,8 +42,8 @@ BRAINVISA_SVN_URL = SVN_URL + '/brainvisa'
 # for their components. Projects not listed but present in BioProj
 # will be added at the end of this list in an unknown order.
 projects = [ 
-  'development',
   'communication', 
+  'development',
   'installer',
   'brainvisa-share',
   'soma',

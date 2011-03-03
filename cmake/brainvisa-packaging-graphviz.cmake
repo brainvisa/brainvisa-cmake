@@ -10,7 +10,6 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO cmake package_name package_maintain
   endif()
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libcairo2 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libexpat1 RUN )
-  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libfontconfig1 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libltdl7 RUN )
 endfunction()
 

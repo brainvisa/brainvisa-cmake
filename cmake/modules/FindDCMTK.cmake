@@ -28,6 +28,10 @@ set( _librarySuffixes
   lib
   dcmtk/lib
 )
+set( _shareSuffixes
+  share/dcmtk
+  dcmtk/share/dcmtk
+)
 
 if( NOT DCMTK_PRE_353 )
   find_path( DCMTK_config_INCLUDE_DIR dcmtk/config/osconfig.h
@@ -151,7 +155,7 @@ find_library(DCMTK_ijg16_LIBRARY ijg16
 
 find_file( DCMTK_dict dicom.dic
     PATHS ${_directories} ${CMAKE_LIBRARY_PATH} ${CMAKE_FRAMEWORK_PATH}
-    PATH_SUFFIXES ${_librarySuffixes}
+    PATH_SUFFIXES ${_librarySuffixes} ${_shareSuffixes}
 )
 
 if( DCMTK_config_INCLUDE_DIR AND

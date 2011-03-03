@@ -1066,6 +1066,48 @@ function( BRAINVISA_GENERATE_EPYDOC_DOC  )
   endif()
 endfunction()
 
+
+# BRAINVISA_GENERATE_SPHINX_DOC
+#    Add rules to generate sphinx documentation with "make doc" or "make <component>-doc" or "make devdoc" or "make <component>-devdoc".
+# Usage:
+#
+#   BRAINVISA_GENERATE_SPHINX_DOC( <source directory> <output directory> )
+#
+# Example:
+#
+#   BRAINVISA_GENERATE_SPHINX_DOC( "doc/source"
+#     "share/doc/soma-workflow-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}" )
+#
+function( BRAINVISA_GENERATE_SPHINX_DOC  )
+  if( SPHINX_FOUND AND SPHINXBUILD_EXECUTABLE )
+    set( args "${ARGN}" )
+
+    list( GET args 0 sourceDirectory )
+    list( GET args 1 outputDirectory )
+
+    set( source_directory "${CMAKE_CURRENT_SOURCE_DIR}/${sourceDirectory}" )
+    set( output_directory "${CMAKE_BINARY_DIR}/${outputDirectory}" )
+
+    add_custom_command( OUTPUT "${output_directory}/index.html"
+                        COMMAND "${CMAKE_COMMAND}" -E make_directory
+                          "${output_directory}"
+                        COMMAND "${SPHINXBUILD_EXECUTABLE}"
+                          ${source_directory}
+                          ${output_directory}
+                      )
+    BRAINVISA_GENERATE_TARGET_NAME( target )
+    add_custom_target( ${target} DEPENDS "${output_directory}/index.html" )
+    add_dependencies( ${PROJECT_NAME}-devdoc ${target} )
+
+    # Install HTML documentation
+    BRAINVISA_INSTALL( DIRECTORY "${output_directory}"
+                       DESTINATION "${outputDirectory}"
+                       USE_SOURCE_PERMISSIONS
+                       COMPONENT ${PROJECT_NAME}-devdoc )
+  endif()
+endfunction()
+
+
 # BRAINVISA_GENERATE_DOCBOOK_DOC
 #    Add rules to generate docbook documentation with "make doc" or "make <component>-doc" 
 #    or "make usrdoc" or "make <component>-usrdoc" if it a user manual or tutorial 

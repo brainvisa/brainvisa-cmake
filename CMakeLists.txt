@@ -77,9 +77,10 @@ add_custom_command( OUTPUT "${packageName}"
 )
 add_custom_target( "package" DEPENDS "${packageName}" )
 
-add_executable( bv_env2 src/bv_env.cc )
-set_target_properties( bv_env2 PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
-install( TARGETS bv_env2
+set( CMAKE_EXE_LINKER_FLAGS -static )
+add_executable( bv_env src/bv_env.cc )
+set_target_properties( bv_env PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
+install( TARGETS bv_env
          DESTINATION bin )
 
 install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/python"

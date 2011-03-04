@@ -1,64 +1,3 @@
-#if 0
-  # Define environment variables modifications
-  unset_variables = [ 'SIGRAPH_PATH', 'ANATOMIST_PATH', 'AIMS_PATH' ]
-  set_variables = {
-  'LC_NUMERIC': 'C',
-  'BRAINVISA_SHARE': install_directory + '/share',
-  }
-  path_prepend = {
-    'DCMDICTPATH': [ install_directory + '/lib/dicom.dic' ],
-    'PYTHONPATH': [ install_directory + '/python' ],
-    'PATH': [ install_directory + '/bin/real-bin', install_directory + '/bin' ],
-    'LD_LIBRARY_PATH': [ install_directory + '/lib' ],
-  }
-  
-  # Look for Python in install_directory
-  python_dirs = glob( os.path.join( install_directory, 'lib', 'python*' ) )
-  if python_dirs:
-    python_version = python_dirs[ 0 ][ -3: ]
-    set_variables[ 'PYTHONHOME' ] = install_directory
-    path_prepend[ 'PYTHONPATH' ].append( install_directory + '/lib/python' + python_version + '/site-packages' )
-  
-  
-  backup_variables = {}
-  for n in unset_variables:
-    if n in os.environ:
-      backup_variables[ n ] = os.environ[ n ]
-      del os.environ[ n ]
-  for n, v in set_variables.iteritems():
-    v = v.replace( '${INSTALL_DIRECTORY}', install_directory )
-    if n in os.environ and os.environ[ n ] != v:
-      backup_variables[ n ] = os.environ[ n ]
-    os.environ[ n ] = v
-  for n, l in path_prepend.iteritems():
-    if n in os.environ:
-      backup_variables[ n ] = os.environ[ n ]
-      content = os.environ[ n ].split( os.pathsep )
-    else:
-      content = []
-    
-    for v in reversed( l ):
-      v = v.replace( '${INSTALL_DIRECTORY}', install_directory )
-      content.insert( 0, v )
-    os.environ[ n ] = os.pathsep.join( ( i for i in content if os.path.exists( i ) ) )
-  
-  if len( sys.argv ) > 1:
-    for n, v in backup_variables.iteritems():
-      os.environ[ 'BRAINVISA_UNENV_' + n ] = v
-    os.execvpe( sys.argv[1], sys.argv[ 1: ], os.environ )
-  else:
-    for n, v in backup_variables.iteritems():
-      print 'export BRAINVISA_UNENV_' + n + "='" + v + "'"
-    for n in unset_variables:
-      print 'unset', n
-    for n in set_variables:
-      print 'export', n + "='" + os.environ[ n ] + "'"
-    for n in path_prepend:
-      v = os.environ[ n ]
-      if v:
-        print 'export', n + "='" + v + "'"
-#endif
-
 #include <iostream>
 #include <string>
 #include <vector>
@@ -66,7 +5,9 @@
 #include <cstdlib>
 #include <sys/stat.h>
 #include <dirent.h>
-
+#ifndef WIN32
+#include <unistd.h> // for execvp()
+#endif
 using namespace std;
 
 #ifdef WIN32
@@ -79,29 +20,45 @@ using namespace std;
 
 
 
-string replace( const string &match, const string &value )
-{
-  return value;
-}
-
-vector <string> split_path( const string &str,
-                            const string &delimiters = "/\\" )
+vector <string> split_path( const string &str )
 {
   vector <string> result;
-  // Skip delimiters at beginning.
-  string::size_type lastPos = str.find_first_not_of( delimiters, 0 );
-  // Find first "non-delimiter".
-  string::size_type pos = str.find_first_of( delimiters, lastPos );
+  if ( ! str.empty() ) {
+    string::size_type pos = 0;
+    if ( str[ 0 ] == PATH_SEP[0] ) {
+      result.push_back( "" );
+      pos = 1;
+    }
+    while ( pos < str.size() ) {
+      string::size_type pos2 = str.find( PATH_SEP, pos );
+      if ( pos2 == string::npos ) {
+        result.push_back( str.substr( pos ) );
+        break;
+      } else {
+        result.push_back( str.substr( pos, pos2 - pos ) );
+        pos = pos2 + 1;
+      }
+    }
+  }
+  return result;
+}
 
-  if ( lastPos ) result.push_back( PATH_SEP );
-  while ( string::npos != pos || string::npos != lastPos )
-  {
-    // Found a token, add it to the vector
-    result.push_back( str.substr( lastPos, pos - lastPos ) );
-    // Skip delimiters.  Note the "not_of"
-    lastPos = str.find_first_not_of( delimiters, pos );
-    // Find next "non-delimiter"
-    pos = str.find_first_of(delimiters, lastPos);
+
+vector <string> split_env( const string &str )
+{
+  vector <string> result;
+  if ( ! str.empty() ) {
+    string::size_type pos = 0;
+    while ( pos < str.size() ) {
+      string::size_type pos2 = str.find( ENV_SEP, pos );
+      if ( pos2 == string::npos ) {
+        result.push_back( str.substr( pos ) );
+        break;
+      } else {
+        result.push_back( str.substr( pos, pos2 - pos ) );
+        pos = pos2 + 1;
+      }
+    }
   }
   return result;
 }
@@ -200,23 +157,12 @@ bool file_exists( string file_name )
 }
 
 
-int main( int argc, const char *argv[], const char *envp[] )
+int main( int argc, char *argv[] )
 {
-/*  if os.path.exists( sys.argv[0] ):
-    this_script = sys.argv[0]
-  else:
-    this_script = None
-    for p in os.environ.get( 'PATH', '' ).split( os.pathsep ) + [ os.curdir ]:
-      s = os.path.join( p, sys.argv[0] )
-      if os.path.exists( s ):
-        this_script = s
-        break
-  if this_script:
-    install_directory = os.path.dirname( os.path.dirname( this_script ) )*/
   string install_directory;
   vector< string > argv0 = split_path( argv[0] );
   if ( argv0.size() > 1 ) {
-    if ( argv0[ 0 ] != PATH_SEP ) {
+    if ( ! argv0[ 0 ].empty() ) {
       // relative directory
       vector< string > curdir = split_path( current_directory() );
       argv0.insert( argv0.begin(), curdir.begin(), curdir.end() );
@@ -225,7 +171,7 @@ int main( int argc, const char *argv[], const char *envp[] )
     argv0.pop_back();
     install_directory = join_path( argv0 );
   } else {
-    vector< string > path = split_path( getenv( "PATH" ), ENV_SEP );
+    vector< string > path = split_env( getenv( "PATH" ) );
     path.push_back( current_directory() );
     for( vector< string >::const_iterator it = path.begin(); it != path.end(); ++it ) {
       vector <string> l = split_path( *it );
@@ -237,26 +183,18 @@ int main( int argc, const char *argv[], const char *envp[] )
       }
     }
   }
-/*  string install_directory( argv[ 0 ] );
-  size_t last_separator = install_directory.rfind( "/" );
-  if ( ! last_separator ) last_separator = install_directory.rfind( "\\" );
-  if ( last_separator ) {
-    install_directory = install_directory.substr( 0, last_separator );
-  } else {
-    install_directory = "";
-  }*/
   
-  vector< string > unset_variables = split_path( "SIGRAPH_PATH:ANATOMIST_PATH:AIMS_PATH", ":" );
+  vector< string > unset_variables = split_path( "SIGRAPH_PATH/ANATOMIST_PATH/AIMS_PATH" );
   
   map< string, string > set_variables;
   set_variables[ "LC_NUMERIC" ] = "C";
   set_variables[ "BRAINVISA_SHARE" ] = install_directory + PATH_SEP "share";
   
   map< string, vector< string > > path_prepend;
-  path_prepend[ "DCMDICTPATH" ] = split_path( install_directory + PATH_SEP "lib" PATH_SEP "dicom.dic", ":" );
-  path_prepend[ "PYTHONPATH" ] = split_path( install_directory + PATH_SEP "python", ":" );
-  path_prepend[ "PATH" ] = split_path( install_directory + PATH_SEP "real-bin" + ":" + install_directory + PATH_SEP "bin", ":" );
-  path_prepend[ "LD_LIBRARY_PATH" ] = split_path( install_directory + PATH_SEP "lib", ":" );
+  path_prepend[ "DCMDICTPATH" ] = split_env( install_directory + PATH_SEP "lib" PATH_SEP "dicom.dic" );
+  path_prepend[ "PYTHONPATH" ] = split_env( install_directory + PATH_SEP "python" );
+  path_prepend[ "PATH" ] = split_env( install_directory + PATH_SEP "real-bin" + ":" + install_directory + PATH_SEP "bin" );
+  path_prepend[ "LD_LIBRARY_PATH" ] = split_env( install_directory + PATH_SEP "lib" );
 
   string site_packages = find_python_site_packages( install_directory );
   if ( ! site_packages.empty() ) {
@@ -265,36 +203,60 @@ int main( int argc, const char *argv[], const char *envp[] )
   }
   
   
-//   cout << "install_directory=" << install_directory << endl;
-//   map< string, string > backup_variables;
-//   for( vector< string >::const_iterator it = unset_variables.begin(); it != unset_variables.end(); ++it ) {
-//     string env = getenv( *it );
-//     if ( ! env.empty ) {
-//       backup_variables[ *it ] = env;
-//       unsetenv( *it );
-//     }
-//   }
-//   for( map< string, string>::const_iterator it = set_variables.begin(); it != set_variables.end(); ++it ) {
-//     string v = replace( it->second, "${INSTALL_DIRECTORY}", install_directory );
-//     string env = getenv( it->first );
-//     if ( ! env.empty() and env != v ) {
-//       backup_variables[ it->first ] = env;
-//       set_env( it->first, v );
-//     }
-//   }
+  map< string, string > backup_variables;
+  for( vector< string >::const_iterator it = unset_variables.begin(); it != unset_variables.end(); ++it ) {
+    string env = getenv( *it );
+    if ( ! env.empty() ) {
+      backup_variables[ *it ] = env;
+      unsetenv( *it );
+    }
+  }
+  for( map< string, string>::const_iterator it = set_variables.begin(); it != set_variables.end(); ++it ) {
+    string env = getenv( it->first );
+    if ( ! env.empty() and env != it->second ) {
+      backup_variables[ it->first ] = env;
+      set_env( it->first, it->second );
+    }
+  }
 
+  for( map< string, vector<string> >::const_iterator it = path_prepend.begin(); it != path_prepend.end(); ++it ) {
+    vector< string > content;
+    string env = getenv( it->first );
+    if ( ! env.empty() ) {
+      backup_variables[ it->first ] = env;
+      content = split_env( env );
+    }
+    
+    for( vector< string >::const_reverse_iterator it2 = it->second.rbegin(); it2 != it->second.rend(); ++it2 ) {
+      if ( file_exists( *it2 ) ) {
+        content.insert( content.begin(), *it2 );
+      }
+    }
+    set_env( it->first, join_path( content, ":" ) );
+  }
 
-// for n, l in path_prepend.iteritems():
-//   if n in os.environ:
-//     backup_variables[ n ] = os.environ[ n ]
-//     content = os.environ[ n ].split( os.pathsep )
-//   else:
-//     content = []
-//   
-//   for v in reversed( l ):
-//     v = v.replace( '${INSTALL_DIRECTORY}', install_directory )
-//     content.insert( 0, v )
-//   os.environ[ n ] = os.pathsep.join( ( i for i in content if os.path.exists( i ) ) )
-
+  const string unenv_prefix( "BRAINVISA_UNENV_" );
+  if ( argc > 1 ) {
+    for( map< string, string>::const_iterator it = backup_variables.begin(); it != backup_variables.end(); ++it ) {
+      set_env(  unenv_prefix + it->first, it->second );
+    }
+    execvp( argv[1], argv + 1 ); // TODO: Windows
+  } else {
+    for( map< string, string>::const_iterator it = backup_variables.begin(); it != backup_variables.end(); ++it ) {
+      cout <<  unenv_prefix << it->first << "='" << it->second << "'" << endl;
+    }
+    for( vector< string >::const_iterator it = unset_variables.begin(); it != unset_variables.end(); ++it ) {
+      cout << "unset " << *it << endl;
+    }
+    for( map< string, string>::const_iterator it = set_variables.begin(); it != set_variables.end(); ++it ) {
+      cout << "export " << it->first << "='" << getenv( it->first ) << "'" << endl;
+    }
+    for( map< string, vector<string> >::const_iterator it = path_prepend.begin(); it != path_prepend.end(); ++it ) {
+      string v = getenv( it->first );
+      if ( ! v.empty() ) {
+        cout << "export " << it->first << "='" << v << "'" << endl;
+      }
+    }
+  }
   return 0;
 }

@@ -1369,7 +1369,7 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
             -c "${CMAKE_CURRENT_BINARY_DIR}"
             -e
             ${_sipFlags}
-            -x VendorID -x Qt_STYLE_WINDOWSXP -x Qt_STYLE_INTERLACE -x Qt_STYLE_WINDOWSXP
+            -x VendorID -x Qt_STYLE_WINDOWSXP -x Qt_STYLE_INTERLACE
             ${_mainSipFile}
     COMMAND "${CMAKE_COMMAND}" -E touch ${_sipOutputFiles}
     DEPENDS ${_mainSipFile} ${_SIP_SOURCES}

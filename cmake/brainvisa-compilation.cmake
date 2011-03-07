@@ -11,7 +11,28 @@ if( BRAINVISA_DEPENDENCY_GRAPH )
 endif()
 
 BRAINVISA_CREATE_MAIN_COMPONENTS()
-  
+
+function( silent_execute_process working_directory )
+  execute_process( COMMAND ${ARGN}
+    WORKING_DIRECTORY "${working_directory}"
+    RESULT_VARIABLE result
+    OUTPUT_QUIET 
+    ERROR_QUIET )
+  if( NOT result EQUAL 0 )
+    set( command )
+    foreach( i ${ARGN} )
+      set( command "${command} \"${i}\"" )
+    endforeach()
+    message( "ERROR: command failed:${command}" )
+    message( "       working directory = \"${working_directory}\"" )
+    message( "---------- command output ----------"  )
+    execute_process( COMMAND ${ARGN} WORKING_DIRECTORY "${working_directory}" )
+    message( "---------- end of command output ----------"  )
+    message( FATAL_ERROR )
+  endif()
+endfunction()
+    
+
 foreach( component ${BRAINVISA_COMPONENTS} )
   if( BRAINVISA_SOURCES_${component} )
     set( ${component}_IS_BEING_COMPILED TRUE CACHE BOOL INTERNAL )
@@ -21,14 +42,8 @@ foreach( component ${BRAINVISA_COMPONENTS} )
       message( STATUS "Configuring component ${component} from source directory \"${BRAINVISA_SOURCES_${component}}\"" )
       if( component STREQUAL brainvisa-cmake )
         file( MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/build_files/${component}" )
-        execute_process( COMMAND "${CMAKE_COMMAND}" "-G" "${CMAKE_GENERATOR}" "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}" "${BRAINVISA_SOURCES_${component}}"
-          WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/build_files/${component}"
-          OUTPUT_QUIET 
-          ERROR_QUIET )
-        execute_process( COMMAND "${CMAKE_BUILD_TOOL}" install
-          WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/build_files/${component}"
-          OUTPUT_QUIET 
-          ERROR_QUIET )
+        silent_execute_process( "${CMAKE_BINARY_DIR}/build_files/${component}" "${CMAKE_COMMAND}" "-G" "${CMAKE_GENERATOR}" "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}" "${BRAINVISA_SOURCES_${component}}" )
+        silent_execute_process( "${CMAKE_BINARY_DIR}/build_files/${component}" "${CMAKE_BUILD_TOOL}" install )
       else()
         add_subdirectory( "${BRAINVISA_SOURCES_${component}}" "build_files/${component}" )
       endif()
@@ -39,4 +54,3 @@ endforeach()
 if( BRAINVISA_DEPENDENCY_GRAPH )
   file( APPEND "${BRAINVISA_DEPENDENCY_GRAPH}" "}\n" )
 endif()
-

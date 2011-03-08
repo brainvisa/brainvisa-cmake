@@ -161,8 +161,8 @@ try:
     'bv_packaging' )
   command = bv_packaging 
   if options.compression:
-    dest = os.path.join( packDir, packName+".tar.bz2" )
-    command = bv_packaging + " pack "
+    dest = os.path.join( packDir, packName )
+    command = bv_packaging + " pack --packname "
   else:
     dest = os.path.join( packDir, packName )
     command = bv_packaging + " dir "

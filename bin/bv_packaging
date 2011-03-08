@@ -273,17 +273,42 @@ fi
 def create_compressed_package( options, selected_packages, dependencies ):
   if not options.output:
     raise UserWarning( 'Ouput file name must be given for this command' )
-  install_directory = tempfile.mkdtemp()
+  temp_directory = tempfile.mkdtemp()
+  if options.packname:
+    install_directory = os.path.join(temp_directory, os.path.basename(options.output))
+    os.mkdir(install_directory)
+  else:
+    install_directory = temp_directory
+
   try:
     output = options.output
     options.output = install_directory
     create_directory_package( options, selected_packages, dependencies )
     options.output = output
-    print 'Compressing %s in %s' % (repr(install_directory), repr(output) )
-    system_call( options, [ 'tar', 'jcf', output ] + os.listdir( install_directory ), cwd=install_directory )
+    if sys.platform != 'win32': # compressing in tar.bz2 with tar
+      output=output+".tar.bz2"
+      print 'Compressing %s in %s' % (repr(install_directory), repr(output) )
+      system_call( options, [ 'tar', 'jcf', output ] + os.listdir( temp_directory ), cwd=temp_directory )
+    else: # compressing in zip with zipfile module
+      output = output+".zip"
+      print 'Compressing %s in %s' % (repr(install_directory), repr(output) )
+      os.chdir(temp_directory)
+      import zipfile
+      zf = zipfile.ZipFile( output, 'w', zipfile.ZIP_DEFLATED )
+      def _store( zf, file ):
+        if os.path.isdir( file ):
+          files = os.listdir( file )
+          for f in files:
+            _store( zf, os.path.join( file, f ) )
+        else:
+          #print 'zipping', file
+          zf.write( file )
+      for f in os.listdir(temp_directory):
+        _store( zf, f )
+      zf.close()
   finally:
-    print 'Removing %s' % repr(install_directory)
-    shutil.rmtree( install_directory )
+    print 'Removing %s' % repr(temp_directory)
+    shutil.rmtree( temp_directory )
 
 
 def validDebianPackageName( package ):
@@ -385,6 +410,7 @@ if __name__ == '__main__':
   options.output = None
   options.dependencies = True
   options.bv_env = False
+  options.packname = False
   options.cmake = 'cmake'
   options.verbose = False
   
@@ -446,10 +472,12 @@ Options:
   -h, --help            Show this help message and exit
   -v, --verbose         Show verbose information
   -o OUTPUT, --output=OUTPUT
-                        File or directory where output will be stored.
+                        File (without extension) or directory where output will be stored.
   --no-deps             Do not include dependencies packages.
   --bv_env              Replace commands located in bib directory by a script that calls
                         the command through bv_env.
+  --packname            Include the name of the package in the compressed archive. 
+                        Available only with pack command. By default, the path in the archive are relative to the pack.
   --tmp DIRECTORY       Location of temporary directory (default is %(tmp)s).
   --cmake CMAKE_EXE     Location of cmake executable (default = %(cmake)s).
 ''' % { 'tmp': repr( tempfile.gettempdir() ),
@@ -477,6 +505,9 @@ Options:
       del args[ index ]
     elif args[ index ] == '--bv_env':
       options.bv_env = True
+      del args[ index ]
+    elif args[ index ] == '--packname':
+      options.packname = True
       del args[ index ]
     elif args[ index ] == '--cmake':
       del args[ index ]

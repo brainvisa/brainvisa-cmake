@@ -77,7 +77,13 @@ add_custom_command( OUTPUT "${packageName}"
 )
 add_custom_target( "package" DEPENDS "${packageName}" )
 
-set( CMAKE_EXE_LINKER_FLAGS -static )
+# Check if static link is available 
+include(CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_FLAGS "-static")
+CHECK_CXX_SOURCE_COMPILES("int main() {}" static_link)
+if(static_link)
+  set( CMAKE_EXE_LINKER_FLAGS -static )
+endif()
 add_executable( bv_env src/bv_env.cc )
 set_target_properties( bv_env PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
 install( TARGETS bv_env
@@ -107,15 +113,15 @@ if( NOT DISABLE_FILE_INSTALLATION_LIST )
   execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${tmp}" )
   execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${tmp}/install" )
   execute_process( COMMAND "${CMAKE_COMMAND}"  "-G" "${CMAKE_GENERATOR}" -DDISABLE_FILE_INSTALLATION_LIST=YES "-DCMAKE_INSTALL_PREFIX:STRING=${tmp}/install" "${CMAKE_CURRENT_SOURCE_DIR}"
-                   WORKING_DIRECTORY "${tmp}"
-                   OUTPUT_QUIET 
-                   ERROR_QUIET )
+                   WORKING_DIRECTORY "${tmp}")
+#                    OUTPUT_QUIET 
+#                    ERROR_QUIET )
   execute_process( COMMAND "${CMAKE_MAKE_PROGRAM}" install
-                   WORKING_DIRECTORY "${tmp}"
-                   OUTPUT_QUIET 
-                   ERROR_QUIET )
+                   WORKING_DIRECTORY "${tmp}")
+#                    OUTPUT_QUIET 
+#                    ERROR_QUIET )
   file( GLOB_RECURSE installed_files RELATIVE "${tmp}/install" "${tmp}/install/*" )
-  execute_process( COMMAND "${CMAKE_COMMAND}" -E remove_directory "${tmp}" )
+#   execute_process( COMMAND "${CMAKE_COMMAND}" -E remove_directory "${tmp}" )
   file( WRITE "${CMAKE_BINARY_DIR}/installed_files.txt" "" )
   foreach( i ${installed_files} )
     file( APPEND "${CMAKE_BINARY_DIR}/installed_files.txt" "${i}\n" )

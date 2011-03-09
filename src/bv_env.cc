@@ -18,7 +18,7 @@ using namespace std;
 
 
 
-vector <string> split_path( const string &str )
+vector <string> split_path( const string &str, const string & sep = PATH_SEP  )
 {
   vector <string> result;
   if ( ! str.empty() ) {
@@ -28,7 +28,7 @@ vector <string> split_path( const string &str )
       pos = 1;
     }
     while ( pos < str.size() ) {
-      string::size_type pos2 = str.find( PATH_SEP, pos );
+      string::size_type pos2 = str.find( sep, pos );
       if ( pos2 == string::npos ) {
         result.push_back( str.substr( pos ) );
         break;
@@ -42,13 +42,13 @@ vector <string> split_path( const string &str )
 }
 
 
-vector <string> split_env( const string &str )
+vector <string> split_env( const string &str, const string & sep = ENV_SEP )
 {
   vector <string> result;
   if ( ! str.empty() ) {
     string::size_type pos = 0;
     while ( pos < str.size() ) {
-      string::size_type pos2 = str.find( ENV_SEP, pos );
+      string::size_type pos2 = str.find( sep, pos );
       if ( pos2 == string::npos ) {
         result.push_back( str.substr( pos ) );
         break;
@@ -182,7 +182,7 @@ int main( int argc, char *argv[] )
     }
   }
   
-  vector< string > unset_variables = split_path( "SIGRAPH_PATH/ANATOMIST_PATH/AIMS_PATH" );
+  vector< string > unset_variables = split_path( "SIGRAPH_PATH/ANATOMIST_PATH/AIMS_PATH", "/" );
   
   map< string, string > set_variables;
   set_variables[ "LC_NUMERIC" ] = "C";

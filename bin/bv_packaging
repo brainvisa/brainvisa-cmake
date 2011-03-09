@@ -247,22 +247,36 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
       source = os.path.join( bindir, command )
       if os.path.isfile( source ) and not os.path.islink( source ):
         dest = os.path.join( realbindir, command )
+        if sys.platform == 'win32':
+          dest += '.bat'
         if os.path.exists( dest ):
           os.remove( dest )
         os.rename( source, dest )
         out = open( source, 'w' )
-        out.write( '''#!/bin/sh
-directory="$0"
-[ -L "$directory" ] && directory="`dirname "$directory"`/`readlink "$directory"`"
-command=`basename $directory`
-directory="`dirname $directory`"
-directory="`cd $directory;pwd`"
-if [ -x "$directory/bv_env" ]; then
-  exec "$directory/bv_env" "$directory/real-bin/$command" "$@"
-else
-  exec "$directory/real-bin/$command" "$@"
-fi
-''' )
+        if sys.platform == 'win32':
+          out.write( '''@setlocal
+@set directory="%~d0%~p0"
+@set command="%~n0%~x0"
+@if exist "%directory:~1,-1%bv_env.exe" (
+  @call "%directory:~1,-1%bv_env.exe" "%directory:~1,-1%real-bin\%command:~1,-1%" %*
+) else (
+  @call "%directory:~1,-1%real-bin\%command:~1,-1%" %*
+)
+@endlocal
+  ''' )
+        else :
+          out.write( '''#!/bin/sh
+  directory="$0"
+  [ -L "$directory" ] && directory="`dirname "$directory"`/`readlink "$directory"`"
+  command=`basename $directory`
+  directory="`dirname $directory`"
+  directory="`cd $directory;pwd`"
+  if [ -x "$directory/bv_env" ]; then
+    exec "$directory/bv_env" "$directory/real-bin/$command" "$@"
+  else
+    exec "$directory/real-bin/$command" "$@"
+  fi
+  ''' )
         out.close()
         os.chmod( source, os.stat( dest ).st_mode )
       elif os.path.islink(source):

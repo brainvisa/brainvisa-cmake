@@ -5,9 +5,7 @@
 #include <cstdlib>
 #include <sys/stat.h>
 #include <dirent.h>
-#ifndef WIN32
 #include <unistd.h> // for execvp()
-#endif
 using namespace std;
 
 #ifdef WIN32

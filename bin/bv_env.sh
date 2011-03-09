@@ -52,15 +52,6 @@ if [ ! -x "$bv_env" ]; then
   bv_env=bv_env
 fi
 
-# try to find python in the real-bin directory of the pack
-# this avoid looping between python and bv_env if the python command of the bin directory of the pack is called
-# and it is not necessary to have python on the system where the package is installed
-python="`dirname $bv_env`/real-bin/python"
-exists $python
-if [ ! $? -eq 0 ]; then
-  python="python"
-fi
-
-"$python" "$bv_env" > "$tmp"
+"$bv_env" > "$tmp"
 source "$tmp"
 \rm "$tmp"

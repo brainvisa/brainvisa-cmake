@@ -119,9 +119,14 @@ string find_python_site_packages( const string &install_directory )
   if ( dir ) {
     for( struct dirent *entry = readdir( dir ); entry; entry = readdir( dir ) ) {
       const string entry_name = entry->d_name;
-      if ( entry_name.compare( 0, 6, "python" ) ) {
-        result = install_directory + PATH_SEP "lib" + entry_name + "site-packages";
-        break;
+      if ( entry_name.compare( 0, 6, "python" ) == 0 ) {
+        string site_packages = install_directory + PATH_SEP "lib" PATH_SEP + entry_name + PATH_SEP "site-packages";
+        DIR *dir2 = opendir( site_packages.c_str() );
+        if ( dir2 ) {
+          closedir( dir2 );
+          result = site_packages;
+          break;
+        }
       }
     }
     closedir( dir );
@@ -213,8 +218,8 @@ int main( int argc, char *argv[] )
     string env = getenv( it->first );
     if ( ! env.empty() and env != it->second ) {
       backup_variables[ it->first ] = env;
-      set_env( it->first, it->second );
     }
+    set_env( it->first, it->second );
   }
 
   for( map< string, vector<string> >::const_iterator it = path_prepend.begin(); it != path_prepend.end(); ++it ) {

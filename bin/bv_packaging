@@ -33,7 +33,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
-import sys, os, re, fnmatch, subprocess, tempfile, shutil
+import sys, os, re, fnmatch, subprocess, tempfile, shutil, glob
 from stat import S_IRUSR, S_IXUSR, S_IRGRP, S_IXGRP, S_IROTH, S_IXOTH
 
 if os.path.exists( sys.argv[0] ):

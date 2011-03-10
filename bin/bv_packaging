@@ -228,6 +228,8 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
       for i in ( j for j in recursive_listdir( install_directory ) if j not in installed_paths):
         installed_paths[ i ] = package
   os.chdir(current_dir)
+  
+  # create scripts that call bv_env before calling the command to setup environment variables
   if options.bv_env:
     bindir = os.path.join( install_directory, 'bin' )
     if not os.path.exists( bindir ):
@@ -284,6 +286,90 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
         dest=os.readlink(source)
         os.symlink(dest, os.path.join(realbindir, os.path.basename(source)))
         
+  # make easy shortcuts for BV and anatomist if they are packaged
+  hasAnatomist = ("anatomist-free" in selected_packages) or ("anatomist-free" in dependencies)
+  ana_shortcut = os.path.join(install_directory, "anatomist")
+  hasBrainvisa = ("axon" in selected_packages) or ("axon" in dependencies)
+  bv_shortcut = os.path.join(install_directory, "BrainVISA")
+  # Windows
+  if sys.platform[:3] == 'win':
+    if hasAnatomist:
+      ana_shortcut += ".bat"
+      out = open( ana_shortcut, 'w' )
+      out.write( '''@setlocal
+@set directory="%~d0%~p0"
+@call "%directory:~1,-1%bin\anatomist.bat" %*
+@endlocal
+  ''' )
+      out.close()
+    if hasBrainvisa:
+      bv_shortcut += ".bat"
+      out = open( bv_shortcut, 'w' )
+      out.write( '''@setlocal
+@set directory="%~d0%~p0"
+@call "%directory:~1,-1%bin\brainvisa.bat" %*
+@endlocal
+  ''' )
+      out.close()
+  # Macos
+  elif sys.platform[:6] == 'darwin':
+    # Build MacOS X clickable icons
+    if hasAnatomist:
+      ana_shortcut += ".app"
+      if os.path.exists( ana_shortcut ):
+        os.unlink( anashortcut )
+      os.symlink( os.path.join('bin', 'anatomist.app'), ana_shortcut )
+    if hasBrainvisa:
+      bv_shortcut += '.app'
+      if os.path.exists( bv_shortcut ):
+        shutil.rmtree( x, 1 )
+      os.makedirs( os.path.join( bv_shortcut, 'Contents', 'MacOS' ) )
+      os.makedirs( os.path.join( bv_shortcut, 'Contents', 'Resources' ) )
+      os.symlink( '../../../bin/brainvisa', 
+                  os.path.join( bv_shortcut, 'Contents', 
+                                'MacOS', 'brainvisa' ) )
+      icns = glob.glob( os.path.join( install_directory, 'share', 'brainvisa*' ) )
+      if icns:
+        icns = os.path.join( '../../../share', os.path.basename( icns[0] ), 
+          'icons/brainvisa.icns' )
+      os.symlink( icns, os.path.join( bv_shortcut, 'Contents', 
+                  'Resources', 'brainvisa.icns' ) )
+      f = open( os.path.join( bv_shortcut, 'Contents', 'PkgInfo' ), 'w' )
+      print >> f, 'APPL????'
+      f.close()
+      f = open( os.path.join( bv_shortcut, 'Contents', 'Info.plist' ), 'w' )
+      print >> f, '''<?xml version="1.0" encoding="UTF-8"?>
+  <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+  <plist version="1.0">
+  <dict>
+          <key>CFBundleExecutable</key>
+          <string>brainvisa</string>
+          <key>CFBundleIconFile</key>
+          <string>brainvisa.icns</string>
+          <key>CFBundleIdentifier</key>
+          <string>brainvisa</string>
+          <key>CFBundlePackageType</key>
+          <string>APPL</string>
+  </dict>
+  </plist>'''
+      f.close()
+  # Linux
+  else:
+    if hasAnatomist:
+      if os.path.exists( ana_shortcut ):
+        os.unlink( ana_shortcut )
+      os.symlink( os.path.join( 'bin', 'anatomist' ), ana_shortcut )
+    if hasBrainvisa:
+      if os.path.exists( bv_shortcut ):
+        os.unlink( bv_shortcut )
+      os.symlink( os.path.join('bin', 'brainvisa'), bv_shortcut )
+      
+      
+  # Update brainvisa shared database
+  if hasBrainvisa and ("brainvisa-share" in selected_packages):
+    print "Updating BrainVISA shared database"
+    os.system( bv_shortcut+" -b --setup" )
+
   if list_installed_paths:
     result = {}
     for path, package in  (( i[len(install_directory)+1:], j ) for i,j in installed_paths.iteritems() ):
@@ -498,7 +584,7 @@ Options:
   -o OUTPUT, --output=OUTPUT
                         File (without extension) or directory where output will be stored.
   --no-deps             Do not include dependencies packages.
-  --bv_env              Replace commands located in bib directory by a script that calls
+  --bv_env              Replace commands located in bin directory by a script that calls
                         the command through bv_env.
   --packname            Include the name of the package in the compressed archive. 
                         Available only with pack command. By default, the path in the archive are relative to the pack.

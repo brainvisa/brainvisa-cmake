@@ -11,9 +11,15 @@ using namespace std;
 #ifdef WIN32
   #define PATH_SEP "\\"
   #define ENV_SEP ";"
+  #define LD_LIBRARY_PATH "PATH"
 #else
   #define PATH_SEP "/"
   #define ENV_SEP ":"
+  #ifdef __APPLE__
+    #define LD_LIBRARY_PATH "DYLD_LIBRARY_PATH"
+  #else
+    #define LD_LIBRARY_PATH "LD_LIBRARY_PATH"
+  #endif
 #endif
 
 
@@ -197,7 +203,7 @@ int main( int argc, char *argv[] )
   path_prepend[ "DCMDICTPATH" ] = split_env( install_directory + PATH_SEP "lib" PATH_SEP "dicom.dic" );
   path_prepend[ "PYTHONPATH" ] = split_env( install_directory + PATH_SEP "python" );
   path_prepend[ "PATH" ] = split_env( install_directory + PATH_SEP "real-bin" + ":" + install_directory + PATH_SEP "bin" );
-  path_prepend[ "LD_LIBRARY_PATH" ] = split_env( install_directory + PATH_SEP "lib" );
+  path_prepend[ LD_LIBRARY_PATH ] = split_env( install_directory + PATH_SEP "lib" );
 
   string site_packages = find_python_site_packages( install_directory );
   if ( ! site_packages.empty() ) {

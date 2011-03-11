@@ -28,29 +28,22 @@ else
     exists history && exists tail && exists awk
     if [ $? -eq 0 ]; then
       bv_unenv_command=`history | tail -n 1 | awk '{print $3}'`
-      bv_unenv=`dirname $bv_unenv_command`
-      bv_unenv="$bv_unenv/bv_unenv"
+      if [ -n "$bv_unenv_command" ];then
+        bv_unenv=`dirname $bv_unenv_command`
+        bv_unenv="$bv_unenv/bv_unenv"
+      fi
     fi
   fi
 fi
-# get fullpath of bv_unenv
-exists readlink
-if [ $? -eq 0 ]; then
-  bv_unenv="`readlink -f $bv_unenv`"
+# get fullpath of bv_env
+bv_unenv_dir=`dirname $bv_unenv`
+if [ -n "$bv_unenv_dir" ];then
+  bv_unenv="`cd $bv_unenv_dir;pwd`/bv_unenv"
 fi
 if [ ! -x "$bv_unenv" ]; then
   bv_unenv=bv_unenv
 fi
 
-# try to find python in the real-bin directory of the pack
-# this avoid looping between python and bv_unenv if the python command of the bin directory of the pack is called
-# and it is not necessary to have python on the system where the package is installed
-python="`dirname $bv_unenv`/real-bin/python"
-exists $python
-if [ ! $? -eq 0 ]; then
-  python="python"
-fi
-
-"$python" "$bv_unenv" > "$tmp"
+"$bv_unenv" > "$tmp"
 source "$tmp"
 \rm "$tmp"

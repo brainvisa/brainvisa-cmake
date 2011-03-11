@@ -246,7 +246,7 @@ int main( int argc, char *argv[] )
     execvp( argv[1], argv + 1 );
   } else {
     for( map< string, string>::const_iterator it = backup_variables.begin(); it != backup_variables.end(); ++it ) {
-      cout <<  unenv_prefix << it->first << "='" << it->second << "'" << endl;
+      cout <<  "export " << unenv_prefix << it->first << "='" << it->second << "'" << endl;
     }
     for( vector< string >::const_iterator it = unset_variables.begin(); it != unset_variables.end(); ++it ) {
       cout << "unset " << *it << endl;

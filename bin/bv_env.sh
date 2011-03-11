@@ -38,15 +38,17 @@ else
     exists history && exists tail && exists awk
     if [ $? -eq 0 ]; then
       bv_env_command=`history | tail -n 1 | awk '{print $3}'`
-      bv_env=`dirname $bv_env_command`
-      bv_env="$bv_env/bv_env"
+      if [ -n "$bv_env_command" ];then
+        bv_env=`dirname $bv_env_command`
+        bv_env="$bv_env/bv_env"
+      fi
     fi
   fi
 fi
 # get fullpath of bv_env
-exists readlink
-if [ $? -eq 0 ]; then
-  bv_env="`readlink -f $bv_env`"
+bv_env_dir=`dirname $bv_env`
+if [ -n "$bv_env_dir" ];then
+  bv_env="`cd $bv_env_dir;pwd`/bv_env"
 fi
 if [ ! -x "$bv_env" ]; then
   bv_env=bv_env

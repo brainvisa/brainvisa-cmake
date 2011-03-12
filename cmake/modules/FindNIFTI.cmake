@@ -9,6 +9,7 @@
 FIND_PATH( NIFTI_INCLUDE_DIR nifti1.h
   ${NIFTI_DIR}/include
   /usr/include 
+  /usr/include/nifti 
 )
 
 
@@ -36,9 +37,9 @@ FIND_LIBRARY(NIFTI_znz_LIBRARY znz
 )
 
 
+
 IF( NIFTI_INCLUDE_DIR )
 IF( NIFTI_niftiio_LIBRARY )
-IF( NIFTI_fslio_LIBRARY )
 IF( NIFTI_nifticdf_LIBRARY )
 IF( NIFTI_znz_LIBRARY )
 
@@ -46,16 +47,24 @@ IF( NIFTI_znz_LIBRARY )
 
   SET( NIFTI_LIBRARIES
     ${NIFTI_niftiio_LIBRARY}
-    ${NIFTI_fslio_LIBRARY}
     ${NIFTI_nifticdf_LIBRARY}
     ${NIFTI_znz_LIBRARY}
   )
 
 ENDIF( NIFTI_znz_LIBRARY )
 ENDIF( NIFTI_nifticdf_LIBRARY )
-ENDIF( NIFTI_fslio_LIBRARY )
 ENDIF( NIFTI_niftiio_LIBRARY )
 ENDIF( NIFTI_INCLUDE_DIR )
+
+IF( NIFTI_fslio_LIBRARY )
+
+  SET( NIFTI_LIBRARIES
+    ${NIFTI_LIBRARIES}
+    ${NIFTI_fslio_LIBRARY}
+  )
+
+ENDIF( NIFTI_fslio_LIBRARY )
+
 
 IF( NOT NIFTI_FOUND )
   SET( NIFTI_DIR "" CACHE PATH "Root of NIFTI source tree (optional)." )

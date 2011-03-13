@@ -29,7 +29,7 @@ vector <string> split_path( const string &str, const string & sep = PATH_SEP  )
   vector <string> result;
   if ( ! str.empty() ) {
     string::size_type pos = 0;
-    if ( str[ 0 ] == PATH_SEP[0] ) {
+    if ( str == PATH_SEP ) {
       result.push_back( "" );
       pos = 1;
     }
@@ -170,8 +170,14 @@ int main( int argc, char *argv[] )
 {
   string install_directory;
   vector< string > argv0 = split_path( argv[0] );
+
   if ( argv0.size() > 1 ) {
-    if ( ! argv0[ 0 ].empty() ) {
+    if ( ( ! argv0[ 0 ].empty() ) 
+#if WIN32
+        // Windows has a letter for drives, so we must add conditions to know if path is relative
+        && ( argv0[0][1] != ':' )
+#endif
+    ) {
       // relative directory
       vector< string > curdir = split_path( current_directory() );
       argv0.insert( argv0.begin(), curdir.begin(), curdir.end() );
@@ -200,10 +206,17 @@ int main( int argc, char *argv[] )
   set_variables[ "BRAINVISA_SHARE" ] = install_directory + PATH_SEP "share";
   
   map< string, vector< string > > path_prepend;
-  path_prepend[ "DCMDICTPATH" ] = split_env( install_directory + PATH_SEP "lib" PATH_SEP "dicom.dic" );
-  path_prepend[ "PYTHONPATH" ] = split_env( install_directory + PATH_SEP "python" );
-  path_prepend[ "PATH" ] = split_env( install_directory + PATH_SEP "real-bin" + ":" + install_directory + PATH_SEP "bin" );
-  path_prepend[ LD_LIBRARY_PATH ] = split_env( install_directory + PATH_SEP "lib" );
+  
+  path_prepend[ "DCMDICTPATH" ] = split_env( install_directory + PATH_SEP + "lib" + PATH_SEP + "dicom.dic" );
+  path_prepend[ "PYTHONPATH" ] = split_env( install_directory + PATH_SEP + "python" );
+  path_prepend[ "PATH" ] = split_env( install_directory + PATH_SEP + "real-bin" + ENV_SEP + install_directory + PATH_SEP + "bin" );
+  
+  vector< string > libpath = split_env( install_directory + PATH_SEP + "lib" );
+  map< string, vector< string > >::iterator pit = path_prepend.find( LD_LIBRARY_PATH );
+  if ( pit != path_prepend.end())
+     pit->second.insert( pit->second.begin(), libpath.begin(), libpath.end() );
+  else
+    path_prepend[ LD_LIBRARY_PATH ] = libpath;
 
   string site_packages = find_python_site_packages( install_directory );
   if ( ! site_packages.empty() ) {
@@ -241,7 +254,7 @@ int main( int argc, char *argv[] )
         content.insert( content.begin(), *it2 );
       }
     }
-    set_env( it->first, join_path( content, ":" ) );
+    set_env( it->first, join_path( content, ENV_SEP ) );
   }
 
   const string unenv_prefix( "BRAINVISA_UNENV_" );
@@ -249,7 +262,13 @@ int main( int argc, char *argv[] )
     for( map< string, string>::const_iterator it = backup_variables.begin(); it != backup_variables.end(); ++it ) {
       set_env(  unenv_prefix + it->first, it->second );
     }
-    execvp( argv[1], argv + 1 );
+    //execvp( argv[1], argv + 1 );
+    string command = argv[1];
+    for( int32_t i = 2; i < argc; i++ )  {    
+      string arg = argv[i];
+      command += " \"" + arg + "\"";
+    }
+    system( command.c_str() );
   } else {
     for( map< string, string>::const_iterator it = backup_variables.begin(); it != backup_variables.end(); ++it ) {
       cout <<  "export " << unenv_prefix << it->first << "='" << it->second << "'" << endl;

@@ -319,7 +319,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
                         os.path.join( source, icns ) )
           bapp = command[:-4].lower()
           bappsrc = os.path.join( bindir, bapp )
-          bappdst = os.path.join( realbindir, f[:-4] )
+          bappdst = os.path.join( realbindir, command[:-4] )
           if os.path.islink( bappsrc ):
             if os.path.exists( bappdst ):
               os.unlink( bappdst )

@@ -28,11 +28,10 @@ set( _librarySuffixes
   lib
   dcmtk/lib
 )
-set( _shareSuffixes
+set( _shareSuffixes 
   share/dcmtk
   dcmtk/share/dcmtk
 )
-
 if( NOT DCMTK_PRE_353 )
   find_path( DCMTK_config_INCLUDE_DIR dcmtk/config/osconfig.h
     ${_directories}

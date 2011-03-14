@@ -266,17 +266,17 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
           os.mkdir( os.path.join( source, 'Contents' ) )
           os.mkdir( os.path.join( source, 'Contents', 'MacOS' ) )
           if os.path.exists( os.path.join( dest, 'Contents', 'Info.plist' ) ):
-            os.symlink( os.path.join( '../../commands-links', command, 'Contents', 
+            os.symlink( os.path.join( '../../real-bin', command, 'Contents', 
                                       'Info.plist' ), 
                         os.path.join( source, 'Contents', 'Info.plist' ) )
           if os.path.exists( os.path.join( dest, 'Contents', 'PkgInfo' ) ):
-            os.symlink( os.path.join( '../../commands-links', command, 'Contents', 
+            os.symlink( os.path.join( '../../real-bin', command, 'Contents', 
                                       'PkgInfo' ), 
                         os.path.join( source, 'Contents', 'PkgInfo' ) )
           icns = os.path.join( 'Contents', 'Resources', command[:-4] + '.icns' )
           if os.path.exists( os.path.join( dest, icns ) ):
             os.mkdir( os.path.join( source, 'Contents', 'Resources' ) )
-            os.symlink( os.path.join( '../../../commands-links', command, icns ), 
+            os.symlink( os.path.join( '../../../real-bin', command, icns ), 
                         os.path.join( source, icns ) )
           bapp = command[:-4].lower()
           bappsrc = os.path.join( bindir, bapp )
@@ -286,21 +286,22 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
               os.unlink( bappdst )
             os.symlink( os.readlink( bappsrc ), bappdst )
           # Generate the script
-          out = open( source, 'w' )
+          scriptfile=os.path.join(source, 'Contents', 'MacOS', command[:-4])
+          out = open( scriptfile, 'w' )
           out.write( '''#!/bin/sh
   directory="$0"
   [ -L "$directory" ] && directory="`dirname "$directory"`/`readlink "$directory"`"
   command=`basename $directory`
   directory="`dirname $directory`"
   directory="`cd $directory;pwd`"
-  if [ -x "$directory/bv_env" ]; then
+  if [ -x "$directory/../../../bv_env" ]; then
     exec "$directory/../../../bv_env" "$directory/../../../real-bin/'''+command+'''/Contents/MacOS/$command" "$@"
   else
     exec "$directory/../../../real-bin/'''+command+'''/Contents/MacOS/$command" "$@"
   fi
   ''' )
           out.close()
-          os.chmod( source, os.stat( dest ).st_mode )
+          os.chmod( scriptfile, os.stat( os.path.join(dest, 'Contents', 'MacOS', command[:-4]) ).st_mode )
         continue # other directories are left untouched
 
       

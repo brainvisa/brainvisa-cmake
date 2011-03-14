@@ -186,6 +186,11 @@ if [ $svn_update -eq 1 ]; then
   )
 fi
 
+if [ $os != "windows" ];then
+  # call bv_nobadlink to remove broken symlinks in the build dir
+  $binary_dir/bv_nobadlink `dirname $binary_dir`
+fi
+
 bv_configure
 bv_build
 bv_doc

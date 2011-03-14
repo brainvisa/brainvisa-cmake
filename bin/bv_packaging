@@ -207,6 +207,45 @@ def create_graphviz_dependencies( options, selected_packages, dependencies ):
   print >> out, '}'
 
 
+def makeRelativeRunScript(source, dest):
+  """Creates a script in source file that calls dest executable file through bv_env to setup environment variables."""
+  if sys.platform == 'win32':
+    ext = os.path.splitext(source)[1]
+    if ext in ( '.py' ) :
+      launcher = '\"python' + exe_ext + '\" '
+    else :
+      launcher = ''
+    source = os.path.splitext(source)[0] + '.bat'
+  out = open( source, 'w' )
+  if sys.platform == 'win32':
+    out.write( '''@setlocal
+@set directory="%%~d0%%~p0"
+@set command="%%~n0%(EXT)s"
+@if exist "%%directory:~1,-1%%bv_env.exe" (
+  @"%%directory:~1,-1%%bv_env.exe" %(LAUNCHER)s"%%directory:~1,-1%%real-bin\%%command:~1,-1%%" %%*
+) else (
+  @%(LAUNCHER)s"%%directory:~1,-1%%real-bin\%%command:~1,-1%%" %%*
+)
+@endlocal
+  ''' % { 'EXT' : ext,
+          'LAUNCHER' : launcher } )
+  else :
+    out.write( '''#!/bin/sh
+  directory="$0"
+  [ -L "$directory" ] && directory="`dirname "$directory"`/`readlink "$directory"`"
+  command=`basename $directory`
+  directory="`dirname $directory`"
+  directory="`cd $directory;pwd`"
+  if [ -x "$directory/bv_env" ]; then
+    exec "$directory/bv_env" "$directory/real-bin/$command" "$@"
+  else
+    exec "$directory/real-bin/$command" "$@"
+  fi
+  ''' )
+  out.close()
+  os.chmod( source, os.stat( dest ).st_mode )
+
+
 def create_directory_package( options, selected_packages, dependencies, list_installed_paths=False ):
   if not options.output:
     raise UserWarning( 'Ouput directory must be given for this command' )
@@ -253,50 +292,47 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
       if command in env_commands:
         continue
       source = os.path.join( bindir, command )
-      if os.path.isfile( source ) and not os.path.islink( source ):
+      if os.path.isdir( source ):
+        if command[-4:] == '.app': # MacOS GUI commands
+          dest = os.path.join( realbindir, command )
+          # first move the entire tree
+          if not os.path.exists( dest ):
+            os.rename( source, dest)
+          elif os.path.exists( source ):
+            shutil.rmtree( source )
+          # then recreate it
+          os.mkdir( source )
+          os.mkdir( os.path.join( source, 'Contents' ) )
+          os.mkdir( os.path.join( source, 'Contents', 'MacOS' ) )
+          if os.path.exists( os.path.join( dest, 'Contents', 'Info.plist' ) ):
+            os.symlink( os.path.join( '../../commands-links', command, 'Contents', 
+                                      'Info.plist' ), 
+                        os.path.join( source, 'Contents', 'Info.plist' ) )
+          if os.path.exists( os.path.join( dest, 'Contents', 'PkgInfo' ) ):
+            os.symlink( os.path.join( '../../commands-links', command, 'Contents', 
+                                      'PkgInfo' ), 
+                        os.path.join( source, 'Contents', 'PkgInfo' ) )
+          icns = os.path.join( 'Contents', 'Resources', command[:-4] + '.icns' )
+          if os.path.exists( os.path.join( dest, icns ) ):
+            os.mkdir( os.path.join( source, 'Contents', 'Resources' ) )
+            os.symlink( os.path.join( '../../../commands-links', command, icns ), 
+                        os.path.join( source, icns ) )
+          bapp = command[:-4].lower()
+          bappsrc = os.path.join( bindir, bapp )
+          bappdst = os.path.join( realbindir, f[:-4] )
+          if os.path.islink( bappsrc ):
+            if os.path.exists( bappdst ):
+              os.unlink( bappdst )
+            os.symlink( os.readlink( bappsrc ), bappdst )
+          # Generate the script
+          makeRelativeRunScript( os.path.join( source, 'Contents', 'MacOS', command[:-4] ), os.path.join( dest, 'Contents', 'MacOS', command[:-4] ) )
+        continue # other directories are left untouched
+      elif os.path.isfile( source ) and not os.path.islink( source ):
         dest = os.path.join( realbindir, command )
         if os.path.exists( dest ):
           os.remove( dest )
         os.rename( source, dest )
-        if sys.platform == 'win32':
-          ext = os.path.splitext(source)[1]
-          if ext in ( '.py' ) :
-            launcher = '\"python' + exe_ext + '\" '
-          else :
-            launcher = ''
-          source = os.path.splitext(source)[0] + '.bat'
-        out = open( source, 'w' )
-        if sys.platform == 'win32':
-          out.write( '''@setlocal
-@set directory="%%~d0%%~p0"
-@set command="%%~n0%(EXT)s"
-@if exist "%%directory:~1,-1%%bv_env.exe" (
-  @"%%directory:~1,-1%%bv_env.exe" %(LAUNCHER)s"%%directory:~1,-1%%real-bin\%%command:~1,-1%%" %%*
-) else (
-  @%(LAUNCHER)s"%%directory:~1,-1%%real-bin\%%command:~1,-1%%" %%*
-)
-@endlocal
-  ''' % { 'EXT' : ext,
-          'LAUNCHER' : launcher } )
-        else :
-          out.write( '''#!/bin/sh
-  directory="$0"
-  [ -L "$directory" ] && directory="`dirname "$directory"`/`readlink "$directory"`"
-  command=`basename $directory`
-  directory="`dirname $directory`"
-  directory="`cd $directory;pwd`"
-  if [ -x "$directory/bv_env" ]; then
-    exec "$directory/bv_env" "$directory/real-bin/$command" "$@"
-  else
-    exec "$directory/real-bin/$command" "$@"
-  fi
-  ''' )
-        out.close()
-        os.chmod( source, os.stat( dest ).st_mode )
-      elif os.path.islink(source):
-        # copy the symlink into real-bin
-        dest=os.readlink(source)
-        os.symlink(dest, os.path.join(realbindir, os.path.basename(source)))
+        makeRelativeRunScript( source, dest )
         
   # make easy shortcuts for BV and anatomist if they are packaged
   hasAnatomist = ("anatomist-free" in selected_packages) or ("anatomist-free" in dependencies)

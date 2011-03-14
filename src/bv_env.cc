@@ -266,6 +266,12 @@ int main( int argc, char *argv[] )
     string command = argv[1];
     for( int32_t i = 2; i < argc; i++ )  {    
       string arg = argv[i];
+      string::size_type position = arg.find( "\"" );
+      while ( position != string::npos ) 
+      {
+          arg.replace( position, 1, "\\\"" );
+          position = arg.find( "\"", position + 2 );
+      }
       command += " \"" + arg + "\"";
     }
     system( command.c_str() );

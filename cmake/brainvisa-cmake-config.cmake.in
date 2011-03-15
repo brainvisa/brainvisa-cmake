@@ -31,7 +31,7 @@ if( NOT BRAINVISA_CMAKE_CONFIG_DONE )
   
   unset( BRAINVISA_THIRDPARTY_COMPONENTS CACHE )
   option( BRAINVISA_PACKAGING_THIRDPARTY "Include packaging rules for third-party software" OFF )
-  mark_as_advanced( BRAINVISA_PACKAGING_THIRDPARTY )
+  #mark_as_advanced( BRAINVISA_PACKAGING_THIRDPARTY )
   if( NOT DEFINED BRAINVISA_SYSTEM_IDENTIFICATION )
     execute_process( COMMAND "${brainvisa-cmake_DIR}/../../../bin/bv_system_info" -s 
       OUTPUT_VARIABLE output OUTPUT_STRIP_TRAILING_WHITESPACE

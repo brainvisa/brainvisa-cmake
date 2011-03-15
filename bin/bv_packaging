@@ -386,7 +386,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
     if hasBrainvisa:
       bv_shortcut += '.app'
       if os.path.exists( bv_shortcut ):
-        shutil.rmtree( x, 1 )
+        shutil.rmtree( bv_shortcut, 1 )
       os.makedirs( os.path.join( bv_shortcut, 'Contents', 'MacOS' ) )
       os.makedirs( os.path.join( bv_shortcut, 'Contents', 'Resources' ) )
       os.symlink( '../../../bin/brainvisa', 
@@ -418,7 +418,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
   </plist>'''
       f.close()
       bv_shortcut=os.path.join( bv_shortcut, 'Contents', 
-                                'MacOS', 'brainvisa' ) )
+                                'MacOS', 'brainvisa' )
   # Linux
   else:
     if hasAnatomist:

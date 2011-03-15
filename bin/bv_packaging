@@ -417,6 +417,8 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
   </dict>
   </plist>'''
       f.close()
+      bv_shortcut=os.path.join( bv_shortcut, 'Contents', 
+                                'MacOS', 'brainvisa' ) )
   # Linux
   else:
     if hasAnatomist:

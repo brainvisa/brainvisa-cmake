@@ -32,8 +32,13 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         COMPONENT "${component}"
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
       if(NOT qtconfig_name STREQUAL "qtconfig")
+        if(WIN32)
+          set( command "copy_if_different" )
+        else()
+          set( command "create_symlink" )
+        endif()
         add_custom_command( TARGET install-${component} POST_BUILD
-                          COMMAND "${CMAKE_COMMAND}" -E create_symlink "${qtconfig_name}" "qtconfig"
+                          COMMAND "${CMAKE_COMMAND}" -E "${command}" "${qtconfig_name}" "qtconfig"
                           WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/bin")
       endif()
     endif()

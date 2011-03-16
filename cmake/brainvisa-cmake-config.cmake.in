@@ -356,6 +356,7 @@ function( BRAINVISA_DECLARE_THIRDPARTY_COMPONENT component )
 
       # Get component information
       BRAINVISA_PACKAGING_COMPONENT_INFO( ${component} package_name package_maintainer package_version )
+      
       if( BRAINVISA_COMPILATION_INFO )
         file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${package_name}' ] = {\n  'name': '${package_name}',\n  'component' : '${component}',\n  'type': 'thirdparty',\n  'version': '${package_version}',\n  'project': 'thirdparty',\n  'maintainer': '${package_maintainer}',\n}\n" )
       endif()
@@ -492,7 +493,7 @@ function( BRAINVISA_COPY_AND_INSTALL_HEADERS _headersVariable _includeDir target
       add_custom_command(
         OUTPUT "${_destFile}"
         DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}"
-        COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}" "${_destFile}" )
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}" "${_destFile}" )
     endif()
     set( destHeaders ${destHeaders}  "${_destFile}" )
     get_filename_component( _path "${_currentHeader}" PATH )
@@ -601,7 +602,7 @@ function( BRAINVISA_COPY_FILES component )
           add_custom_command(
             OUTPUT "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
             DEPENDS "${_absoluteFile}"
-            COMMAND "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_absoluteFile}" "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
         endif()
       endif()
 
@@ -770,7 +771,7 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
                           DEPENDS "${_pythonDirectory}/${_file}" )
     else()
       add_custom_command( OUTPUT "${_fileBuild}"
-                          COMMAND "${CMAKE_COMMAND}" -E copy "${_pythonDirectory}/${_file}" "${_fileBuild}"
+                          COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_pythonDirectory}/${_file}" "${_fileBuild}"
                           DEPENDS "${_pythonDirectory}/${_file}" )
     endif()
 
@@ -804,7 +805,7 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
                           DEPENDS "${_pythonDirectory}/${_file}" )
     else()
       add_custom_command( OUTPUT "${_fileBuild}"
-        COMMAND "${CMAKE_COMMAND}" -E copy "${_pythonDirectory}/${_file}" "${_fileBuild}"
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_pythonDirectory}/${_file}" "${_fileBuild}"
         DEPENDS "${_pythonDirectory}/${_file}" )
     endif()
     # Install source file and byte compiled files
@@ -1421,7 +1422,61 @@ function( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
           COMPONENT ${PROJECT_NAME}-dev )
 
 endfunction()
-
+  
+# BRAINVISA_RESOLVE_SYMBOL_LIBRARIES
+#   Resolve symbol library pathes. A list of library or symbol files is given in parameter, and the function gets the absolute path of these files, 
+#   check existance, and check that it is a symbol for dynamic library. If the file is a symbol file for dynamic library, try to find the matching 
+#   library file.
+#
+# Usage:
+#
+#   BRAINVISA_RESOLVE_SYMBOL_LIBRARIES( <output_variable> PATHS <list of library files> )
+#
+# Example:
+#    find_package(LibXml2)
+#    BRAINVISA_RESOLVE_SYMBOL_LIBRARIES( libxml2 ${LIBXML2_LIBRARIES} )
+#
+function( BRAINVISA_RESOLVE_SYMBOL_LIBRARIES output_variable )
+  set(_argn ${ARGN})
+  
+  # Read options
+  set( arg_index 0 )
+  foreach( _arg ${_argn} )
+  
+    if( "${_arg}" STREQUAL "PATHS" )
+      set(_currentarg "${_arg}")
+      
+    elseif( "${_currentarg}" STREQUAL "PATHS" )
+      list( GET _argn ${arg_index} result )
+      set( _paths ${_paths} ${result} )
+      
+    endif()
+    
+    math(EXPR arg_index "${arg_index} + 1")
+  endforeach()
+  
+  set( result )
+  foreach( lib ${_paths} )
+    get_filename_component( real "${lib}" REALPATH )
+    string(REGEX REPLACE "\\${CMAKE_SHARED_LIBRARY_SUFFIX}.*" "" realpathwe "${real}")
+    get_filename_component(realnamewe "${realpathwe}" NAME)
+    get_filename_component( realdir ${real} PATH )
+    if( EXISTS "${real}" )
+      if( WIN32)
+        if( real MATCHES "${CMAKE_SHARED_LIBRARY_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX}" )
+          # In this case, it necessary to get the real library file instead of symbols file
+          file(GLOB real "${realdir}/../bin/${realnamewe}-*${CMAKE_SHARED_LIBRARY_SUFFIX}" "${realdir}/../bin/${realnamewe}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+          get_filename_component(real "${real}" REALPATH )
+          set( result ${result} "${real}" )
+        elseif( real MATCHES "${CMAKE_SHARED_LIBRARY_SUFFIX}" )
+          set( result ${result} "${real}" )
+        endif()
+      endif()
+    endif()
+  endforeach()
+  set( ${output_variable} ${result} PARENT_SCOPE )
+endfunction()
+  
 # BRAINVISA_INSTALL_RUNTIME_LIBRARIES
 #   Checks and creates install rules for the libraries of the given component. 
 #   A list of library files is given in parameter, and the function gets the absolute path of these files, check existance, 
@@ -1509,15 +1564,21 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
               endif()
             endif()
           endforeach()
-        endif( UNIX OR APPLE )
-        set( librariesToInstall ${librariesToInstall} "${real}" )
+        elseif( WIN32 )
+          BRAINVISA_RESOLVE_SYMBOL_LIBRARIES( real PATHS "${lib}" )
+        endif()
+        if ( real )
+          set( librariesToInstall ${librariesToInstall} "${real}" )
+        else()
+          message( "WARNING: Cannot find valid library files for ${lib}." )
+        endif()
       endif()
     else() 
       message( "WARNING: Cannot install non existing library file ${lib}." )
     endif() 
   endforeach()
   # install libraries
-  #message("libraries to install : ${librariesToInstall}")
+  # message("libraries to install : ${librariesToInstall}")
   BRAINVISA_INSTALL( FILES ${librariesToInstall}
       DESTINATION "${destination}"
       COMPONENT "${component}"

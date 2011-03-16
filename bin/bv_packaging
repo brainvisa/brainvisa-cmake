@@ -72,15 +72,21 @@ def system_call( options, command, cwd=None, env=None, return_output=False ):
     raise subprocess.CalledProcessError( popen.returncode, ' '.join( ( repr(i) for i in command ) ) )
   return result
   
-def unixstyle_path( path ):
-  if sys.platform == 'win32':
-    if ( len( os.path.splitdrive( path )[0] ) > 0 ) :
+def system_path( path, mode = 'auto2win', keepdrive = True ):
+  
+  if ( mode == 'unix2win' \
+      or ( ( mode == 'auto2win' ) and ( sys.platform[:3] == 'win' ) ) ) :
+    return path.replace( '/', '\\' )
+
+  elif ( mode == 'win2unix' \
+      or ( ( mode == 'auto2unix' ) and ( sys.platform[:3] != 'win' ) ) ) :
+    if not keepdrive :
       # This is an absolute windows path
       path = os.path.sep + path.replace( ':', '' )
-      
+        
     return path.replace( '\\', '/' )
-  else :
-    return path
+      
+  return path
     
 def recursive_listdir( directory ):
   for i in os.listdir( directory ):
@@ -207,6 +213,7 @@ def create_graphviz_dependencies( options, selected_packages, dependencies ):
   print >> out, '}'
 
 def create_directory_package( options, selected_packages, dependencies, list_installed_paths=False ):
+
   if not options.output:
     raise UserWarning( 'Ouput directory must be given for this command' )
   install_directory = options.output
@@ -218,9 +225,10 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
   installed_paths = {}
   current_dir=os.getcwd()
   os.chdir(build_directory)
+  
   for package in ( selected_packages + dependencies  if options.dependencies else selected_packages ):
     print 'Installing', package
-    command = [ 'make', 'BRAINVISA_INSTALL_PREFIX=' + unixstyle_path( install_directory ), 'install-' + packages_info[ package ]['component'] ]
+    command = [ 'make', 'BRAINVISA_INSTALL_PREFIX=' + system_path( install_directory, 'auto2unix' ), 'install-' + packages_info[ package ]['component'] ]
     system_call( options, command )
     if list_installed_paths:
       # List files installed by package
@@ -233,7 +241,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
     bindir = os.path.join( install_directory, 'bin' )
     if not os.path.exists( bindir ):
       os.mkdir( bindir )
-    if sys.platform == 'win32':
+    if sys.platform[:3] == 'win':
       exe_ext = '.exe'
     else :
       exe_ext = ''
@@ -310,7 +318,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
         if os.path.exists( dest ):
           os.remove( dest )
         os.rename( source, dest )
-        if sys.platform == 'win32':
+        if sys.platform[:3] == 'win':
           ext = os.path.splitext(source)[1]
           if ext in ( '.py' ) :
             launcher = '\"python' + exe_ext + '\" '
@@ -318,7 +326,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
             launcher = ''
           source = os.path.splitext(source)[0] + '.bat'
         out = open( source, 'w' )
-        if sys.platform == 'win32':
+        if sys.platform[:3] == 'win':
           out.write( '''@setlocal
 @set directory="%%~d0%%~p0"
 @set command="%%~n0%(EXT)s"
@@ -375,6 +383,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
 @endlocal
   ''' )
       out.close()
+  
   # Macos
   elif sys.platform[:6] == 'darwin':
     # Build MacOS X clickable icons
@@ -429,13 +438,12 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
       if os.path.exists( bv_shortcut ):
         os.unlink( bv_shortcut )
       os.symlink( os.path.join('bin', 'brainvisa'), bv_shortcut )
-      
-      
+
   # Update brainvisa shared database
   if hasBrainvisa and ("brainvisa-share" in selected_packages):
     print "Updating BrainVISA shared database"
-    os.system( bv_shortcut+" -b --setup" )
-
+    os.system( system_path( bv_shortcut, 'auto2unix' ) + " -b --setup" )
+  
   if list_installed_paths:
     result = {}
     for path, package in  (( i[len(install_directory)+1:], j ) for i,j in installed_paths.iteritems() ):
@@ -460,10 +468,10 @@ def create_compressed_package( options, selected_packages, dependencies ):
     options.output = install_directory
     create_directory_package( options, selected_packages, dependencies )
     options.output = output
-    if sys.platform != 'win32': # compressing in tar.bz2 with tar
+    if sys.platform[:3] != 'win': # compressing in tar.bz2 with tar
       output=output+".tar.bz2"
       print 'Compressing %s in %s' % (repr(install_directory), repr(output) )
-      system_call( options, [ 'tar', 'jcf', unixstyle_path( output ) ] + os.listdir( temp_directory ), cwd=temp_directory )
+      system_call( options, [ 'tar', 'jcf', system_path( output, 'auto2unix' ) ] + os.listdir( temp_directory ), cwd=temp_directory )
     else: # compressing in zip with zipfile module
       output = output+".zip"
       print 'Compressing %s in %s' % (repr(install_directory), repr(output) )
@@ -558,7 +566,7 @@ Section: multiverse/science''') % package_info
       
       # Creating *.deb file
       try:
-        system_call( options, ( 'dpkg', '--build', unixstyle_path( deb_directory ), unixstyle_path( deb_file ) ) )
+        system_call( options, ( 'dpkg', '--build', system_path( deb_directory, 'auto2unix' ), system_path( deb_file, 'auto2unix' ) ) )
       except subprocess.CalledProcessError:
         print >> sys.stderr, '\nDebian control file for %s' % package
         sys.stderr.write( open( control.name ).read() )

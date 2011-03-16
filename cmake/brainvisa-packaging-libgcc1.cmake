@@ -14,7 +14,7 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  if(NOT APPLE AND NOT WIN32) # packaged only on linux
+  if(NOT APPLE) # packaged on linux and windows
     if(LIBGCC_FOUND)
       BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${LIBGCC_LIBRARIES} )
       set(${component}_PACKAGED TRUE PARENT_SCOPE)

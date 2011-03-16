@@ -35,6 +35,7 @@
 
 from subprocess import Popen, PIPE, STDOUT
 from tempfile import NamedTemporaryFile
+from fnmatch import fnmatch
 
 SVN_URL = 'https://bioproj.extra.cea.fr/neurosvn'
 BRAINVISA_SVN_URL = SVN_URL + '/brainvisa'
@@ -50,7 +51,6 @@ projects = [
   'aims',
   'anatomist',
   'axon',
-  'axon_web',
   'data_storage_client',
   'datamind',
   't1mri',
@@ -63,13 +63,12 @@ projects = [
   'optical_imaging',
   'pyhrf',
   'fmri',
+  'ptk',
   'famis',
   'sandbox',
-  'ptk'
 ]
 
-excludeProjects = set()
-excludeComponents = set()
+excludeComponents = [ 'ptk/toolbox-user-*' ]
 
 # If component order inside a project is important, it is possible to
 # declare them in componentsPerProject. Components not listed but present
@@ -92,6 +91,7 @@ componentsPerProject = {
  't1mri': [ 't1mri-private', 't1mri-gpl' ],
  'famis': [ 'famis-private', 'famis-gpl' ],
  'pyhrf': [ 'pyhrf-free', 'pyhrf-gpl' ],
+ 'ptk': [ 'ptk', 'pyptk', 'mri-reconstruction', 'relaxometrist', 'nucleist', 'functionalist', 'connectomist', 'microscopist', 'realtime-mri' ],
 }
 
 
@@ -171,7 +171,7 @@ def list_svn_directories( url ):
   output = system( 'svn', 'list', url )
   return [ i[ :-1 ] for i in output.split( '\n' ) if i and i[-1] == '/' ]
 
-def find_branches_and_tags( projects=None, components=None, excludeProjects=excludeProjects ):
+def find_branches_and_tags( projects=None, components=None, excludeComponents=excludeComponents ):
   '''
   Look in BRAINVISA_SVN_URL for branches. Returns a generator
   containing tuples with four elements: ( project, component, url, branches ).
@@ -183,10 +183,10 @@ def find_branches_and_tags( projects=None, components=None, excludeProjects=excl
     branches is a list of existing branches sorted from the lowest to the highest
       (e.g. ['3.1', '3.2', '3.12', '3.113']).
   '''
+  real_component_name = {}
   if projects is None:
     projects = [ i for i in list_svn_directories( BRAINVISA_SVN_URL ) if i != 'source_views' ]
   for project in projects:
-    if excludeProjects and project in excludeProjects: continue
     if components is None:
       selected_components = [ i for i in list_svn_directories( BRAINVISA_SVN_URL + '/' + project ) if i != 'build-config' ]
     else:
@@ -195,7 +195,16 @@ def find_branches_and_tags( projects=None, components=None, excludeProjects=excl
       if 'trunk' in selected_components:
         selected_components = [ None ]
       for component in selected_components:
-        if component in excludeComponents: continue
+        if excludeComponents:
+          projectAndComponent = project + ( '/' + component if component else '' )
+          for exclude_pattern in excludeComponents:
+            if fnmatch( projectAndComponent, exclude_pattern ):
+              exclude = True
+              break
+          else:
+            exclude = False
+          if exclude:
+            continue
         if component is None:
           url = BRAINVISA_SVN_URL + '/' + project
         else:
@@ -208,7 +217,18 @@ def find_branches_and_tags( projects=None, components=None, excludeProjects=excl
           tags = [ '.'.join( (str(l) for l in k ) ) for k in sorted( ( ([int(j) for j in i.split('.')] for i in list_svn_directories( url + '/tags' ) ) ) ) ]
         except SystemError:
           tags = []
-        yield ( project, component, url, branches, tags )
+        component_name = real_component_name.get( ( project if component is None else component ) )
+        if component_name is None:
+          try:
+            project_info = system( 'svn', 'cat', url + '/trunk/project_info.cmake' )
+          except SystemError:
+            component_name = ''
+          else:
+            l = project_info.split()
+            component_name = l[ l.index( 'BRAINVISA_PACKAGE_NAME' ) + 1 ]
+          real_component_name[ component ] = component_name
+        if component_name:
+          yield ( project, component_name, url, branches, tags )
 
 def read_bioproj_cmake_version( url ):
   temporary = NamedTemporaryFile()

@@ -85,6 +85,10 @@ componentsPerGroup = {}
 
 print 'Scanning BrainVISA subversion repository...'
 for project, component, url, branches, tags in find_branches_and_tags():
+  print ' ', project + '/' + component
+  print '    url:', url
+  print '    branches:', branches
+  print '    tags:', tags
   if component is None:
     component = project
   if project not in projects:
@@ -167,6 +171,12 @@ def compare( first, second ):
   return _remove_comments.sub( '', first ) == _remove_comments.sub( '', second )
 
 
+for component in projectPerComponent.keys():
+  if urlPerComponent.get( component ) is None:
+    print 'WARNING: component ' + repr( component ) + ' is declared in bioproj_parser.py but was not found in repository'
+    project = projectPerComponent[ component ]
+    del projectPerComponent[ component ]
+    componentsPerProject[ project ].remove( component )
 todo = []
 
 cmake_projects = os.path.join( tmp, 'cmake_projects' )

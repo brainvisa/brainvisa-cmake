@@ -595,28 +595,30 @@ function( BRAINVISA_COPY_FILES component )
       get_filename_component( _path "${_file}" PATH )
     endif()
     if( EXISTS "${_absoluteFile}" )
-      if( immediate )
-        configure_file( "${_absoluteFile}"
-                        "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
-                        COPYONLY )
-      else()
-        if( symlinks AND ( UNIX OR APPLE ) )
-          # Make a symlink instead of copying Python source allows to
-          # execute code from the build tree and directly benefit from
-          # modifications in the source tree (without typing make)
-          get_filename_component( _path_file "${_file}" PATH )
-          add_custom_command(
-            OUTPUT "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
-            COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/${_destination}/${_path_file}"
-            COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_absoluteFile}" "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
+      # do not copy a file on itself
+      if(NOT "${_absoluteFile}" STREQUAL "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
+        if( immediate )
+          configure_file( "${_absoluteFile}"
+                          "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
+                          COPYONLY )
         else()
-          add_custom_command(
-            OUTPUT "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
-            DEPENDS "${_absoluteFile}"
-            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_absoluteFile}" "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
+          if( symlinks AND ( UNIX OR APPLE ) )
+            # Make a symlink instead of copying Python source allows to
+            # execute code from the build tree and directly benefit from
+            # modifications in the source tree (without typing make)
+            get_filename_component( _path_file "${_file}" PATH )
+            add_custom_command(
+              OUTPUT "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
+              COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/${_destination}/${_path_file}"
+              COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_absoluteFile}" "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
+          else()
+            add_custom_command(
+              OUTPUT "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
+              DEPENDS "${_absoluteFile}"
+              COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_absoluteFile}" "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
+          endif()
         endif()
       endif()
-
       if( outputVariable )
         list( APPEND _allOutputFiles  "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
       endif()

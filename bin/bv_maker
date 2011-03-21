@@ -146,10 +146,7 @@ class GlobalConfiguration( object ):
     (options, args) = parser.parse_args( argv )
     if args:
       raise ValueError( 'Invalid option: %s' % args[0] )
-  
-    for i in ( 'configuration_file', 'username', 'verbose' ):
-      setattr( self, i, getattr( options, i ) )
-    
+   
     packages = []
     lineCount = 0
     currentDirectoryObject = None
@@ -164,7 +161,10 @@ class GlobalConfiguration( object ):
       bd.addConfigurationLine( 'all * ' + options.sources_directory )
     elif not options.configuration_file:
       options.configuration_file = defaultConfigurationFile
-      
+    
+    for i in ( 'configuration_file', 'username', 'verbose' ):
+      setattr( self, i, getattr( options, i ) )
+
     if options.configuration_file:
       # Read configuration file
       for line in open( options.configuration_file ):
@@ -194,6 +194,25 @@ class GlobalConfiguration( object ):
             currentDirectoryObject.addConfigurationLine( line )
         except SyntaxError:
           raise SyntaxError( 'Syntax error in ' + repr( options.configuration_file ) + ' on line ' + str( lineCount ) )
+
+
+class InfoCommand( object ):
+  def __init__( self, argv, configuration ):
+    usage = '''%prog [global options] info [options]
+    
+    Display information about configuration, sources directories and build directories.'''
+    parser = OptionParser(usage=usage)
+    (options, args) = parser.parse_args( argv )
+    if args:
+      raise ValueError( 'Invalid option: %s' % args[0] )
+  
+  
+  def __call__( self ):
+    print 'Configuration file:', configuration.configuration_file
+    for d, o in configuration.sourcesDirectories.iteritems():
+      o.info()
+    for d, o in configuration.buildDirectories.iteritems():
+      o.info()
 
 
 class SourcesCommand( object ):
@@ -458,6 +477,23 @@ class SourceDirectory( object ):
     self.svncommand( 'propset', 'svn:externals', '--file', externalsFileName, self.directory )
     self.svncommand( 'commit', '-m', '', self.directory )
 
+  def info( self ):
+    print 'Source directory: "' + self.directory + '"'
+    
+    self.clients = {}
+    for url, component_version in self.componentVersionPerURL.iteritems():
+      component, version = component_version
+      self.clients.setdefault( version, {} ).setdefault( brainvisaProjectPerComponent.get( component ), [] ).append( url )
+      
+    currentProject = None
+    for version, content in self.clients.iteritems():
+      for project, urls in content.iteritems():
+        for url in urls:
+          print ' ', url[ len( BRAINVISA_SVN_URL ) + 1: ], '<-', url
+    for source, dest in self.otherComponentsDirectory:
+      print ' ', dest, '<--', SVN_URL + '/' + source
+
+
 
 
 
@@ -593,8 +629,50 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
   def doc( self ):
     system( cwd=self.directory, *( ['make'] + self.make_options.split() + ['-j1', 'doc'] ) )
   
+  
+  def info( self ):
+    print 'Build directory: "' + self.directory + '"'
+    for directory in self.configurationDirectories:
+      os.stat( directory ) # Raise appropriate error if directory does not exist
+      project_info = os.path.join( directory, 'project_info.cmake' )
+      if os.path.exists( project_info ):
+        project = None
+        component = None
+        p = re.compile( r'\s*set\(\s*([^ \t]*)\s*(.*[^ \t])\s*\)' )
+        for line in open( project_info ):
+          match = p.match( line )
+          if match:
+            variable, value = match.groups()
+            if variable == 'BRAINVISA_PACKAGE_NAME':
+              component = value
+            elif variable == 'BRAINVISA_PACKAGE_MAIN_PROJECT':
+              project = value
+        if project:
+          self.projects.add( project )
+        if component:
+          self.components[ component ] = directory
+    
+    for component, directory in self.components.items():
+      if not os.path.exists( os.path.join( directory, 'project_info.cmake' ) ):
+        del self.components[ component ]
+    
+    # Order of projects and components is important for dependencies
+    sortedProjects = [ p for p in brainvisaProjects if p in self.projects ]
+    sortedComponents = []
+    components = set( self.components )
+    for project in sortedProjects:
+      for component in brainvisaComponentsPerProject[ project ]:
+        if component in components:
+          sortedComponents.append( component )
+          components.remove( component )
+    sortedComponents.extend( components )
+    
+    for component in sortedComponents:
+      print ' ', component, '<=', self.components[ component ]
+
 
 commands = {
+  'info': InfoCommand,
   'sources': SourcesCommand,
   'configure': ConfigureCommand,
   'build': BuildCommand,
@@ -624,7 +702,7 @@ if len( options_by_command ) == 1:
     if i in ( 'doc', 'compile' ):
       continue
     options_by_command[ i ] = []
-for command in [ 'compile', 'sources', 'configure', 'build', 'doc' ]:
+for command in [ 'info', 'compile', 'sources', 'configure', 'build', 'doc' ]:
   if command in options_by_command:
     todo.append( commands[ command ]( options_by_command[ command ], configuration ) )
 

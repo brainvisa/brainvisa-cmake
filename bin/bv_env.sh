@@ -38,6 +38,7 @@ else
     exists history && exists tail && exists awk
     if [ $? -eq 0 ]; then
       bv_env_command=`history | tail -n 1 | awk '{print $3}'`
+      bv_env_command=`eval echo $bv_env_command`
       if [ -n "$bv_env_command" ];then
         bv_env=`dirname $bv_env_command`
         bv_env="$bv_env/bv_env"

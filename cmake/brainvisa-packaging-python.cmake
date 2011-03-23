@@ -21,7 +21,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     get_filename_component( PYTHON_BIN_DIR "${REAL_PYTHON_EXECUTABLE}" PATH )
     get_filename_component( name "${PYTHON_EXECUTABLE}" NAME_WE )
     get_filename_component( ext "${PYTHON_EXECUTABLE}" EXT )
-    
+
     if( NOT name STREQUAL "python" )
       if(WIN32)
         set( command "copy_if_different" )
@@ -33,13 +33,34 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/bin")
     endif()
 
+    if( APPLE )
+      get_filename_component( PYTHON_DIR "${PYTHON_BIN_DIR}" PATH )
+      if( EXISTS "${PYTHON_DIR}/Resources/Python.app" )
+        set( _python_app TRUE )
+      endif()
+    endif()
+
     find_program(IPYTHON_EXECUTABLE ipython PATHS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts NO_DEFAULT_PATH)
     find_program(PYCOLOR_EXECUTABLE pycolor PATHS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts NO_DEFAULT_PATH)
   
-    BRAINVISA_INSTALL( FILES "${REAL_PYTHON_EXECUTABLE}" "${IPYTHON_EXECUTABLE}" "${PYCOLOR_EXECUTABLE}"
+    if( _python_app )
+      BRAINVISA_INSTALL( FILES "${IPYTHON_EXECUTABLE}" "${PYCOLOR_EXECUTABLE}"
       DESTINATION "bin"
       COMPONENT "${component}"
       PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
+      BRAINVISA_INSTALL( DIRECTORY "${PYTHON_DIR}/Resources/Python.app"
+      DESTINATION "bin"
+      COMPONENT "${component}"
+      USE_SOURCE_PERMISSIONS )
+      add_custom_command( TARGET install-${component} POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "Python.app/Contents/MacOS/Python" "python"
+        WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/bin")
+    else()
+      BRAINVISA_INSTALL( FILES "${REAL_PYTHON_EXECUTABLE}" "${IPYTHON_EXECUTABLE}" "${PYCOLOR_EXECUTABLE}"
+      DESTINATION "bin"
+      COMPONENT "${component}"
+      PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
+    endif()
   
     BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${PYTHON_LIBRARY} )
   

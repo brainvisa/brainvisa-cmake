@@ -1563,16 +1563,21 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
             # ex: libsqlite3.so and libsqlite3-3.6.2.so.0
             if(realnamewe STREQUAL name)
               if(NOT realdir STREQUAL dirname)
-                file(GLOB othernames "${lib}*" "${realdir}/${realnamewe}${ext}*")
+                file(GLOB othernames "${lib}*"
+                  "${realdir}/${realnamewe}${ext}*"
+                  "${realdir}/${realnamewe}.*${ext}")
               else()
-                file( GLOB othernames "${lib}*")
+                file( GLOB othernames "${lib}*"
+                  "${realdir}/${realnamewe}.*${ext}")
               endif()
             else()
               #message("search glob expressions : ${lib}* ${realdir}/${realnamewe}${ext}*")
-              file( GLOB othernames "${lib}*" "${realdir}/${realnamewe}${ext}*" )
+              file( GLOB othernames "${lib}*"
+                "${realdir}/${realnamewe}${ext}*"
+                "${realdir}/${realnamewe}.*${ext}" )
             endif()
           endif()
-          #message("othernames of the lib : ${othernames}")
+          message("othernames of the lib : ${othernames}")
           # create linknames list to store the processed link names to avoid create several times the same link
           set(linknames)
           foreach(link ${othernames})

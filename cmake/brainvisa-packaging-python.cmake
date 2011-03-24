@@ -66,12 +66,27 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   
     # all python modules are copied in install directory but in theory, we should not copy site-packages subdirectory
     # the content of site-packages should be described in different packages.
-    #BRAINVISA_INSTALL_DIRECTORY( "${PYTHON_MODULES_PATH}" "lib/python${PYTHON_SHORT_VERSION}" "${component}" )
-    BRAINVISA_INSTALL(DIRECTORY "${PYTHON_MODULES_PATH}"
-      DESTINATION "lib"
-      USE_SOURCE_PERMISSIONS
-      COMPONENT "${component}"
-    )
+    if(WIN32)
+      set(PYTHON_DLLS "${PYTHON_BIN_DIR}/DLLs")
+      set(PYTHON_DOC "${PYTHON_BIN_DIR}/Doc")
+      #set(PYTHON_SCRIPTS "${PYTHON_BIN_DIR}/Scripts")
+      set(PYTHON_SIP "${PYTHON_BIN_DIR}/sip")
+      set(PYTHON_TCL "${PYTHON_BIN_DIR}/tcl")
+      set(PYTHON_TOOLS "${PYTHON_BIN_DIR}/tools")
+      set(PYTHON_XMLDOC "${PYTHON_BIN_DIR}/xmldoc")
+      set(PYTHON_SUBDIRS "${PYTHON_MODULES_PATH}" "${PYTHON_DLLS}" "${PYTHON_DOC}" "${PYTHON_SIP}" "${PYTHON_TCL}" "${PYTHON_TOOLS}" "${PYTHON_XMLDOC}")
+      
+      BRAINVISA_INSTALL( DIRECTORY ${PYTHON_SUBDIRS} 
+                         DESTINATION "lib/python" 
+                         USE_SOURCE_PERMISSIONS
+                         COMPONENT "${component}" )
+    else()
+      BRAINVISA_INSTALL(DIRECTORY "${PYTHON_MODULES_PATH}"
+        DESTINATION "lib"
+        USE_SOURCE_PERMISSIONS
+        COMPONENT "${component}"
+      )
+    endif()
     set(${component}_PACKAGED TRUE PARENT_SCOPE)
   else()
     set(${component}_PACKAGED FALSE PARENT_SCOPE)

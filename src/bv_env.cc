@@ -121,12 +121,16 @@ string current_directory()
 string find_python_site_packages( const string &install_directory )
 {
   string result;
-  DIR *dir = opendir( (install_directory + PATH_SEP "lib").c_str() );
+  DIR *dir = opendir( (install_directory + PATH_SEP + "lib").c_str() );
   if ( dir ) {
     for( struct dirent *entry = readdir( dir ); entry; entry = readdir( dir ) ) {
       const string entry_name = entry->d_name;
       if ( entry_name.compare( 0, 6, "python" ) == 0 ) {
-        string site_packages = install_directory + PATH_SEP "lib" PATH_SEP + entry_name + PATH_SEP "site-packages";
+#if WIN32
+        string site_packages = install_directory + PATH_SEP + "lib" + PATH_SEP + entry_name + PATH_SEP + "lib" + PATH_SEP "site-packages";
+#else
+        string site_packages = install_directory + PATH_SEP + "lib" + PATH_SEP + entry_name + PATH_SEP "site-packages";
+#endif
         DIR *dir2 = opendir( site_packages.c_str() );
         if ( dir2 ) {
           closedir( dir2 );
@@ -208,10 +212,18 @@ int main( int argc, char *argv[] )
   map< string, vector< string > > path_prepend;
   
   path_prepend[ "DCMDICTPATH" ] = split_env( install_directory + PATH_SEP + "lib" + PATH_SEP + "dicom.dic" );
+
   path_prepend[ "PYTHONPATH" ] = split_env( install_directory + PATH_SEP + "python" );
   path_prepend[ "PATH" ] = split_env( install_directory + PATH_SEP + "real-bin" + ENV_SEP + install_directory + PATH_SEP + "bin" );
-  
+
+#ifdef WIN32
+  vector< string > libpath = split_env( install_directory + PATH_SEP + "lib" + ENV_SEP
+                                        + install_directory + PATH_SEP + "lib"+ PATH_SEP + "python" + ENV_SEP
+                                        + install_directory + PATH_SEP + "lib"+ PATH_SEP + "python"+ PATH_SEP + "DLLs" );
+#else
   vector< string > libpath = split_env( install_directory + PATH_SEP + "lib" );
+#endif  
+
   map< string, vector< string > >::iterator pit = path_prepend.find( LD_LIBRARY_PATH );
   if ( pit != path_prepend.end())
      pit->second.insert( pit->second.begin(), libpath.begin(), libpath.end() );
@@ -220,8 +232,14 @@ int main( int argc, char *argv[] )
 
   string site_packages = find_python_site_packages( install_directory );
   if ( ! site_packages.empty() ) {
-    set_variables[ "PYTHONHOME" ] = install_directory;
     path_prepend[ "PYTHONPATH" ].push_back( site_packages );
+#ifdef WIN32
+    set_variables[ "PYTHONHOME" ] = install_directory + PATH_SEP + "lib" + PATH_SEP + "python";
+    path_prepend[ "PYTHONPATH" ].push_back( site_packages + PATH_SEP + "win32" );
+    path_prepend[ "PYTHONPATH" ].push_back( site_packages + PATH_SEP + "win32"+ PATH_SEP + "lib" );
+#else
+    set_variables[ "PYTHONHOME" ] = install_directory;
+#endif
   }
   
   

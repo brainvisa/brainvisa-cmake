@@ -12,6 +12,8 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO cmake package_name package_maintain
   if (NOT WIN32)
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libcairo2 RUN )
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libltdl7 RUN )
+  else()
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libregex RUN )
   endif()
 endfunction()
 

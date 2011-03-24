@@ -49,4 +49,7 @@ if( WIN32 )
     endif()
   endif()
   
+  # Set default prefixes to find libraries in right order
+  set(CMAKE_FIND_LIBRARY_PREFIXES "" ${CMAKE_FIND_LIBRARY_PREFIXES})
+  
 endif()

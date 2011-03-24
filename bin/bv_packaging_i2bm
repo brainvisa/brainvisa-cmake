@@ -115,6 +115,10 @@ elif version == 'trunk' or version == 'devel':
     packages += " -project=nuclear_processing -project=data_storage_client"
 else:
   parser.error( 'Invalid version. Possible values are: "stable" and "trunk"' )
+  
+if platf == 'windows' :
+  # No windows version of connectomist project is available
+  packages += ' -project=connectomist -project=ptk'
 
 packBaseName = 'brainvisa-' + system
 packName = packBaseName + '-' + packVersion

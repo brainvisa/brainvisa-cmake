@@ -1577,7 +1577,7 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
                 "${realdir}/${realnamewe}.*${ext}" )
             endif()
           endif()
-          message("othernames of the lib : ${othernames}")
+          # message("othernames of the lib : ${othernames}")
           # create linknames list to store the processed link names to avoid create several times the same link
           set(linknames)
           foreach(link ${othernames})

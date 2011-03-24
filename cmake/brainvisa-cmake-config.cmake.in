@@ -1574,10 +1574,14 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
               #message("search glob expressions : ${lib}* ${realdir}/${realnamewe}${ext}*")
               file( GLOB othernames "${lib}*"
                 "${realdir}/${realnamewe}${ext}*"
-                "${realdir}/${realnamewe}.*${ext}" )
+                "${realdir}/${realnamewe}.*${ext}"
+                "${realdir}/${name}${ext}*"
+                "${realdir}/${name}.*${ext}" )
             endif()
           endif()
-          # message("othernames of the lib : ${othernames}")
+          list( REMOVE_DUPLICATES othernames )
+          # message("othernames of the lib ${real} in ${realdir}/${realnamewe}:" )
+          # message( "othernames : ${othernames}")
           # create linknames list to store the processed link names to avoid create several times the same link
           set(linknames)
           foreach(link ${othernames})

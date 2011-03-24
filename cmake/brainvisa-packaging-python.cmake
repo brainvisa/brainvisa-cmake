@@ -87,6 +87,17 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         COMPONENT "${component}"
       )
     endif()
+
+    # install pyconfig.h file since it may be required by some packages
+    # using distutils (like matplotlib)
+    find_file( pyconfig "pyconfig.h" PYTHON_INCLUDE_PATH )
+    if( pyconfig )
+      BRAINVISA_INSTALL( FILES "${pyconfig}"
+        DESTINATION "include/python${PYTHON_SHORT_VERSION}"
+        COMPONENT "${component}"
+        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ )
+    endif()
+
     set(${component}_PACKAGED TRUE PARENT_SCOPE)
   else()
     set(${component}_PACKAGED FALSE PARENT_SCOPE)

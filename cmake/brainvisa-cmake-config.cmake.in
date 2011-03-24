@@ -1581,7 +1581,7 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
           endif()
           list( REMOVE_DUPLICATES othernames )
           # message("othernames of the lib ${real} in ${realdir}/${realnamewe}:" )
-          # message( "othernames : ${othernames}")
+          #message( "othernames : ${othernames}")
           # create linknames list to store the processed link names to avoid create several times the same link
           set(linknames)
           foreach(link ${othernames})
@@ -1591,7 +1591,8 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
             if(link_found EQUAL -1)
               list(APPEND linknames ${linkname})
               get_filename_component(linkreal ${link} REALPATH)
-              if(NOT link STREQUAL linkreal AND NOT linkname STREQUAL realname) # if it is really a symlink and it has a name different from the name of the lib
+	      # if it is really a symlink and it has a name different from the name of the lib and the link points to the real library
+              if(NOT link STREQUAL linkreal AND NOT linkname STREQUAL realname AND linkreal STREQUAL real) 
                 add_custom_command( TARGET install-${component} POST_BUILD
                         COMMAND "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}"
                         WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/${destination}")
@@ -1613,7 +1614,7 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
     endif() 
   endforeach()
   # install libraries
-  # message("libraries to install : ${librariesToInstall}")
+  #message("libraries to install : ${librariesToInstall}")
   BRAINVISA_INSTALL( FILES ${librariesToInstall}
       DESTINATION "${destination}"
       COMPONENT "${component}"

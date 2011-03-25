@@ -16,23 +16,7 @@ endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   if(PYTHON_FOUND)
-    # Find the usual python executable : without version number in the name
-    get_filename_component( REAL_PYTHON_EXECUTABLE "${PYTHON_EXECUTABLE}" REALPATH )
-    get_filename_component( PYTHON_BIN_DIR "${REAL_PYTHON_EXECUTABLE}" PATH )
-    get_filename_component( name "${PYTHON_EXECUTABLE}" NAME_WE )
-    get_filename_component( ext "${PYTHON_EXECUTABLE}" EXT )
-
-    if( NOT name STREQUAL "python" )
-      if(WIN32)
-        set( command "copy_if_different" )
-      else()
-        set( command "create_symlink" )
-      endif()
-      add_custom_command( TARGET install-${component} POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E "${command}" "${name}${ext}" "python${ext}"
-        WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/bin")
-    endif()
-
+  
     if( APPLE )
       get_filename_component( PYTHON_DIR "${PYTHON_BIN_DIR}" PATH )
       if( EXISTS "${PYTHON_DIR}/Resources/Python.app" )
@@ -56,6 +40,23 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "Python.app/Contents/MacOS/Python" "python"
         WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/bin")
     else()
+      
+      # Find the real path of python executable
+      get_filename_component( REAL_PYTHON_EXECUTABLE "${PYTHON_EXECUTABLE}" REALPATH )
+      get_filename_component( PYTHON_BIN_DIR "${REAL_PYTHON_EXECUTABLE}" PATH )
+      get_filename_component( name "${PYTHON_EXECUTABLE}" NAME )
+      # copy or create a link named python that starts the real python executable
+      if( NOT name STREQUAL "python" )
+        if(WIN32)
+          set( command "copy_if_different" )
+        else()
+          set( command "create_symlink" )
+        endif()
+        add_custom_command( TARGET install-${component} POST_BUILD
+          COMMAND "${CMAKE_COMMAND}" -E "${command}" "${name}" "python${CMAKE_EXECUTABLE_SUFFIX}"
+          WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/bin")
+      endif()
+
       BRAINVISA_INSTALL( FILES "${REAL_PYTHON_EXECUTABLE}" "${IPYTHON_EXECUTABLE}" "${PYCOLOR_EXECUTABLE}"
       DESTINATION "bin"
       COMPONENT "${component}"

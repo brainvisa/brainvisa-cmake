@@ -16,7 +16,10 @@ endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   if(PYTHON_FOUND)
-  
+    # Find the real path of python executable
+    get_filename_component( REAL_PYTHON_EXECUTABLE "${PYTHON_EXECUTABLE}" REALPATH )
+    get_filename_component( PYTHON_BIN_DIR "${REAL_PYTHON_EXECUTABLE}" PATH )
+
     if( APPLE )
       get_filename_component( PYTHON_DIR "${PYTHON_BIN_DIR}" PATH )
       if( EXISTS "${PYTHON_DIR}/Resources/Python.app" )
@@ -41,11 +44,8 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/bin")
     else()
       
-      # Find the real path of python executable
-      get_filename_component( REAL_PYTHON_EXECUTABLE "${PYTHON_EXECUTABLE}" REALPATH )
-      get_filename_component( PYTHON_BIN_DIR "${REAL_PYTHON_EXECUTABLE}" PATH )
+      # copy or create a link named python that starts the real python executable (ex. python -> python2.6)
       get_filename_component( name "${PYTHON_EXECUTABLE}" NAME )
-      # copy or create a link named python that starts the real python executable
       if( NOT name STREQUAL "python" )
         if(WIN32)
           set( command "copy_if_different" )

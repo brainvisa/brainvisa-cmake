@@ -96,23 +96,20 @@ if len( args ) != 1:
 version = args[ 0 ]
 date = time.strftime( '%Y_%m_%d' )
 
+# for separate distribution, fmri is not in this list
+packages="+type=run +type=usrdoc -project=pyhrf -project=fmri -project=famis -project=sandbox -name=\"web*\" -project=axon_web -project=brainvisa-installer"
+if not options.i2bm:
+  packages += " -project=nuclear_processing -project=data_storage_client -name=bioprocessing"
 if version == 'stable':
   version='stable'
   packVersion = '4.0.2-' + date
   shortVersion = '4.0'
   setupOptions = ''
-  # for separate distribution, fmri is not in this list
-  packages="+type=run +type=usrdoc -project=pyhrf -project=fmri -project=famis -project=sandbox -name=\"web*\" -project=axon_web -project=brainvisa-installer"
-  if not options.i2bm:
-    packages += " -project=nuclear_processing -project=data_storage_client"
 elif version == 'trunk' or version == 'devel':
   version='trunk'
   packVersion = 'devel_4.1-' + date
   shortVersion = '4.1'
   setupOptions = ' --binSuffix=-' + date
-  packages="+type=run +type=usrdoc -project=pyhrf -project=fmri -project=famis -project=sandbox -name=\"web*\" -project=axon_web -project=brainvisa-installer"
-  if not options.i2bm:
-    packages += " -project=nuclear_processing -project=data_storage_client"
 else:
   parser.error( 'Invalid version. Possible values are: "stable" and "trunk"' )
   

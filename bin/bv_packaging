@@ -75,11 +75,11 @@ def system_call( options, command, cwd=None, env=None, return_output=False ):
 def system_path( path, mode = 'auto2win', keepdrive = True ):
   
   if ( mode == 'unix2win' \
-      or ( ( mode == 'auto2win' ) and ( sys.platform[:3] == 'win' ) ) ) :
+      or ( ( mode == 'auto2win' ) and ( sys.platform[:3] != 'win' ) ) ) :
     return path.replace( '/', '\\' )
 
   elif ( mode == 'win2unix' \
-      or ( ( mode == 'auto2unix' ) and ( sys.platform[:3] != 'win' ) ) ) :
+      or ( ( mode == 'auto2unix' ) and ( sys.platform[:3] == 'win' ) ) ) :
     if not keepdrive :
       # This is an absolute windows path
       path = os.path.sep + path.replace( ':', '' )
@@ -460,7 +460,12 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
 def create_compressed_package( options, selected_packages, dependencies ):
   if not options.output:
     raise UserWarning( 'Ouput file name must be given for this command' )
-  temp_directory = tempfile.mkdtemp()
+  # on windows the size of filename is limited, so brainvisa pack cannot be installed in a too long path
+  # and default tmp directory is too long, so use d:/tmp if it exists instead of default tmp directory
+  if ((sys.platform[:3] == 'win') and (os.path.exists("d:/tmp"))):
+    temp_directory = tempfile.mkdtemp(dir="d:/tmp")
+  else:
+    temp_directory = tempfile.mkdtemp()
   if options.packname:
     install_directory = os.path.join(temp_directory, os.path.basename(options.output))
     os.mkdir(install_directory)

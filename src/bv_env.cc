@@ -214,7 +214,7 @@ int main( int argc, char *argv[] )
   path_prepend[ "DCMDICTPATH" ] = split_env( install_directory + PATH_SEP + "lib" + PATH_SEP + "dicom.dic" );
 
   path_prepend[ "PYTHONPATH" ] = split_env( install_directory + PATH_SEP + "python" );
-  path_prepend[ "PATH" ] = split_env( install_directory + PATH_SEP + "real-bin" + ENV_SEP + install_directory + PATH_SEP + "bin" );
+  path_prepend[ "PATH" ] = split_env( install_directory + PATH_SEP + "bin" + PATH_SEP + "real-bin" + ENV_SEP + install_directory + PATH_SEP + "bin" );
 
 #ifdef WIN32
   vector< string > libpath = split_env( install_directory + PATH_SEP + "lib" + ENV_SEP

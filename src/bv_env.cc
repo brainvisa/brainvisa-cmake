@@ -170,6 +170,32 @@ bool file_exists( string file_name )
 }
 
 
+string find_python_osmodule( const string &install_directory )
+{
+  string result;
+  DIR *dir = opendir( (install_directory + PATH_SEP + "lib").c_str() );
+  if ( dir ) {
+    for( struct dirent *entry = readdir( dir ); entry; entry = readdir( dir ) ) {
+      const string entry_name = entry->d_name;
+      if ( entry_name.compare( 0, 6, "python" ) == 0 ) {
+#if WIN32
+        string site_os = install_directory + PATH_SEP + "lib" + PATH_SEP + entry_name + PATH_SEP + "lib" + PATH_SEP "os.py";
+#else
+        string site_os = install_directory + PATH_SEP + "lib" + PATH_SEP + entry_name + PATH_SEP "os.py";
+#endif
+        if( file_exists( site_os ) )
+        {
+          result = site_os;
+          break;
+        }
+      }
+    }
+    closedir( dir );
+  }
+  return result;
+}
+
+
 int main( int argc, char *argv[] )
 {
   string install_directory;
@@ -231,18 +257,23 @@ int main( int argc, char *argv[] )
     path_prepend[ LD_LIBRARY_PATH ] = libpath;
 
   string site_packages = find_python_site_packages( install_directory );
-  if ( ! site_packages.empty() ) {
+  if ( ! site_packages.empty() )
+  {
     path_prepend[ "PYTHONPATH" ].push_back( site_packages );
 #ifdef WIN32
-    set_variables[ "PYTHONHOME" ] = install_directory + PATH_SEP + "lib" + PATH_SEP + "python";
     path_prepend[ "PYTHONPATH" ].push_back( site_packages + PATH_SEP + "win32" );
     path_prepend[ "PYTHONPATH" ].push_back( site_packages + PATH_SEP + "win32"+ PATH_SEP + "lib" );
-#else
-    set_variables[ "PYTHONHOME" ] = install_directory;
 #endif
   }
-  
-  
+
+#ifdef WIN32
+  if( !find_python_osmodule( install_directory ).empty() )
+    set_variables[ "PYTHONHOME" ] = install_directory + PATH_SEP + "lib" + PATH_SEP + "python";
+#else
+  if( !find_python_osmodule( install_directory ).empty() )
+    set_variables[ "PYTHONHOME" ] = install_directory;
+#endif
+
   map< string, string > backup_variables;
   for( vector< string >::const_iterator it = unset_variables.begin(); it != unset_variables.end(); ++it ) {
     string env = getenv( *it );

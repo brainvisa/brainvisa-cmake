@@ -1172,26 +1172,58 @@ function( BRAINVISA_GENERATE_DOCBOOK_DOC )
         list( FIND exclude ${doc_project} result )
         if (result EQUAL -1) # if the docbook project is not in exclude list, create install rules
           # install rules
-          BRAINVISA_INSTALL(DIRECTORY "${CMAKE_BINARY_DIR}/share/doc/${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
-            DESTINATION share/doc
-            USE_SOURCE_PERMISSIONS
-            COMPONENT ${PROJECT_NAME}-usrdoc
-            FILES_MATCHING REGEX "_training/"
-            REGEX "_man/"
-            PATTERN "doxygen" EXCLUDE
-            PATTERN "*_pg" EXCLUDE 
-            PATTERN "epydoc" EXCLUDE
-            )
-          BRAINVISA_INSTALL(DIRECTORY "${CMAKE_BINARY_DIR}/share/doc/${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
-            DESTINATION share/doc
-            USE_SOURCE_PERMISSIONS
-            COMPONENT ${PROJECT_NAME}-devdoc
-            FILES_MATCHING REGEX "_pg/"
-            PATTERN "doxygen" EXCLUDE
-            PATTERN "epydoc" EXCLUDE
-            PATTERN "*_training" EXCLUDE
-            PATTERN "*_man" EXCLUDE
-            )
+          if(APPLE)
+            # There is a bug in CMake with MacOS system, so files_matching regex doesn't work in install rules
+            # So, for MacOS, there's no files_matching rule but several exclude rules instead...
+            BRAINVISA_INSTALL(DIRECTORY "${CMAKE_BINARY_DIR}/share/doc/${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
+              DESTINATION share/doc
+              USE_SOURCE_PERMISSIONS
+              COMPONENT ${PROJECT_NAME}-usrdoc
+              REGEX "${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/html" EXCLUDE
+              REGEX "${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/en" EXCLUDE
+              REGEX "${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/fr" EXCLUDE
+              REGEX "${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/images" EXCLUDE
+              REGEX "${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/[^/]*\\..*" EXCLUDE
+              PATTERN "doxygen" EXCLUDE
+              PATTERN "*_pg" EXCLUDE 
+              PATTERN "epydoc" EXCLUDE
+              )
+            BRAINVISA_INSTALL(DIRECTORY "${CMAKE_BINARY_DIR}/share/doc/${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
+              DESTINATION share/doc
+              USE_SOURCE_PERMISSIONS
+              COMPONENT ${PROJECT_NAME}-devdoc
+              REGEX "${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/html" EXCLUDE
+              REGEX "${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/en" EXCLUDE
+              REGEX "${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/fr" EXCLUDE
+              REGEX "${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/images" EXCLUDE
+              REGEX "${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/[^/]*\\..*" EXCLUDE
+              PATTERN "doxygen" EXCLUDE
+              PATTERN "epydoc" EXCLUDE
+              PATTERN "*_training" EXCLUDE
+              PATTERN "*_man" EXCLUDE
+              )
+          else()
+            BRAINVISA_INSTALL(DIRECTORY "${CMAKE_BINARY_DIR}/share/doc/${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
+              DESTINATION share/doc
+              USE_SOURCE_PERMISSIONS
+              COMPONENT ${PROJECT_NAME}-usrdoc
+              FILES_MATCHING REGEX "_training/"
+              REGEX "_man/"
+              PATTERN "doxygen" EXCLUDE
+              PATTERN "*_pg" EXCLUDE 
+              PATTERN "epydoc" EXCLUDE
+              )
+            BRAINVISA_INSTALL(DIRECTORY "${CMAKE_BINARY_DIR}/share/doc/${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
+              DESTINATION share/doc
+              USE_SOURCE_PERMISSIONS
+              COMPONENT ${PROJECT_NAME}-devdoc
+              FILES_MATCHING REGEX "_pg/"
+              PATTERN "doxygen" EXCLUDE
+              PATTERN "epydoc" EXCLUDE
+              PATTERN "*_training" EXCLUDE
+              PATTERN "*_man" EXCLUDE
+              )
+        endif()
         endif()
       endforeach()
     endif() # exists source directory
@@ -1611,8 +1643,8 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
             endif()
           endif()
           list( REMOVE_DUPLICATES othernames )
-          # message("othernames of the lib ${real} in ${realdir}/${realnamewe}:" )
-          #message( "othernames : ${othernames}")
+          message("othernames of the lib ${real} in ${realdir}/${realnamewe}:" )
+          message( "othernames : ${othernames}")
           # create linknames list to store the processed link names to avoid create several times the same link
           set(linknames)
           foreach(link ${othernames})
@@ -1627,7 +1659,7 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
                 add_custom_command( TARGET install-${component} POST_BUILD
                         COMMAND "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}"
                         WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/${destination}")
-                #message("Create symlink $(BRAINVISA_INSTALL_PREFIX)/${destination}/${linkname} -> $(BRAINVISA_INSTALL_PREFIX)/${destination}/${realname}")
+                message("Create symlink $(BRAINVISA_INSTALL_PREFIX)/${destination}/${linkname} -> $(BRAINVISA_INSTALL_PREFIX)/${destination}/${realname}")
               endif()
             endif()
           endforeach()
@@ -1648,7 +1680,7 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
     endif() 
   endforeach()
   # install libraries
-  #message("libraries to install : ${librariesToInstall}")
+  message("libraries to install : ${librariesToInstall}")
   BRAINVISA_INSTALL( FILES ${librariesToInstall}
       DESTINATION "${destination}"
       COMPONENT "${component}"

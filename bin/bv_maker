@@ -677,8 +677,8 @@ commands = {
   'configure': ConfigureCommand,
   'build': BuildCommand,
   'doc': DocCommand,
-  'compile': CompileCommand,
 }
+default_commands = [ 'sources', 'configure', 'build' ]
 options_by_command = { None: [] }
 command = None
 for i in sys.argv[1:]:
@@ -697,12 +697,11 @@ configuration = GlobalConfiguration( options_by_command[ None ] )
 # Parse commands options and prepare them for processing in the correct order
 todo = []
 if len( options_by_command ) == 1:
-  # No command selected => do all commands except "doc" and "compile"
-  for i in commands:
-    if i in ( 'doc', 'compile' ):
-      continue
+  # No command selected => do all default commands
+  for i in default_commands:
     options_by_command[ i ] = []
-for command in [ 'info', 'compile', 'sources', 'configure', 'build', 'doc' ]:
+# Ordered command list
+for command in [ 'info', 'sources', 'configure', 'build', 'doc' ]:
   if command in options_by_command:
     todo.append( commands[ command ]( options_by_command[ command ], configuration ) )
 

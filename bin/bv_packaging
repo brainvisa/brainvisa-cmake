@@ -104,29 +104,41 @@ def packages_selection( rules ):
   for rule in rules:
     if not rule: continue
     if rule[ 0 ] in ( '+', '-' ):
-      attributes={}
-      for attribute_selection in rule[1:].split( ',' ):
-        if not attribute_selection: continue
-        try:
-          attribute, pattern = attribute_selection.split( '=', 1 )
-        except ValueError:
-          attribute = 'name'
-          pattern = attribute_selection
-        attributes[ attribute ] = re.compile( fnmatch.translate( pattern ) )
-      for package_info in packages_info.itervalues():
-        selected = True
-        for attribute, pattern in attributes.iteritems():
-          value = package_info.get( attribute )
-          if value is None:
-            raise SyntaxWarning( 'Unknown attribute %s in rule %s' % ( repr( attribute ), repr( rule ) ) )
-          if not pattern.match( value ):
-            selected = False
-            break
-        if selected:
-          if rule[ 0 ] == '+':
-            packages.add( package_info[ 'name' ] )
-          else:
-            packages.discard( package_info[ 'name' ] )
+      if rule[1:] == 'dependencies':
+        # Complete packages with dependencies of currently selected packages
+        dependencies = set()
+        todo = set( packages )
+        while todo:
+          package = todo.pop()
+          for type, name, version, binary_independent in packages_dependencies.get( package, () ):
+            if name not in packages and name not in dependencies:
+              dependencies.add( name )
+              todo.add( name )
+        packages.update( dependencies )
+      else:
+        attributes={}
+        for attribute_selection in rule[1:].split( ',' ):
+          if not attribute_selection: continue
+          try:
+            attribute, pattern = attribute_selection.split( '=', 1 )
+          except ValueError:
+            attribute = 'name'
+            pattern = attribute_selection
+          attributes[ attribute ] = re.compile( fnmatch.translate( pattern ) )
+        for package_info in packages_info.itervalues():
+          selected = True
+          for attribute, pattern in attributes.iteritems():
+            value = package_info.get( attribute )
+            if value is None:
+              raise SyntaxWarning( 'Unknown attribute %s in rule %s' % ( repr( attribute ), repr( rule ) ) )
+            if not pattern.match( value ):
+              selected = False
+              break
+          if selected:
+            if rule[ 0 ] == '+':
+              packages.add( package_info[ 'name' ] )
+            else:
+              packages.discard( package_info[ 'name' ] )
     else:
       raise SyntaxWarning( 'A package selection rule must start with + or -: %s' % repr( rule ) )
     
@@ -621,9 +633,10 @@ if __name__ == '__main__':
   Selection rule:
     +<selection_pattern>: Adds all packages corresponding to the selection pattern
     -<selection_pattern>: Remove all packages corresponding to the selection pattern
+    +dependencies: Special rule to add the dependencies of the currently selected packages
 
   Selection pattern:
-    <property>=<pattern>[,<property>=<pattern>...]: matc all packages where every selected property match the corresponding pattern
+    <property>=<pattern>[,<property>=<pattern>...]: match all packages where every selected property match the corresponding pattern
     <pattern>: equivalent to name=<pattern>
 
   Packages properties:
@@ -660,6 +673,10 @@ if __name__ == '__main__':
     List all packages whose name start with "a" excludind development packages
     without their dependent packages:
       bv_packaging --no-deps list '+a*'
+    
+    Create debian packages for all packages in soma project with all their dependencies except python
+      bv_packaging deb +project=soma +dependencies -python
+    
 
 Options:
   -h, --help            Show this help message and exit
@@ -696,6 +713,9 @@ Options:
     elif args[ index ] == '--no-deps':
       options.dependencies = False
       del args[ index ]
+    elif args[ index ] == '+dependencies':
+      options.dependencies = False
+      index += 1
     elif args[ index ] == '--bv_env':
       options.bv_env = True
       del args[ index ]

@@ -1659,7 +1659,7 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
                 add_custom_command( TARGET install-${component} POST_BUILD
                         COMMAND "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}"
                         WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/${destination}")
-                message("Create symlink $(BRAINVISA_INSTALL_PREFIX)/${destination}/${linkname} -> $(BRAINVISA_INSTALL_PREFIX)/${destination}/${realname}")
+                #message("Create symlink $(BRAINVISA_INSTALL_PREFIX)/${destination}/${linkname} -> $(BRAINVISA_INSTALL_PREFIX)/${destination}/${realname}")
               endif()
             endif()
           endforeach()

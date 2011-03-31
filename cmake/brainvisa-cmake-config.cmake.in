@@ -153,7 +153,7 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
                                    DESCRIPTION "User documentation: manual, tutorial." )
     BRAINVISA_ADD_COMPONENT_GROUP( devdoc
                                    DISPLAY_NAME "Development Documentation"
-                                   DESCRIPTION "Development documentations: doxygen, epydoc." )
+                                   DESCRIPTION "Development documentations: doxygen, epydoc, sphinx." )
     BRAINVISA_ADD_COMPONENT_GROUP( thirdparty
                                    DISPLAY_NAME "Thirdparty"
                                    DESCRIPTION "External dependencies : qt, sigc++, libxml..." )

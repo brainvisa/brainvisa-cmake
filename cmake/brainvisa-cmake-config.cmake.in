@@ -1109,15 +1109,15 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
     set( source_directory "${CMAKE_CURRENT_SOURCE_DIR}/${sourceDirectory}" )
     set( output_directory "${CMAKE_BINARY_DIR}/${outputDirectory}" )
 
-    add_custom_command( OUTPUT "${output_directory}/index.html"
-                        COMMAND "${CMAKE_COMMAND}" -E make_directory
-                          "${output_directory}"
-                        COMMAND "${SPHINXBUILD_EXECUTABLE}"
-                          ${source_directory}
-                          ${output_directory}
-                      )
-    BRAINVISA_GENERATE_TARGET_NAME( target )
-    add_custom_target( ${target} DEPENDS "${output_directory}/index.html" )
+    set( target ${PROJECT_NAME}-sphinx )
+    add_custom_target( ${target}
+                       COMMAND "${CMAKE_COMMAND}" -E make_directory
+                         "${output_directory}"
+                       COMMAND "${SPHINXBUILD_EXECUTABLE}"
+                         ${source_directory}
+                         ${output_directory}
+    )
+
     add_dependencies( ${PROJECT_NAME}-devdoc ${target} )
 
     # Install HTML documentation

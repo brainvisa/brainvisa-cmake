@@ -116,6 +116,7 @@ find_library( DCMTK_ofstd_LIBRARY ofstd
     PATH_SUFFIXES ${_librarySuffixes}
 )
 
+# For DCMTK >= 3.6.0
 find_library(DCMTK_oflog_LIBRARY oflog
   ${_directories}
   PATH_SUFFIXES ${_librarySuffixes}

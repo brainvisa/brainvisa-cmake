@@ -78,6 +78,11 @@ else()
     PATH_SUFFIXES ${_includeSuffixes}
   )
 
+  # For DCMTK >= 3.6.0
+  find_path( DCMTK_oflog_INCLUDE_DIR dcmtk/oflog/logger.h
+    ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
+  )
 
   find_path( DCMTK_dcmdata_INCLUDE_DIR dcmtk/dcmdata/dctypes.h
     ${_directories}
@@ -109,6 +114,11 @@ endif()
 find_library( DCMTK_ofstd_LIBRARY ofstd
     ${_directories}
     PATH_SUFFIXES ${_librarySuffixes}
+)
+
+find_library(DCMTK_oflog_LIBRARY oflog
+  ${_directories}
+  PATH_SUFFIXES ${_librarySuffixes}
 )
 
 find_library( DCMTK_dcmdata_LIBRARY dcmdata
@@ -145,7 +155,6 @@ find_library(DCMTK_ijg12_LIBRARY ijg12
   ${_libraryDirectories}
   PATH_SUFFIXES ${_pathSuffixes}
 )
-
 
 find_library(DCMTK_ijg16_LIBRARY ijg16
   ${_libraryDirectories}
@@ -199,6 +208,18 @@ if( DCMTK_config_INCLUDE_DIR AND
     endif( ZLIB_FOUND )
   ENDIF( APPLE )
 
+  # For DCMTK >= 3.6.0
+  IF(DCMTK_oflog_LIBRARY)
+   SET(DCMTK_INCLUDE_DIR
+   ${DCMTK_INCLUDE_DIR}
+   ${DCMTK_oflog_INCLUDE_DIR}/dcmtk/oflog
+   )
+   SET(DCMTK_LIBRARIES
+   ${DCMTK_LIBRARIES}
+   ${DCMTK_oflog_LIBRARY}
+   )
+  ENDIF(DCMTK_oflog_LIBRARY)
+
   IF(DCMTK_dcmjpeg_LIBRARY)
    SET(DCMTK_LIBRARIES
    ${DCMTK_LIBRARIES}
@@ -212,6 +233,7 @@ if( DCMTK_config_INCLUDE_DIR AND
    ${DCMTK_ijg8_LIBRARY}
    )
   ENDIF(DCMTK_ijg8_LIBRARY)
+  
   IF(DCMTK_ijg12_LIBRARY)
    SET(DCMTK_LIBRARIES
    ${DCMTK_LIBRARIES}

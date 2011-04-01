@@ -15,6 +15,18 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
       endif()
     endif()
   endforeach()
+  if( ${package_version} EQUAL "0.0.0" )
+    foreach( include ${DCMTK_INCLUDE_DIR} )
+      if( EXISTS "${include}/dcmtk/config/cfunix.h" )
+        file( READ "${include}/dcmtk/config/cfunix.h" header )
+        string( REGEX MATCH "#define[ \\t]*PACKAGE_VERSION[ \\t]*\"([^\"]*)\"" match "${header}" )
+        if( match )
+          set( ${package_version} "${CMAKE_MATCH_1}" PARENT_SCOPE )
+          break()
+        endif()
+      endif()
+    endforeach()
+  endif()
 endfunction()
 
 

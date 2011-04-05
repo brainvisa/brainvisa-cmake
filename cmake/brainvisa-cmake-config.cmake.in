@@ -1680,7 +1680,7 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
     endif() 
   endforeach()
   # install libraries
-  message("libraries to install : ${librariesToInstall}")
+  #message("libraries to install : ${librariesToInstall}")
   BRAINVISA_INSTALL( FILES ${librariesToInstall}
       DESTINATION "${destination}"
       COMPONENT "${component}"

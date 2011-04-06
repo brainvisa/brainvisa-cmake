@@ -250,22 +250,26 @@ int main( int argc, char *argv[] )
   vector< string > libpath = split_env( install_directory + PATH_SEP + "lib" );
 #endif  
 
-  map< string, vector< string > >::iterator pit = path_prepend.find( LD_LIBRARY_PATH );
-  if ( pit != path_prepend.end())
-     pit->second.insert( pit->second.begin(), libpath.begin(), libpath.end() );
-  else
-    path_prepend[ LD_LIBRARY_PATH ] = libpath;
-
   string site_packages = find_python_site_packages( install_directory );
   if ( ! site_packages.empty() )
   {
     path_prepend[ "PYTHONPATH" ].push_back( site_packages );
 #ifdef WIN32
+    libpath.push_back( site_packages + PATH_SEP + "pywin32_system32" );
+    libpath.push_back( site_packages + PATH_SEP + "pythonwin" );
+    libpath.push_back( site_packages + PATH_SEP + "OpenGL" + PATH_SEP + "DLLs" );
+    libpath.push_back( site_packages + PATH_SEP + "isapi" );
     path_prepend[ "PYTHONPATH" ].push_back( site_packages + PATH_SEP + "win32" );
     path_prepend[ "PYTHONPATH" ].push_back( site_packages + PATH_SEP + "win32"+ PATH_SEP + "lib" );
 #endif
   }
-
+  
+  map< string, vector< string > >::iterator pit = path_prepend.find( LD_LIBRARY_PATH );
+  if ( pit != path_prepend.end())
+     pit->second.insert( pit->second.begin(), libpath.begin(), libpath.end() );
+  else
+    path_prepend[ LD_LIBRARY_PATH ] = libpath;
+    
 #ifdef WIN32
   if( !find_python_osmodule( install_directory ).empty() )
     set_variables[ "PYTHONHOME" ] = install_directory + PATH_SEP + "lib" + PATH_SEP + "python";

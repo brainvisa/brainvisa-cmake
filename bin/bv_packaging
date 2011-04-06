@@ -337,6 +337,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
           ext = os.path.splitext(source)[1]
           if ext in ( '.py' ) :
             launcher = '\"python\" '
+            ext = ''
             source = source + '.bat'
           else :
             launcher = ''

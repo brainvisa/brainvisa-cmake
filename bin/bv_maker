@@ -466,7 +466,7 @@ class BuildDirectory( object ):
         for component, version, url in getMatchingURLs( component, versionPattern ):
           componentSourcesDirectory = os.path.join( sourceDirectory, url[ len( BRAINVISA_SVN_URL ) + 1: ] )
           if os.path.exists( componentSourcesDirectory ):
-            self.components[ component ] = componentSourcesDirectory
+            self.components[ component ] = ( componentSourcesDirectory, None )
             if self.configuration.verbose:
               print "    " + component + " source directory '" + componentSourcesDirectory + "'"
             self.projects.add( brainvisaProjectPerComponent[ component ] )
@@ -483,6 +483,7 @@ class BuildDirectory( object ):
       if os.path.exists( project_info ):
         project = None
         component = None
+        version = [ '', '' ]
         p = re.compile( r'\s*set\(\s*([^ \t]*)\s*(.*[^ \t])\s*\)' )
         for line in open( project_info ):
           match = p.match( line )
@@ -492,10 +493,14 @@ class BuildDirectory( object ):
               component = value
             elif variable == 'BRAINVISA_PACKAGE_MAIN_PROJECT':
               project = value
+            elif variable == 'BRAINVISA_PACKAGE_VERSION_MAJOR':
+              version[ 0 ] = value
+            elif variable == 'BRAINVISA_PACKAGE_VERSION_MINOR':
+              version[ 1 ] = value
         if project:
           self.projects.add( project )
         if component:
-          self.components[ component ] = directory
+          self.components[ component ] = ( directory, '.'.join( version ) )
       else:
         print >> sys.stderr, "WARNING: ignoring directory '%s' because it does not contain project_info.cmake" % directory
     
@@ -505,9 +510,23 @@ class BuildDirectory( object ):
     cmakeFile = os.path.join( self.directory, 'bv_maker.cmake' )
     out = open( cmakeFile, 'w' )
     
-    for component, directory in self.components.items():
-      if not os.path.exists( os.path.join( directory, 'project_info.cmake' ) ):
+    for component, directory_version in self.components.items():
+      directory, version = directory_version
+      project_info = os.path.join( directory, 'project_info.cmake' )
+      if not os.path.exists( project_info ):
         del self.components[ component ]
+      elif version is None:
+        version = [ '', '' ]
+        p = re.compile( r'\s*set\(\s*([^ \t]*)\s*(.*[^ \t])\s*\)' )
+        for line in open( project_info ):
+          match = p.match( line )
+          if match:
+            variable, value = match.groups()
+            if variable == 'BRAINVISA_PACKAGE_VERSION_MAJOR':
+              version[ 0 ] = value
+            elif variable == 'BRAINVISA_PACKAGE_VERSION_MINOR':
+              version[ 1 ] = value
+        self.components[ component ] = ( directory, '.'.join( version ) )
     
     # Order of projects and components is important for dependencies
     sortedProjects = [ p for p in brainvisaProjects if p in self.projects ]
@@ -524,8 +543,10 @@ class BuildDirectory( object ):
     print >> out, 'set( BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" FORCE )'
     print >> out, 'set( _BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" FORCE )'
     print >> out
-    for component, directory in self.components.iteritems():
+    for component, directory_version in self.components.iteritems():
+      directory, version = directory_version
       print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + cmake_path( directory ) + '" CACHE STRING "Sources directory for component ' + component + '" FORCE )'
+      print >> out, 'set( ' + component + '_DIR "' + cmake_path( self.directory ) + '/share/' + component + '-' + version + '/cmake " CACHE STRING "Directory used for find_package( ' + component + ' )" FORCE )'
 
     cmakeLists = os.path.join( self.directory, 'CMakeLists.txt' )
     out.close()
@@ -564,6 +585,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
       if os.path.exists( project_info ):
         project = None
         component = None
+        version = [ '', '' ]
         p = re.compile( r'\s*set\(\s*([^ \t]*)\s*(.*[^ \t])\s*\)' )
         for line in open( project_info ):
           match = p.match( line )
@@ -573,15 +595,33 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
               component = value
             elif variable == 'BRAINVISA_PACKAGE_MAIN_PROJECT':
               project = value
+            elif variable == 'BRAINVISA_PACKAGE_VERSION_MAJOR':
+              version[ 0 ] = value
+            elif variable == 'BRAINVISA_PACKAGE_VERSION_MINOR':
+              version[ 1 ] = value
         if project:
           self.projects.add( project )
         if component:
-          self.components[ component ] = directory
+          self.components[ component ] = ( directory, '.'.join( version ) )
     
-    for component, directory in self.components.items():
-      if not os.path.exists( os.path.join( directory, 'project_info.cmake' ) ):
+    for component, directory_version in self.components.items():
+      directory, version = directory_version
+      project_info = os.path.join( directory, 'project_info.cmake' )
+      if not os.path.exists( project_info ):
         del self.components[ component ]
-    
+      elif version is None:
+        version = [ '', '' ]
+        p = re.compile( r'\s*set\(\s*([^ \t]*)\s*(.*[^ \t])\s*\)' )
+        for line in open( project_info ):
+          match = p.match( line )
+          if match:
+            variable, value = match.groups()
+            if variable == 'BRAINVISA_PACKAGE_VERSION_MAJOR':
+              version[ 0 ] = value
+            elif variable == 'BRAINVISA_PACKAGE_VERSION_MINOR':
+              version[ 1 ] = value
+        self.components[ component ] = ( directory, '.'.join( version ) )
+
     # Order of projects and components is important for dependencies
     sortedProjects = [ p for p in brainvisaProjects if p in self.projects ]
     sortedComponents = []
@@ -594,7 +634,8 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
     sortedComponents.extend( components )
     
     for component in sortedComponents:
-      print ' ', component, '<=', self.components[ component ]
+      directory, version = self.components[ component ]
+      print ' ', component, '(' + version + ') <=', directory
 
 
 commands = {

@@ -179,25 +179,28 @@ for component in projectPerComponent.keys():
     componentsPerProject[ project ].remove( component )
 todo = []
 
-cmake_projects = os.path.join( tmp, 'cmake_projects' )
-generate_cmake( open( cmake_projects, 'w' ) )
-print 'Checking', BRAINVISA_SVN_URL + '/development/brainvisa-cmake/trunk/cmake/brainvisa-projects.cmake'
-system( 'svn', 'co', BRAINVISA_SVN_URL + '/development/brainvisa-cmake/trunk/cmake', os.path.join( tmp, 'cmake' ) )
-cmake_projects_svn = os.path.join( tmp, 'cmake', 'brainvisa-projects.cmake' )
-if not compare( open( cmake_projects ).read(), open( cmake_projects_svn ).read() ):
-  print '--> updating',BRAINVISA_SVN_URL + '/development/brainvisa-cmake/trunk/cmake/brainvisa-projects.cmake'
-  open( cmake_projects_svn, 'w' ).write( open( cmake_projects ).read() )
-  todo.append( [ 'svn', 'commit', os.path.join( tmp, 'cmake' ), '-m', 'updated BrainVISA projects and components lists.' ] )
+for brainvisa_cmake_version in ( 'trunk', 'branches/1.0' ):
+  cmake_projects = os.path.join( tmp, 'cmake_projects' )
+  generate_cmake( open( cmake_projects, 'w' ) )
+  print 'Checking', BRAINVISA_SVN_URL + '/development/brainvisa-cmake/' + brainvisa_cmake_version + '/cmake/brainvisa-projects.cmake'
+  svn_checkout = os.path.join( tmp, 'cmake', brainvisa_cmake_version  )
+  system( 'svn', 'co', BRAINVISA_SVN_URL + '/development/brainvisa-cmake/' + brainvisa_cmake_version + '/cmake', svn_checkout )
+  cmake_projects_svn = os.path.join( svn_checkout, 'brainvisa-projects.cmake' )
+  if not compare( open( cmake_projects ).read(), open( cmake_projects_svn ).read() ):
+    print '--> updating',BRAINVISA_SVN_URL + '/development/brainvisa-cmake/' + brainvisa_cmake_version + '/cmake/brainvisa-projects.cmake'
+    open( cmake_projects_svn, 'w' ).write( open( cmake_projects ).read() )
+    todo.append( [ 'svn', 'commit', svn_checkout, '-m', 'updated BrainVISA projects and components lists.' ] )
 
-python_projects = os.path.join( tmp, 'python_projects' )
-generate_python( open( python_projects, 'w' ) )
-print 'Checking', BRAINVISA_SVN_URL + '/development/brainvisa-cmake/trunk/python/brainvisa/maker/brainvisa_projects.py'
-system( 'svn', 'co', BRAINVISA_SVN_URL + '/development/brainvisa-cmake/trunk/python/brainvisa/maker', os.path.join( tmp, 'python' ) )
-python_projects_svn = os.path.join( tmp, 'python', 'brainvisa_projects.py' )
-if not compare( open( python_projects ).read(), open( python_projects_svn ).read() ):
-  print '--> updating', BRAINVISA_SVN_URL + '/development/brainvisa-cmake/trunk/python/brainvisa/maker/brainvisa_projects.py'
-  open( python_projects_svn, 'w' ).write( open( python_projects ).read() )
-  todo.append( [ 'svn', 'commit', os.path.join( tmp, 'python' ), '-m', 'updated BrainVISA projects and components lists.' ] )
+  python_projects = os.path.join( tmp, 'python_projects' )
+  generate_python( open( python_projects, 'w' ) )
+  print 'Checking', BRAINVISA_SVN_URL + '/development/brainvisa-cmake/' + brainvisa_cmake_version + '/python/brainvisa/maker/brainvisa_projects.py'
+  svn_checkout = os.path.join( tmp, 'python', brainvisa_cmake_version  )
+  system( 'svn', 'co', BRAINVISA_SVN_URL + '/development/brainvisa-cmake/' + brainvisa_cmake_version + '/python/brainvisa/maker', svn_checkout )
+  python_projects_svn = os.path.join( svn_checkout, 'brainvisa_projects.py' )
+  if not compare( open( python_projects ).read(), open( python_projects_svn ).read() ):
+    print '--> updating', BRAINVISA_SVN_URL + '/development/brainvisa-cmake/' + brainvisa_cmake_version + '/python/brainvisa/maker/brainvisa_projects.py'
+    open( python_projects_svn, 'w' ).write( open( python_projects ).read() )
+    todo.append( [ 'svn', 'commit', svn_checkout, '-m', 'updated BrainVISA projects and components lists.' ] )
 
 print 'Checking externals'
 source_views = os.path.join( tmp, 'source_views' )

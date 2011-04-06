@@ -53,7 +53,7 @@ if this_script:
     sys.path.insert( 0, python_modules )
 
 from brainvisa.maker.brainvisa_projects import *
-from brainvisa.maker.bioproj_parser import BRAINVISA_SVN_URL, SVN_URL
+from brainvisa.maker.bioproj_parser import BRAINVISA_SVN_URL, SVN_URL, getBrainVISAComponents, getMatchingURLs
 
 def system( *args, **kwargs ):
   print ' '.join( args )
@@ -283,80 +283,6 @@ class DocCommand( object ):
   def __call__( self ):
     for d, o in configuration.buildDirectories.iteritems():
       o.doc()
-
-
-
-def getBrainVISAComponents( componentsPattern ):
-  components = brainvisaComponentsPerGroup.get( componentsPattern )
-  if components is None:
-    components = brainvisaComponentsPerProject.get( componentsPattern )
-    if components is None:
-      if componentsPattern in brainvisaProjectPerComponent:
-        components = [ componentsPattern ]
-      else:
-        l = componentsPattern.split( ':' )
-        if len( l ) > 2:
-          raise SyntaxError()
-        if len( l ) == 1:
-          projectPattern = '*'
-          componentPattern = l[ 0 ]
-        else:
-          projectPattern, componentPattern = l
-        components = []
-        for project, projectComponents in brainvisaComponentsPerProject.iteritems():
-          if fnmatchcase( project, projectPattern ):
-            for component in projectComponents:
-              if fnmatchcase( component, componentPattern ):
-                components.append( component )
-  return components
-
-
-_urlsAlias = {
-  'development': 'trunk',
-  'bug_fix': 'branch:-1',
-  'latest_release': 'tag:-1',
-  'tag': 'tag:-1',
-  'branch': 'branch:-1',
-  'stable': 'branch:-1',
-}
-def getMatchingURLs( component, versionPattern ):
-  versionPattern = _urlsAlias.get( versionPattern, versionPattern )
-  if versionPattern == 'trunk':
-    versions = [ ( 'trunk', 'trunk' ) ]
-  else:
-    l = versionPattern.split( ':' )
-    if len( l ) == 1:
-      if fnmatchcase( 'trunk', versionPattern ):
-        versions = [ ( 'trunk', 'trunk' ) ]
-      else:
-        versions = []
-      for branch in brainvisaBranchesPerComponent.get( component, [] ):
-        if fnmatchcase( branch, versionPattern ):
-          versions.append( ( 'branch', 'branches/' + branch ) )
-      for tag in brainvisaTagsPerComponent.get( component, [] ):
-        if fnmatchcase( tag, versionPattern ):
-          versions.append( ( 'tag', 'tags/' + tag  ) )
-    elif len( l ) == 2:
-      try:
-        index = int( l[1] )
-      except ValueError:
-        raise SyntaxError()
-      if l[0] == 'branch':
-        try:
-          versions = [ ( 'branch', 'branches/' + brainvisaBranchesPerComponent.get( component, [] )[ index ] ) ]
-        except IndexError:
-          versions = []
-      elif l[0] == 'tag':
-        try:
-          versions = [ ( 'tag', 'tags/' + brainvisaTagsPerComponent.get( component, [] )[ index ] ) ]
-        except IndexError:
-          versions = []
-      else:
-        raise SyntaxError() 
-    else:
-      raise SyntaxError()
-  return [ ( component, i[0], brainvisaURLPerComponent[ component ] + '/' + i[1] ) for i in versions ]
-
 
 
 class SourceDirectory( object ):

@@ -35,7 +35,8 @@
 
 from subprocess import Popen, PIPE, STDOUT
 from tempfile import NamedTemporaryFile
-from fnmatch import fnmatch
+from fnmatch import fnmatch, fnmatchcase
+from brainvisa.maker.brainvisa_projects import brainvisaComponentsPerGroup, brainvisaComponentsPerProject, brainvisaProjectPerComponent, brainvisaBranchesPerComponent, brainvisaTagsPerComponent, brainvisaURLPerComponent
 
 SVN_URL = 'https://bioproj.extra.cea.fr/neurosvn'
 BRAINVISA_SVN_URL = SVN_URL + '/brainvisa'
@@ -250,3 +251,100 @@ def read_bioproj_cmake_version( url ):
         patch = l[ l.index( 'BRAINVISA_PACKAGE_VERSION_PATCH' ) + 1 ]
     return ( major,  minor, patch )
   return None
+
+def getBrainVISAComponents( componentsPattern ):
+  """Gets all the Brainvisa components that match the given pattern. 
+  
+  @type componentsPattern: string
+  @param componentsPattern: The pattern can be:
+  - the name of a group of projects (standard, opensource...)
+  - the name of a project (soma, axon, anatomist...)
+  - the name of a component (soma-base, anatomist-gpl...)
+  - a fnmatch pattern matching a Brainvisa component in any project (soma-*, old-connectomist-*, ...)
+  - fnmatch patterns matching a project and a component <project_pattern>:<component_pattern> (anatomist:*, connectomist:old-connectomist-*,...)
+  
+  @rtype: list
+  @return: the list of components that match the pattern
+  """
+  components = brainvisaComponentsPerGroup.get( componentsPattern )
+  if components is None:
+    components = brainvisaComponentsPerProject.get( componentsPattern )
+    if components is None:
+      if componentsPattern in brainvisaProjectPerComponent:
+        components = [ componentsPattern ]
+      else:
+        l = componentsPattern.split( ':' )
+        if len( l ) > 2:
+          raise SyntaxError()
+        if len( l ) == 1:
+          projectPattern = '*'
+          componentPattern = l[ 0 ]
+        else:
+          projectPattern, componentPattern = l
+        components = []
+        for project, projectComponents in brainvisaComponentsPerProject.iteritems():
+          if fnmatchcase( project, projectPattern ):
+            for component in projectComponents:
+              if fnmatchcase( component, componentPattern ):
+                components.append( component )
+  return components
+
+_urlsAlias = {
+  'development': 'trunk',
+  'bug_fix': 'branch:-1',
+  'latest_release': 'tag:-1',
+  'tag': 'tag:-1',
+  'branch': 'branch:-1',
+  'stable': 'branch:-1',
+}
+
+def getMatchingURLs( component, versionPattern ):
+  """
+  Gets the url in svn repository for the given component and version.
+  @type component: string
+  @param component: the name of the component
+  @type versionPattern: string
+  @param versionPattern: the version of the component. It could be:
+  - the name of the branch: trunk or development; bug_fix, branch or stable; latest_release or tag
+  - a version number (4.1, 3.2.0...)
+  - the type of branch and an index: the nth tag or branch (branch:0, tag:2, branch:-1, ...)
+  
+  @rtype: tuple
+  @return: a tuple containing (<component name>, <branch type>, <url>); branch type is trunk, branch or tag
+  """
+  versionPattern = _urlsAlias.get( versionPattern, versionPattern )
+  if versionPattern == 'trunk':
+    versions = [ ( 'trunk', 'trunk' ) ]
+  else:
+    l = versionPattern.split( ':' )
+    if len( l ) == 1:
+      if fnmatchcase( 'trunk', versionPattern ):
+        versions = [ ( 'trunk', 'trunk' ) ]
+      else:
+        versions = []
+      for branch in brainvisaBranchesPerComponent.get( component, [] ):
+        if fnmatchcase( branch, versionPattern ):
+          versions.append( ( 'branch', 'branches/' + branch ) )
+      for tag in brainvisaTagsPerComponent.get( component, [] ):
+        if fnmatchcase( tag, versionPattern ):
+          versions.append( ( 'tag', 'tags/' + tag  ) )
+    elif len( l ) == 2:
+      try:
+        index = int( l[1] )
+      except ValueError:
+        raise SyntaxError()
+      if l[0] == 'branch':
+        try:
+          versions = [ ( 'branch', 'branches/' + brainvisaBranchesPerComponent.get( component, [] )[ index ] ) ]
+        except IndexError:
+          versions = []
+      elif l[0] == 'tag':
+        try:
+          versions = [ ( 'tag', 'tags/' + brainvisaTagsPerComponent.get( component, [] )[ index ] ) ]
+        except IndexError:
+          versions = []
+      else:
+        raise SyntaxError() 
+    else:
+      raise SyntaxError()
+  return [ ( component, i[0], brainvisaURLPerComponent[ component ] + '/' + i[1] ) for i in versions ]

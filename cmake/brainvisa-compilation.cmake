@@ -1,5 +1,14 @@
 if( EXISTS "${CMAKE_BINARY_DIR}/bv_maker.cmake" )
   include( "${CMAKE_BINARY_DIR}/bv_maker.cmake" )
+  foreach( component ${BRAINVISA_COMPONENTS} )
+    file( GLOB _share_list "${CMAKE_BINARY_DIR}/share/${component}-*" )
+    foreach( _share ${_share_list} )
+      if( NOT "${_share}/cmake" STREQUAL "${${component}_DIR}" )
+        message( "WARNING: removing \"${_share}\" directory to avoid confusion with \"${${component}_DIR}\"" )
+        execute_process( COMMAND "${CMAKE_COMMAND}" -E remove_directory "${_share}" )
+      endif()
+    endforeach()
+  endforeach()
 endif()
 
 # Set default Qt desired version

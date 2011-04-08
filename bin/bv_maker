@@ -546,7 +546,8 @@ class BuildDirectory( object ):
     for component, directory_version in self.components.iteritems():
       directory, version = directory_version
       print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + cmake_path( directory ) + '" CACHE STRING "Sources directory for component ' + component + '" FORCE )'
-      print >> out, 'set( ' + component + '_DIR "' + cmake_path( self.directory ) + '/share/' + component + '-' + version + '/cmake " CACHE STRING "Directory used for find_package( ' + component + ' )" FORCE )'
+      print >> out, 'set( ' + component + '_DIR "' + cmake_path( self.directory ) + '/share/' + component + '-' + version + '/cmake" CACHE STRING "Directory used for find_package( ' + component + ' )" FORCE )'
+      print >> out, 'set( ' + component + '_VERSION "' + version + '" )'
 
     cmakeLists = os.path.join( self.directory, 'CMakeLists.txt' )
     out.close()

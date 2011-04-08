@@ -563,7 +563,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
     else:
       command = [ 'cmake' ]
 
-    command += [ '-DCMAKE_BUILD_TYPE:STRING=' + self.build_type, '-C', cmake_path( cmakeFile ), cmake_path( self.directory ) ]
+    command += [ '-DCMAKE_BUILD_TYPE:STRING=' + self.build_type, cmake_path( self.directory ) ]
     if self.packaging_thirdparty == 'ON':
       command += ['-DBRAINVISA_PACKAGING_THIRDPARTY=ON']
 

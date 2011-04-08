@@ -1,3 +1,7 @@
+if( EXISTS "${CMAKE_BINARY_DIR}/bv_maker.cmake" )
+  include( "${CMAKE_BINARY_DIR}/bv_maker.cmake" )
+endif()
+
 # Set default Qt desired version
 set( DESIRED_QT_VERSION 4 CACHE STRING "Pick a version of QT to use: 3 or 4" )
 

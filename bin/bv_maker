@@ -506,7 +506,8 @@ class BuildDirectory( object ):
     
     if not os.path.exists( self.directory ):
       os.makedirs( self.directory )
-    copy_brainvisa_cmake( self.directory )
+    if not 'brainvisa-cmake' in self.components:
+      copy_brainvisa_cmake( self.directory )
     cmakeFile = os.path.join( self.directory, 'bv_maker.cmake' )
     out = open( cmakeFile, 'w' )
     

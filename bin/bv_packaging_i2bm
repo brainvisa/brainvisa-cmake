@@ -103,13 +103,13 @@ if not options.i2bm:
   packages += " -project=nuclear_processing -project=optical_imaging -project=data_storage_client -name=bioprocessing -name=\"freesurfer_plugin*\" -name=\"tms*\""
 if version == 'stable':
   version='stable'
-  packVersion = '4.0.2-' + date
-  shortVersion = '4.0'
+  packVersion = '4.1.0-' + date
+  shortVersion = '4.1'
   setupOptions = ''
 elif version == 'trunk' or version == 'devel':
   version='trunk'
-  packVersion = 'devel_4.1-' + date
-  shortVersion = '4.1'
+  packVersion = 'devel_4.2-' + date
+  shortVersion = '4.2'
   setupOptions = ' --binSuffix=-' + date
 else:
   parser.error( 'Invalid version. Possible values are: "stable" and "trunk"' )

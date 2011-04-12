@@ -1069,7 +1069,8 @@ function( BRAINVISA_GENERATE_EPYDOC_DOC  )
     add_custom_command( OUTPUT "${CMAKE_BINARY_DIR}/${outputDirectory}/index.html"
                         DEPENDS ${pythonFiles}
                         COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/${outputDirectory}"
-                        COMMAND "${EPYDOC_EXECUTABLE}" 
+                        COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env" 
+                          "${EPYDOC_EXECUTABLE}" 
                           --html
                           --name "${PROJECT_NAME} ${${PROJECT_NAME}_VERSION}"
                           -o "${CMAKE_BINARY_DIR}/${outputDirectory}"
@@ -1114,7 +1115,8 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
     add_custom_target( ${target}
                        COMMAND "${CMAKE_COMMAND}" -E make_directory
                          "${output_directory}"
-                       COMMAND "${SPHINXBUILD_EXECUTABLE}"
+                       COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env" 
+                        "${SPHINXBUILD_EXECUTABLE}"
                          ${source_directory}
                          ${output_directory}
     )

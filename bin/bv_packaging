@@ -514,6 +514,7 @@ def create_compressed_package( options, selected_packages, dependencies ):
 
   finally:
     print 'Removing %s' % repr(temp_directory)
+    os.chdir( os.path.dirname( temp_directory ) )
     shutil.rmtree( temp_directory )
 
 
@@ -595,6 +596,7 @@ Section: multiverse/science''') % package_info
         raise
   finally:
     print 'Removing %s' % repr(install_directory)
+    os.chdir( os.path.dirname( install_directory ) )
     shutil.rmtree( install_directory )
 
 commands = {

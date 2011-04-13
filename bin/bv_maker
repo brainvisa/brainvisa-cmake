@@ -363,8 +363,15 @@ class SourceDirectory( object ):
         
       self.svncommand( 'checkout',  'file://' + repositoryDirectory, self.directory )
       checkout = True
+    
+    # Go to the sources directory
+    current_dir=os.getcwd()
+    os.chdir( self.directory )
+    
     self.updateExternals()
     self.svncommand( 'update', self.directory )
+    
+    os.chdir( current_dir )
   
   
 
@@ -506,8 +513,15 @@ class BuildDirectory( object ):
     
     if not os.path.exists( self.directory ):
       os.makedirs( self.directory )
-    if not 'brainvisa-cmake' in self.components:
+
+    brainvisa_cmake_path = os.path.join( self.directory, 
+                                         'share', 
+                                         '-'.join( [ 'brainvisa-cmake', '*' ] ), 
+                                         'cmake', 
+                                         'brainvisa-cmake-config.cmake.in' )
+    if not 'brainvisa-cmake' in self.components or len( glob.glob( brainvisa_cmake_path ) ) == 0 :
       copy_brainvisa_cmake( self.directory )
+      
     cmakeFile = os.path.join( self.directory, 'bv_maker.cmake' )
     out = open( cmakeFile, 'w' )
     

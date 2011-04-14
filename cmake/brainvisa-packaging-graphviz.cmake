@@ -37,12 +37,20 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       get_filename_component(libdir ${reallib} PATH)
       if( EXISTS "${libdir}/graphviz" )
         BRAINVISA_INSTALL( DIRECTORY "${libdir}/graphviz"
-                          DESTINATION "lib"
-                          USE_SOURCE_PERMISSIONS
-                          COMPONENT "${component}" )
+                           DESTINATION "lib"
+                           USE_SOURCE_PERMISSIONS
+                           COMPONENT "${component}" )
         break()
       endif()
     endforeach()
+    
+    # Configuration file
+    if(DOT_CONFIG)
+        BRAINVISA_INSTALL( FILES "${DOT_CONFIG}"
+                           DESTINATION "lib"
+                           COMPONENT "${component}"
+                           PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
+    endif()
   else()
     set(${component}_PACKAGED FALSE PARENT_SCOPE)
   endif()

@@ -113,7 +113,6 @@ groupsDefinition = {
     'fmri/*',
     'brainvisa-installer/*',
     'nuclear_imaging/*',
-    'nuclear_processing/*',
     'optical_imaging/*',
     'soma/*',
     'sulci/*',

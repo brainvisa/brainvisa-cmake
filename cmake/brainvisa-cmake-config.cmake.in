@@ -1094,12 +1094,15 @@ endfunction()
 #    Add rules to generate sphinx documentation with "make doc" or "make <component>-doc" or "make devdoc" or "make <component>-devdoc".
 # Usage:
 #
-#   BRAINVISA_GENERATE_SPHINX_DOC( <source directory> <output directory> )
+#   BRAINVISA_GENERATE_SPHINX_DOC( <source directory> <output directory>
+#                                  [TARGET <target_name>] )
 #
 # Example:
 #
 #   BRAINVISA_GENERATE_SPHINX_DOC( "doc/source"
 #     "share/doc/soma-workflow-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}" )
+#
+# if TARGET argument is not specified, the target name defaults to ${PROJECT_NAME}-sphinx
 #
 function( BRAINVISA_GENERATE_SPHINX_DOC  )
   if( SPHINX_FOUND AND SPHINXBUILD_EXECUTABLE )
@@ -1107,11 +1110,20 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
 
     list( GET args 0 sourceDirectory )
     list( GET args 1 outputDirectory )
+    set( target )
+    list( FIND args TARGET result )
+    if( NOT result EQUAL -1 )
+      list( REMOVE_AT args ${result} )
+      list( GET args ${result} target )
+      list( REMOVE_AT args ${result} )
+    endif()
 
     set( source_directory "${CMAKE_CURRENT_SOURCE_DIR}/${sourceDirectory}" )
     set( output_directory "${CMAKE_BINARY_DIR}/${outputDirectory}" )
 
-    set( target ${PROJECT_NAME}-sphinx )
+    if( NOT target )
+      set( target ${PROJECT_NAME}-sphinx )
+    endif()
     add_custom_target( ${target}
                        COMMAND "${CMAKE_COMMAND}" -E make_directory
                          "${output_directory}"

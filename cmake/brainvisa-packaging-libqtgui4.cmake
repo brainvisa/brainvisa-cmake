@@ -7,6 +7,14 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
 
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqtcore4 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libpng12-0 RUN )
+  # ship libfontconfig only on Mandriva 2008 packages
+  execute_process( COMMAND "${CMAKE_BINARY_DIR}/bin/bv_system_info" RESULT_VARIABLE result OUTPUT_VARIABLE output OUTPUT_STRIP_TRAILING_WHITESPACE )
+  if( result EQUAL 0 )
+    string( REGEX MATCH "Mandriva-2008.*" mdv ${output} )
+    if( mdv )
+      BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libfontconfig1 RUN )
+    endif()
+  endif()
 endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )

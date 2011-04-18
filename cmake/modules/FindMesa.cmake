@@ -15,6 +15,13 @@ else()
         PATHS ${CMAKE_PREFIX_PATH}
         PATH_SUFFIXES ${lib_paths}
         NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH)
+  if( NOT GL_LIB )
+    # libgl might be found only a libGL.so.1
+    file( GLOB GL_LIB /usr/lib64/mesa/libGL.so.? )
+    if( NOT GL_LIB )
+      file( GLOB GL_LIB /usr/lib/mesa/libGL.so.? )
+    endif()
+  endif()
   find_library( OSMESA_LIB OSMesa 
         PATHS ${CMAKE_PREFIX_PATH}
         PATH_SUFFIXES ${lib_paths}

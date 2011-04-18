@@ -250,6 +250,10 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
   
   # create scripts that call bv_env before calling the command to setup environment variables
   if options.bv_env:
+    
+    # Extensions for which scripts command are not generated
+    config_ext = [ '.conf' ]
+    
     bindir = os.path.join( install_directory, 'bin' )
     if not os.path.exists( bindir ):
       os.mkdir( bindir )
@@ -258,8 +262,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
       specific_env_commands = [ 'brainvisa' ]
     else :
       exe_ext = ''
-      specific_env_commands = list()
-      
+      specific_env_commands = list()   
     env_commands = [ 'bv_env' + exe_ext, 'bv_env.py', 'bv_env.sh', 'bv_unenv', 'bv_unenv.sh' ] + specific_env_commands
     for command in env_commands:
       source = os.path.join( brainvisacmake_directory, 'bin', command )
@@ -333,18 +336,21 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
         if os.path.exists( dest ):
           os.remove( dest )
         os.rename( source, dest )
-        if sys.platform[:3] == 'win':
-          ext = os.path.splitext(source)[1]
-          if ext in ( '.py' ) :
-            launcher = '\"python\" '
-            ext = ''
-            source = source + '.bat'
-          else :
-            launcher = ''
-            source = os.path.splitext(source)[0] + '.bat'
-        out = open( source, 'w' )
-        if sys.platform[:3] == 'win':
-          out.write( '''@setlocal
+        
+        # Only generate scripts for files that are not configuration files
+        ext = os.path.splitext(command)[1]
+        if not ext in config_ext :
+          if sys.platform[:3] == 'win':
+            if ext in ( '.py' ) :
+              launcher = '\"python\" '
+              ext = ''
+              source = source + '.bat'
+            else :
+              launcher = ''
+              source = os.path.splitext(source)[0] + '.bat'
+          out = open( source, 'w' )
+          if sys.platform[:3] == 'win':
+            out.write( '''@setlocal
 @set directory="%%~d0%%~p0"
 @set command="%%~n0%(EXT)s"
 @if exist "%%directory:~1,-1%%bv_env.exe" (
@@ -355,8 +361,8 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
 @endlocal
   ''' % { 'EXT' : ext,
           'LAUNCHER' : launcher } )
-        else :
-          out.write( '''#!/bin/sh
+          else :
+            out.write( '''#!/bin/sh
   directory="$0"
   [ -L "$directory" ] && directory="`dirname "$directory"`/`readlink "$directory"`"
   command=`basename $directory`
@@ -368,8 +374,8 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
     exec "$directory/real-bin/$command" "$@"
   fi
   ''' )
-        out.close()
-        os.chmod( source, os.stat( dest ).st_mode )
+          out.close()
+          os.chmod( source, os.stat( dest ).st_mode )
       elif os.path.islink(source):
         # copy the symlink into real-bin
         dest=os.readlink(source)

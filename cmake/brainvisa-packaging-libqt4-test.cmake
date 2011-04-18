@@ -9,7 +9,7 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  if(WIN32 AND QT_QTTEST_FOUND)
+  if(QT_QTTEST_FOUND)
     if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND QT_QTTEST_LIBRARY_DEBUG)
       set(libs ${QT_QTTEST_LIBRARY_DEBUG})
     else()

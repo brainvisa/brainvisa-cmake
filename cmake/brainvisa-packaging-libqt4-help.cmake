@@ -14,7 +14,7 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  if(WIN32 AND QT_QTHELP_FOUND)
+  if(QT_QTHELP_FOUND)
     if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND QT_QTHELP_LIBRARY_DEBUG)
       set(libs ${QT_QTHELP_LIBRARY_DEBUG})
     else()

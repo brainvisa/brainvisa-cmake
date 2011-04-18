@@ -1,4 +1,4 @@
-find_package( Qt4 COMPONENTS QtWebkit )
+find_package( Qt4 COMPONENTS QtWebkit phonon )
 
 function( BRAINVISA_PACKAGING_COMPONENT_INFO cmake package_name package_maintainer package_version )
   set( ${package_name} ${component} PARENT_SCOPE )
@@ -8,7 +8,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO cmake package_name package_maintain
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqtgui4 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt4-network RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt4-xmlpatterns RUN )
-  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt4-phonon RUN )
+  if( QT_PHONON_FOUND )
+    # not available / used on some platforms
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt4-phonon RUN )
+  endif()
 endfunction()
 
 

@@ -1,8 +1,9 @@
 cmake_policy( SET CMP0011 NEW )
 cmake_policy( SET CMP0009 NEW )
 
-if( NOT BRAINVISA_CMAKE_CONFIG_DONE )
-  set( BRAINVISA_CMAKE_CONFIG_DONE YES )
+get_property( config_done GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE )
+if( NOT config_done )
+  set_property( GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE YES )
   
   option( CMAKE_OVERRIDE_COMPILER_MISMATCH "Avoid CMake to completely erase the cache if a compiler mismatch is detected (for instance with find_package( VTK ))" ON )
   
@@ -1291,7 +1292,7 @@ function( BRAINVISA_ADD_COMPONENT _component )
     endif()
   endforeach()
 
-#    message( "Create component ${_component} in group ${_group}" )
+  message( "Create component ${_component} in group ${_group}" )
   cpack_add_component( ${_component}
                        ${ARGN} )
   if( NOT BRAINVISA_INSTALL_PREFIX )

@@ -233,8 +233,10 @@ int main( int argc, char *argv[] )
   
   map< string, string > set_variables;
   set_variables[ "LC_NUMERIC" ] = "C";
-  set_variables[ "BRAINVISA_SHARE" ] = install_directory + PATH_SEP "share";
-  
+  set_variables[ "BRAINVISA_SHARE" ] = install_directory + PATH_SEP + "share";
+#ifdef __APPLE__
+  set_variables[ "QT_PLUGIN_PATH" ] = install_directory + PATH_SEP + "lib" + PATH_SEP + "qt-plugins";
+#endif
   map< string, vector< string > > path_prepend;
   
   path_prepend[ "DCMDICTPATH" ] = split_env( install_directory + PATH_SEP + "lib" + PATH_SEP + "dicom.dic" );

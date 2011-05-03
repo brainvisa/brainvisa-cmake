@@ -1292,7 +1292,7 @@ function( BRAINVISA_ADD_COMPONENT _component )
     endif()
   endforeach()
 
-  message( "Create component ${_component} in group ${_group}" )
+  #message( "Create component ${_component} in group ${_group}" )
   cpack_add_component( ${_component}
                        ${ARGN} )
   if( NOT BRAINVISA_INSTALL_PREFIX )

@@ -316,12 +316,12 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
           out = open( scriptfile, 'w' )
           out.write( '''#!/bin/sh
   directory="$0"
-  [ -L "$directory" ] && directory="`dirname "$directory"`/`readlink "$directory"`"
-  command=`basename $directory`
-  directory="`dirname $directory`"
-  directory="`cd $directory/../../..;pwd`"
+  [ -L "$directory" ] && directory="`dirname \\"$directory\\"`/`readlink \\"$directory\\"`"
+  command="`basename \\"$directory\\"`"
+  directory="`dirname \\"$directory\\"`"
+  directory="`cd \\"$directory/../../..\\";pwd`"
   if [ -x "$directory/bv_env" ]; then
-    exec "$directory/bv_env" "$directory/real-bin/'''+command+'''/Contents/MacOS/$command" "$@"
+    exec "$directory/bv_env" "\\"$directory/real-bin/'''+command+'''/Contents/MacOS/$command\\"" "$@"
   else
     exec "$directory/real-bin/'''+command+'''/Contents/MacOS/$command" "$@"
   fi
@@ -364,12 +364,12 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
           else :
             out.write( '''#!/bin/sh
   directory="$0"
-  [ -L "$directory" ] && directory="`dirname "$directory"`/`readlink "$directory"`"
-  command=`basename $directory`
-  directory="`dirname $directory`"
-  directory="`cd $directory;pwd`"
+  [ -L "$directory" ] && directory="`dirname \\"$directory\\"`/`readlink \\"$directory\\"`"
+  command="`basename \\"$directory\\"`"
+  directory="`dirname \\"$directory\\"`"
+  directory="`cd \\"$directory\\";pwd`"
   if [ -x "$directory/bv_env" ]; then
-    exec "$directory/bv_env" "$directory/real-bin/$command" "$@"
+    exec "$directory/bv_env" "\\"$directory/real-bin/$command\\"" "$@"
   else
     exec "$directory/real-bin/$command" "$@"
   fi

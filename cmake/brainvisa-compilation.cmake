@@ -61,9 +61,6 @@ if( where GREATER -1 )
   endif()
 endif()
 
-message( "!!!!2!!!! CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH}" )
-message( "!!!!2!!!! brainvisa-cmake_DIR ${brainvisa-cmake_DIR}" )
-
 # Second pass to configure all other components
 foreach( component ${BRAINVISA_COMPONENTS} )
   if( NOT component STREQUAL brainvisa-cmake )

@@ -1119,6 +1119,7 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
     endif()
 
     set( source_directory "${CMAKE_CURRENT_SOURCE_DIR}/${sourceDirectory}" )
+    get_filename_component(install_directory "${outputDirectory}" PATH)
     set( output_directory "${CMAKE_BINARY_DIR}/${outputDirectory}" )
 
     if( NOT target )
@@ -1137,7 +1138,7 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
 
     # Install HTML documentation
     BRAINVISA_INSTALL( DIRECTORY "${output_directory}"
-                       DESTINATION "${outputDirectory}"
+                       DESTINATION "${install_directory}"
                        USE_SOURCE_PERMISSIONS
                        COMPONENT ${PROJECT_NAME}-devdoc )
   endif()

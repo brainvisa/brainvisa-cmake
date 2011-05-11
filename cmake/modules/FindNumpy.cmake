@@ -18,15 +18,19 @@ EXEC_PROGRAM ("${PYTHON_EXECUTABLE}"
   ERROR_QUIET
   RETURN_VALUE NUMPY_NOT_FOUND)
 
-if (NUMPY_INCLUDE_DIR)
+if (NUMPY_NOT_FOUND EQUAL 0)
   set (NUMPY_FOUND TRUE)
   set (NUMPY_INCLUDE_DIR ${NUMPY_INCLUDE_DIR} CACHE STRING "Numpy include path")
   EXEC_PROGRAM ("${PYTHON_EXECUTABLE}"
     ARGS "-c" "\"import numpy; print numpy.version.version\""
     OUTPUT_VARIABLE NUMPY_VERSION)
-else (NUMPY_INCLUDE_DIR)
+else ()
+  if( NUMPY_INCLUDE_DIR )
+    message( "Numpy detection failed - output message: ${NUMPY_INCLUDE_DIR}" )
+  endif()
+  set(NUMPY_INCLUDE_DIR)
   set(NUMPY_FOUND FALSE)
-endif (NUMPY_INCLUDE_DIR)
+endif ()
 
 if (NUMPY_FOUND)
   if (NOT NUMPY_FIND_QUIETLY)

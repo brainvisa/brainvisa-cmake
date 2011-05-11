@@ -33,7 +33,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
-import sys, os, re, fnmatch, subprocess, tempfile, shutil, glob
+import sys, os, re, fnmatch, subprocess, tempfile, shutil, glob, time
 from stat import S_IRUSR, S_IXUSR, S_IRGRP, S_IXGRP, S_IROTH, S_IXOTH
 
 if os.path.exists( sys.argv[0] ):
@@ -247,7 +247,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
       for i in ( j for j in recursive_listdir( install_directory ) if j not in installed_paths):
         installed_paths[ i ] = package
   os.chdir(current_dir)
-  
+
   # create scripts that call bv_env before calling the command to setup environment variables
   if options.bv_env:
     
@@ -321,7 +321,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
   directory="`dirname \\"$directory\\"`"
   directory="`cd \\"$directory/../../..\\";pwd`"
   if [ -x "$directory/bv_env" ]; then
-    exec "$directory/bv_env" "\\"$directory/real-bin/'''+command+'''/Contents/MacOS/$command\\"" "$@"
+    exec "$directory/bv_env" "$directory/real-bin/'''+command+'''/Contents/MacOS/$command" "$@"
   else
     exec "$directory/real-bin/'''+command+'''/Contents/MacOS/$command" "$@"
   fi
@@ -369,7 +369,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
   directory="`dirname \\"$directory\\"`"
   directory="`cd \\"$directory\\";pwd`"
   if [ -x "$directory/bv_env" ]; then
-    exec "$directory/bv_env" "\\"$directory/real-bin/$command\\"" "$@"
+    exec "$directory/bv_env" "$directory/real-bin/$command" "$@"
   else
     exec "$directory/real-bin/$command" "$@"
   fi
@@ -466,6 +466,9 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
   if hasBrainvisa and ("brainvisa-share" in selected_packages):
     print "Updating BrainVISA shared database"
     os.system( system_path( bv_shortcut, 'auto2unix' ) + " -b --setup" )
+
+  # create a .README file with install / run instrutctions
+  create_readme_file( install_directory )
   
   if list_installed_paths:
     result = {}
@@ -522,6 +525,139 @@ def create_compressed_package( options, selected_packages, dependencies ):
     print 'Removing %s' % repr(temp_directory)
     os.chdir( os.path.dirname( temp_directory ) )
     shutil.rmtree( temp_directory )
+
+
+def create_readme_file( install_directory ):
+  if sys.platform[:3] != 'win':
+    zipext = ".tar.bz2"
+  else:
+    zipext = ".zip"
+  date = time.strftime( '%Y_%m_%d' )
+  m = re.match( '.*-([0-9]\.[0-9](\.[0-9]))-([0-9]+_[0-9]+_[0-9]+)',
+    os.path.basename( install_directory ) )
+  if m and len( m.groups() ) >= 1:
+    version = m.group( 1 )
+  else:
+    version = '<unknown>'
+  packname = os.path.basename( install_directory )
+  zfile = packname + zipext
+  readme = open( install_directory + '.README', 'w' )
+  print >> readme, '''                            BRAINVISA / ANATOMIST
+                            INSTALL INSTRUCTIONS
+
+Pack Version : ''' + version + '''
+Release date : ''' + date + '''
+
+
+####################
+# INSTALLATION
+
+1) cd to the directory where to install the top directory of
+   the BrainVISA package, e.g.:
+
+  cd /home/yourlogin
+
+  (or maybe 'cd /usr/local' if you are root)
+
+
+2) uncompress the archive file:
+
+  gunzip -c ''' + zfile + ''' | tar xf -
+
+3) Optionally, change the main direcory name, e.g:
+
+  mv ''' + packname + ''' brainvisa
+
+4) The file ''' + zfile + ''' is not longer
+   needed (except if you want to reinstall), and can be deleted.
+
+-- Note that there is no setup program or script anymore: no setup step is
+   needed now, and the binary package can be moved to a different directory
+   afterwards: no absolute path is stored anywhere.
+
+#####################
+# RUNNING
+
+The package consists of two main programs, anatomist and brainvisa, and a suite
+of utility programs. All are located in the 'bin' directory of the package.
+
+It is *not recommended* to permanently add this directory to your path,
+because this can create conflicts with other programs on your system (e.g.
+python). We suggest two possibilities.
+
+
+1. To start a program, type the full path along with the name of the program,
+   e.g.:
+
+~/''' + packname + '''/bin/anatomist
+
+(or create symbolic links to 'anatomist' and 'brainvisa' in a directory listed
+in your path (maybe /home/yourlogin/bin)
+
+2. If you often launch anatomist, brainvisa or the accompanying programs.
+you can run a small shell script that modifies the paths and other shell
+variables before each working session. Depending on your shell (bash,
+csh...; use 'echo $SHELL' to determine which shell is running),
+you need to run:
+
+
+for sh or bash:
+  . ./''' + packname + '''/bin/bv_env.sh
+
+for csh or tcsh:
+
+  source ./''' + packname + '''/bin/bv_env.csh
+
+On Windows:
+
+  ./''' + packname + '''/bin/bv_env.bat
+
+
+To avoid typing this long line, Bash users may add the following four
+lines to the '~/.bashrc' file:
+
+function brainvisa_setup
+{
+ . ~/''' + packname + '''/bin/bv_env.sh
+}
+
+Then typing 'brainvisa_setup' (completion works) will initialize the
+variables and allow you to use the various commands from any place.
+
+
+########################
+# UNINSTALLING
+
+To delete brainvisa from your system, just remove the whole
+brainvisa directory (with 'rm -rf ''' + packname + '''')
+
+
+########################
+# PROBLEMS OR QUESTIONS
+
+
+- Visit http://www.anatomist.info or http://www.brainvisa.info web sites.
+
+- If you have 3D rendering problems on Linux in Anatomist, there may be an
+  alternative OpenGL library in the present package. You have to copy it to the
+  libraries directory to use it:
+
+cp ''' + packname + '''/lib/mesa/libGL.so.1 ''' + packname + '''/lib/libGL.so.1
+
+Then restart Anatomist.
+
+It is a software-only Mesa-OpenGL library which is probably slower than the native OpenGL library on your machine, but which should at least work correctly in every case. you can remove it if you want to use the system OpenGL library again.
+
+There are also two options in Anatomist preferences (in the OpenGL tab) that
+might influence the rendering (which proved useful on some Windows machines):
+- limit the number of texture units (it fixed a problem where nothing did display
+  on one machine by setting the limit to 3)
+- disable the use of OpenGL selection (it avoided crashes when the selection
+  takes place on the same machine)
+
+On Windows you can also lower the level of 3D hardware acceleration in the display properties of Windows, it quite often helps to bypass hardware driver
+bugs.
+'''
 
 
 def validDebianPackageName( package ):

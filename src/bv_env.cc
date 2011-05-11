@@ -319,6 +319,7 @@ int main( int argc, char *argv[] )
     }
     //execvp( argv[1], argv + 1 );
     string command = argv[1];
+    command = "\"" + command + "\"";
     for( int32_t i = 2; i < argc; i++ )  {    
       string arg = argv[i];
       string::size_type position = arg.find( "\"" );

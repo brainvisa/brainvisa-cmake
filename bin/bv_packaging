@@ -321,7 +321,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
   directory="`dirname \\"$directory\\"`"
   directory="`cd \\"$directory/../../..\\";pwd`"
   if [ -x "$directory/bv_env" ]; then
-    exec "$directory/bv_env" "\\"$directory/real-bin/'''+command+'''/Contents/MacOS/$command\\"" "$@"
+    exec "$directory/bv_env" "$directory/real-bin/'''+command+'''/Contents/MacOS/$command" "$@"
   else
     exec "$directory/real-bin/'''+command+'''/Contents/MacOS/$command" "$@"
   fi
@@ -369,7 +369,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
   directory="`dirname \\"$directory\\"`"
   directory="`cd \\"$directory\\";pwd`"
   if [ -x "$directory/bv_env" ]; then
-    exec "$directory/bv_env" "\\"$directory/real-bin/$command\\"" "$@"
+    exec "$directory/bv_env" "$directory/real-bin/$command" "$@"
   else
     exec "$directory/real-bin/$command" "$@"
   fi

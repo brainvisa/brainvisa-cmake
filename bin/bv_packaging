@@ -502,7 +502,7 @@ def create_compressed_package( options, selected_packages, dependencies ):
     if sys.platform[:3] != 'win': # compressing in tar.bz2 with tar
       output=output+".tar.bz2"
       print 'Compressing %s in %s' % (repr(install_directory), repr(output) )
-      system_call( options, [ 'tar', 'jcf', system_path( output, 'auto2unix' ) ] + os.basename( install_directory ), cwd=temp_directory )
+      system_call( options, [ 'tar', 'jcf', system_path( output, 'auto2unix' ) ] + os.path.basename( install_directory ), cwd=temp_directory )
     else: # compressing in zip with zipfile module
       output = output+".zip"
       print 'Compressing %s in %s' % (repr(install_directory), repr(output) )
@@ -517,7 +517,7 @@ def create_compressed_package( options, selected_packages, dependencies ):
         else:
           #print 'zipping', file
           zf.write( file )
-      _store( zf, os.basename(install_directory) )
+      _store( zf, os.path.basename(install_directory) )
       zf.close()
 
   finally:

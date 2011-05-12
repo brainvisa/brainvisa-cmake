@@ -58,6 +58,7 @@ if( where GREATER -1 )
     set_property( GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE )
     unset( brainvisa-cmake_DIR CACHE )
     unset( brainvisa-cmake_DIR )
+    find_package( brainvisa-cmake )
   endif()
 endif()
 

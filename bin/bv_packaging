@@ -502,7 +502,7 @@ def create_compressed_package( options, selected_packages, dependencies ):
     if sys.platform[:3] != 'win': # compressing in tar.bz2 with tar
       output=output+".tar.bz2"
       print 'Compressing %s in %s' % (repr(install_directory), repr(output) )
-      system_call( options, [ 'tar', 'jcf', system_path( output, 'auto2unix' ) ] + os.listdir( temp_directory ), cwd=temp_directory )
+      system_call( options, [ 'tar', 'jcf', system_path( output, 'auto2unix' ) ] + os.listdir( install_directory ), cwd=temp_directory )
     else: # compressing in zip with zipfile module
       output = output+".zip"
       print 'Compressing %s in %s' % (repr(install_directory), repr(output) )
@@ -517,7 +517,7 @@ def create_compressed_package( options, selected_packages, dependencies ):
         else:
           #print 'zipping', file
           zf.write( file )
-      for f in os.listdir(temp_directory):
+      for f in os.listdir(install_directory):
         _store( zf, f )
       zf.close()
 
@@ -562,7 +562,9 @@ Release date : ''' + date + '''
 
 2) uncompress the archive file:
 
-  gunzip -c ''' + zfile + ''' | tar xf -
+  On Unix : gunzip -c ''' + zfile + ''' | tar xf -
+  On Windows: uncompress the ZIP archive wherever you want to install the package
+  
 
 3) Optionally, change the main direcory name, e.g:
 
@@ -596,21 +598,15 @@ in your path (maybe /home/yourlogin/bin)
 
 2. If you often launch anatomist, brainvisa or the accompanying programs.
 you can run a small shell script that modifies the paths and other shell
-variables before each working session. Depending on your shell (bash,
-csh...; use 'echo $SHELL' to determine which shell is running),
-you need to run:
+variables before each working session. You need to run:
 
 
-for sh or bash:
-  . ./''' + packname + '''/bin/bv_env.sh
-
-for csh or tcsh:
-
-  source ./''' + packname + '''/bin/bv_env.csh
+On Linux or MacOS:
+  . ./''' + packname + '''/bin/bv_env.sh ./''' + packname+ '''
 
 On Windows:
 
-  ./''' + packname + '''/bin/bv_env.bat
+  ./''' + packname + '''/bin/bv_env.bat ./''' + packname + '''
 
 
 To avoid typing this long line, Bash users may add the following four
@@ -618,7 +614,7 @@ lines to the '~/.bashrc' file:
 
 function brainvisa_setup
 {
- . ~/''' + packname + '''/bin/bv_env.sh
+ . ~/''' + packname + '''/bin/bv_env.sh ~/''' + packname + '''
 }
 
 Then typing 'brainvisa_setup' (completion works) will initialize the
@@ -658,6 +654,8 @@ might influence the rendering (which proved useful on some Windows machines):
 On Windows you can also lower the level of 3D hardware acceleration in the display properties of Windows, it quite often helps to bypass hardware driver
 bugs.
 '''
+  readme.close()
+  shutil.copyfile( install_directory + '.README', os.path.join(install_directory, "README") )
 
 
 def validDebianPackageName( package ):

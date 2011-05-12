@@ -319,7 +319,20 @@ int main( int argc, char *argv[] )
     }
     //execvp( argv[1], argv + 1 );
     string command = argv[1];
+#if WIN32
+    string command_orig = command;
+    command.clear();
+    // 'command name' -> 'command" "name'
+    for( string::size_type x=0; x<command_orig.length(); ++x )
+    {
+      if( command_orig[x] == ' ' )
+        command += "\" \"";
+      else
+        command += command_orig[x];
+    }
+#else
     command = "\"" + command + "\"";
+#endif
     for( int32_t i = 2; i < argc; i++ )  {    
       string arg = argv[i];
       string::size_type position = arg.find( "\"" );

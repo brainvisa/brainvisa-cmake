@@ -303,6 +303,9 @@ int main( int argc, char *argv[] )
       backup_variables[ it->first ] = env;
       content = split_env( env );
     }
+    else{
+      backup_variables[ it->first ] = "";
+    }
     
     for( vector< string >::const_reverse_iterator it2 = it->second.rbegin(); it2 != it->second.rend(); ++it2 ) {
       if ( file_exists( *it2 ) ) {

@@ -36,12 +36,26 @@ from optparse import OptionParser
 from brainvisa.maker.bioproj_parser import getBrainVISAComponents
 from brainvisa.maker.brainvisa_projects import brainvisaTagsPerComponent, brainvisaProjectPerComponent
 
-usage = '''%prog <projects>'''
+bvrelease = brainvisaTagsPerComponent.get( 'axon' )[-1]
+dest = '/tmp/sources-' + bvrelease
+sourcedir = '/neurospin/brainvisa/sources'
+if not os.path.isdir( sourcedir ):
+  sourcedir = '.'
+else:
+  try:
+    os.listdir( sourcedir )
+  except:
+    sourcedir = '.'
+
+usage = '''%prog [options] <projects>
+make tarballs of source packages for a brainvisa release'''
 
 parser = OptionParser(usage=usage)
-parser.add_option( '-s', '--source', dest="sourcedir",
-  default="/neurospin/brainvisa/sources",
-  help='source directory for the svn repository' )
+parser.add_option( '-s', '--source', dest="sourcedir", default=sourcedir,
+  help='source directory for the svn repository ' \
+  '[default: ' + sourcedir + ']' )
+parser.add_option( '-o', '--output', dest="outputdir", default=dest,
+  help='output directory for tarballs [default: ' + dest + ']' )
 
 (options, args) = parser.parse_args()
 # at least one argument: the type of branch bug_fix of release
@@ -49,6 +63,7 @@ if len( args ) < 1:
   parser.error( 'Invalid arguments: missing projects list.' )
 
 sourcedir = options.sourcedir
+dest = options.outputdir
 
 components=set()
 for arg in args:
@@ -70,9 +85,6 @@ for component in components:
 
 print sources
 os.chdir( sourcedir )
-
-bvrelease = brainvisaTagsPerComponent.get( 'axon' )[-1]
-dest = '/tmp/sources-' + bvrelease
 
 #def cleandirs( directories, verbose=False ):
   #if type( directories ) in types.StringTypes:

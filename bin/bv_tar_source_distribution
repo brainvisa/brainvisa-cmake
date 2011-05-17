@@ -32,82 +32,72 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 import os, shutil, types
+from optparse import OptionParser
+from brainvisa.maker.bioproj_parser import getBrainVISAComponents
+from brainvisa.maker.brainvisa_projects import brainvisaTagsPerComponent, brainvisaProjectPerComponent
 
-source = '/neurospin/brainvisa/svn'
-mode = 'stable'
-ver = '4.0'
-longver = '4.0.2'
-dest = '/tmp/sources-' + longver
+usage = '''%prog <projects>'''
 
-projects = { 'aims-free': [ 'aims/aims-free/branches/stable', 'aims/build-config' ],
-  'aims-gpl': 'aims/aims-gpl/branches/stable',
-  'anatomist-free': [ 'anatomist/anatomist-free/branches/stable', 'anatomist/build-config' ],
-  'anatomist-gpl' : 'anatomist/anatomist-gpl/branches/stable', 'brainvisa-share' : 'brainvisa-share/branches/stable',
-  'soma' : [ 'soma/build-config', 'soma/soma-base/branches/stable', 'soma/soma-io/branches/stable' ],
-  'soma-qtgui' : 'soma/soma-qtgui/branches/stable',
-  'axon' : 'axon/branches/stable',
-  'brainrat-gpl' : [ 'brainrat/build-config', 'brainrat/brainrat-gpl' ],
-  't1mri-gpl' : [ 't1mri/build-config', 't1mri/t1mri-gpl/branches/stable' ],
-  'sulci-gpl' : [ 'sulci/build-config', 'sulci/sulci-gpl/branches/stable' ],
-  'connectomist-gpl' : [ 'connectomist/build-config', 'connectomist/connectomist-gpl/branches/stable' ],
-  'cortical_surface-gpl' : [ 'cortical_surface/build-config', 'cortical_surface/cortical_surface-gpl/branches/stable' ],
-  'fmri' : [ 'fmri/build-config', 'fmri/fmri-gpl/branches/stable' ],
-}
-utils = [ 'build-config', 'configure', 'maker', 'sip4make.py',
-          'doxyconf.py', 'systemIdentification', 'buildIndexDoc',
-          'makeCommandsDoc' ]
+parser = OptionParser(usage=usage)
+parser.add_option( '-s', '--source', dest="sourcedir",
+  default="/neurospin/brainvisa/sources",
+  help='source directory for the svn repository' )
 
-def cleandirs( directories, verbose=False ):
-  if type( directories ) in types.StringTypes:
-    directories = [ directories ]
-  while directories:
-    d = directories.pop()
-    if os.path.exists( d ):
-      s = os.path.join( d, '.svn' )
-      if os.path.exists( s ):
-        if verbose: print 'rmtree', s
-        shutil.rmtree( s )
-      for f in os.listdir( d ):
-        g = os.path.join( d, f )
-        if g.endswith( '~' ) or g.endswith( '%' ):
-          if verbose: print 'rm', s
-          os.unlink( g )
-        elif os.path.isdir( g ):
-          directories.append( g )
+(options, args) = parser.parse_args()
+# at least one argument: the type of branch bug_fix of release
+if len( args ) < 1:
+  parser.error( 'Invalid arguments: missing projects list.' )
+
+sourcedir = options.sourcedir
+
+components=set()
+for arg in args:
+  components.update(getBrainVISAComponents(arg))
+print "Selected components : ", components
+
+sources = []
+for component in components:
+  project = brainvisaProjectPerComponent.get( component )
+  tags = brainvisaTagsPerComponent.get( component, [] )
+  if len( tags ) > 0:
+    tag = tags[-1]
+    if project != component:
+      sources.append( ( os.path.join( project, component, 'tags', tag ),
+        component + '-' + tag ) )
+    else:
+      sources.append( ( os.path.join( component, 'tags', tag ),
+        component + '-' + tag ) )
+
+print sources
+os.chdir( sourcedir )
+
+bvrelease = brainvisaTagsPerComponent.get( 'axon' )[-1]
+dest = '/tmp/sources-' + bvrelease
+
+#def cleandirs( directories, verbose=False ):
+  #if type( directories ) in types.StringTypes:
+    #directories = [ directories ]
+  #while directories:
+    #d = directories.pop()
+    #if os.path.exists( d ):
+      #s = os.path.join( d, '.svn' )
+      #if os.path.exists( s ):
+        #if verbose: print 'rmtree', s
+        #shutil.rmtree( s )
+      #for f in os.listdir( d ):
+        #g = os.path.join( d, f )
+        #if g.endswith( '~' ) or g.endswith( '%' ):
+          #if verbose: print 'rm', s
+          #os.unlink( g )
+        #elif os.path.isdir( g ):
+          #directories.append( g )
 
 if not os.path.exists( dest ):
   os.makedirs( dest )
-os.chdir( dest )
-for proj, pr in projects.iteritems():
-  prx = []
-  base = ''
-  if type(pr) is not type([]):
-    pr = [ pr ]
-  for p in pr:
-    if p.endswith( '/stable' ):
-      px = os.path.join( os.path.dirname( p ), ver )
-    else:
-      px = p
-    projdir = p.split( os.path.sep )[0]
-    prx.append( px )
-    print 'mkdir -p', os.path.join( dest, px )
-    os.makedirs( os.path.join( dest, px ) )
-    print 'cp -a', os.path.join( source, p, '*' ) \
-               + ' ' + os.path.join( dest, px )
-    os.system( 'cp -a ' + os.path.join( source, p, '*' ) \
-               + ' ' + os.path.join( dest, px ) )
-  print 'cleaning ' + os.path.join( dest, projdir )
-  cleandirs( os.path.join( dest, projdir ), verbose=False )
-  print 'tar cfz ' + proj + '.tar.gz ' + ' '.join( prx )
-  os.system( 'tar cfz ' + proj + '.tar.gz ' + ' '.join( prx ) )
-  print 'rm -r', os.path.join( dest, projdir )
-  shutil.rmtree( os.path.join( dest, projdir ) )
 
-os.mkdir( os.path.join( dest, 'build-config-' + ver ) )
-for x in utils:
-  shutil.copy2( os.path.join( source, 'development/build-config/trunk', x ),
-                os.path.join( dest, 'build-config-' + ver, x ) )
-px = 'build-config-' + ver
-os.system( 'tar cfz ' + px + '.tar.gz ' + px )
-shutil.rmtree( os.path.join( dest, px ) )
+for proj, tarname in sources:
+  cmd = 'tar cfz --exclude-vcs ' + os.path.join( dest, tarname + '.tar.gz' ) \
+    + ' ' + proj
+  print cmd
+  os.system( cmd )
 

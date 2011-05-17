@@ -96,8 +96,8 @@ if not os.path.exists( dest ):
   os.makedirs( dest )
 
 for proj, tarname in sources:
-  cmd = 'tar cfz --exclude-vcs ' + os.path.join( dest, tarname + '.tar.gz' ) \
-    + ' ' + proj
+  cmd = 'tar cfz ' + os.path.join( dest, tarname + '.tar.gz' ) \
+    + ' --exclude-vcs --exclude="*~" ' + proj
   print cmd
   os.system( cmd )
 

@@ -48,7 +48,12 @@ else:
     sourcedir = '.'
 
 usage = '''%prog [options] <projects>
-make tarballs of source packages for a brainvisa release'''
+
+Make tarballs of source packages for a brainvisa release.
+
+<projects> is a list of projects, components, or projects groups, allowing
+wildcards, with the same syntax as in bv_maker.cfg, bv_packaging, or
+bv_create_branch.'''
 
 parser = OptionParser(usage=usage)
 parser.add_option( '-s', '--source', dest="sourcedir", default=sourcedir,
@@ -58,7 +63,7 @@ parser.add_option( '-o', '--output', dest="outputdir", default=dest,
   help='output directory for tarballs [default: ' + dest + ']' )
 
 (options, args) = parser.parse_args()
-# at least one argument: the type of branch bug_fix of release
+# at least one argument: project[s], group[s], component[s]
 if len( args ) < 1:
   parser.error( 'Invalid arguments: missing projects list.' )
 

@@ -1,0 +1,113 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#  This software and supporting documentation are distributed by
+#      Institut Federatif de Recherche 49
+#      CEA/NeuroSpin, Batiment 145,
+#      91191 Gif-sur-Yvette cedex
+#      France
+#
+# This software is governed by the CeCILL-B license under
+# French law and abiding by the rules of distribution of free software.
+# You can  use, modify and/or redistribute the software under the 
+# terms of the CeCILL-B license as circulated by CEA, CNRS
+# and INRIA at the following URL "http://www.cecill.info". 
+#
+# As a counterpart to the access to the source code and  rights to copy,
+# modify and redistribute granted by the license, users are provided only
+# with a limited warranty  and the software's author,  the holder of the
+# economic rights,  and the successive licensors  have only  limited
+# liability.
+#
+# In this respect, the user's attention is drawn to the risks associated
+# with loading,  using,  modifying and/or developing or reproducing the
+# software by the user in light of its specific status of free software,
+# that may mean  that it is complicated to manipulate,  and  that  also
+# therefore means  that it is reserved for developers  and  experienced
+# professionals having in-depth computer knowledge. Users are therefore
+# encouraged to load and test the software's suitability as regards their
+# requirements in conditions enabling the security of their systems and/or 
+# data to be ensured and,  more generally, to use and operate it in the 
+# same conditions as regards security.
+#
+# The fact that you are presently reading this means that you have had
+# knowledge of the CeCILL-B license and that you accept its terms.
+import os, shutil, types
+
+source = '/neurospin/brainvisa/svn'
+mode = 'stable'
+ver = '4.0'
+longver = '4.0.2'
+dest = '/tmp/sources-' + longver
+
+projects = { 'aims-free': [ 'aims/aims-free/branches/stable', 'aims/build-config' ],
+  'aims-gpl': 'aims/aims-gpl/branches/stable',
+  'anatomist-free': [ 'anatomist/anatomist-free/branches/stable', 'anatomist/build-config' ],
+  'anatomist-gpl' : 'anatomist/anatomist-gpl/branches/stable', 'brainvisa-share' : 'brainvisa-share/branches/stable',
+  'soma' : [ 'soma/build-config', 'soma/soma-base/branches/stable', 'soma/soma-io/branches/stable' ],
+  'soma-qtgui' : 'soma/soma-qtgui/branches/stable',
+  'axon' : 'axon/branches/stable',
+  'brainrat-gpl' : [ 'brainrat/build-config', 'brainrat/brainrat-gpl' ],
+  't1mri-gpl' : [ 't1mri/build-config', 't1mri/t1mri-gpl/branches/stable' ],
+  'sulci-gpl' : [ 'sulci/build-config', 'sulci/sulci-gpl/branches/stable' ],
+  'connectomist-gpl' : [ 'connectomist/build-config', 'connectomist/connectomist-gpl/branches/stable' ],
+  'cortical_surface-gpl' : [ 'cortical_surface/build-config', 'cortical_surface/cortical_surface-gpl/branches/stable' ],
+  'fmri' : [ 'fmri/build-config', 'fmri/fmri-gpl/branches/stable' ],
+}
+utils = [ 'build-config', 'configure', 'maker', 'sip4make.py',
+          'doxyconf.py', 'systemIdentification', 'buildIndexDoc',
+          'makeCommandsDoc' ]
+
+def cleandirs( directories, verbose=False ):
+  if type( directories ) in types.StringTypes:
+    directories = [ directories ]
+  while directories:
+    d = directories.pop()
+    if os.path.exists( d ):
+      s = os.path.join( d, '.svn' )
+      if os.path.exists( s ):
+        if verbose: print 'rmtree', s
+        shutil.rmtree( s )
+      for f in os.listdir( d ):
+        g = os.path.join( d, f )
+        if g.endswith( '~' ) or g.endswith( '%' ):
+          if verbose: print 'rm', s
+          os.unlink( g )
+        elif os.path.isdir( g ):
+          directories.append( g )
+
+if not os.path.exists( dest ):
+  os.makedirs( dest )
+os.chdir( dest )
+for proj, pr in projects.iteritems():
+  prx = []
+  base = ''
+  if type(pr) is not type([]):
+    pr = [ pr ]
+  for p in pr:
+    if p.endswith( '/stable' ):
+      px = os.path.join( os.path.dirname( p ), ver )
+    else:
+      px = p
+    projdir = p.split( os.path.sep )[0]
+    prx.append( px )
+    print 'mkdir -p', os.path.join( dest, px )
+    os.makedirs( os.path.join( dest, px ) )
+    print 'cp -a', os.path.join( source, p, '*' ) \
+               + ' ' + os.path.join( dest, px )
+    os.system( 'cp -a ' + os.path.join( source, p, '*' ) \
+               + ' ' + os.path.join( dest, px ) )
+  print 'cleaning ' + os.path.join( dest, projdir )
+  cleandirs( os.path.join( dest, projdir ), verbose=False )
+  print 'tar cfz ' + proj + '.tar.gz ' + ' '.join( prx )
+  os.system( 'tar cfz ' + proj + '.tar.gz ' + ' '.join( prx ) )
+  print 'rm -r', os.path.join( dest, projdir )
+  shutil.rmtree( os.path.join( dest, projdir ) )
+
+os.mkdir( os.path.join( dest, 'build-config-' + ver ) )
+for x in utils:
+  shutil.copy2( os.path.join( source, 'development/build-config/trunk', x ),
+                os.path.join( dest, 'build-config-' + ver, x ) )
+px = 'build-config-' + ver
+os.system( 'tar cfz ' + px + '.tar.gz ' + px )
+shutil.rmtree( os.path.join( dest, px ) )
+

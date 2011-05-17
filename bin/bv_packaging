@@ -562,7 +562,7 @@ Release date : ''' + date + '''
 
 2) uncompress the archive file:
 
-  On Unix : gunzip -c ''' + zfile + ''' | tar xf -
+  On Unix : tar jxvf ''' + zfile + '''
   On Windows: uncompress the ZIP archive wherever you want to install the package
   
 

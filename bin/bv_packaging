@@ -424,7 +424,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
       os.symlink( '../../../bin/brainvisa', 
                   os.path.join( bv_shortcut, 'Contents', 
                                 'MacOS', 'brainvisa' ) )
-      icns = glob.glob( os.path.join( install_directory, 'share', 'brainvisa*' ) )
+      icns = glob.glob( os.path.join( install_directory, 'share', 'axon*' ) )
       if icns:
         icns = os.path.join( '../../../share', os.path.basename( icns[0] ), 
           'icons/brainvisa.icns' )

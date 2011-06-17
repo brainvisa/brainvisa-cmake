@@ -84,5 +84,3 @@ endforeach()
 if( BRAINVISA_DEPENDENCY_GRAPH )
   file( APPEND "${BRAINVISA_DEPENDENCY_GRAPH}" "}\n" )
 endif()
-
-ENABLE_TESTING()

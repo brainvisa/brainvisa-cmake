@@ -8,10 +8,43 @@
 #include <unistd.h> // for execvp()
 using namespace std;
 
+// It is necessary to first redefine getenv function
+string getenv( const string &variable )
+{
+  char *env = std::getenv( variable.c_str() );
+  if ( env ) return env;
+  return string();
+}
+
 #ifdef WIN32
-  #define PATH_SEP "\\"
-  #define ENV_SEP ";"
-  #define LD_LIBRARY_PATH "PATH"
+
+  #define UNIX_PATH_SEP "/"
+  #define UNIX_ENV_SEP ":"
+  #define UNIX_LD_LIBRARY_PATH "LD_LIBRARY_PATH"
+  
+  #define WIN_PATH_SEP "\\"
+  #define WIN_ENV_SEP ";"
+  #define WIN_LD_LIBRARY_PATH "PATH"
+  
+  #define PATH_SEP WIN_PATH_SEP
+    
+  #define ENV_SEP WIN_ENV_SEP
+    
+  #define LD_LIBRARY_PATH \
+    ( is_msys() ? UNIX_LD_LIBRARY_PATH : WIN_LD_LIBRARY_PATH )
+
+string get_term()
+{
+  static string ostermkey = "TERM";
+  static string osterm = getenv( ostermkey );
+  return osterm;
+}
+
+bool is_msys()
+{
+  return ((get_term() == "msys") || (get_term() == "cygwin"));
+}
+
 #else
   #define PATH_SEP "/"
   #define ENV_SEP ":"
@@ -22,14 +55,12 @@ using namespace std;
   #endif
 #endif
 
-
-
 vector <string> split_path( const string &str, const string & sep = PATH_SEP  )
 {
   vector <string> result;
   if ( ! str.empty() ) {
     string::size_type pos = 0;
-    if ( str == PATH_SEP ) {
+    if ( str == sep ) {
       result.push_back( "" );
       pos = 1;
     }
@@ -81,14 +112,6 @@ string join_path( const vector< string > &splitted, const string &sep = PATH_SEP
   return result;
 }
 
-
-string getenv( const string &variable )
-{
-  char *env = std::getenv( variable.c_str() );
-  if ( env ) return env;
-  return string();
-}
-
 void set_env( const string &variable, const string &value )
 {
 #if WIN32
@@ -127,9 +150,9 @@ string find_python_site_packages( const string &install_directory )
       const string entry_name = entry->d_name;
       if ( entry_name.compare( 0, 6, "python" ) == 0 ) {
 #if WIN32
-        string site_packages = install_directory + PATH_SEP + "lib" + PATH_SEP + entry_name + PATH_SEP + "lib" + PATH_SEP "site-packages";
+        string site_packages = install_directory + PATH_SEP + "lib" + PATH_SEP + entry_name + PATH_SEP + "lib" + PATH_SEP + "site-packages";
 #else
-        string site_packages = install_directory + PATH_SEP + "lib" + PATH_SEP + entry_name + PATH_SEP "site-packages";
+        string site_packages = install_directory + PATH_SEP + "lib" + PATH_SEP + entry_name + PATH_SEP + "site-packages";
 #endif
         DIR *dir2 = opendir( site_packages.c_str() );
         if ( dir2 ) {
@@ -179,9 +202,9 @@ string find_python_osmodule( const string &install_directory )
       const string entry_name = entry->d_name;
       if ( entry_name.compare( 0, 6, "python" ) == 0 ) {
 #if WIN32
-        string site_os = install_directory + PATH_SEP + "lib" + PATH_SEP + entry_name + PATH_SEP + "lib" + PATH_SEP "os.py";
+        string site_os = install_directory + PATH_SEP + "lib" + PATH_SEP + entry_name + PATH_SEP + "lib" + PATH_SEP + "os.py";
 #else
-        string site_os = install_directory + PATH_SEP + "lib" + PATH_SEP + entry_name + PATH_SEP "os.py";
+        string site_os = install_directory + PATH_SEP + "lib" + PATH_SEP + entry_name + PATH_SEP + "os.py";
 #endif
         if( file_exists( site_os ) )
         {
@@ -228,7 +251,7 @@ int main( int argc, char *argv[] )
       }
     }
   }
-  
+    
   vector< string > unset_variables = split_path( "SIGRAPH_PATH/ANATOMIST_PATH/AIMS_PATH", "/" );
   
   map< string, string > set_variables;
@@ -259,8 +282,8 @@ int main( int argc, char *argv[] )
 #ifdef WIN32
     libpath.push_back( site_packages + PATH_SEP + "pywin32_system32" );
     libpath.push_back( site_packages + PATH_SEP + "pythonwin" );
-    libpath.push_back( site_packages + PATH_SEP + "OpenGL" + PATH_SEP + "DLLs" );
-    libpath.push_back( site_packages + PATH_SEP + "isapi" );
+    //libpath.push_back( site_packages + PATH_SEP + "OpenGL" + PATH_SEP + "DLLs" );
+    //libpath.push_back( site_packages + PATH_SEP + "isapi" );
     path_prepend[ "PYTHONPATH" ].push_back( site_packages + PATH_SEP + "win32" );
     path_prepend[ "PYTHONPATH" ].push_back( site_packages + PATH_SEP + "win32"+ PATH_SEP + "lib" );
 #endif
@@ -320,47 +343,55 @@ int main( int argc, char *argv[] )
     for( map< string, string>::const_iterator it = backup_variables.begin(); it != backup_variables.end(); ++it ) {
       set_env(  unenv_prefix + it->first, it->second );
     }
-    //execvp( argv[1], argv + 1 );
-    string command = argv[1];
-#if WIN32
-    string command_orig = command;
-    command.clear();
-    // 'command name' -> 'command" "name'
-    for( string::size_type x=0; x<command_orig.length(); ++x )
-    {
-      if( command_orig[x] == ' ' )
-        command += "\" \"";
-      else
-        command += command_orig[x];
-    }
-#else
-    command = "\"" + command + "\"";
-#endif
-    for( int32_t i = 2; i < argc; i++ )  {    
-      string arg = argv[i];
-      string::size_type position = arg.find( "\"" );
-      while ( position != string::npos ) 
-      {
-          arg.replace( position, 1, "\\\"" );
-          position = arg.find( "\"", position + 2 );
-      }
-      command += " \"" + arg + "\"";
-    }
-    system( command.c_str() );
+    spawnvp( P_WAIT, argv[1], argv + 1 );
   } else {
+  
+  bool win = false;
+#ifdef WIN32
+  // We only use windows format if are in dos shell
+  win = ! is_msys();
+#endif
     for( map< string, string>::const_iterator it = backup_variables.begin(); it != backup_variables.end(); ++it ) {
-      cout <<  "export " << unenv_prefix << it->first << "='" << it->second << "'" << endl;
+      if( win )
+      {
+        cout <<  "set " << unenv_prefix << it->first << "=" << it->second << endl;
+      }
+      else
+      {
+        cout <<  "export " << unenv_prefix << it->first << "='" << it->second << "'" << endl;
+      }
     }
     for( vector< string >::const_iterator it = unset_variables.begin(); it != unset_variables.end(); ++it ) {
-      cout << "unset " << *it << endl;
+      if( win )
+      {
+        cout <<  "set " << *it << "=" << endl;
+      }
+      else
+      {
+        cout << "unset " << *it << endl;
+      }
     }
     for( map< string, string>::const_iterator it = set_variables.begin(); it != set_variables.end(); ++it ) {
-      cout << "export " << it->first << "='" << getenv( it->first ) << "'" << endl;
+      if( win )
+      {
+        cout <<  "set " << it->first << "=" << getenv( it->first ) << endl;
+      }
+      else
+      {
+        cout << "export " << it->first << "='" << getenv( it->first ) << "'" << endl;
+      }
     }
     for( map< string, vector<string> >::const_iterator it = path_prepend.begin(); it != path_prepend.end(); ++it ) {
       string v = getenv( it->first );
       if ( ! v.empty() ) {
-        cout << "export " << it->first << "='" << v << "'" << endl;
+        if( win )
+        {
+          cout <<  "set " << it->first << "=" << v << endl;
+        }
+        else
+        {
+          cout << "export " << it->first << "='" << v << "'" << endl;
+        }
       }
     }
   }

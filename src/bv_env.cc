@@ -343,7 +343,11 @@ int main( int argc, char *argv[] )
     for( map< string, string>::const_iterator it = backup_variables.begin(); it != backup_variables.end(); ++it ) {
       set_env(  unenv_prefix + it->first, it->second );
     }
+#ifndef _WIN32
+    execvp( argv[1], argv + 1 );
+#else
     spawnvp( P_WAIT, argv[1], argv + 1 );
+#endif
   } else {
   
   bool win = false;

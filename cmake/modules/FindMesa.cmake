@@ -9,12 +9,14 @@ if( MESA_LIBRARIES )
   set( MESA_FOUND true )
 
 else()
-  
+
   set(lib_paths "mesa/lib" "mesa/lib64" "lib" "lib64")
   find_library( GL_LIB GL 
         PATHS ${CMAKE_PREFIX_PATH}
         PATH_SUFFIXES ${lib_paths}
         NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH)
+  find_library( GL_LIB GL 
+        PATH_SUFFIXES ${lib_paths} )
   if( NOT GL_LIB )
     # libgl might be found only a libGL.so.1
     file( GLOB GL_LIB /usr/lib64/mesa/libGL.so.? )
@@ -26,6 +28,8 @@ else()
         PATHS ${CMAKE_PREFIX_PATH}
         PATH_SUFFIXES ${lib_paths}
         NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH)
+  find_library( OSMESA_LIB OSMesa 
+        PATH_SUFFIXES ${lib_paths} )
   if(GL_LIB AND OSMESA_LIB)
     set(MESA_LIBRARIES "${GL_LIB}" "${OSMESA_LIB}")
     set(MESA_FOUND TRUE)
@@ -39,7 +43,5 @@ else()
     ENDIF()
 
   endif()
-  unset(GL_LIB CACHE)
-  unset(OSMESA_LIB CACHE)
       
 endif()

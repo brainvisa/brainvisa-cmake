@@ -10,7 +10,7 @@ if( MESA_LIBRARIES )
 
 else()
   
-  set(lib_paths "mesa/lib")
+  set(lib_paths "mesa/lib" "mesa/lib64" "lib" "lib64")
   find_library( GL_LIB GL 
         PATHS ${CMAKE_PREFIX_PATH}
         PATH_SUFFIXES ${lib_paths}

@@ -185,6 +185,7 @@ if( DCMTK_config_INCLUDE_DIR AND
     )
   ELSE( DCMTK_PRE_353 )
     SET( DCMTK_INCLUDE_DIR
+      ${DCMTK_dcmdata_INCLUDE_DIR}
       ${DCMTK_config_INCLUDE_DIR}
       ${DCMTK_config_INCLUDE_DIR}/dcmtk/config
       ${DCMTK_ofstd_INCLUDE_DIR}/dcmtk/ofstd

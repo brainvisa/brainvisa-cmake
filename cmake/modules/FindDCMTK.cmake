@@ -213,31 +213,36 @@ if( DCMTK_config_INCLUDE_DIR AND
     )
   ENDIF()
 
+  # For DCMTK >= 3.6.0
+  IF(DCMTK_oflog_LIBRARY)
+   SET(DCMTK_INCLUDE_DIR
+     ${DCMTK_INCLUDE_DIR}
      ${DCMTK_oflog_INCLUDE_DIR}/oflog
-  SET( DCMTK_LIBRARIES
-    ${DCMTK_dcmimgle_LIBRARY}
-    ${DCMTK_dcmdata_LIBRARY}
-    ${DCMTK_ofstd_LIBRARY}
-    ${DCMTK_config_LIBRARY}
+     ${DCMTK_oflog_INCLUDE_DIR}/dcmtk/oflog
+   )
+   SET(DCMTK_LIBRARIES
+     ${DCMTK_LIBRARIES}
+     ${DCMTK_dcmimgle_LIBRARY}
+     ${DCMTK_dcmdata_LIBRARY}
+     ${DCMTK_oflog_LIBRARY}
+     ${DCMTK_ofstd_LIBRARY}
+     ${DCMTK_config_LIBRARY}
+   )
+  ELSE(DCMTK_oflog_LIBRARY)
+    SET( DCMTK_LIBRARIES
+      ${DCMTK_dcmimgle_LIBRARY}
+      ${DCMTK_dcmdata_LIBRARY}
+      ${DCMTK_ofstd_LIBRARY}
+      ${DCMTK_config_LIBRARY}
   )
+  ENDIF(DCMTK_oflog_LIBRARY)
+
   IF( APPLE )
     find_package( ZLIB )
     if( ZLIB_FOUND )
       SET( DCMTK_LIBRARIES ${DCMTK_LIBRARIES} ${ZLIB_LIBRARIES} )
     endif( ZLIB_FOUND )
   ENDIF( APPLE )
-
-  # For DCMTK >= 3.6.0
-  IF(DCMTK_oflog_LIBRARY)
-   SET(DCMTK_INCLUDE_DIR
-   ${DCMTK_INCLUDE_DIR}
-   ${DCMTK_oflog_INCLUDE_DIR}/dcmtk/oflog
-   )
-   SET(DCMTK_LIBRARIES
-   ${DCMTK_LIBRARIES}
-   ${DCMTK_oflog_LIBRARY}
-   )
-  ENDIF(DCMTK_oflog_LIBRARY)
 
   IF(DCMTK_dcmjpeg_LIBRARY)
    SET(DCMTK_LIBRARIES

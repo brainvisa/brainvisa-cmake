@@ -19,10 +19,18 @@
 set( _directories
   "${DCMTK_DIR}"
 )
+
+if( NOT _directories )
+set( _directories
+  "$ENV{DCMTK_DIR}"
+)
+endif()
   
 set( _includeSuffixes
   include
   dcmtk/include
+  include/dcmtk
+  dcmtk
 )
 set( _librarySuffixes
   lib
@@ -33,8 +41,8 @@ set( _shareSuffixes
   dcmtk/share/dcmtk
 )
 if( NOT DCMTK_PRE_353 )
-  find_path( DCMTK_config_INCLUDE_DIR dcmtk/config/osconfig.h
-    ${_directories}
+  find_path( DCMTK_config_INCLUDE_DIR config/osconfig.h
+    PATHS ${_directories}
     PATH_SUFFIXES ${_includeSuffixes}
   )
 endif()
@@ -42,7 +50,7 @@ endif()
 if( NOT DCMTK_config_INCLUDE_DIR OR DCMTK_PRE_353 )
   # For DCMTK <= 3.5.3
   find_path( DCMTK_config_INCLUDE_DIR osconfig.h
-    ${_directories}
+    PATHS ${_directories}
     PATH_SUFFIXES ${_includeSuffixes}
   )
   if( DCMTK_config_INCLUDE_DIR )
@@ -56,109 +64,110 @@ if( DCMTK_PRE_353 )
   # For DCMTK <= 3.5.3
 
   find_path( DCMTK_ofstd_INCLUDE_DIR ofstd/ofstdinc.h
-    ${_directories}
+    PATHS ${_directories}
     PATH_SUFFIXES ${_includeSuffixes}
   )
 
   find_path( DCMTK_dcmdata_INCLUDE_DIR dcmdata/dctypes.h
-    ${_directories}
+    PATHS ${_directories}
     PATH_SUFFIXES ${_includeSuffixes}
   )
 
   find_path( DCMTK_dcmimgle_INCLUDE_DIR dcmimgle/dcmimage.h
-    ${_directories}
+    PATHS ${_directories}
     PATH_SUFFIXES ${_includeSuffixes}
   )
 
 else()
   # For DCMTK >= 3.5.4
 
+
   find_path( DCMTK_ofstd_INCLUDE_DIR dcmtk/ofstd/ofstdinc.h
-    ${_directories}
+    PATHS ${_directories}
     PATH_SUFFIXES ${_includeSuffixes}
   )
 
   # For DCMTK >= 3.6.0
   find_path( DCMTK_oflog_INCLUDE_DIR dcmtk/oflog/logger.h
-    ${_directories}
+    PATHS ${_directories}
     PATH_SUFFIXES ${_includeSuffixes}
   )
 
   find_path( DCMTK_dcmdata_INCLUDE_DIR dcmtk/dcmdata/dctypes.h
-    ${_directories}
+    PATHS ${_directories}
     PATH_SUFFIXES ${_includeSuffixes}
   )
 
   find_path( DCMTK_dcmnet_INCLUDE_DIR dcmtk/dcmnet/dcmtrans.h
-    ${_directories}
+    PATHS ${_directories}
     PATH_SUFFIXES ${_includeSuffixes}
   )
 
   find_path( DCMTK_dcmtls_INCLUDE_DIR dcmtk/dcmtls/tlslayer.h
-    ${_directories}
+    PATHS ${_directories}
     PATH_SUFFIXES ${_includeSuffixes}
   )
 
   find_path( DCMTK_dcmimgle_INCLUDE_DIR dcmtk/dcmimgle/dcmimage.h
-    ${_directories}
+    PATHS ${_directories}
     PATH_SUFFIXES ${_includeSuffixes}
   )
 
   find_path( DCMTK_dcmjpeg_INCLUDE_DIR dcmtk/dcmjpeg/djdijg16.h
-    ${_directories}
+    PATHS ${_directories}
     PATH_SUFFIXES ${_includeSuffixes}
   )
 
 endif()
 
 find_library( DCMTK_ofstd_LIBRARY ofstd
-    ${_directories}
+    PATHS ${_directories}
     PATH_SUFFIXES ${_librarySuffixes}
 )
 
 # For DCMTK >= 3.6.0
 find_library(DCMTK_oflog_LIBRARY oflog
-  ${_directories}
+  PATHS ${_directories}
   PATH_SUFFIXES ${_librarySuffixes}
 )
 
 find_library( DCMTK_dcmdata_LIBRARY dcmdata
-    ${_directories}
+    PATHS ${_directories}
     PATH_SUFFIXES ${_librarySuffixes}
 )
 
 find_library( DCMTK_dcmnet_LIBRARY dcmnet
-    ${_directories}
+    PATHS ${_directories}
     PATH_SUFFIXES ${_librarySuffixes}
 )
 
 find_library( DCMTK_dcmtls_LIBRARY dcmtls
-    ${_directories}
+    PATHS ${_directories}
     PATH_SUFFIXES ${_librarySuffixes}
 )
 
 find_library( DCMTK_dcmimgle_LIBRARY dcmimgle
-    ${_directories}
+    PATHS ${_directories}
     PATH_SUFFIXES ${_librarySuffixes}
 )
 
 find_library(DCMTK_dcmjpeg_LIBRARY dcmjpeg
-  ${_libraryDirectories}
+  PATHS ${_libraryDirectories}
   PATH_SUFFIXES ${_pathSuffixes}
 )
 
 find_library(DCMTK_ijg8_LIBRARY ijg8
-  ${_libraryDirectories}
+  PATHS ${_libraryDirectories}
   PATH_SUFFIXES ${_pathSuffixes}
 )
 
 find_library(DCMTK_ijg12_LIBRARY ijg12
-  ${_libraryDirectories}
+  PATHS ${_libraryDirectories}
   PATH_SUFFIXES ${_pathSuffixes}
 )
 
 find_library(DCMTK_ijg16_LIBRARY ijg16
-  ${_libraryDirectories}
+  PATHS ${_libraryDirectories}
   PATH_SUFFIXES ${_pathSuffixes}
 )
 
@@ -183,7 +192,7 @@ if( DCMTK_config_INCLUDE_DIR AND
       ${DCMTK_dcmdata_INCLUDE_DIR}/dcmdata
       ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmimgle
     )
-  ELSE( DCMTK_PRE_353 )
+  ELSE()
     SET( DCMTK_INCLUDE_DIR
       ${DCMTK_dcmdata_INCLUDE_DIR}
       ${DCMTK_config_INCLUDE_DIR}
@@ -194,9 +203,17 @@ if( DCMTK_config_INCLUDE_DIR AND
       ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtk/dcmtls
       ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtk/dcmimgle
       ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtk/dcmjpeg
+#      ${DCMTK_config_INCLUDE_DIR}/config
+#      ${DCMTK_ofstd_INCLUDE_DIR}/ofstd
+#      ${DCMTK_dcmdata_INCLUDE_DIR}/dcmdata
+#      ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmnet
+#      ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtls
+#      ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmimgle
+#      ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmjpeg
     )
-  ENDIF( DCMTK_PRE_353 )
+  ENDIF()
 
+     ${DCMTK_oflog_INCLUDE_DIR}/oflog
   SET( DCMTK_LIBRARIES
     ${DCMTK_dcmimgle_LIBRARY}
     ${DCMTK_dcmdata_LIBRARY}

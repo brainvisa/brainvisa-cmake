@@ -26,7 +26,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         "vtkNetCDF" "vtkpng" "vtkRendering" "vtksys" "vtktiff"
         "vtkViews" "vtkVolumeRendering" "vtkWidgets" "vtkzlib" "vtksqlite" "vtkParallel")
         find_library( vtk_lib ${library} ${VTK_LIBRARY_DIRS} NO_DEFAULT_PATH )
-        find_library( vtk_lib ${library} ${VTK_LIBRARY_DIRS})
+        find_library( vtk_lib ${library} ${VTK_LIBRARY_DIRS} )
         if(vtk_lib)
           set( VTK_LIBRARIES ${VTK_LIBRARIES} "${vtk_lib}" )
         endif()

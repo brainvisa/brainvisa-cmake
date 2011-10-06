@@ -1710,19 +1710,29 @@ endfunction( BRAINVISA_INSTALL_RUNTIME_LIBRARIES )
 #
 # Usage:
 #
-#   BRAINVISA_ADD_TRANSLATION( <name of the source share directory where finding the *.ts files> <name of the destination share directory where writing the *.qm files> <component>)
+#   BRAINVISA_ADD_TRANSLATION( <name of the source share directory where finding the *.ts files> <name of the destination share directory where writing the *.qm files> <component> [source directory to search c++ files] )
 #
 function( BRAINVISA_ADD_TRANSLATION source_share_dir dest_share_dir component)
+
+  list( LENGTH ARGN nargs )
+  if( ${nargs} EQUAL 4 )
+    list( GET ARGN 3 source_cpp_dir )
+  else()
+    set( source_cpp_dir "${CMAKE_CURRENT_SOURCE_DIR}/${source_share_dir}/.." )
+  endif()
+
   file(GLOB_RECURSE TR_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${source_share_dir}/po/*.ts")
+  file( GLOB_RECURSE CPP_SOURCES "${source_cpp_dir}" "*.ui" "*.c" "*.c++" "*.cc" "*.cpp" "*.cxx" "*.ch" "*.h" "*.h++" "*.hh" "*.hpp" "*.hxx" )
   foreach(tr_source ${TR_SOURCES})
     file(RELATIVE_PATH tr_relative_name "${CMAKE_CURRENT_SOURCE_DIR}/${source_share_dir}/po" ${tr_source})
     get_filename_component(tr_relative_path ${tr_relative_name} PATH)
     set_source_files_properties(${tr_source} PROPERTIES OUTPUT_LOCATION "${CMAKE_BINARY_DIR}/${dest_share_dir}/po/${tr_relative_path}")
   endforeach()
-  QT4_ADD_TRANSLATION( TRANSLATION_FILES "${TR_SOURCES}" )
+  QT4_CREATE_TRANSLATION( TRANSLATION_FILES ${TR_SOURCES} ${CPP_SOURCES} )
+  # QT4_ADD_TRANSLATION( TRANSLATION_FILES "${TR_SOURCES}" )
   BRAINVISA_GENERATE_TARGET_NAME(TRANSLATION_TARGET)
   add_custom_target(${TRANSLATION_TARGET} ALL 
-      DEPENDS ${TRANSLATION_FILES})
+      DEPENDS ${TR_SOURCES} ${CPP_SOURCES} )
   foreach(tr_file ${TRANSLATION_FILES})
     file(RELATIVE_PATH tr_relative_name "${CMAKE_BINARY_DIR}/${dest_share_dir}/po" ${tr_file})
     get_filename_component(tr_relative_path ${tr_relative_name} PATH)

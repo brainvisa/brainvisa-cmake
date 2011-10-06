@@ -1732,7 +1732,7 @@ function( BRAINVISA_ADD_TRANSLATION source_share_dir dest_share_dir component)
   # QT4_ADD_TRANSLATION( TRANSLATION_FILES "${TR_SOURCES}" )
   BRAINVISA_GENERATE_TARGET_NAME(TRANSLATION_TARGET)
   add_custom_target(${TRANSLATION_TARGET} ALL 
-      DEPENDS ${TR_SOURCES} ${CPP_SOURCES} )
+      DEPENDS ${TRANSLATION_FILES} ${TR_SOURCES} ${CPP_SOURCES} )
   foreach(tr_file ${TRANSLATION_FILES})
     file(RELATIVE_PATH tr_relative_name "${CMAKE_BINARY_DIR}/${dest_share_dir}/po" ${tr_file})
     get_filename_component(tr_relative_path ${tr_relative_name} PATH)

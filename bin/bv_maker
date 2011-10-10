@@ -152,7 +152,9 @@ class GlobalConfiguration( object ):
     currentDirectoryObject = None
     self.sourcesDirectories = {}
     self.buildDirectories = {}
-
+    
+    directories = [ os.path.normpath(os.path.abspath(d)) for d in options.directories ]
+    
     if options.build_directory:
       if not options.sources_directory:
         options.sources_directory = os.path.dirname( os.path.dirname( this_script ) )
@@ -180,11 +182,17 @@ class GlobalConfiguration( object ):
             if l[ 0 ] == 'source':
               pass
               currentDirectoryObject = SourceDirectory( environmentVariablesSubstitution( l[ 1 ].strip() ), self )
-              self.sourcesDirectories[ currentDirectoryObject.directory ] = currentDirectoryObject
+              if (not directories or (currentDirectoryObject.directory in directories)):
+                self.sourcesDirectories[ currentDirectoryObject.directory ] = currentDirectoryObject
+              elif self.verbose:
+                print 'Passing ',currentDirectoryObject.directory, 'because it is not in the selected directories.'
             elif l[ 0 ] == 'build':
               pass
               currentDirectoryObject = BuildDirectory( environmentVariablesSubstitution( l[ 1 ].strip() ), self )
-              self.buildDirectories[ currentDirectoryObject.directory ] = currentDirectoryObject
+              if (not directories or (currentDirectoryObject.directory in directories)):
+                self.buildDirectories[ currentDirectoryObject.directory ] = currentDirectoryObject
+              elif self.verbose:
+                print 'Passing ',currentDirectoryObject.directory, 'because it is not in the selected directories.'
             else:
               raise SyntaxError()
           else:

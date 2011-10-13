@@ -1,11 +1,11 @@
 #include <iostream>
-#include <string>
 #include <vector>
 #include <map>
 #include <cstdlib>
 #include <sys/stat.h>
 #include <dirent.h>
 #include <unistd.h> // for execvp()
+#include <string.h> // for strcpy()
 using namespace std;
 
 // It is necessary to first redefine getenv function
@@ -346,7 +346,26 @@ int main( int argc, char *argv[] )
 #ifndef _WIN32
     execvp( argv[1], argv + 1 );
 #else
-    spawnvp( P_WAIT, argv[1], argv + 1 );
+    // Double-quoted arguments is required on windows before spawnvp call
+    // otherwise contained spaces are used as argument separator
+    vector<const char*> args;
+
+    for(int i = 0; i < (argc - 1); i++) {
+      string arg = "\"" + std::string(argv[i + 1]) + "\"";
+      char * carg = new char[ arg.size() ];
+      strcpy(carg, arg.c_str());
+      args.push_back((const char *)carg);
+    }
+    args.push_back( (const char *)NULL );
+    
+    // Command call
+    spawnvp( P_WAIT, argv[1], &args[0] );
+    
+    // Free allocated memory
+    for(int i = 0; i < args.size(); i++) {
+      free((void*)args[i]);
+    }
+
 #endif
   } else {
   

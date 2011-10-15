@@ -12,7 +12,7 @@ else()
       PATHS ${SVM_DIR}/include
       /usr/local/include
       /usr/include
-      PATH_SUFFIXES libsvm/include include/libsvm-2.0/libsvm include )
+      PATH_SUFFIXES libsvm/include include/libsvm-2.0/libsvm include/libsvm include )
   
   FIND_LIBRARY( SVM_LIBRARIES svm
     PATHS ${SVM_DIR}/lib

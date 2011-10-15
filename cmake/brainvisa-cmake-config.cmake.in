@@ -28,7 +28,9 @@ if( NOT config_done )
   endif( WIN32 AND CMAKE_CROSSCOMPILING )
   
   # Requires CPack for its argument parsing macro
-  include( CPack )
+  if(NOT CPack_CMake_INCLUDED)
+    include( CPack )
+  endif()
   
   unset( BRAINVISA_THIRDPARTY_COMPONENTS CACHE )
   option( BRAINVISA_PACKAGING_THIRDPARTY "Include packaging rules for third-party software" OFF )
@@ -114,7 +116,9 @@ macro( BRAINVISA_PROJECT )
   file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${PROJECT_NAME}-usrdoc' ] = {\n  'name': '${PROJECT_NAME}-usrdoc',\n  'component' : '${PROJECT_NAME}-usrdoc',\n 'type': 'usrdoc',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n}\n" )
   file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${PROJECT_NAME}-devdoc' ] = {\n  'name': '${PROJECT_NAME}-devdoc',\n  'component' : '${PROJECT_NAME}-devdoc',\n 'type': 'devdoc',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n}\n" )
 
-  include( CPack )
+  if(NOT CPack_CMake_INCLUDED)
+    include( CPack )
+  endif()
   
   set( ${PROJECT_NAME}_TARGET_COUNT 0 CACHE INTERNAL "Used to generate new targets" )
   BRAINVISA_CREATE_MAIN_COMPONENTS()

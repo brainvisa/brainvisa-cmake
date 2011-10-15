@@ -9,6 +9,10 @@ IF(STDCPP_LIBRARIES)
 ELSE(STDCPP_LIBRARIES)
   FIND_FILE( STDCPP_LIBRARIES "libstdc++.so.6" 
      PATHS /usr/lib64 /usr/lib)
+  IF( NOT STDCPP_LIBRARIES )
+    FIND_FILE( STDCPP_LIBRARIES "libstdc++.so"
+      PATHS "/usr/lib/gcc/i686-linux-gnu/?.?" )
+  ENDIF()
 
   IF( NOT STDCPP_LIBRARIES )
     FIND_LIBRARY( STDCPP_LIBRARIES libstdc++-6 )

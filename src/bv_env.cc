@@ -16,18 +16,24 @@ string getenv( const string &variable )
   return string();
 }
 
-#ifdef WIN32
+enum system_conversion {
+  WindowsToUnix,
+  UnixToWindows
+};
 
-  #define UNIX_PATH_SEP "/"
-  #define UNIX_ENV_SEP ":"
-  #define UNIX_LD_LIBRARY_PATH "LD_LIBRARY_PATH"
+#define UNIX_PATH_SEP "/"
+#define UNIX_ENV_SEP ":"
+#define UNIX_LD_LIBRARY_PATH "LD_LIBRARY_PATH"
+
+#define WIN_PATH_SEP "\\"
+#define WIN_ENV_SEP ";"
+#define WIN_LD_LIBRARY_PATH "PATH"
+
+#define APPLE_LD_LIBRARY_PATH "DYLD_LIBRARY_PATH"
   
-  #define WIN_PATH_SEP "\\"
-  #define WIN_ENV_SEP ";"
-  #define WIN_LD_LIBRARY_PATH "PATH"
-  
+#ifdef WIN32
+ 
   #define PATH_SEP WIN_PATH_SEP
-    
   #define ENV_SEP WIN_ENV_SEP
     
   #define LD_LIBRARY_PATH \
@@ -46,12 +52,13 @@ bool is_msys()
 }
 
 #else
-  #define PATH_SEP "/"
-  #define ENV_SEP ":"
+  #define PATH_SEP UNIX_PATH_SEP
+  #define ENV_SEP UNIX_ENV_SEP
+  
   #ifdef __APPLE__
-    #define LD_LIBRARY_PATH "DYLD_LIBRARY_PATH"
+    #define LD_LIBRARY_PATH APPLE_LD_LIBRARY_PATH
   #else
-    #define LD_LIBRARY_PATH "LD_LIBRARY_PATH"
+    #define LD_LIBRARY_PATH UNIX_LD_LIBRARY_PATH
   #endif
 #endif
 
@@ -110,6 +117,58 @@ string join_path( const vector< string > &splitted, const string &sep = PATH_SEP
     if ( *it != sep ) add_sep = true;
   }
   return result;
+}
+
+string convert_path( const string &str, const system_conversion mode = WindowsToUnix )
+{
+  vector <string> v;
+  string r = str;
+  
+  switch(mode) {
+    case WindowsToUnix:
+      v = split_path( str, WIN_PATH_SEP );
+      if ((v.size() > 0) && (v[0].size() > 1) && (v[0][1] == ':')) {
+        // Drive letter found
+        // Remove ":" from drive letter
+        v[0] = UNIX_PATH_SEP + v[0].replace( 1, 1, "" );
+      }
+      r = join_path( v, UNIX_PATH_SEP );
+      break;
+
+    case UnixToWindows:
+      v = split_path( str, UNIX_PATH_SEP );
+      if ((v.size() > 1) && (v[0].size() == 0) && (v[1].size() == 1)) {
+        // Drive letter probably found
+        // Add ":" to drive letter
+        v[1] += ":";
+        r = join_path( v, WIN_PATH_SEP ).substr(1); // Join removing root path separator
+      }
+      else {
+        r = join_path( v, WIN_PATH_SEP );
+      }
+      break;
+  }
+  
+  return r;
+}
+
+string convert_env( const string &str, const system_conversion mode = WindowsToUnix )
+{
+  vector <string> v;
+  string sep1 = WIN_ENV_SEP, sep2 = UNIX_ENV_SEP;
+  
+  switch(mode) {
+    case UnixToWindows:
+      sep1 = UNIX_ENV_SEP;
+      sep2 = WIN_ENV_SEP;
+      break;
+  }
+  
+  v = split_env( str, sep1 );
+  for( vector< string >::iterator it = v.begin(); it != v.end(); ++it ) {
+    (*it) = convert_path( *it, mode );
+  }
+  return join_path( v, sep2 );
 }
 
 void set_env( const string &variable, const string &value )
@@ -351,7 +410,14 @@ int main( int argc, char *argv[] )
     vector<const char*> args;
 
     for(int i = 0; i < (argc - 1); i++) {
-      string arg = "\"" + std::string(argv[i + 1]) + "\"";
+      string arg = std::string(argv[i + 1]);
+      // Fixes special " windows character
+      string::size_type pos = arg.find( "\"" );
+      while(pos != string::npos) {
+        arg.replace(pos, 1, "\\\"");
+        pos = arg.find( "\"", pos + 2  );
+      }
+      arg = "\"" + arg + "\"";
       char * carg = new char[ arg.size() ];
       strcpy(carg, arg.c_str());
       args.push_back((const char *)carg);
@@ -370,10 +436,18 @@ int main( int argc, char *argv[] )
   } else {
   
   bool win = false;
+  bool msys = false;
+  
 #ifdef WIN32
-  // We only use windows format if are in dos shell
-  win = ! is_msys();
+  // We only use windows format in dos shell
+  msys = is_msys();
+  win = !msys;
 #endif
+
+#define CONVERT_ENV(env) \
+( msys ? convert_env(env, WindowsToUnix) : env )
+  
+    string value;
     for( map< string, string>::const_iterator it = backup_variables.begin(); it != backup_variables.end(); ++it ) {
       if( win )
       {
@@ -381,7 +455,7 @@ int main( int argc, char *argv[] )
       }
       else
       {
-        cout <<  "export " << unenv_prefix << it->first << "='" << it->second << "'" << endl;
+        cout <<  "export " << unenv_prefix << it->first << "='" << CONVERT_ENV(it->second) << "'" << endl;
       }
     }
     for( vector< string >::const_iterator it = unset_variables.begin(); it != unset_variables.end(); ++it ) {
@@ -401,7 +475,7 @@ int main( int argc, char *argv[] )
       }
       else
       {
-        cout << "export " << it->first << "='" << getenv( it->first ) << "'" << endl;
+        cout << "export " << it->first << "='" << CONVERT_ENV(getenv( it->first )) << "'" << endl;
       }
     }
     for( map< string, vector<string> >::const_iterator it = path_prepend.begin(); it != path_prepend.end(); ++it ) {
@@ -413,7 +487,7 @@ int main( int argc, char *argv[] )
         }
         else
         {
-          cout << "export " << it->first << "='" << v << "'" << endl;
+          cout << "export " << it->first << "='" << CONVERT_ENV(v) << "'" << endl;
         }
       }
     }

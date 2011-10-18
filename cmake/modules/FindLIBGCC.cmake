@@ -16,7 +16,7 @@ else()
       execute_process( COMMAND "${CMAKE_CXX_COMPILER}" "-v"
         ERROR_VARIABLE _gcc_v )
       string( REGEX MATCH "gcc version ([0-9]+.[0-9]+)" _gccver "${_gcc_v}" )
-      set( GCC_VERSION ${CMAKE_MATCH_1} PARENT_SCOPE CACHE STRING "gcc version" )
+      set( GCC_VERSION ${CMAKE_MATCH_1} CACHE STRING "gcc version" )
       file( GLOB LIBGCC_LIBRARIES "/usr/lib/gcc/x86_64-linux-gnu/${_gccver}/libgcc_s.so" )
     endif()
     if( NOT LIBGCC_LIBRARIES )

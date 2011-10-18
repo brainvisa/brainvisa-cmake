@@ -18,8 +18,12 @@ else()
   if( _SIGCPP2_FOUND )
     find_library( Sigc++2_LIBRARIES ${_SIGCPP2_LIBRARIES} 
                   PATHS ${_SIGCPP2_LIBRARY_DIRS} )
+    find_path( Sigc++2_INCLUDE_CONFIG_DIR sigc++config.h
+      PATHS ${_SIGCPP2_INCLUDE_DIRS}
+      PATH_SUFFIXES sigc++-2.0 sigc++-2.0/include lib/sigc++-2.0/include )
     set( Sigc++2_INCLUDE_DIRS ${_SIGCPP2_INCLUDE_DIRS} CACHE PATH "paths to Sigc++2 header files" )
     set( Sigc++2_VERSION "${_SIGCPP2_VERSION}" CACHE STRING "version of Sigc++2 library")
+    set( Sigc++2_INCLUDE_CONFIG_DIR "${Sigc++2_INCLUDE_CONFIG_DIR}" CACHE PATH "paths to Sigc++2 config header files" )
     if( Sigc++2_LIBRARIES )
       set( Sigc++2_FOUND TRUE )
     endif()

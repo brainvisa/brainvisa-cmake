@@ -131,9 +131,9 @@ class GlobalConfiguration( object ):
     parser.add_option( '-c', '--config', dest='configuration_file',
                       help='specify configuration file. Default ="' + defaultConfigurationFile + '"',
                       metavar='USERNAME', default=None )
-    parser.add_option( '-s', '--sources', dest='sources_directory',
+    parser.add_option( '-s', '--sources', dest='sources_directories',
                       help='directory containing sources',
-                      metavar='DIR', default=None )
+                      metavar='DIR', action='append', default=[] )
     parser.add_option( '-b', '--build', dest='build_directory',
                       help='build directory',
                       metavar='DIR', default=None )
@@ -146,7 +146,6 @@ class GlobalConfiguration( object ):
     (options, args) = parser.parse_args( argv )
     if args:
       raise ValueError( 'Invalid option: %s' % args[0] )
-   
     packages = []
     lineCount = 0
     currentDirectoryObject = None
@@ -155,18 +154,22 @@ class GlobalConfiguration( object ):
     
     directories = [ os.path.normpath(os.path.abspath(d)) for d in options.directories ]
     
+    for i in ( 'configuration_file', 'username', 'verbose' ):
+      setattr( self, i, getattr( options, i ) )
+    
     if options.build_directory:
-      if not options.sources_directory:
-        options.sources_directory = os.path.dirname( os.path.dirname( this_script ) )
+      if not options.sources_directories:
+        options.sources_directories = [ os.path.dirname( os.path.dirname( this_script ) ) ]
       bd = BuildDirectory( environmentVariablesSubstitution( options.build_directory ), self )
       self.buildDirectories[ bd.directory ] = bd
-      bd.addConfigurationLine( 'all * ' + options.sources_directory )
+      for sd in options.sources_directories:
+        if os.path.exists( os.path.join( sd, 'project_info.cmake' ) ):
+          bd.addConfigurationLine( '+ ' + sd )
+        else:
+          bd.addConfigurationLine( 'all * ' + sd )
     elif not options.configuration_file:
       options.configuration_file = defaultConfigurationFile
     
-    for i in ( 'configuration_file', 'username', 'verbose' ):
-      setattr( self, i, getattr( options, i ) )
-
     if options.configuration_file:
       # Read configuration file
       for line in open( options.configuration_file ):

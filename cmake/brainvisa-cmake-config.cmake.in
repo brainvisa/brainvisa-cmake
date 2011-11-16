@@ -1304,7 +1304,7 @@ function( BRAINVISA_ADD_COMPONENT _component )
     set( BRAINVISA_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" )
   endif()
   add_custom_target( install-${_component}
-                     COMMAND "${CMAKE_COMMAND}" -DCMAKE_INSTALL_PREFIX=$(BRAINVISA_INSTALL_PREFIX) -DCOMPONENT=${_component} -P "${CMAKE_BINARY_DIR}/cmake_install.cmake" )
+                     COMMAND "${CMAKE_COMMAND}" -DCMAKE_INSTALL_PREFIX=${BRAINVISA_INSTALL_PREFIX} -DCOMPONENT=${_component} -P "${CMAKE_BINARY_DIR}/cmake_install.cmake" )
   add_dependencies( install-${_group} install-${_component} )
 endfunction()
 
@@ -1678,8 +1678,8 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
               if(NOT link STREQUAL linkreal AND NOT linkname STREQUAL realname AND linkreal STREQUAL real) 
                 add_custom_command( TARGET install-${component} POST_BUILD
                         COMMAND "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}"
-                        WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/${destination}")
-                #message("Create symlink $(BRAINVISA_INSTALL_PREFIX)/${destination}/${linkname} -> $(BRAINVISA_INSTALL_PREFIX)/${destination}/${realname}")
+                        WORKING_DIRECTORY "${BRAINVISA_INSTALL_PREFIX}/${destination}")
+                #message("Create symlink ${BRAINVISA_INSTALL_PREFIX}/${destination}/${linkname} -> ${BRAINVISA_INSTALL_PREFIX}/${destination}/${realname}")
               endif()
             endif()
           endforeach()

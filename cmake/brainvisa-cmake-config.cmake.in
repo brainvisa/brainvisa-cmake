@@ -630,7 +630,7 @@ function( BRAINVISA_COPY_FILES component )
 
       # custom command attached to the custom target created for the files installation
       add_custom_command(TARGET ${installTarget} PRE_BUILD
-          COMMAND "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "$(BRAINVISA_INSTALL_PREFIX)/${_destination}/${_file}" )
+          COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "$(BRAINVISA_INSTALL_PREFIX)/${_destination}/${_file}"\;else "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "${CMAKE_INSTALL_PREFIX}/${_destination}/${_file}"\;fi )
 
       set( _targetDepends ${_targetDepends} "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
     else()
@@ -1298,7 +1298,7 @@ function( BRAINVISA_ADD_COMPONENT _component )
   cpack_add_component( ${_component}
                        ${ARGN} )
   add_custom_target( install-${_component}
-                     COMMAND "${CMAKE_COMMAND}" -DCMAKE_INSTALL_PREFIX=$(BRAINVISA_INSTALL_PREFIX) -DCOMPONENT=${_component} -P "${CMAKE_BINARY_DIR}/cmake_install.cmake" )
+                     COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then "${CMAKE_COMMAND}" -DCMAKE_INSTALL_PREFIX=$(BRAINVISA_INSTALL_PREFIX) -DCOMPONENT=${_component} -P "${CMAKE_BINARY_DIR}/cmake_install.cmake"\;else "${CMAKE_COMMAND}" -DCOMPONENT=${_component} -P "${CMAKE_BINARY_DIR}/cmake_install.cmake"\;fi )
   add_dependencies( install-${_group} install-${_component} )
 endfunction()
 
@@ -1667,8 +1667,9 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
 	      # if it is really a symlink and it has a name different from the name of the lib and the link points to the real library
               if(NOT link STREQUAL linkreal AND NOT linkname STREQUAL realname AND linkreal STREQUAL real) 
                 add_custom_command( TARGET install-${component} POST_BUILD
-                        COMMAND "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}"
-                        WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/${destination}")
+                        COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}"
+                        WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/${destination}"\;else "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}"
+                        WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}/${destination}"\;fi )
                 #message("Create symlink $(BRAINVISA_INSTALL_PREFIX)/${destination}/${linkname} -> $(BRAINVISA_INSTALL_PREFIX)/${destination}/${realname}")
               endif()
             endif()

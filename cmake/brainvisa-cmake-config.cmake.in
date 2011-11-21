@@ -1667,9 +1667,7 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
 	      # if it is really a symlink and it has a name different from the name of the lib and the link points to the real library
               if(NOT link STREQUAL linkreal AND NOT linkname STREQUAL realname AND linkreal STREQUAL real) 
                 add_custom_command( TARGET install-${component} POST_BUILD
-                        COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}"
-                        WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/${destination}"\;else "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}"
-                        WORKING_DIRECTORY "${CMAKE_INSTALL_PREFIX}/${destination}"\;fi )
+                        COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then cd "$(BRAINVISA_INSTALL_PREFIX)/${destination}" && "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}"\;else cd "${CMAKE_INSTALL_PREFIX}/${destination}" && "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}"\;fi )
                 #message("Create symlink $(BRAINVISA_INSTALL_PREFIX)/${destination}/${linkname} -> $(BRAINVISA_INSTALL_PREFIX)/${destination}/${realname}")
               endif()
             endif()

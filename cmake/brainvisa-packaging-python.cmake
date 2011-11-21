@@ -33,12 +33,22 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
 
     find_program(IPYTHON_EXECUTABLE ipython PATHS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts NO_DEFAULT_PATH)
     find_program(PYCOLOR_EXECUTABLE pycolor PATHS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts NO_DEFAULT_PATH)
-  
+
+    set( _instfiles )
+    if( IPYTHON_EXECUTABLE )
+      list( APPEND _instfiles "${IPYTHON_EXECUTABLE}" )
+    endif()
+    if( PYCOLOR_EXECUTABLE )
+      list( APPEND _instfiles "${PYCOLOR_EXECUTABLE}" )
+    endif()
+
     if( _python_app )
-      BRAINVISA_INSTALL( FILES "${IPYTHON_EXECUTABLE}" "${PYCOLOR_EXECUTABLE}"
-      DESTINATION "bin"
-      COMPONENT "${component}"
-      PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
+      if( _instfiles )
+        BRAINVISA_INSTALL( FILES ${_instfiles}
+        DESTINATION "bin"
+        COMPONENT "${component}"
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
+      endif()
       BRAINVISA_INSTALL( DIRECTORY "${PYTHON_DIR}/Resources/Python.app"
       DESTINATION "bin"
       COMPONENT "${component}"
@@ -65,16 +75,16 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       DESTINATION "bin"
       COMPONENT "${component}"
       PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
-      
+
       if( NOT WIN32 )
-        BRAINVISA_INSTALL( FILES "${IPYTHON_EXECUTABLE}" "${PYCOLOR_EXECUTABLE}"
+        BRAINVISA_INSTALL( FILES ${_instfiles}
         DESTINATION "bin"
         COMPONENT "${component}"
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
       endif()
-      
+
     endif()
-  
+
     BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${PYTHON_LIBRARY} )
   
     # all python modules are copied in install directory but in theory, we should not copy site-packages subdirectory
@@ -82,7 +92,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     if(WIN32)
       find_program(IPYTHON_SCRIPT ipython-script.py PATHS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts NO_DEFAULT_PATH)
       find_program(PYCOLOR_SCRIPT pycolor-script.py PATHS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts NO_DEFAULT_PATH)
-      
+
       set(PYTHON_DLLS "${PYTHON_BIN_DIR}/DLLs")
       set(PYTHON_DOC "${PYTHON_BIN_DIR}/Doc")
       #set(PYTHON_SCRIPTS "${PYTHON_BIN_DIR}/Scripts")
@@ -91,24 +101,27 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       set(PYTHON_TOOLS "${PYTHON_BIN_DIR}/tools")
       set(PYTHON_XMLDOC "${PYTHON_BIN_DIR}/xmldoc")
       set(PYTHON_SUBDIRS "${PYTHON_MODULES_PATH}" "${PYTHON_DLLS}" "${PYTHON_DOC}" "${PYTHON_SIP}" "${PYTHON_TCL}" "${PYTHON_TOOLS}" "${PYTHON_XMLDOC}")
-      
-      BRAINVISA_INSTALL( DIRECTORY ${PYTHON_SUBDIRS} 
+
+      BRAINVISA_INSTALL( DIRECTORY ${PYTHON_SUBDIRS}
                          DESTINATION "lib/python" 
                          USE_SOURCE_PERMISSIONS
                          COMPONENT "${component}" )
-                         
-      
-      BRAINVISA_INSTALL( FILES "${IPYTHON_SCRIPT}"
-                         RENAME ipython.py
-                         DESTINATION "bin"
-                         COMPONENT "${component}"
-                         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
-                         
-      BRAINVISA_INSTALL( FILES "${PYCOLOR_SCRIPT}"
-                         RENAME pycolor.py
-                         DESTINATION "bin"
-                         COMPONENT "${component}"
-                         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
+
+      if( IPYTHON_SCRIPT )
+        BRAINVISA_INSTALL( FILES "${IPYTHON_SCRIPT}"
+                          RENAME ipython.py
+                          DESTINATION "bin"
+                          COMPONENT "${component}"
+                          PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
+      endif()
+
+      if( PYCOLOR_SCRIPT )
+        BRAINVISA_INSTALL( FILES "${PYCOLOR_SCRIPT}"
+                          RENAME pycolor.py
+                          DESTINATION "bin"
+                          COMPONENT "${component}"
+                          PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
+      endif()
     else()
       BRAINVISA_INSTALL(DIRECTORY "${PYTHON_MODULES_PATH}"
         DESTINATION "lib"

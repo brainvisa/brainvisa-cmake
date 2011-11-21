@@ -11,7 +11,10 @@ else()
   if( NOT LIBGCC_LIBRARIES )
     # On Ubuntu 10.4 libgcc_s is in /lib/libgcc_s.so.1 and CMake cannot find it
     # because there is no /lib/libgcc_s.so
-    file( GLOB LIBGCC_LIBRARIES /lib/libgcc_s.so )
+    file( GLOB LIBGCC_LIBRARIES /lib/libgcc_s.so.? )
+    if( NOT LIBGCC_LIBRARIES )
+      file( GLOB LIBGCC_LIBRARIES /lib/libgcc_s.so )
+    endif()
     if( NOT LIBGCC_LIBRARIES )
       execute_process( COMMAND "${CMAKE_CXX_COMPILER}" "-v"
         ERROR_VARIABLE _gcc_v )

@@ -1,10 +1,10 @@
 #! /bin/sh
 
 # Usage:
-#   source /somewhere/bin/bv_env.sh /somewhere
+#   . /somewhere/bin/bv_env.sh /somewhere
 #   
 #   If used from a terminal with history activated, the parameter can be ommited:
-#     source /somewhere/bin/bv_env.sh
+#     . /somewhere/bin/bv_env.sh
 #
 
 exists() {
@@ -56,5 +56,5 @@ if [ ! -x "$bv_env" ]; then
 fi
 
 "$bv_env" > "$tmp"
-source "$tmp"
+. "$tmp"
 \rm "$tmp"

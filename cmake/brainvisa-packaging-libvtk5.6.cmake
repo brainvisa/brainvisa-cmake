@@ -23,7 +23,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         "vtkexoIIc" "vtkexpat" "vtkFiltering" "vtkfreetype" "vtkftgl"
         "vtkGenericFiltering" "vtkGraphics" "vtkHybrid" "vtkImaging"
         "vtkInfovis" "vtkIO" "vtkjpeg" "vtklibxml2" "vtkmetaio"
-        "vtkNetCDF" "vtkpng" "vtkRendering" "vtksys" "vtktiff"
+        "vtkNetCDF" "vtkNetCDF_cxx" "vtkpng" "vtkRendering" "vtksys" "vtktiff"
         "vtkViews" "vtkVolumeRendering" "vtkWidgets" "vtkzlib" "vtksqlite" "vtkParallel")
         find_library( vtk_lib ${library} ${VTK_LIBRARY_DIRS} NO_DEFAULT_PATH )
         find_library( vtk_lib ${library} ${VTK_LIBRARY_DIRS} )

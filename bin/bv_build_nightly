@@ -222,6 +222,12 @@ if [ -s "$log" ]
 then
   echo "Error - build started $startime, stopped $stoptime on $machine ($os)" >>"$buildlog"
 
+  echo "==================================================" >>"$log"
+  echo "          Environment variables" >>"$log"
+  echo "==================================================" >>"$log"
+  echo >> "$log"
+  env >> "$log"
+
   # send error message
   to="appli@saxifrage.saclay.cea.fr"
   

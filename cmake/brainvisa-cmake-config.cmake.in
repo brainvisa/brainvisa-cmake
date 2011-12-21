@@ -1716,15 +1716,42 @@ function( BRAINVISA_ADD_TRANSLATION source_share_dir dest_share_dir component)
 
   file(GLOB_RECURSE TR_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${source_share_dir}/po/*.ts")
   file( GLOB_RECURSE CPP_SOURCES "${source_cpp_dir}" "*.ui" "*.c" "*.c++" "*.cc" "*.cpp" "*.cxx" "*.ch" "*.h" "*.h++" "*.hh" "*.hpp" "*.hxx" )
+  set( TRANSLATION_FILES )
+  set( TR_BUILD )
   foreach(tr_source ${TR_SOURCES})
     file(RELATIVE_PATH tr_relative_name "${CMAKE_CURRENT_SOURCE_DIR}/${source_share_dir}/po" ${tr_source})
     get_filename_component(tr_relative_path ${tr_relative_name} PATH)
-    set_source_files_properties(${tr_source} PROPERTIES OUTPUT_LOCATION "${CMAKE_BINARY_DIR}/${dest_share_dir}/po/${tr_relative_path}")
+    set( lang "${tr_relative_path}" )
+    get_filename_component( tr_name ${tr_source} NAME_WE )
+    set( tr_dst "${CMAKE_BINARY_DIR}/${dest_share_dir}/po/${tr_relative_path}/${tr_name}_updated.ts" )
+    set( rel_tr_dst "${dest_share_dir}/po/${tr_relative_path}/${tr_name}_updated.ts" )
+    set( qm_dst "${CMAKE_BINARY_DIR}/${dest_share_dir}/po/${tr_relative_path}/${tr_name}.qm" )
+    set_source_files_properties(${tr_dst} PROPERTIES OUTPUT_LOCATION "${CMAKE_BINARY_DIR}/${dest_share_dir}/po/${tr_relative_path}")
+    list( APPEND TRANSLATION_FILES "${qm_dst}" )
+    list( APPEND TR_BUILD "${tr_dst}" )
+
+    # copied and adapted from FindQt4.cmake
+    # make a .pro file to call lupdate on, so we don't make our commands too
+    # long for some systems
+    SET(_ts_pro ${CMAKE_BINARY_DIR}/${dest_share_dir}/po/${tr_relative_path}/${tr_name}_lupdate.pro)
+    SET(_pro_srcs)
+    FOREACH(_pro_src ${CPP_SOURCES})
+      SET(_pro_srcs "${_pro_srcs} \"${_pro_src}\"")
+    ENDFOREACH()
+    FILE(WRITE ${_ts_pro} "SOURCES = ${_pro_srcs}")
+    set( _lupdate_options -source-language "${lang}" )
+    message( "!!!!! copy: ${tr_source} ### ${tr_dst} / QM: ${qm_dst}" )
+    ADD_CUSTOM_COMMAND(OUTPUT "${tr_dst}" "${qm_dst}"
+        COMMAND "${CMAKE_COMMAND}" ARGS -E copy "${tr_source}" "${tr_dst}"
+        COMMAND "${QT_LUPDATE_EXECUTABLE}"
+        ARGS ${_lupdate_options} "${_ts_pro}" -ts "${tr_dst}"
+        COMMAND ${QT_LRELEASE_EXECUTABLE}
+        ARGS ${tr_dst} -qm ${qm_dst}
+        DEPENDS ${CPP_SOURCES} "${_ts_pro}" "${tr_source}" )
   endforeach()
-  QT4_CREATE_TRANSLATION( TRANSLATION_FILES ${TR_SOURCES} ${CPP_SOURCES} )
-  # QT4_ADD_TRANSLATION( TRANSLATION_FILES "${TR_SOURCES}" )
-  BRAINVISA_GENERATE_TARGET_NAME(TRANSLATION_TARGET)
-  add_custom_target(${TRANSLATION_TARGET} ALL 
+  # QT4_ADD_TRANSLATION( TRANSLATION_FILES "${TR_BUILD}" )
+  # BRAINVISA_GENERATE_TARGET_NAME(TRANSLATION_TARGET)
+  add_custom_target(${component}-translation ALL
       DEPENDS ${TRANSLATION_FILES} ${TR_SOURCES} ${CPP_SOURCES} )
   foreach(tr_file ${TRANSLATION_FILES})
     file(RELATIVE_PATH tr_relative_name "${CMAKE_BINARY_DIR}/${dest_share_dir}/po" ${tr_file})

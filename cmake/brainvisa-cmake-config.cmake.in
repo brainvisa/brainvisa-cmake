@@ -1740,7 +1740,6 @@ function( BRAINVISA_ADD_TRANSLATION source_share_dir dest_share_dir component)
     ENDFOREACH()
     FILE(WRITE ${_ts_pro} "SOURCES = ${_pro_srcs}")
     set( _lupdate_options -source-language "${lang}" )
-    message( "!!!!! copy: ${tr_source} ### ${tr_dst} / QM: ${qm_dst}" )
     ADD_CUSTOM_COMMAND(OUTPUT "${tr_dst}" "${qm_dst}"
         COMMAND "${CMAKE_COMMAND}" ARGS -E copy "${tr_source}" "${tr_dst}"
         COMMAND "${QT_LUPDATE_EXECUTABLE}"

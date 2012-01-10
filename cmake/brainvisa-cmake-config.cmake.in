@@ -630,7 +630,7 @@ function( BRAINVISA_COPY_FILES component )
 
       # custom command attached to the custom target created for the files installation
       add_custom_command(TARGET ${installTarget} PRE_BUILD
-          COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then "${CMAKE_COMMAND}" -E copy "\"${_absoluteFile}\"" "\"$(BRAINVISA_INSTALL_PREFIX)/${_destination}/${_file}\""\;else "${CMAKE_COMMAND}" -E copy "\"${_absoluteFile}\"" "\"${CMAKE_INSTALL_PREFIX}/${_destination}/${_file}\""\;fi )
+          COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "$(BRAINVISA_INSTALL_PREFIX)/${_destination}/${_file}"\;else "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "${CMAKE_INSTALL_PREFIX}/${_destination}/${_file}"\;fi )
 
       set( _targetDepends ${_targetDepends} "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
     else()

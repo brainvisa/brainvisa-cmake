@@ -483,15 +483,11 @@ class BuildDirectory( object ):
           print '  considering component:', component
         for component, version, url in getMatchingURLs( component, versionPattern ):
           componentSourcesDirectory = os.path.join( sourceDirectory, url[ len( BRAINVISA_SVN_URL ) + 1: ] )
-          if os.path.exists( componentSourcesDirectory ):
-            self.components[ component ] = ( componentSourcesDirectory, None )
-            if self.configuration.verbose:
-              print "    " + component + " source directory '" + componentSourcesDirectory + "'"
-            self.projects.add( brainvisaProjectPerComponent[ component ] )
+          self.components[ component ] = ( componentSourcesDirectory, None )
+          if self.configuration.verbose:
+            print "    " + component + " source directory '" + componentSourcesDirectory + "'"
+          self.projects.add( brainvisaProjectPerComponent[ component ] )
     self.configurationLines.append( line )
-
-
-
 
   
   def configure( self ):
@@ -538,8 +534,10 @@ class BuildDirectory( object ):
     
     for component, directory_version in self.components.items():
       directory, version = directory_version
+      os.stat( directory ) # Raise appropriate error if directory does not exist
       project_info = os.path.join( directory, 'project_info.cmake' )
       if not os.path.exists( project_info ):
+        print >> sys.stderr, "WARNING: ignoring directory '%s' because it does not contain project_info.cmake" % directory
         del self.components[ component ]
       elif version is None:
         version = [ '', '' ]

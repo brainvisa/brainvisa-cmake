@@ -341,26 +341,33 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
         ext = os.path.splitext(command)[1]
         if not ext in config_ext :
           if sys.platform[:3] == 'win':
-            if ext in ( '.py' ) :
+            if ext in ( '.py' ):
               launcher = '\"python\" '
               ext = ''
               source = source + '.bat'
+              realcommand="%directory:~1,-1%real-bin\\%command:~1,-1%"
+            elif (command == "brainvisa.bat"):
+              # calling a .bat script via bv_env doesn't seem to work, so for brainvisa, directly call python neuro.py
+              launcher = '\"python\" '
+              realcommand="%directory:~1,-1%..\\brainvisa\\neuro.py"
             else :
               launcher = ''
               source = os.path.splitext(source)[0] + '.bat'
+              realcommand="%directory:~1,-1%real-bin\\%command:~1,-1%"
           out = open( source, 'w' )
           if sys.platform[:3] == 'win':
             out.write( '''@setlocal
 @set directory="%%~d0%%~p0"
 @set command="%%~n0%(EXT)s"
 @if exist "%%directory:~1,-1%%bv_env.exe" (
-  @"%%directory:~1,-1%%bv_env.exe" %(LAUNCHER)s"%%directory:~1,-1%%real-bin\\%%command:~1,-1%%" %%*
+  @"%%directory:~1,-1%%bv_env.exe" %(LAUNCHER)s"%(REALCOM)s" %%*
 ) else (
-  @%(LAUNCHER)s"%%directory:~1,-1%%real-bin\\%%command:~1,-1%%" %%*
+  @%(LAUNCHER)s"%(REALCOM)s" %%*
 )
 @endlocal
   ''' % { 'EXT' : ext,
-          'LAUNCHER' : launcher } )
+          'LAUNCHER' : launcher, 
+          'REALCOM' : realcommand } )
           elif sys.platform[:6] == 'darwin':
             out.write( '''#!/bin/sh
   directory="$0"

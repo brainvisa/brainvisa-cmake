@@ -342,13 +342,13 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
         if not ext in config_ext :
           if sys.platform[:3] == 'win':
             if ext in ( '.py' ):
-              launcher = '\"python\" '
+              launcher = '\"python.exe\" '
               ext = ''
               source = source + '.bat'
               realcommand="%directory:~1,-1%real-bin\\%command:~1,-1%"
             elif (command == "brainvisa.bat"):
               # calling a .bat script via bv_env doesn't seem to work, so for brainvisa, directly call python neuro.py
-              launcher = '\"python\" '
+              launcher = '\"python.exe\" '
               realcommand="%directory:~1,-1%..\\brainvisa\\neuro.py"
             else :
               launcher = ''

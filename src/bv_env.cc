@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include <map>
 #include <cstdlib>
@@ -6,6 +7,7 @@
 #include <dirent.h>
 #include <unistd.h> // for execvp()
 #include <string.h> // for strcpy()
+#include <stdio.h> // for perror()
 using namespace std;
 
 // It is necessary to first redefine getenv function
@@ -404,6 +406,15 @@ int main( int argc, char *argv[] )
     }
 #ifndef _WIN32
     execvp( argv[1], argv + 1 );
+
+    // execvp returns only when the command cannot be executed
+    ostringstream error_string;
+    error_string << argv[0] << ": cannot execute " << argv[1];
+
+    cerr.flush(); // perror writes to standard error
+    perror(error_string.str().c_str());
+
+    return 1;
 #else
     // Double-quoted arguments is required on windows before spawnvp call
     // otherwise contained spaces are used as argument separator

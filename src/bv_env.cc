@@ -436,12 +436,23 @@ int main( int argc, char *argv[] )
     args.push_back( (const char *)NULL );
     
     // Command call
-    spawnvp( P_WAIT, argv[1], &args[0] );
+    int res = spawnvp( P_WAIT, argv[1], &args[0] );
     
     // Free allocated memory
     for(int i = 0; i < args.size(); i++) {
       free((void*)args[i]);
     }
+    
+    if( res != 0 ) // error
+    {
+      ostringstream error_string;
+      error_string << argv[0] << ": cannot execute " << argv[1];
+
+      cerr.flush(); // perror writes to standard error
+      perror(error_string.str().c_str());
+      return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
 
 #endif
   } else {

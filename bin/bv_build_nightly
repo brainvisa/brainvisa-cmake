@@ -230,6 +230,7 @@ then
 
   # send error message
   to="appli@saxifrage.saclay.cea.fr"
+  to="nicolas.souedet@cea.fr"
   
   # create error message in temporary file
   (

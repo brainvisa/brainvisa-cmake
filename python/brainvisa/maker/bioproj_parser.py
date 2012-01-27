@@ -102,7 +102,6 @@ groupsDefinition = {
     'brainvisa-share/*',
     'anatomist/*',
     'axon/*',
-    'axon_web/*',
     'brainrat/brainrat-gpl',
     'communication/*',
     'connectomist/*',

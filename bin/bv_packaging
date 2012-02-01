@@ -871,7 +871,7 @@ Options:
       if index == len( args ):
         print >> sys.stderr, 'Missing output file or directory name'
         sys.exit( 1 )
-      options.output = args[ index ]
+      options.output = os.path.abspath(args[ index ])
       del args[ index ]
     elif args[ index ] == '--no-deps':
       options.dependencies = False

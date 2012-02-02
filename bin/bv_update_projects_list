@@ -179,7 +179,7 @@ for component in projectPerComponent.keys():
     componentsPerProject[ project ].remove( component )
 todo = []
 
-for brainvisa_cmake_version in ( 'trunk', 'branches/1.0' ):
+for brainvisa_cmake_version in ( 'trunk', 'branches/'+branchesPerComponent['brainvisa-cmake'][-1] ):
   cmake_projects = os.path.join( tmp, 'cmake_projects' )
   generate_cmake( open( cmake_projects, 'w' ) )
   print 'Checking', BRAINVISA_SVN_URL + '/development/brainvisa-cmake/' + brainvisa_cmake_version + '/cmake/brainvisa-projects.cmake'

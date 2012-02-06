@@ -246,6 +246,13 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
       # List files installed by package
       for i in ( j for j in recursive_listdir( install_directory ) if j not in installed_paths):
         installed_paths[ i ] = package
+  
+  # patch linux packaged libraries to remove rpaths
+  if ((sys.platform[:3] != "win") and (sys.platform[:6]!= "darwin") and options.dependencies):
+    print "Trying to remove RPATH from packaged libraries headers"
+    os.chdir(install_directory)
+    system_call(options, ["bv_patch_libs.sh"], return_output=True)
+    
   os.chdir(current_dir)
 
   # create scripts that call bv_env before calling the command to setup environment variables

@@ -246,6 +246,14 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
       # List files installed by package
       for i in ( j for j in recursive_listdir( install_directory ) if j not in installed_paths):
         installed_paths[ i ] = package
+  
+  # patch linux packaged libraries to remove rpaths
+  if ((sys.platform[:3] != "win") and (sys.platform[:6]!= "darwin") and options.dependencies):
+    if os.path.exists(os.path.join(install_directory, "lib")):
+      print "Trying to remove RPATH from packaged libraries headers"
+      os.chdir(os.path.join(install_directory, "lib"))
+      patch_output=system_call(options, ["bv_patch_libs.sh"], return_output=True)
+      print patch_output
   os.chdir(current_dir)
 
   # create scripts that call bv_env before calling the command to setup environment variables
@@ -508,7 +516,11 @@ def create_compressed_package( options, selected_packages, dependencies ):
     temp_directory = tempfile.mkdtemp(dir="d:/tmp")
   else:
     temp_directory = tempfile.mkdtemp()
-  if options.packname:
+  
+  if len(options.compressedpackdir) > 0:
+    install_directory = os.path.join(temp_directory, options.compressedpackdir)
+    os.mkdir(install_directory)    
+  elif options.packname:
     install_directory = os.path.join(temp_directory, os.path.basename(options.output))
     os.mkdir(install_directory)
   else:
@@ -540,7 +552,7 @@ def create_compressed_package( options, selected_packages, dependencies ):
       _store( zf, os.path.basename(install_directory) )
       zf.close()
     # copy readme file outside the temp directory
-    shutil.copy( install_directory + '.README', os.path.dirname(output) )
+    shutil.copy( install_directory + '.README', output + '.README' )
   finally:
     print 'Removing %s' % repr(temp_directory)
     os.chdir( os.path.dirname( temp_directory ) )
@@ -779,6 +791,7 @@ if __name__ == '__main__':
   options.dependencies = True
   options.bv_env = False
   options.packname = False
+  options.compressedpackdir = ''
   options.cmake = 'cmake'
   options.verbose = False
   
@@ -851,6 +864,8 @@ Options:
                         the command through bv_env.
   --packname            Include the name of the package in the compressed archive. 
                         Available only with pack command. By default, the path in the archive are relative to the pack.
+  --compressed-packdir  Name of the directory in compressed archive. 
+                        Available only with pack command. By default, the name of the directory in the archive is the name of the pack.
   --tmp DIRECTORY       Location of temporary directory (default is %(tmp)s).
   --cmake CMAKE_EXE     Location of cmake executable (default = %(cmake)s).
 ''' % { 'tmp': repr( tempfile.gettempdir() ),
@@ -898,6 +913,13 @@ Options:
         print >> sys.stderr, 'Missing temporary directory name'
         sys.exit( 1 )
       tempfile.tempdir = args[ index ]
+      del args[ index ]
+    elif args[ index ] == '--compressed-packdir':
+      del args[ index ]
+      if index == len( args ):
+        print >> sys.stderr, 'Missing compressed pack dir'
+        sys.exit( 1 )
+      options.compressedpackdir = args[ index ]
       del args[ index ]
     else:
       index += 1

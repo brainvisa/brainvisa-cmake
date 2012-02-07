@@ -130,7 +130,7 @@ while os.path.exists( os.path.join( packDir, packName ) ):
     packName += 'i2bm'
 if count:
   packVersion += '-' + str( count )
-
+  
 lock = open( os.path.join( packDir, packName+'_info.txt' ), 'w' )
 
 if options.verbose:
@@ -157,7 +157,14 @@ try:
   command = bv_packaging 
   if options.compression:
     dest = os.path.join( packDir, packName )
-    command = bv_packaging + " pack --packname "
+    
+    # Add compressed packaging directory name
+    compressedPackDir = 'brainvisa-' + fullVersion
+    if options.i2bm:
+      packName += 'i2bm'
+      compressedPackDir += 'i2bm'
+      
+    command = bv_packaging + " pack --compressed-packdir " + compressedPackDir
   else:
     dest = os.path.join( packDir, packName )
     command = bv_packaging + " dir "

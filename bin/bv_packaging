@@ -249,10 +249,11 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
   
   # patch linux packaged libraries to remove rpaths
   if ((sys.platform[:3] != "win") and (sys.platform[:6]!= "darwin") and options.dependencies):
-    print "Trying to remove RPATH from packaged libraries headers"
-    os.chdir(os.path.join(install_directory, "lib"))
-    patch_output=system_call(options, ["bv_patch_libs.sh"], return_output=True)
-    print patch_output
+    if os.path.exists(os.path.join(install_directory, "lib")):
+      print "Trying to remove RPATH from packaged libraries headers"
+      os.chdir(os.path.join(install_directory, "lib"))
+      patch_output=system_call(options, ["bv_patch_libs.sh"], return_output=True)
+      print patch_output
   os.chdir(current_dir)
 
   # create scripts that call bv_env before calling the command to setup environment variables

@@ -565,7 +565,7 @@ def create_readme_file( install_directory ):
   else:
     zipext = ".zip"
   date = time.strftime( '%Y_%m_%d' )
-  m = re.match( '.*-([0-9]\.[0-9](\.[0-9]))-([0-9]+_[0-9]+_[0-9]+)',
+  m = re.match( '.*-([0-9]\.[0-9](\.[0-9]))',
     os.path.basename( install_directory ) )
   if m and len( m.groups() ) >= 1:
     version = m.group( 1 )

@@ -442,9 +442,15 @@ int main( int argc, char *argv[] )
     for(int i = 0; i < args.size(); i++) {
       free((void*)args[i]);
     }
-    
-    if( res != 0 ) // error
+
+    if( res < 0 ) 
     {
+      // Error that indicates that the command was unable to execute 
+      // -2 File not found 
+      // -3 Path not found 
+      // -11 Invalid .exe file (for Windows) 
+      // -13 DOS 4. 0 application 
+      // -14 Unknown .exe type (may be DOS extended) 
       ostringstream error_string;
       error_string << argv[0] << ": cannot execute " << argv[1];
 
@@ -452,7 +458,7 @@ int main( int argc, char *argv[] )
       perror(error_string.str().c_str());
       return EXIT_FAILURE;
     }
-    return EXIT_SUCCESS;
+    return res;
 
 #endif
   } else {

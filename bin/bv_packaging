@@ -552,7 +552,7 @@ def create_compressed_package( options, selected_packages, dependencies ):
       _store( zf, os.path.basename(install_directory) )
       zf.close()
     # copy readme file outside the temp directory
-    shutil.copy( install_directory + '.README', output + '.README' )
+    shutil.copy( install_directory + '.README', options.output + '.README' )
   finally:
     print 'Removing %s' % repr(temp_directory)
     os.chdir( os.path.dirname( temp_directory ) )

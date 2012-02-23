@@ -89,7 +89,7 @@ componentsPerProject = {
  'optical_imaging' : ['optical_imaging-private', 'optical_imaging-gpl'],
  'soma': [ 'soma-base',  'soma-io', 'soma-qtgui' ],
  'sulci': [ 'sulci-gpl' ],
- 'morphologist': [ 'morphologist-private', 'morphologist-gpl', 'sulci-private', 'sulci-data' ],
+ 'morphologist': [ 'morphologist-private', 'morphologist-gpl', 'baby', 'tms', 'sulci-data', 'sulci-private' ],
  'famis': [ 'famis-private', 'famis-gpl' ],
  'pyhrf': [ 'pyhrf-free', 'pyhrf-gpl' ],
  'ptk': [ 'ptk', 'pyptk', 'mri-reconstruction', 'relaxometrist', 'nucleist', 'functionalist', 'connectomist', 'microscopist', 'realtime-mri' ],

@@ -419,7 +419,7 @@ int main( int argc, char *argv[] )
     // Double-quoted arguments is required on windows before spawnvp call
     // otherwise contained spaces are used as argument separator
     vector<const char*> args;
-
+    
     for(int i = 0; i < (argc - 1); i++) {
       string arg = std::string(argv[i + 1]);
       // Fixes special " windows character
@@ -429,11 +429,17 @@ int main( int argc, char *argv[] )
         pos = arg.find( "\"", pos + 2  );
       }
       arg = "\"" + arg + "\"";
-      char * carg = new char[ arg.size() ];
+      char * carg = new char[ arg.size() + 1 ];
       strcpy(carg, arg.c_str());
       args.push_back((const char *)carg);
     }
     args.push_back( (const char *)NULL );
+
+    // cout << "Executing command : " << argv[1] << endl << flush;
+    // cout << "Using arguments : " << endl << flush;
+    // for(int i = 0; i < (argc - 1); i++) {
+    //   cout << args[i] << endl << flush;
+    // }
     
     // Command call
     int res = spawnvp( P_WAIT, argv[1], &args[0] );

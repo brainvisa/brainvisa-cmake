@@ -85,11 +85,6 @@ else :
     system = systemtype # default is just 'Linux'
     release = platform.dist()[1]
     arch = platform.machine()
-    # fix a bug in some CentOS 5.3 python 2.4 distribs
-    if platform.dist() == ( 'redhat', '5', 'Final' ) and arch == 'x86_64' \
-      and ( sys.version.startswith( '2.4.3 (#1, Nov 11 2010, 13:30:19)' ) \
-        or sys.version.startswith( '2.5.1 (r251:54863, Jun 16 2010' ) ):
-        release = '5.3' # these specific versions miss the .3 subversion
     systemplatform = system.lower()
     # Check for Ubuntu
     if os.path.exists( '/etc/lsb-release' ):
@@ -104,6 +99,10 @@ else :
         result = getValueFromFile( sysfile )
         if result != None :
           system = result
+          if system == 'CentOS':
+             # fix a bug in some CentOS 5 distribs
+             # can really not rely on platform.dist() on CentOS...
+             release = getValueFromFile( sysfile, 2 )
           break
     system = system[0].upper() + system[1:]
 

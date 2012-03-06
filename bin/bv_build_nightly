@@ -164,7 +164,7 @@ bv_doc() {
 if [ $svn_update -eq 1 ]; then
   # add package name and date to output file
   stderr="/tmp/buildout-update-$date.tmp"
-  
+  echo "Sources "
   $binary_dir/bv_maker sources 2>&1 >/dev/null | cat >>"$stderr"
   
   # if errors detected copy output file into log
@@ -191,6 +191,9 @@ fi
 if [ $os != "windows" ];then
   # call bv_nobadlink to remove broken symlinks in the build dir
   $binary_dir/bv_nobadlink `dirname $binary_dir`
+  # clean *.pyc and *.pyo files in case the corresponding python source
+  # has been removed
+  find `dirname $binary_dir` -name '*.pyc' -exec rm "{}" \; -or -name '*.pyo' -exec rm "{}" \;
 fi
 
 bv_configure
@@ -230,7 +233,7 @@ then
 
   # send error message
   to="appli@saxifrage.saclay.cea.fr"
-  to="nicolas.souedet@cea.fr"
+  # to="nicolas.souedet@cea.fr"
   
   # create error message in temporary file
   (

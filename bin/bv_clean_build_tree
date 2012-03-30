@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import sys, os
+
+if len( sys.argv ) >= 2:
+  basedirs = sys.argv[1:]
+  if '-h' in basedirs or '--help' in basedirs:
+    print 'usage:'
+    print sys.argv[0], '[dir1] [dir2] [...]'
+    print 'Clean build directory / directories'
+    print 'If no dir is specified, the current directory is assumed.'
+    print 'Dead links and obsolete python modules (.pyc and .pyo files without a valid .py file next to them) are removed.'
+else:
+  basedirs = [ '.' ]
+
+while basedirs:
+  d = basedirs.pop()
+  for f in os.listdir( d ):
+    path = os.path.join( d, f )
+    if os.path.isdir( path ):
+      basedirs.append( path )
+    elif os.path.islink( path ):
+      if not os.path.exists( path ):
+        print 'rm dead link', path
+        os.unkink( path )
+    elif f.endswith( '.pyc' ) or f.endswith( '.pyo' ):
+      pyfile = path[:-1]
+      if not os.path.exists( pyfile ):
+        print 'rm obsolete module', path
+        os.unlink( path )
+

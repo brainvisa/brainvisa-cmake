@@ -1,7 +1,10 @@
 #! /bin/sh
 patchelfexists=`which patchelf 2>/dev/null`
 if [ -n "$patchelfexists" ]; then
-  for lib in `/bin/ls *.so`;do
+  for lib in `/bin/ls *.so*`;do
+    if [ `readlink $lib` ]; then
+	continue
+    fi
     rpath=`readelf -d $lib | grep "RPATH"`
     if [ -n "$rpath" ];then
       echo "Remove RPATH from library " $lib

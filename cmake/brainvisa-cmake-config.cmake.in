@@ -1840,3 +1840,33 @@ function( BRAINVISA_FIND_FSENTRY output_variable )
   endforeach()
   set( ${output_variable} ${result} PARENT_SCOPE )
 endfunction()
+
+
+# BRAINVISA_PYUIC
+#   Run pyside-uic / pyuic4 / pyuic on a .ui file to generate the
+#   corresponding .py module
+#
+# Usage:
+#
+#   BRAINVISA_PYUIC( <source_ui_file> <dest_py_file> <relative_path> )
+#
+function( BRAINVISA_PYUIC source_ui_file dest_py_file relative_path )
+  if( PYUIC )
+    BRAINVISA_GENERATE_TARGET_NAME( target )
+    add_custom_command(
+      OUTPUT "${CMAKE_BINARY_DIR}/${relative_path}/${dest_py_file}"
+      COMMAND ${PYUIC} -o "${dest_py_file}" "${source_ui_file}"
+      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${relative_path}"
+      DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${relative_path}/${source_ui_file}"
+    )
+    add_custom_target( ${target} ALL
+      DEPENDS "${CMAKE_BINARY_DIR}/${relative_path}/${dest_py_file}"
+      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${relative_path}"
+    )
+    BRAINVISA_INSTALL( FILES
+        "${CMAKE_BINARY_DIR}/${relative_path}/${dest_py_file}"
+      DESTINATION ${relative_path}
+      COMPONENT ${PROJECT_NAME}-runtime )
+  endif()
+endfunction()
+

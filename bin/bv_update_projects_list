@@ -38,53 +38,60 @@ from optparse import OptionParser
 from pprint import pprint
 
 from brainvisa.maker.bioproj_parser import BRAINVISA_SVN_URL, find_branches_and_tags, projects, projectPerComponent, componentsPerProject, groupsDefinition, system
+from brainvisa.maker.brainvisa_projects import brainvisaProjects, brainvisaProjectPerComponent, brainvisaComponentsPerProject, brainvisaBranchesPerComponent, brainvisaTagsPerComponent, brainvisaURLPerComponent, brainvisaComponentsPerGroup
 
 usage = '''%prog [options] 
 
-Use internal information and parse BrainVISA Subversion repository (''' + BRAINVISA_SVN_URL + ''') to update brainvisa-cmake a files containing information about projects, components, branches and tags. This command also update sources_views directories on BrainVISA's Subversion repository. All modification are put in a temporary Subversion directory and must be commited manually with the commands that are printed.'''
+Use internal information and parse BrainVISA Subversion repository (''' + BRAINVISA_SVN_URL + ''') to update brainvisa-cmake files containing information about projects, components, branches and tags. This command also update sources_views directories on BrainVISA's Subversion repository. All modification are put in a temporary Subversion directory and must be commited manually with the commands that are printed.
+
+When a directory of the repository cannot be parsed by the current user, it is generally because the user does not have the required rights to access the project but the information about the project should not be deleted however. So by default, bv_update_projects_list keep existing information about projects that cannot be parsed. To really remove information about a project that cannot be parsed from the brainvisa-cmake files, use the option -d.
+'''
 
 parser = OptionParser(usage=usage)
-#parser.add_option( '-l', '--language', dest='language',
-                   #help='target language for output. Possible values are cmake or python. Default is cmake.', metavar='language', default='cmake' )
-#parser.add_option( '-o', '--output', dest='output',
-                   #help='output file name', metavar='FILE', default='' )
-#parser.add_option( '-b', '--branch', dest='branches', action='store_true',
-                   #help='include information on branches', default=False )
-#parser.add_option( '-t', '--tags', dest='tags', action='store_true',
-                   #help='include information on tags', default=False )
-#parser.add_option( '-u', '--url', dest='url', action='store_true',
-                   #help='include information about BioProj URL for each component', default=False )
-#parser.add_option( '-g', '--groups', dest='groups', action='store_true',
-                   #help='include information on groups of components', default=False )
-#parser.add_option( '-s', '--svn', dest='svn', action='store_true',
-                   #help='check if projects lists have changed on subversion', default=False )
+parser.add_option( '-d', '--delete', dest='delete', action='store_true',
+                   help='Delete information about projects that cannot be parsed. Use this option only if you are sure to have access rights on the whole repository', default=False )
+parser.add_option( '-p', '--project', dest='projects', action='append',
+                   help='Update information only for the selected project' , default=None)
+parser.add_option( '-c', '--component', dest='components', action='append',
+                   help='Update information only for the selected component', default=None )
 (options, args) = parser.parse_args()
-if len( args ) != 0:
+if len( args ) > 3:
   parser.error( 'Too many options' )
-#if options.language not in ( 'cmake', 'python' ):
-  #parser.error( 'Unknown language: ' + options.language )
 
-#if options.svn:
 tmp = '/tmp/bv_update_projects_list'
 print 'Create directory', repr( tmp )
 if os.path.exists( tmp ):
-  print >> sys.stderr, 'Directory', repr( tmp ), 'exists. You must erase it before using --svn option.'
-  sys.exit( 1 )
+  print '\nDirectory', repr( tmp ), 'exists. Do you want to erase it before ? (y/n) '
+  line = sys.stdin.readline()[:-1]
+  if line=="y":
+    system("rm", "-rf", tmp)
+  else:
+    sys.exit( 1 )
 os.mkdir( tmp )
-#else:
-  #if options.output:
-    #output = open( options.output, 'w' )
-  #else:
-    #output = sys.stdout
 
-
-branchesPerComponent = {}
-tagsPerComponent = {}
-urlPerComponent = {}
-componentsPerGroup = {}
+# if the user wants to update only a subset of projects and components, 
+# the option delete is disable because we must not remove any information whereas we do not parse the entire repository.
+if options.projects or options.components:
+  options.delete=False
+  
+# if the user does not want to remove any existing information, 
+# the list of projects, components, etc... are intialized with the previous values from brainvisa_projects.py
+if not options.delete:
+  projects=brainvisaProjects
+  projectPerComponent=brainvisaProjectPerComponent
+  componentsPerProject=brainvisaComponentsPerProject
+  branchesPerComponent = brainvisaBranchesPerComponent
+  tagsPerComponent = brainvisaTagsPerComponent
+  urlPerComponent = brainvisaURLPerComponent
+  componentsPerGroup = brainvisaComponentsPerGroup
+else:
+  branchesPerComponent = {}
+  tagsPerComponent = {}
+  urlPerComponent = {}
+  componentsPerGroup = {}
 
 print 'Scanning BrainVISA subversion repository...'
-for project, component, url, branches, tags in find_branches_and_tags():
+for project, component, url, branches, tags in find_branches_and_tags(projects=options.projects, components=options.components):
   print ' ', project + '/' + component
   print '    url:', url
   print '    branches:', branches
@@ -107,13 +114,16 @@ for project, component, url, branches, tags in find_branches_and_tags():
     projectComponents.append( component )
   
   projectAndComponent = project + '/' + component
-  componentsPerGroup.setdefault( 'all', [] ).append( component )
+  allComponents=componentsPerGroup.setdefault( 'all', [] )
+  if component not in allComponents:
+    allComponents.append( component )
   for group, include in groupsDefinition.iteritems():
     for i in include:
       if fnmatch( projectAndComponent, i ):
-        componentsPerGroup.setdefault( group, [] ).append( component )
+        groupComponents=componentsPerGroup.setdefault( group, [] )
+        if component not in groupComponents:
+          groupComponents.append( component )
         break
-  
   
 def generate_cmake( output ):
   print >> output, '# This file had been generated by bv_update_projects_list command on ' + time.asctime() + '\n'
@@ -124,24 +134,6 @@ def generate_cmake( output ):
   for project in projects:
     for component in componentsPerProject[ project ]:
       print >> output, 'set( BRAINVISA_PROJECT_' + component + ' "' + projectPerComponent[ component ] + '" )'
-  
-  ## Branches
-  #print >> output
-  #for project in projects:
-    #for component in componentsPerProject[ project ]:
-      #print >> output, 'set( BRAINVISA_BRANCHES_' + component + ' "' + ';'.join( branchesPerComponent.get( component, () ) ) + '" )'
-  ## Tags
-  #print >> output
-  #for project in projects:
-    #for component in componentsPerProject[ project ]:
-      #print >> output, 'set( BRAINVISA_TAGS_' + component + ' "' + ';'.join( tagsPerComponent.get( component, () ) ) + '" )'
-  
-  ## Groups
-  #print >> output
-  #print >> output, 'set( BRAINVISA_COMPONENTS_GROUP "' + ';'.join( componentsPerGroup ) + '" )'
-  #for group, components in componentsPerGroup.iteritems():
-      #print >> output, 'set( BRAINVISA_COMPONENTS_GROUP_' + group + ' "' + ';'.join( components ) + '" )'
-
 
 def generate_python( output ):
   print >> output, '# -*- coding: utf-8 -*-\n\n# This module had been generated by bv_update_projects_list command on ' + time.asctime() + '\n'
@@ -170,13 +162,17 @@ _remove_comments = re.compile( '#.*\n' )
 def compare( first, second ):
   return _remove_comments.sub( '', first ) == _remove_comments.sub( '', second )
 
+# check if some projects or components must be removed from the list because they were not found in the repository
+if options.delete:
+  for component in projectPerComponent.keys():
+    # the component was not found in the repository: it may not exist or the user does not have the access right to see it.
+    if urlPerComponent.get( component ) is None:
+      print 'WARNING: component ' + repr( component ) + ' is declared in bioproj_parser.py but was not found in repository'
+      project = projectPerComponent[ component ]
+      del projectPerComponent[ component ]
+      componentsPerProject[ project ].remove( component )
 
-for component in projectPerComponent.keys():
-  if urlPerComponent.get( component ) is None:
-    print 'WARNING: component ' + repr( component ) + ' is declared in bioproj_parser.py but was not found in repository'
-    project = projectPerComponent[ component ]
-    del projectPerComponent[ component ]
-    componentsPerProject[ project ].remove( component )
+      
 todo = []
 
 for brainvisa_cmake_version in ( 'trunk', 'branches/'+branchesPerComponent['brainvisa-cmake'][-1] ):
@@ -207,7 +203,7 @@ source_views = os.path.join( tmp, 'source_views' )
 system( 'svn', 'co', '--ignore-externals', BRAINVISA_SVN_URL + '/source_views', source_views )
 updateExternals = False
 for g in os.listdir( source_views ):
-  if g == '.svn': continue
+  if g == '.svn' or g == 'brainvisa-cmake': continue
   if g not in componentsPerGroup:
     print '--> removing', BRAINVISA_SVN_URL + '/source_views/' + g
     system( 'svn', 'delete', os.path.join( source_views, g ) )

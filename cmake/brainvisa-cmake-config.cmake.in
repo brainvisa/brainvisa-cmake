@@ -1874,7 +1874,7 @@ function( BRAINVISA_PYUIC source_ui_file dest_py_file relative_path )
     BRAINVISA_INSTALL( FILES
         "${CMAKE_BINARY_DIR}/${relative_path}/${dest_py_file}"
       DESTINATION ${relative_path}
-      COMPONENT ${PROJECT_NAME}-runtime )
+      COMPONENT ${PROJECT_NAME} )
   endif()
 endfunction()
 

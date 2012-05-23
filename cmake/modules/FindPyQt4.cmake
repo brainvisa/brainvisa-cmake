@@ -49,7 +49,10 @@ else()
     string( REGEX REPLACE ".*\npyqt_sip_flags:([^\n]+).*$" "\\1" PYQT4_SIP_FLAGS ${pyqt_config} )
     set( PYQT4_SIP_FLAGS "${PYQT4_SIP_FLAGS}" CACHE STRING "The SIP flags used to build PyQt" )
     mark_as_advanced( PYQT4_SIP_FLAGS )
-    
+
+    find_program( PYQT4_PYLUPDATE_EXECUTABLE NAMES pylupdate4 pylupdate
+      DOC "pylupdate program path" )
+
     set(PYQT4_FOUND TRUE)
   endif()
 

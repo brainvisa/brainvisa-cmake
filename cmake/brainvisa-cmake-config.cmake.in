@@ -1722,14 +1722,14 @@ endfunction( BRAINVISA_INSTALL_RUNTIME_LIBRARIES )
 function( BRAINVISA_ADD_TRANSLATION source_share_dir dest_share_dir component)
 
   list( LENGTH ARGN nargs )
-  if( ${nargs} EQUAL 4 )
-    list( GET ARGN 3 source_cpp_dir )
+  if( ${nargs} EQUAL 1 )
+    list( GET ARGN 0 source_cpp_dir )
   else()
     set( source_cpp_dir "${CMAKE_CURRENT_SOURCE_DIR}/${source_share_dir}/.." )
   endif()
 
   file(GLOB_RECURSE TR_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${source_share_dir}/po/*.ts")
-  file( GLOB_RECURSE CPP_SOURCES "${source_cpp_dir}" "*.ui" "*.c" "*.c++" "*.cc" "*.cpp" "*.cxx" "*.ch" "*.h" "*.h++" "*.hh" "*.hpp" "*.hxx" )
+  file( GLOB_RECURSE CPP_SOURCES "${source_cpp_dir}/*.ui" "${source_cpp_dir}/*.c" "${source_cpp_dir}/*.c++" "${source_cpp_dir}/*.cc" "${source_cpp_dir}/*.cpp" "${source_cpp_dir}/*.cxx" "${source_cpp_dir}/*.ch" "${source_cpp_dir}/*.h" "${source_cpp_dir}/*.h++" "${source_cpp_dir}/*.hh" "${source_cpp_dir}/*.hpp" "${source_cpp_dir}/*.hxx" )
   set( TRANSLATION_FILES )
   set( TR_BUILD )
   foreach(tr_source ${TR_SOURCES})
@@ -1774,6 +1774,84 @@ function( BRAINVISA_ADD_TRANSLATION source_share_dir dest_share_dir component)
       COMPONENT ${component} )
   endforeach()
 endfunction()
+
+
+# BRAINVISA_ADD_PYTRANSLATION
+#   Search recursively PyQt linguist source files (*.ts) generated from python
+#   (PyQt) sources, in the directory source share directory
+#   and generates the commands to create the associated *.qm files in the build
+#   share directory and creates associated install rules.
+#
+# Usage:
+#
+#   BRAINVISA_ADD_PYTRANSLATION( <name of the source share directory where finding the *.ts files> <name of the destination share directory where writing the *.qm files> <component> [source directory to search python files] )
+#
+function( BRAINVISA_ADD_PYTRANSLATION source_share_dir dest_share_dir component)
+
+  if( PYQT4_PYLUPDATE_EXECUTABLE )
+    list( LENGTH ARGN nargs )
+    if( ${nargs} EQUAL 1 )
+      list( GET ARGN 0 source_py_dir )
+    else()
+      set( source_py_dir "${CMAKE_CURRENT_SOURCE_DIR}/${source_share_dir}/../python" )
+    endif()
+
+    file(GLOB_RECURSE TR_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${source_share_dir}/po/*.ts")
+    file( GLOB_RECURSE PY_SOURCES "${source_py_dir}/*.py" )
+    file( GLOB_RECURSE UI_SOURCES "${source_py_dir}/*.ui" )
+    set( TRANSLATION_FILES )
+    set( TR_BUILD )
+    foreach(tr_source ${TR_SOURCES})
+      file(RELATIVE_PATH tr_relative_name "${CMAKE_CURRENT_SOURCE_DIR}/${source_share_dir}/po" ${tr_source})
+      get_filename_component(tr_relative_path ${tr_relative_name} PATH)
+      set( lang "${tr_relative_path}" )
+      get_filename_component( tr_name ${tr_source} NAME_WE )
+      set( tr_dst "${CMAKE_BINARY_DIR}/${dest_share_dir}/po/${tr_relative_path}/${tr_name}_updated.ts" )
+      set( rel_tr_dst "${dest_share_dir}/po/${tr_relative_path}/${tr_name}_updated.ts" )
+      set( qm_dst "${CMAKE_BINARY_DIR}/${dest_share_dir}/po/${tr_relative_path}/${tr_name}.qm" )
+      set_source_files_properties(${tr_dst} PROPERTIES OUTPUT_LOCATION "${CMAKE_BINARY_DIR}/${dest_share_dir}/po/${tr_relative_path}")
+      list( APPEND TRANSLATION_FILES "${qm_dst}" )
+      list( APPEND TR_BUILD "${tr_dst}" )
+
+      # copied and adapted from FindQt4.cmake
+      # make a .pro file to call pylupdate on, so we don't make our commands too
+      # long for some systems
+      SET(_ts_pro ${CMAKE_BINARY_DIR}/${dest_share_dir}/po/${tr_relative_path}/${tr_name}_pylupdate.pro)
+      SET(_pro_srcs)
+      FOREACH(_pro_src ${PY_SOURCES})
+        SET(_pro_srcs "${_pro_srcs} ${_pro_src} \\\n")
+      ENDFOREACH()
+      SET(_pro_uis)
+      FOREACH(_pro_src ${UI_SOURCES})
+        SET(_pro_uis "${_pro_uis} ${_pro_src} \\\n")
+      ENDFOREACH()
+      FILE(WRITE ${_ts_pro} "SOURCES = ${_pro_srcs}\n")
+      if( UI_SOURCES )
+        file( APPEND ${_ts_pro} "FORMS = ${_pro_uis}\n" )
+      endif()
+      file( APPEND ${_ts_pro} "TRANSLATIONS = ${tr_dst}\n" )
+      ADD_CUSTOM_COMMAND(OUTPUT "${tr_dst}" "${qm_dst}"
+          COMMAND "${CMAKE_COMMAND}" ARGS -E copy "${tr_source}" "${tr_dst}"
+          COMMAND "${PYQT4_PYLUPDATE_EXECUTABLE}"
+          ARGS "${_ts_pro}"
+          COMMAND ${QT_LRELEASE_EXECUTABLE}
+          ARGS ${tr_dst} -qm ${qm_dst}
+          DEPENDS ${PY_SOURCES} ${UI_SOURCES} "${_ts_pro}" "${tr_source}" )
+    endforeach()
+    # QT4_ADD_TRANSLATION( TRANSLATION_FILES "${TR_BUILD}" )
+    # BRAINVISA_GENERATE_TARGET_NAME(TRANSLATION_TARGET)
+    add_custom_target(${component}-translation ALL
+        DEPENDS ${TRANSLATION_FILES} ${TR_SOURCES} ${PY_SOURCES} ${UI_SOURCES} )
+    foreach(tr_file ${TRANSLATION_FILES})
+      file(RELATIVE_PATH tr_relative_name "${CMAKE_BINARY_DIR}/${dest_share_dir}/po" ${tr_file})
+      get_filename_component(tr_relative_path ${tr_relative_name} PATH)
+      BRAINVISA_INSTALL( FILES "${tr_file}"
+        DESTINATION "${dest_share_dir}/po/${tr_relative_path}"
+        COMPONENT ${component} )
+    endforeach()
+  endif() # PYQT4_PYLUPDATE_EXECUTABLE found
+endfunction()
+
 
 # BRAINVISA_FIND_FSENTRY
 #   Find file system entries from PATHS using search PATTERNS.

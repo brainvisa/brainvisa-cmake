@@ -1102,10 +1102,15 @@ function( BRAINVISA_ADD_COMMAND_HELP name)
     endif()
 
     if(DEFINED _output_command)
-      set( _command "${_output_command}" "-h" )
+      set( _command "bin/${_output_command}" "-h" )
       unset(_output_command)
     else()
-      set( _command "${name}" "-h" )
+      set( _command "bin/${name}" "-h" )
+    endif()
+
+    if (${name}-command-is-script)
+      # Execute command using python interpreter
+      set( _command "python" ${_command})
     endif()
   endif()
 

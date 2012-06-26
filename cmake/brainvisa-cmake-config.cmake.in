@@ -968,7 +968,7 @@ function( BRAINVISA_GENERATE_COMMANDS_HELP_INDEX )
   endif()
 
   get_filename_component( _output_directory "${CMAKE_BINARY_DIR}/share/doc" ABSOLUTE )
-  set( _install_directory "$(BRAINVISA_INSTALL_PREFIX)/share/doc" )
+  set( _install_directory "${CMAKE_INSTALL_PREFIX}/share/doc" )
 
   set(_index_file "index_commands.html")
 
@@ -1196,22 +1196,22 @@ function( BRAINVISA_GENERATE_COMMANDS_HELP )
     set( _components "${BRAINVISA_COMPONENTS}" )
   endif()
 
-  if ( BRAINVISA_ADVANCED_FEATURE_TEST_MODE )
-    foreach(_component ${_components})
-      if (DEFINED ${_component}-commands)
-        foreach(_command ${${_component}-commands})
-          if((NOT DEFINED ${_command}-help-generate) 
-              OR ${_command}-help-generate)
+  #if ( BRAINVISA_ADVANCED_FEATURE_TEST_MODE )
+  foreach(_component ${_components})
+    if (DEFINED ${_component}-commands)
+      foreach(_command ${${_component}-commands})
+        if((NOT DEFINED ${_command}-help-generate) 
+            OR ${_command}-help-generate)
 
-            # Add help generation
-            BRAINVISA_ADD_COMMAND_HELP( "${_command}" 
-                                        HELP_COMMAND ${${_command}-help-command}
-                                        COMPONENT ${_component} )
-          endif()
-        endforeach()
-      endif()
-    endforeach()
-  endif()
+          # Add help generation
+          BRAINVISA_ADD_COMMAND_HELP( "${_command}" 
+                                      HELP_COMMAND ${${_command}-help-command}
+                                      COMPONENT ${_component} )
+        endif()
+      endforeach()
+    endif()
+  endforeach()
+  #endif()
 
   unset(_command)
   unset(_component)

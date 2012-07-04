@@ -968,7 +968,7 @@ function( BRAINVISA_GENERATE_COMMANDS_HELP_INDEX )
   endif()
 
   get_filename_component( _output_directory "${CMAKE_BINARY_DIR}/share/doc" ABSOLUTE )
-  set( _install_directory "${CMAKE_INSTALL_PREFIX}/share/doc" )
+  set( _install_directory "$(BRAINVISA_INSTALL_PREFIX)/share/doc" )
 
   set(_index_file "index_commands.html")
 

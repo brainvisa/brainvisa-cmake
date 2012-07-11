@@ -120,6 +120,7 @@ class GlobalConfiguration( object ):
       configure: Create and configure selected build directories with CMake.
       build: compile all selected build directories.
       doc: Generate documentation (docbook, epydoc, doxygen)
+      test: Execute tests using ctest.
     
     To get help for a specific command, use -h option of the command. Example: "%prog build -h".
     '''
@@ -295,6 +296,19 @@ class DocCommand( object ):
     for d, o in configuration.buildDirectories.iteritems():
       o.doc()
 
+class TestCommand( object ):
+  def __init__( self, argv, configuration ):
+    usage = '''%prog [global options] test
+    
+    Executes ctest.'''
+    parser = OptionParser(usage=usage)
+    (options, args) = parser.parse_args( argv )
+    if args:
+      raise ValueError( 'Invalid option: %s' % args[0] )
+  
+  def __call__( self ):
+    for d, o in configuration.buildDirectories.iteritems():
+      o.test()
 
 class SourceDirectory( object ):
   def __init__( self, directory, configuration ):
@@ -601,7 +615,9 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
   def doc( self ):
     system( cwd=self.directory, *( ['make'] + self.make_options.split() + ['-j1', 'doc'] ) )
   
-  
+  def test( self ):
+    system( cwd=self.directory, *( ['ctest', '--output-on-failure'] ) )
+    
   def info( self ):
     print 'Build directory: "' + self.directory + '"'
     for directory in self.configurationDirectories:
@@ -669,6 +685,7 @@ commands = {
   'configure': ConfigureCommand,
   'build': BuildCommand,
   'doc': DocCommand,
+  'test': TestCommand,
 }
 default_commands = [ 'sources', 'configure', 'build' ]
 options_by_command = { None: [] }
@@ -693,7 +710,7 @@ if len( options_by_command ) == 1:
   for i in default_commands:
     options_by_command[ i ] = []
 # Ordered command list
-for command in [ 'info', 'sources', 'configure', 'build', 'doc' ]:
+for command in [ 'info', 'sources', 'configure', 'build', 'test', 'doc' ]:
   if command in options_by_command:
     todo.append( commands[ command ]( options_by_command[ command ], configuration ) )
 

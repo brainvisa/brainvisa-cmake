@@ -7,7 +7,7 @@ toreplace = 'gtk+'
 replaced = 'kg+t'
 
 def usage( fail=False ):
-  print sys.argv[0], '''[--replace] [-h] [--help] [<libdir>]
+  print os.path.basename( sys.argv[0] ), '''[--replace] [-h] [--help] [<libdir>]
 Patch libQtGui to remove references to gtk+ library, to avoid system binaries incompatibilities
 options:
   -h, --help : print this help and quit
@@ -15,6 +15,10 @@ options:
 
 <libdir> is the libraries dir. If not specified, libraries will be found relatively to this script, in "../lib/libQtGui.so.*"
 '''
+  if fail:
+    sys.exit( 1 )
+  else:
+    sys.exit( 0 )
 
 if '-h' in sys.argv[1:] or '--help' in sys.argv[1:]:
   usage()

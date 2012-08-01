@@ -47,7 +47,7 @@ case ${os} in
     # choose the qt version used for compilation
     export I2BM_QT=4
 
-    i2bm_setup_devel
+    bv_setup_devel
 
     # remove distcc on linux
     i2bm_pathvar_remove PATH /usr/lib64/distcc/bin

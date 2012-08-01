@@ -33,6 +33,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
+import re
 from subprocess import Popen, PIPE, STDOUT
 from tempfile import NamedTemporaryFile
 from fnmatch import fnmatch, fnmatchcase
@@ -214,7 +215,7 @@ def find_branches_and_tags( projects=None, components=None, excludeComponents=ex
           pass
         else:
           try:
-            branches = [ '.'.join( (str(l) for l in k ) ) for k in sorted( ( ([int(j) for j in i.split('.')] for i in list_svn_directories( url + '/branches' ) ) ) ) ]
+            branches = [ '.'.join( (str(l) for l in k ) ) for k in sorted( ( ([int(j) for j in i.split('.')] for i in list_svn_directories( url + '/branches' ) if (re.match("\d+\.\d+", i) is not None) ) ) ) ]
           except SystemError:
             branches = []
           try:

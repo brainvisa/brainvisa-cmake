@@ -25,6 +25,11 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       set(libs ${QT_QTGUI_LIBRARY_RELEASE})
     endif()
     BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${libs} )
+    # patch libs to remove references to GTK+ libs
+    if( UNIX )
+      add_custom_command( TARGET install-${component} POST_BUILD
+        COMMAND bv_patch_qtgui_gtk.py "$(BRAINVISA_INSTALL_PREFIX)/lib" )
+    endif()
     # install plugins
     FILE(GLOB plugin "${QT_PLUGINS_DIR}/accessible/*qtaccessiblewidgets*")
     if( plugin )

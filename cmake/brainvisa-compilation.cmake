@@ -81,6 +81,20 @@ foreach( component ${BRAINVISA_COMPONENTS} )
   endif()
 endforeach()
 
+# Third pass to do post configuration
+foreach( component ${BRAINVISA_COMPONENTS} )
+  if( NOT component STREQUAL brainvisa-cmake )
+    if( BRAINVISA_SOURCES_${component} )
+      if( EXISTS "${BRAINVISA_SOURCES_${component}}/CMakeLists_postconfig.txt" )
+        message( STATUS "Post-configuring component ${component} from source directory \"${BRAINVISA_SOURCES_${component}}\"" )
+        include( "${BRAINVISA_SOURCES_${component}}/CMakeLists_postconfig.txt" )
+      endif()
+    endif()
+  endif()
+endforeach()
+
 if( BRAINVISA_DEPENDENCY_GRAPH )
   file( APPEND "${BRAINVISA_DEPENDENCY_GRAPH}" "}\n" )
 endif()
+
+enable_testing()

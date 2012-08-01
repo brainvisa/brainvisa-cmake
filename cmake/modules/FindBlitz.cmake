@@ -24,6 +24,7 @@ set( _includeSuffixes
   include
   blitz/include
   lib/blitz/include
+  lib64/blitz/include
 )
 
 find_path( BLITZ_INCLUDE_DIR blitz/blitz.h

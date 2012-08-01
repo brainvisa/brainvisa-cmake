@@ -33,6 +33,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
+import re
 from subprocess import Popen, PIPE, STDOUT
 from tempfile import NamedTemporaryFile
 from fnmatch import fnmatch, fnmatchcase
@@ -209,25 +210,30 @@ def find_branches_and_tags( projects=None, components=None, excludeComponents=ex
         else:
           url = BRAINVISA_SVN_URL + '/' + project + '/' + component
         try:
-          branches = [ '.'.join( (str(l) for l in k ) ) for k in sorted( ( ([int(j) for j in i.split('.')] for i in list_svn_directories( url + '/branches' ) ) ) ) ]
+          list_svn_directories(url)
         except SystemError:
-          branches = []
-        try:
-          tags = [ '.'.join( (str(l) for l in k ) ) for k in sorted( ( ([int(j) for j in i.split('.')] for i in list_svn_directories( url + '/tags' ) ) ) ) ]
-        except SystemError:
-          tags = []
-        component_name = real_component_name.get( ( project if component is None else component ) )
-        if component_name is None:
+          pass
+        else:
           try:
-            project_info = system( 'svn', 'cat', url + '/trunk/project_info.cmake' )
+            branches = [ '.'.join( (str(l) for l in k ) ) for k in sorted( ( ([int(j) for j in i.split('.')] for i in list_svn_directories( url + '/branches' ) if (re.match("\d+\.\d+", i) is not None) ) ) ) ]
           except SystemError:
-            component_name = ''
-          else:
-            l = project_info.split()
-            component_name = l[ l.index( 'BRAINVISA_PACKAGE_NAME' ) + 1 ]
-          real_component_name[ component ] = component_name
-        if component_name:
-          yield ( project, component_name, url, branches, tags )
+            branches = []
+          try:
+            tags = [ '.'.join( (str(l) for l in k ) ) for k in sorted( ( ([int(j) for j in i.split('.')] for i in list_svn_directories( url + '/tags' ) ) ) ) ]
+          except SystemError:
+            tags = []
+          component_name = real_component_name.get( ( project if component is None else component ) )
+          if component_name is None:
+            try:
+              project_info = system( 'svn', 'cat', url + '/trunk/project_info.cmake' )
+            except SystemError:
+              component_name = ''
+            else:
+              l = project_info.split()
+              component_name = l[ l.index( 'BRAINVISA_PACKAGE_NAME' ) + 1 ]
+            real_component_name[ component ] = component_name
+          if component_name:
+            yield ( project, component_name, url, branches, tags )
 
 def read_bioproj_cmake_version( url ):
   temporary = NamedTemporaryFile()

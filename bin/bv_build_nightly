@@ -47,7 +47,7 @@ case ${os} in
     # choose the qt version used for compilation
     export I2BM_QT=4
 
-    i2bm_setup_devel
+    bv_setup_devel
 
     # remove distcc on linux
     i2bm_pathvar_remove PATH /usr/lib64/distcc/bin
@@ -130,6 +130,34 @@ bv_build() {
   )
 }
 
+bv_test() {
+  stderr="/tmp/buildout-test-$date.tmp"
+  # delete log if it already exists
+  rm -f "$stderr"
+  # build target, redirecting all output
+  echo "Build "
+  $binary_dir/bv_maker "test" >"$stderr" 2>&1
+
+  status=$?
+  # if errors detected copy output file into log
+  if [ $status -ne 0 ]
+  then
+    echo "==================================================" >>"$log"
+    echo "     command: bv_maker test " >>"$log"
+    echo "==================================================" >>"$log"
+    echo >>"$log"
+    echo "PATH: "$PATH >>"$log"
+    echo "${LIBRARY_PATHVAR}: "${!LIBRARY_PATHVAR} >>"$log"
+    echo >>"$log"
+    cat "$stderr" >>"$log"
+    echo >>"$log"
+    echo >>"$log"
+  fi
+  [ $dellogs = 0 ] || (
+    # delete output file
+    rm -f "$stderr"
+  )
+}
 
 bv_doc() {
   stderr="/tmp/buildout-doc-$date.tmp"
@@ -164,7 +192,7 @@ bv_doc() {
 if [ $svn_update -eq 1 ]; then
   # add package name and date to output file
   stderr="/tmp/buildout-update-$date.tmp"
-  
+  echo "Sources "
   $binary_dir/bv_maker sources 2>&1 >/dev/null | cat >>"$stderr"
   
   # if errors detected copy output file into log
@@ -191,10 +219,14 @@ fi
 if [ $os != "windows" ];then
   # call bv_nobadlink to remove broken symlinks in the build dir
   $binary_dir/bv_nobadlink `dirname $binary_dir`
+  # clean *.pyc and *.pyo files in case the corresponding python source
+  # has been removed
+  find `dirname $binary_dir` -name '*.pyc' -exec rm "{}" \; -or -name '*.pyo' -exec rm "{}" \;
 fi
 
 bv_configure
 bv_build
+bv_test
 bv_doc
 
 echo "End compile and doc "
@@ -230,7 +262,7 @@ then
 
   # send error message
   to="appli@saxifrage.saclay.cea.fr"
-  to="nicolas.souedet@cea.fr"
+  # to="nicolas.souedet@cea.fr"
   
   # create error message in temporary file
   (

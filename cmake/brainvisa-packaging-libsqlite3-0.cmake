@@ -14,7 +14,9 @@ endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   if( SQLITE3_FOUND )
-    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${SQLITE3_LIBRARIES} )
+    if( NOT APPLE ) # don't package it on Mac
+      BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${SQLITE3_LIBRARIES} )
+    endif()
     set(${component}_PACKAGED TRUE PARENT_SCOPE)
   else()
     set(${component}_PACKAGED FALSE PARENT_SCOPE)

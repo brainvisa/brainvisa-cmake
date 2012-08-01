@@ -47,6 +47,10 @@ if( NOT config_done )
     set( BRAINVISA_SYSTEM_IDENTIFICATION "${BRAINVISA_SYSTEM_IDENTIFICATION}" CACHE STRING "Suffix for system identification in packages name" )
   endif()
 
+  if(NOT DEFINED BRAINVISA_ADVANCED_FEATURE_TEST_MODE)
+    option( BRAINVISA_ADVANCED_FEATURE_TEST_MODE "Enable/disable BrainVISA advanced feature test mode" OFF )
+  endif()
+
   # Initialize python module containing compilation information
   set( BRAINVISA_COMPILATION_INFO "${CMAKE_BINARY_DIR}/python/brainvisa/compilation_info.py" )
   execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/python/brainvisa" )
@@ -202,8 +206,11 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
   add_dependencies( doc ${PROJECT_NAME}-doc )
   add_custom_target( ${PROJECT_NAME}-usrdoc )
   add_dependencies( usrdoc ${PROJECT_NAME}-usrdoc )
+#   add_custom_target( ${PROJECT_NAME}-cmddoc )
+#   add_dependencies( cmddoc ${PROJECT_NAME}-cmddoc )
   add_custom_target( ${PROJECT_NAME}-devdoc )
   add_dependencies( devdoc ${PROJECT_NAME}-devdoc )
+#  add_dependencies( ${PROJECT_NAME}-doc ${PROJECT_NAME}-usrdoc ${PROJECT_NAME}-cmddoc  ${PROJECT_NAME}-devdoc)
   add_dependencies( ${PROJECT_NAME}-doc ${PROJECT_NAME}-usrdoc ${PROJECT_NAME}-devdoc)
   add_dependencies( install-${PROJECT_NAME}-doc install-${PROJECT_NAME}-usrdoc install-${PROJECT_NAME}-devdoc )
   
@@ -516,7 +523,7 @@ endfunction()
 # BRAINVISA_COPY_FILES
 #
 # Usage:
-#  BRAINVISA_COPY_FILES( <component> <source files> [SOURCE_DIRECTORY <directory>] DESTINATION <destination directory>  [IMMEDIATE] [GET_TARGET <target variable>] [GET_OUTPUT_FILES <target variable>] [NO_SYMLINKS] )
+#  BRAINVISA_COPY_FILES( <component> <source files> [SOURCE_DIRECTORY <directory>] DESTINATION <destination directory>  [IMMEDIATE] [GET_TARGET <target variable>] [TARGET <target name>] [GET_OUTPUT_FILES <target variable>] [NO_SYMLINKS] )
 #
 function( BRAINVISA_COPY_FILES component )
   set( _files "${ARGN}" )
@@ -534,6 +541,17 @@ function( BRAINVISA_COPY_FILES component )
   # Read GET_TARGET option
   list( FIND _files GET_TARGET result )
   if( result EQUAL -1 )
+
+    # Read TARGET option
+    list( FIND _files TARGET result )
+    if( result EQUAL -1 )
+      set( targetName )
+    else()
+      list( REMOVE_AT _files ${result} )
+      list( GET _files ${result} targetName )
+      list( REMOVE_AT _files ${result} )
+    endif()
+
     set( targetVariable )
   else()
     list( REMOVE_AT _files ${result} )
@@ -583,6 +601,7 @@ function( BRAINVISA_COPY_FILES component )
 #     message( "=== copy: from ${_sourceDirectory} to ${_destination} : ${_files}" )
   # Create a custom target for the files installation. The install-component target depends on this custom target
   BRAINVISA_GENERATE_TARGET_NAME( installTarget )
+
   add_custom_target( ${installTarget} )
   add_dependencies( install-${component} ${installTarget} )
   set( _allOutputFiles )
@@ -638,7 +657,13 @@ function( BRAINVISA_COPY_FILES component )
     endif()
   endforeach()
 
-  BRAINVISA_GENERATE_TARGET_NAME( target )
+  if (targetName)
+    #message("Set target name : ${targetName}")
+    set(target ${targetName})
+  else()
+    BRAINVISA_GENERATE_TARGET_NAME( target )
+  endif()
+
   add_custom_target( ${target} ALL
                      DEPENDS ${_targetDepends} )
   if( targetVariable )
@@ -897,6 +922,444 @@ MACRO( BRAINVISA_GET_SPACED_QUOTED_LIST _listVariable _outputVariable )
   ENDIF( _length GREATER 0 )
 ENDMACRO( BRAINVISA_GET_SPACED_QUOTED_LIST _listVariable _outputVariable )
 
+
+# BRAINVISA_GENERATE_COMMANDS_HELP_INDEX
+#   Add target to generate command help index
+#
+# Usage:
+#
+#   BRAINVISA_GENERATE_COMMANDS_HELP_INDEX( COMPONENT <component> )
+#
+function( BRAINVISA_GENERATE_COMMANDS_HELP_INDEX )
+
+  set(_argn ${ARGN})
+  
+  # Read options
+  set( arg_index 0 )
+  unset(_currentarg)
+  unset(_components)
+  unset(_output_directory)
+  unset(_install_directory)
+  unset(_depends)
+  unset(_dirs)
+
+  foreach( _arg ${_argn} )
+    if( "_${_arg}" STREQUAL _COMPONENT )
+      set(_currentarg "${_arg}")
+
+    elseif( "_${_currentarg}" STREQUAL _COMPONENT )
+      list( GET _argn ${arg_index} result )
+      if(DEFINED _components)
+        set( _components ${_components} "${result}" )
+      else()
+        set( _components "${result}" )
+      endif()
+    endif()
+    
+    math(EXPR arg_index "${arg_index} + 1")
+  endforeach()
+
+  unset(_currentarg)
+  unset(_arg)
+
+  # Set default option values
+  if (NOT DEFINED _components)
+    set( _components "${BRAINVISA_COMPONENTS}" )
+  endif()
+
+  get_filename_component( _output_directory "${CMAKE_BINARY_DIR}/share/doc" ABSOLUTE )
+  set( _install_directory "$(BRAINVISA_INSTALL_PREFIX)/share/doc" )
+
+  set(_index_file "index_commands.html")
+
+  if(NOT TARGET bv_commands_doc)
+    set(_depends "")
+    set(_dirs "")
+    foreach(_component ${_components})
+      foreach(_command ${${_component}-commands})
+        if((NOT DEFINED ${_command}-help-generate) OR ${_command}-help-generate)
+          list( APPEND _depends "${_output_directory}/commands-help/${_component}-${${_component}_VERSION}/${_command}" )
+        endif()
+      endforeach()
+      unset(_command)
+
+      list( APPEND _dirs "${_output_directory}/commands-help/${_component}-${${_component}_VERSION}" )
+    endforeach()
+
+    file(TO_NATIVE_PATH "${_dirs}" _helppath)
+    if (NOT WIN32)
+      string(REPLACE ";" ":" _helppath "${_helppath}")
+    endif()
+
+#     message("--BRAINVISA_ADD_COMMAND_HELP_INDEX - _output_directory : ${_output_directory}")
+#     message("--BRAINVISA_ADD_COMMAND_HELP_INDEX - _depends : ${_depends}")
+#     message("--BRAINVISA_ADD_COMMAND_HELP_INDEX - _dirs : ${_dirs}")
+
+    add_custom_command( OUTPUT "${_output_directory}/${_index_file}"
+                        COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env" 
+                                "${PYTHON_EXECUTABLE}" 
+                                ${CREATE_COMMANDS_DOC} 
+                                -t "${_helppath}" 
+                                -v 0 
+                                "${_output_directory}/${_index_file}"
+                        DEPENDS ${_depends}
+                        COMMENT "Generating documentation commands help index ..."
+                        VERBATIM )
+
+    add_custom_target( bv_commands_doc
+                       DEPENDS "${_output_directory}/${_index_file}" 
+                       VERBATIM )
+
+    add_custom_command( OUTPUT "${_install_directory}/${_index_file}"
+                        COMMAND "${CMAKE_COMMAND}" -E make_directory "${_install_directory}"
+                        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_output_directory}/${_index_file}" "${_install_directory}/${_index_file}"
+                        DEPENDS "${_output_directory}/${_index_file}"
+                        COMMENT "Installing documentation commands help index ..."
+                        VERBATIM )
+
+    add_custom_target( install-bv_commands_doc 
+                       DEPENDS "${_install_directory}/${_index_file}" 
+                       VERBATIM )
+  endif()
+
+  unset(_output_directory)
+  unset(_install_directory)
+  unset(_depends)
+  unset(_dirs)
+
+endfunction()
+
+# BRAINVISA_ADD_COMMAND_HELP
+#   Add target to generate command help files
+#
+# Usage:
+#
+#   BRAINVISA_ADD_COMMAND_HELP( name [COMPONENT <component>] 
+#                                    [HELP_COMMAND <command>] 
+#                                    [HELP_DEPENDS <dependencies>] )
+#
+function( BRAINVISA_ADD_COMMAND_HELP name)
+  set(_argn ${ARGN})
+  
+  # Read options
+  set( arg_index 0 )
+  unset(_command)
+  unset(_depends)
+  unset(_component)
+  unset(_currentarg)
+  foreach( _arg ${_argn} )
+    if( "${_arg}" STREQUAL HELP_COMMAND 
+        OR "_${_arg}" STREQUAL _ARGS 
+        OR "${_arg}" STREQUAL HELP_DEPENDS 
+        OR "_${_arg}" STREQUAL _COMPONENT )
+      set(_currentarg "${_arg}")
+      
+    elseif( "${_currentarg}" STREQUAL HELP_COMMAND
+            OR "_${_currentarg}" STREQUAL _ARGS )
+      list( GET _argn ${arg_index} result )
+      if(DEFINED _command)
+        set( _command ${_command} "${result}" )
+      else()
+        set( _command "${result}" )
+      endif()
+
+    elseif( "${_currentarg}" STREQUAL HELP_DEPENDS )
+      list( GET _argn ${arg_index} result )
+      if(DEFINED _depends)
+        set( _depends ${_depends} "${result}" )
+      else()
+        set( _depends "${result}" )
+      endif()
+      
+    elseif( "_${_currentarg}" STREQUAL _COMPONENT )
+      list( GET _argn ${arg_index} result )
+      set( _component "${result}" )
+    endif()
+    
+    math(EXPR arg_index "${arg_index} + 1")
+  endforeach()
+
+  unset(_currentarg)
+  unset(_arg)
+
+  get_filename_component( _namewe "${name}" NAME_WE)
+
+  # Set default option values
+  if (NOT DEFINED _component)
+    set( _component "${PROJECT_NAME}" )
+  endif()
+
+  if ((NOT DEFINED _depends) AND (NOT DEFINED _command))
+    # Default dependencies is set using command name
+    set( _depends "bin/${name}" )
+  endif()
+
+  if (NOT DEFINED _command)
+    # Default is set to command name --help
+    # but in some cases output name of the target is not the same as target name
+    if(TARGET ${name})
+      get_property( _output_command TARGET "${name}" PROPERTY OUTPUT_NAME )
+    endif()
+
+    if(DEFINED _output_command)
+      set( _command "bin/${_output_command}" "-h" )
+      unset(_output_command)
+    else()
+      set( _command "bin/${name}" "-h" )
+    endif()
+
+    if (${name}-command-is-script)
+      # Execute command using python interpreter
+      set( _command "python" ${_command})
+    endif()
+  endif()
+
+  string(REPLACE ";" "', '" _command "${_command}")
+  get_filename_component( _output_directory "${CMAKE_BINARY_DIR}/share/doc" ABSOLUTE)
+  get_filename_component( _component_help_directory "${_output_directory}/commands-help/${_component}-${${_component}_VERSION}" ABSOLUTE)
+
+#   message("--BRAINVISA_ADD_COMMAND_HELP - name : ${name}")
+#   message("--BRAINVISA_ADD_COMMAND_HELP - _namewe : ${_namewe}")
+#   message("--BRAINVISA_ADD_COMMAND_HELP - _output_directory : ${_output_directory}")
+#   message("--BRAINVISA_ADD_COMMAND_HELP - _component_help_directory : ${_component_help_directory}")
+#   message("--BRAINVISA_ADD_COMMAND_HELP - _depends : ${_depends}")
+
+  if (NOT TARGET ${_component}-command-help)
+    add_custom_target( ${_component}-command-help )
+  endif()
+
+  if(TARGET "${name}-help")
+    message( FATAL_ERROR "Target: ${name}-help already exists. Impossible to use it for BRAINVISA_ADD_COMMAND_HELP" )
+  else()
+    # Add help generation target
+    add_custom_command( OUTPUT "${_component_help_directory}/${name}" 
+                        COMMAND "${CMAKE_COMMAND}" -E make_directory "${_component_help_directory}"
+                        COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env" python -c "import sys, subprocess; subprocess.call( ['${_command}'], stdout = sys.stdout, stderr = sys.stdout )" > ${_component_help_directory}/${name}
+                        DEPENDS ${_depends}
+                        COMMENT "Generating ${name} help file ..."
+                        VERBATIM )
+
+    # It is necessary to remove the extension, because cmake 
+    # does not support '.' in target names
+    add_custom_target( ${name}-help
+                       DEPENDS "${_component_help_directory}/${name}"
+                       VERBATIM )
+
+    add_dependencies(${_component}-command-help ${name}-help)
+
+  endif()
+
+  unset(_command)
+  unset(_namewe)
+  unset(_depends)
+  unset(_component)
+  unset(_output_directory)
+
+endfunction()
+
+# BRAINVISA_GENERATE_COMMANDS_HELP
+#   Add targets to generate commands help
+#
+# Usage:
+#
+#   BRAINVISA_GENERATE_COMMANDS_HELP( [COMPONENT] <component_1> ... <component_N>  )
+#
+function( BRAINVISA_GENERATE_COMMANDS_HELP )
+  set(_argn ${ARGN})
+  
+  # Read options
+  set( arg_index 0 )
+  unset(_currentarg)
+  unset(_components)
+  foreach( _arg ${_argn} )
+    if( "_${_arg}" STREQUAL _COMPONENT )
+      set(_currentarg "${_arg}")
+
+    else()
+      list( GET _argn ${arg_index} result )
+      if (DEFINED _components)
+        list(APPEND _components "${result}")
+      else()
+        set( _components "${result}" )
+      endif()
+    endif()
+    
+    math(EXPR arg_index "${arg_index} + 1")
+  endforeach()
+  unset(_currentarg)
+  unset(_arg)
+
+  # Set default option values
+  if (DEFINED _components)
+    list(REMOVE_DUPLICATES _components)
+  else()
+    set( _components "${BRAINVISA_COMPONENTS}" )
+  endif()
+
+  #if ( BRAINVISA_ADVANCED_FEATURE_TEST_MODE )
+  foreach(_component ${_components})
+    if (DEFINED ${_component}-commands)
+      foreach(_command ${${_component}-commands})
+        if((NOT DEFINED ${_command}-help-generate) 
+            OR ${_command}-help-generate)
+
+          # Add help generation
+          BRAINVISA_ADD_COMMAND_HELP( "${_command}" 
+                                      HELP_COMMAND ${${_command}-help-command}
+                                      COMPONENT ${_component} )
+        endif()
+      endforeach()
+    endif()
+  endforeach()
+  #endif()
+
+  unset(_command)
+  unset(_component)
+  unset(_components)
+endfunction()
+
+# BRAINVISA_ADD_EXECUTABLE
+#   Add executable target and reference executable for the component.
+#   Executables added with BRAINVISA_ADD_EXECUTABLE are referenced a 
+#   cache variable named ${component}-commands.
+#
+# Usage:
+#
+#   BRAINVISA_ADD_EXECUTABLE( <name> 
+#                                    [WIN32] [MACOSX_BUNDLE] [EXCLUDE_FROM_ALL] 
+#                                    source1 ... sourceN
+#                                    [COMPONENT <component>] 
+#                                    [IS_SCRIPT]
+#                                    [HELP_COMMAND <command> arg1 ... argN]
+#                                    [HELP_GENERATE On/Off] )
+#
+function( BRAINVISA_ADD_EXECUTABLE name )
+  set(_argn ${ARGN})
+  
+  # Read options
+  set( arg_index 0 )
+  unset(_currentarg)
+  unset(_is_script)
+  unset(_help_command)
+  unset(_help_generate)
+  unset(_sources)
+  unset(_exe_args)
+  foreach( _arg ${_argn} )
+    if( "${_arg}" STREQUAL HELP_COMMAND
+        OR "${_arg}" STREQUAL HELP_GENERATE
+        OR "_${_arg}" STREQUAL _COMPONENT )
+      set(_currentarg "${_arg}")
+
+    elseif( "${_arg}" STREQUAL IS_SCRIPT )
+      set(_is_script TRUE)
+
+    elseif( "${_currentarg}" STREQUAL HELP_COMMAND )
+      list( GET _argn ${arg_index} result )
+      if(DEFINED _help_command)
+        set( _help_command ${_help_command} "${result}" )
+      else()
+        set( _help_command "${result}" )
+      endif()
+
+    elseif( "${_currentarg}" STREQUAL HELP_GENERATE )
+      list( GET _argn ${arg_index} result )
+      set( _help_generate "${result}" )
+
+    elseif( "_${_currentarg}" STREQUAL _COMPONENT )
+      list( GET _argn ${arg_index} result )
+      set( _component "${result}" )
+
+    else()
+
+      # Add argument to excutable arguments
+      list( GET _argn ${arg_index} result )
+      if(DEFINED _exe_args)
+        set(_exe_args ${_exe_args} "${result}" )
+      else()
+        set( _exe_args "${result}" )
+      endif()
+    
+      # Add argument to sources
+      if( (NOT "${_currentarg}" STREQUAL WIN32)
+          AND (NOT "${_currentarg}" STREQUAL MACOSX_BUNDLE)
+          AND (NOT "${_currentarg}" STREQUAL EXCLUDE_FROM_ALL) )
+        if( DEFINED _sources )
+          set( _sources ${_sources} "${result}" )
+        else()
+          set( _sources "${result}" )
+        endif()
+      endif()
+
+    endif()
+    
+    math(EXPR arg_index "${arg_index} + 1")
+  endforeach()
+  unset(_currentarg)
+  unset(_arg)
+
+  # Set default option values
+  if (NOT DEFINED _component)
+    set( _component "${PROJECT_NAME}" )
+  endif()
+
+#   message("BRAINVISA_ADD_EXECUTABLE - name : ${name}")
+#   message("BRAINVISA_ADD_EXECUTABLE - _exe_args : ${_exe_args}")
+#   message("BRAINVISA_ADD_EXECUTABLE - _component : ${_component}")
+#   message("BRAINVISA_ADD_EXECUTABLE - _is_script : ${_is_script}")
+#   message("BRAINVISA_ADD_EXECUTABLE - _sources : ${_sources}")
+
+  if (NOT _is_script)
+    # Add executable only if it is not a script
+    add_executable( ${name} ${_exe_args} )
+#     message("BRAINVISA_ADD_EXECUTABLE - executable ${name} added")
+  else()
+    # In the case of a script we add a copy of the file to the runtime directory
+    foreach(_source ${_sources})
+      get_filename_component(_sourcename "${_source}" NAME)
+      get_filename_component(_sourcedir "${_source}" PATH)
+      get_filename_component(_sourcedir "${_sourcedir}" ABSOLUTE)
+      file(RELATIVE_PATH _source "${_sourcedir}" "${_source}")
+#       message("BRAINVISA_ADD_EXECUTABLE - ${_source}")
+#       message("BRAINVISA_ADD_EXECUTABLE - ${_sourcenamewe}")
+#       message("BRAINVISA_ADD_EXECUTABLE - ${_sourcedir}")
+      BRAINVISA_COPY_FILES( ${_component} ${_source} 
+                            SOURCE_DIRECTORY "${_sourcedir}" 
+                            DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+                            TARGET ${_sourcename} )
+    endforeach()
+    unset(_source)
+    unset(_sourcename)
+    unset(_sourcedir)
+    set(${name}-command-is-script ${_is_script} CACHE INTERNAL "${name} command is script")
+  endif()
+
+  # Append command name to the list of commands for the component
+  if (DEFINED ${_component}-commands)
+    set(_internal-commands ${${_component}-commands} "${name}")
+    list(REMOVE_DUPLICATES _internal-commands)
+    set(${_component}-commands ${_internal-commands} CACHE INTERNAL "Component ${_component} commands")
+    unset(_internal-commands)
+  else()
+    set(${_component}-commands "${name}" CACHE INTERNAL "Component ${_component} commands")
+  endif()
+
+  # Store command to generate help
+  if(DEFINED _help_command)
+    set(${name}-help-command ${_help_command} CACHE INTERNAL "${name} help generation command")
+  endif()
+
+  # Store if command help must not be generated
+  if(DEFINED _help_generate
+     AND (NOT _help_generate))
+    set(${name}-help-generate ${_help_generate} CACHE INTERNAL "${name} help must be generated")
+  endif()
+
+  unset(_is_script)
+  unset(_sources)
+  unset(_help_command)
+  unset(_help_generate)
+  unset(_exe_args)
+endfunction()
 
 # BRAINVISA_GENERATE_DOXYGEN_DOC
 #    Add rules to generate doxygen documentation with "make doc" or "make devdoc".
@@ -1425,9 +1888,15 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
 
   # Build include options according to _SIP_INCLUDE
   set( _sipIncludeOptions )
+  set( _sipDeps )
   foreach( _i ${_SIP_INCLUDE} )
     set( _sipIncludeOptions ${_sipIncludeOptions} -I "${_i}" )
+    file( GLOB _j "${_i}/*.sip" )
+    list( APPEND _sipDeps ${_j} )
   endforeach( _i ${_SIP_INCLUDE} )
+  # this will be many many dependencies,
+  # but we cannot know the exact correct ones.
+  list( REMOVE_DUPLICATES _sipDeps )
 
   # Add rule to generate C++ code with sip
   if( DESIRED_QT_VERSION EQUAL 3 )
@@ -1441,8 +1910,9 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
     # Sip can generate less files than requested. The touch
     # command make sure that all the files are created (necessary)
     # for dependencies).
-    COMMAND "${CMAKE_COMMAND}" -E remove ${_sipOutputFiles}
-    COMMAND "${SIP_EXECUTABLE}"
+    # COMMAND "${CMAKE_COMMAND}" -E remove ${_sipOutputFiles}
+    # bv_sip4make takes care of it.
+    COMMAND "${SIP4MAKE_EXECUTABLE}"
             -j ${_sipSplitGeneratedCode}
             ${_sipIncludeOptions}
             -c "${CMAKE_CURRENT_BINARY_DIR}"
@@ -1452,6 +1922,7 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
             ${_mainSipFile}
     COMMAND "${CMAKE_COMMAND}" -E touch ${_sipOutputFiles}
     DEPENDS ${copied_sip_files}
+    DEPENDS ${_sipDeps}
   )
 
   # Create library with sip generated files

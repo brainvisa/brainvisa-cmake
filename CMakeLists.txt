@@ -119,7 +119,7 @@ if( NOT DISABLE_FILE_INSTALLATION_LIST )
 #                    OUTPUT_QUIET 
 #                    ERROR_QUIET )
   file( GLOB_RECURSE installed_files RELATIVE "${tmp}/install" "${tmp}/install/*" )
-#   execute_process( COMMAND "${CMAKE_COMMAND}" -E remove_directory "${tmp}" )
+  execute_process( COMMAND "${CMAKE_COMMAND}" -E remove_directory "${tmp}" )
   file( WRITE "${CMAKE_BINARY_DIR}/installed_files.txt" "" )
   foreach( i ${installed_files} )
     file( APPEND "${CMAKE_BINARY_DIR}/installed_files.txt" "${i}\n" )

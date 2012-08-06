@@ -125,7 +125,7 @@ groupsDefinition = {
     'brainrat/*-gpl',
     'communication/*',
     'connectomist/old_connectomist-gpl',
-    'cortical_surface/*-gpl',
+    'cortical_surface/old_connectomist-gpl',
     'cortical_surface/freesurfer_plugin',
     'data_storage_client/*',
     'development/*',

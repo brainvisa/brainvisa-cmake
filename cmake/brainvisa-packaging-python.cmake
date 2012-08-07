@@ -86,7 +86,8 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           get_filename_component( _instname "${_instfile}" NAME )
           add_custom_command( TARGET install-${component} POST_BUILD
           COMMAND "sed" "'1" "s/.*[pP]ython.*/\\#\\!\\/usr\\/bin\\/env" "python/'" "${_instname}" ">${_instname}_temp"
-          COMMAND "${CMAKE_COMMAND}" -E "rename" "${_instname}_temp" "${_instname}"
+          COMMAND "${CMAKE_COMMAND}" -E "copy" "${_instname}_temp" "${_instname}"
+          COMMAND "${CMAKE_COMMAND}" -E "remove" "${_instname}_temp"
           WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/bin")
         endforeach()
       endif()

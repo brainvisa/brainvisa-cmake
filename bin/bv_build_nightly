@@ -50,8 +50,8 @@ case ${os} in
     bv_setup_devel
 
     # remove distcc on linux
-    i2bm_pathvar_remove PATH /usr/lib64/distcc/bin
-    i2bm_pathvar_remove PATH /usr/lib/distcc/bin
+    bv_pathvar_remove PATH /usr/lib64/distcc/bin
+    bv_pathvar_remove PATH /usr/lib/distcc/bin
 
     case ${os} in
       macos)
@@ -226,8 +226,8 @@ fi
 
 bv_configure
 bv_build
-bv_test
 bv_doc
+bv_test
 
 echo "End compile and doc "
 

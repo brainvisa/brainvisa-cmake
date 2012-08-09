@@ -108,8 +108,6 @@ groupsDefinition = {
     'datamind/*',
     'data_storage_client/*',
     'development/*',
-    'fmri/*',
-    'brainvisa-installer/*',
     'nuclear_imaging/*',
     'optical_imaging/*',
     'soma/*',

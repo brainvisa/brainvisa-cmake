@@ -1324,7 +1324,7 @@ function( BRAINVISA_ADD_EXECUTABLE name )
 #       message("BRAINVISA_ADD_EXECUTABLE - ${_sourcedir}")
       BRAINVISA_COPY_FILES( ${_component} ${_source} 
                             SOURCE_DIRECTORY "${_sourcedir}" 
-                            DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+                            DESTINATION "bin"
                             TARGET ${_sourcename} )
     endforeach()
     unset(_source)

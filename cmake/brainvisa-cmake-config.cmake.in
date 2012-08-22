@@ -1231,7 +1231,11 @@ endfunction()
 #                                    [COMPONENT <component>] 
 #                                    [IS_SCRIPT]
 #                                    [HELP_COMMAND <command> arg1 ... argN]
-#                                    [HELP_GENERATE On/Off] )
+#                                    [HELP_GENERATE On/Off]
+#                                    [OUTPUT_NAME commandname] )
+#
+#  if OUTPUT_NAME is set, set_property( TARGET <name> PROPERTY OUTPUT_NAME <commandname> )
+#    is called, and the command help is set with the name <commandname> instead of <name>.
 #
 function( BRAINVISA_ADD_EXECUTABLE name )
   set(_argn ${ARGN})
@@ -1242,18 +1246,23 @@ function( BRAINVISA_ADD_EXECUTABLE name )
   unset(_is_script)
   unset(_help_command)
   unset(_help_generate)
+  unset(_commandname)
   unset(_sources)
   unset(_exe_args)
+  unset(_component)
+  set( COMPONENT "COMPONENT" ) # prevents a bug in STREQUAL because
+  # COMPONENT exists as a global variable
   foreach( _arg ${_argn} )
     if( "${_arg}" STREQUAL HELP_COMMAND
         OR "${_arg}" STREQUAL HELP_GENERATE
-        OR "_${_arg}" STREQUAL _COMPONENT )
+        OR "${_arg}" STREQUAL COMPONENT
+        OR "${_arg}" STREQUAL OUTPUT_NAME )
       set(_currentarg "${_arg}")
 
-    elseif( "${_arg}" STREQUAL IS_SCRIPT )
+    elseif( "${_arg}" STREQUAL "IS_SCRIPT" )
       set(_is_script TRUE)
 
-    elseif( "${_currentarg}" STREQUAL HELP_COMMAND )
+    elseif( "${_currentarg}" STREQUAL "HELP_COMMAND" )
       list( GET _argn ${arg_index} result )
       if(DEFINED _help_command)
         set( _help_command ${_help_command} "${result}" )
@@ -1265,9 +1274,13 @@ function( BRAINVISA_ADD_EXECUTABLE name )
       list( GET _argn ${arg_index} result )
       set( _help_generate "${result}" )
 
-    elseif( "_${_currentarg}" STREQUAL _COMPONENT )
+    elseif( "${_currentarg}" STREQUAL COMPONENT )
       list( GET _argn ${arg_index} result )
       set( _component "${result}" )
+
+    elseif( "${_currentarg}" STREQUAL OUTPUT_NAME )
+      list( GET _argn ${arg_index} result )
+      set( _commandname "${result}" )
 
     else()
 
@@ -1307,10 +1320,15 @@ function( BRAINVISA_ADD_EXECUTABLE name )
 #   message("BRAINVISA_ADD_EXECUTABLE - _component : ${_component}")
 #   message("BRAINVISA_ADD_EXECUTABLE - _is_script : ${_is_script}")
 #   message("BRAINVISA_ADD_EXECUTABLE - _sources : ${_sources}")
+#   message("BRAINVISA_ADD_EXECUTABLE - _commandname : ${_commandname}")
 
   if (NOT _is_script)
     # Add executable only if it is not a script
     add_executable( ${name} ${_exe_args} )
+    if( _commandname )
+      set_property( TARGET ${name} PROPERTY OUTPUT_NAME "${_commandname}" )
+    endif()
+
 #     message("BRAINVISA_ADD_EXECUTABLE - executable ${name} added")
   else()
     # In the case of a script we add a copy of the file to the runtime directory
@@ -1331,6 +1349,11 @@ function( BRAINVISA_ADD_EXECUTABLE name )
     unset(_sourcename)
     unset(_sourcedir)
     set(${name}-command-is-script ${_is_script} CACHE INTERNAL "${name} command is script")
+  endif()
+
+  # replace name with commandname for help generation
+  if( _commandname )
+    set( name "${_commandname}" )
   endif()
 
   # Append command name to the list of commands for the component

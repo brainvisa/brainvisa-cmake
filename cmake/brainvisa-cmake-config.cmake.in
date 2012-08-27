@@ -2442,3 +2442,18 @@ function( BRAINVISA_PYUIC source_ui_file dest_py_file relative_path )
   endif()
 endfunction()
 
+# BRAINVISA_QT4_WRAP_UI
+#   Works like QT4_WRAP_UI, but in addition, the directory of
+#   generated files is user-defined (<input_outdir>).
+#
+# Usage:
+#
+#   BRAINVISA_QT4_WRAP_UI( <outfiles> <inputfile> <input_outdir> )
+#
+MACRO ( BRAINVISA_QT4_WRAP_UI outfiles inputfiles input_outdir )
+  set(_old_dir "${CMAKE_CURRENT_BINARY_DIR}")
+  set(CMAKE_CURRENT_BINARY_DIR "${input_outdir}")
+  file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  QT4_WRAP_UI(${outfiles} ${inputfiles})
+  set(CMAKE_CURRENT_BINARY_DIR ${_old_dir})
+ENDMACRO()

@@ -122,7 +122,7 @@ groupsDefinition = {
     'axon_web/*',
     'brainrat/*-gpl',
     'communication/*',
-    'connectomist/*-gpl',
+    'connectomist/old_connectomist-gpl',
     'cortical_surface/old_connectomist-gpl',
     'cortical_surface/freesurfer_plugin',
     'data_storage_client/*',

@@ -130,9 +130,9 @@ if res == 0:
     for i in range( jopt ):
       if i not in indices:
         # write an empty file
-        fname = os.path.join( tdir, base + str(i) + '.' + ext )
+        fname = base + str(i) + '.' + ext
         print 'adding empty file', fname
-        open( fname, 'w' )
+        open(  os.path.join( tdir, fname ), 'w' )
         tlist.append( fname )
 
   for x in tlist:

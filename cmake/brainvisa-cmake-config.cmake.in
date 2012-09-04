@@ -1928,25 +1928,42 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
     string( REPLACE " " ";" _sipFlags "${PYQT4_SIP_FLAGS}" )
   endif()
   set( _sipFlags ${SIP_FLAGS} ${_sipFlags} )
-  add_custom_command(
-    OUTPUT ${_sipOutputFiles}
-    # Sip can generate less files than requested. The touch
-    # command make sure that all the files are created (necessary)
-    # for dependencies).
-    # COMMAND "${CMAKE_COMMAND}" -E remove ${_sipOutputFiles}
-    # bv_sip4make takes care of it.
-    COMMAND "${SIP4MAKE_EXECUTABLE}"
-            -j ${_sipSplitGeneratedCode}
-            ${_sipIncludeOptions}
-            -c "${CMAKE_CURRENT_BINARY_DIR}"
-            -e
-            ${_sipFlags}
-            -x VendorID -x Qt_STYLE_WINDOWSXP -x Qt_STYLE_INTERLACE
-            ${_mainSipFile}
-    COMMAND "${CMAKE_COMMAND}" -E touch ${_sipOutputFiles}
-    DEPENDS ${copied_sip_files}
-    DEPENDS ${_sipDeps}
-  )
+  if( $SIP4MAKE_EXECUTABLE STREQUAL $SIP_EXECUTABLE )
+    # use regular sip
+    add_custom_command(
+      OUTPUT ${_sipOutputFiles}
+      # Sip can generate less files than requested. The touch
+      # command make sure that all the files are created (necessary)
+      # for dependencies).
+      COMMAND "${CMAKE_COMMAND}" -E remove ${_sipOutputFiles}
+      COMMAND "${SIP4MAKE_EXECUTABLE}"
+              -j ${_sipSplitGeneratedCode}
+              ${_sipIncludeOptions}
+              -c "${CMAKE_CURRENT_BINARY_DIR}"
+              -e
+              ${_sipFlags}
+              -x VendorID -x Qt_STYLE_WINDOWSXP -x Qt_STYLE_INTERLACE
+              ${_mainSipFile}
+      COMMAND "${CMAKE_COMMAND}" -E touch ${_sipOutputFiles}
+      DEPENDS ${copied_sip_files}
+      DEPENDS ${_sipDeps}
+    )
+  else()
+    # use bv_sip4make, taking care of creating the expected number of files
+    add_custom_command(
+      OUTPUT ${_sipOutputFiles}
+      COMMAND "${SIP4MAKE_EXECUTABLE}"
+              -j ${_sipSplitGeneratedCode}
+              ${_sipIncludeOptions}
+              -c "${CMAKE_CURRENT_BINARY_DIR}"
+              -e
+              ${_sipFlags}
+              -x VendorID -x Qt_STYLE_WINDOWSXP -x Qt_STYLE_INTERLACE
+              ${_mainSipFile}
+      DEPENDS ${copied_sip_files}
+      DEPENDS ${_sipDeps}
+    )
+  endif()
 
   # Create library with sip generated files
   add_library( ${_moduleName} MODULE ${_sipOutputFiles} )

@@ -34,7 +34,7 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 
 
-import os, sys, shutil, tempfile, string
+import os, sys, shutil, tempfile, string, re
 
 # print 'SIP options:', sys.argv
 sys.stdout.flush()
@@ -49,6 +49,16 @@ elif copt == len(sys.argv)-1:
   # print 'no argument to -c option. Running sip normally'
   pass
   copt = -1
+# find -j option
+try:
+  jopt = sys.argv.index( '-j' )
+except:
+  jopt = -1
+if jopt == len(sys.argv)-1:
+  jopt = -1
+if jopt >= 0:
+  jopt = int( sys.argv[jopt+1] )
+
 
 # if --listingOnly, display only the generated source list
 try:
@@ -78,8 +88,12 @@ if not os.path.exists( outdir ):
   os.mkdir( outdir )
 
 def skipcomment( f ):
-  for i in xrange(5):
-    l = f.readline() # for now I know it's 5 lines...
+  try:
+    for i in xrange(5):
+      l = f.readline() # for now I know it's 5 lines...
+  except:
+    # if fewer than 5 lines
+    pass
 
 if os.path.isdir( tdir ):
   tlist = os.listdir( tdir )
@@ -94,6 +108,32 @@ if res == 0:
 
   # compare files
   olist = os.listdir( outdir )
+  ccfiles = []
+
+  # create empty files if -j option is used and not enough files were generated
+  if jopt > 0:
+    for x in tlist:
+      if x.endswith( '.cc' ) or x.endswith( '.cpp' ):
+        ccfiles.append( x )
+    r = re.compile( '^(.*part)([0-9]+)\.(cpp|cc)$' )
+    indices = set()
+    base = ''
+    ext = ''
+    for x in ccfiles:
+      m = r.match( x )
+      if m:
+        i = int( m.group(2) )
+        indices.add( i )
+        if base == '':
+          base = m.group(1)
+          ext = m.group(3)
+    for i in range( jopt ):
+      if i not in indices:
+        # write an empty file
+        fname = os.path.join( tdir, base + str(i) + '.' + ext )
+        print 'adding empty file', fname
+        open( fname, 'w' )
+        tlist.append( fname )
 
   for x in tlist:
     if x not in olist:
@@ -123,9 +163,30 @@ if res == 0:
 
   # cleanup obsolete files
   for x in olist:
-    if x not in tlist and ( x.endswith( '.h' ) or x.endswith( '.cc' ) or x.endswith( '.cpp' ) or x.endswith( '.hpp' ) ):
+    if x not in tlist and ( x.endswith( '.h' ) or x.endswith( '.cc' ) \
+      or x.endswith( '.cpp' ) or x.endswith( '.hpp' ) ):
+      # keep files of size 0 since they may be here intentionnally.
       print x, 'is obsolete'
       os.unlink( os.path.join( outdir, x ) )
+
+  # create empty files if -j option is used and not enough files were generated
+  if jopt > 0:
+    r = re.compile( '^(.*part)([0-9]+)\.(cpp|cc)$' )
+    indices = set()
+    base = ''
+    ext = ''
+    for x in ccfiles:
+      m = r.match( x )
+      if m:
+        i = int( m.group(2) )
+        indices.add( i )
+        if base == '':
+          base = m.group(1)
+          ext = m.group(3)
+    for i in range( jopt ):
+      if i not in indices:
+        # write an empty file
+        open( os.path.join( outdir, base + str(i) + '.' + ext ), 'w' )
 
 # delete temp directory
 for x in tlist:

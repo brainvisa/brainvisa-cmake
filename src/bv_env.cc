@@ -24,10 +24,12 @@ enum system_conversion {
 };
 
 #define UNIX_PATH_SEP "/"
+#define UNIX_ALTERNATE_PATH_SEP ""
 #define UNIX_ENV_SEP ":"
 #define UNIX_LD_LIBRARY_PATH "LD_LIBRARY_PATH"
 
 #define WIN_PATH_SEP "\\"
+#define WIN_ALTERNATE_PATH_SEP UNIX_PATH_SEP
 #define WIN_ENV_SEP ";"
 #define WIN_LD_LIBRARY_PATH "PATH"
 
@@ -36,6 +38,7 @@ enum system_conversion {
 #ifdef WIN32
  
   #define PATH_SEP WIN_PATH_SEP
+  #define ALTERNATE_PATH_SEP WIN_ALTERNATE_PATH_SEP
   #define ENV_SEP WIN_ENV_SEP
     
   #define LD_LIBRARY_PATH \
@@ -55,6 +58,7 @@ bool is_msys()
 
 #else
   #define PATH_SEP UNIX_PATH_SEP
+  #define ALTERNATE_PATH_SEP UNIX_ALTERNATE_PATH_SEP
   #define ENV_SEP UNIX_ENV_SEP
   
   #ifdef __APPLE__
@@ -64,17 +68,41 @@ bool is_msys()
   #endif
 #endif
 
-vector <string> split_path( const string &str, const string & sep = PATH_SEP  )
+bool is_sep(const char c, const string & sep = PATH_SEP) {
+ 
+  bool res = false;
+  
+  // Test if string is one of PATH_SEP¨characters
+  for (int i = 0; i < sep.size(); i++) {
+    if (c == sep[i]) {
+      res = true;
+      break;
+    }
+  }
+  
+  return res;
+}
+
+vector <string> split_path( const string &str, const string & sep = string(PATH_SEP) + string(ALTERNATE_PATH_SEP) )
 {
   vector <string> result;
   if ( ! str.empty() ) {
     string::size_type pos = 0;
-    if ( str == sep ) {
+
+    if ( (str.size() == 1) && is_sep(str[0], sep) ) {
       result.push_back( "" );
       pos = 1;
     }
     while ( pos < str.size() ) {
-      string::size_type pos2 = str.find( sep, pos );
+      // Search the next character of PATH_SEP in the string
+      string::size_type pos2 = string::npos;
+      for (int i = 0; i < sep.size(); i++){
+        string::size_type pos3 = str.find( sep[i], pos );
+        if ((pos3 != string::npos) && (pos3 < pos2)) {
+          pos2 = pos3;
+        }
+      }
+      
       if ( pos2 == string::npos ) {
         result.push_back( str.substr( pos ) );
         break;
@@ -128,7 +156,7 @@ string convert_path( const string &str, const system_conversion mode = WindowsTo
   
   switch(mode) {
     case WindowsToUnix:
-      v = split_path( str, WIN_PATH_SEP );
+      v = split_path( str, string(WIN_PATH_SEP) + string(WIN_ALTERNATE_PATH_SEP) );
       if ((v.size() > 0) && (v[0].size() > 1) && (v[0][1] == ':')) {
         // Drive letter found
         // Remove ":" from drive letter

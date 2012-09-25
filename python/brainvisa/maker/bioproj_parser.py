@@ -109,10 +109,8 @@ groupsDefinition = {
     'data_storage_client/*',
     'development/*',
     'nuclear_imaging/*',
-    'optical_imaging/*',
     'soma/*',
     'morphologist/*',
-    'pyhrf/*',
   ],
   'opensource': [
     'aims/*',
@@ -127,10 +125,8 @@ groupsDefinition = {
     'data_storage_client/*',
     'development/*',
     'nuclear_imaging/*-gpl',
-    'optical_imaging/*-gpl',
     'soma/*',
     'morphologist/*-gpl',
-    'pyhrf/*',
   ],
   'anatomist': [
     'aims/*',

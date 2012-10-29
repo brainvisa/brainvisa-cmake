@@ -12,7 +12,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO cmake package_name package_maintain
     # not available / used on some platforms
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt4-phonon RUN )
   endif()
-  if( QT_DBUS_FOUND )
+  if( QT_QTDBUS_FOUND )
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt4-dbus RUN )
   endif()
 endfunction()

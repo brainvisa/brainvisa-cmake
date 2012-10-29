@@ -1,4 +1,4 @@
-find_package( Qt4 COMPONENTS QtWebkit phonon )
+find_package( Qt4 COMPONENTS QtWebkit phonon QtDBus)
 
 function( BRAINVISA_PACKAGING_COMPONENT_INFO cmake package_name package_maintainer package_version )
   set( ${package_name} ${component} PARENT_SCOPE )
@@ -12,7 +12,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO cmake package_name package_maintain
     # not available / used on some platforms
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt4-phonon RUN )
   endif()
-  if( APPLE )
+  if( QT_DBUS_FOUND )
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt4-dbus RUN )
   endif()
 endfunction()

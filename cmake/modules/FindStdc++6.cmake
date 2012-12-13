@@ -18,8 +18,19 @@ ELSE(STDCPP_LIBRARIES)
     FIND_LIBRARY( STDCPP_LIBRARIES libstdc++-6 )
   ENDIF()
   
+  IF( NOT STDCPP_LIBRARIES )
+    execute_process( COMMAND "${CMAKE_CXX_COMPILER}" "-v"
+      ERROR_VARIABLE _gcc_v )
+    string( REGEX MATCH "gcc version ([0-9]+.[0-9]+)" _gccver "${_gcc_v}" )
+    set( GCC_VERSION ${CMAKE_MATCH_1} CACHE STRING "gcc version" )
+    set( _GCCPATH "/usr/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}" )
+    find_library( STDCPP_LIBRARIES "stdc++" PATHS ${_GCCPATH} )
+    unset( _GCCPATH )
+  ENDIF()
+  
   IF( STDCPP_LIBRARIES )
     SET(STDCPP_FOUND TRUE)
+    set( STDCPP_LIBRARIES ${STDCPP_LIBRARIES} CACHE PATH "stdc++ libraries" )
   ELSE()
     SET(STDCPP_FOUND FALSE)
       

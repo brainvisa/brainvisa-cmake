@@ -3,10 +3,9 @@
 # LIBGCC_FOUND
 # LIBGCC_LIBRARIES - the gcc library
 
-if( LIBGCC_LIBRARIES AND STDCPP_LIBRARIES )
+if( LIBGCC_LIBRARIES )
   # already found  
   set( LIBGCC_FOUND TRUE )
-  set( STDCPP_FOUND TRUE )
 else()
   find_library( LIBGCC_LIBRARIES NAMES gcc_s gcc_s_dw2-1 )
   if( NOT LIBGCC_LIBRARIES )
@@ -23,7 +22,6 @@ else()
       set( GCC_VERSION ${CMAKE_MATCH_1} CACHE STRING "gcc version" )
       set( _GCCPATH "/usr/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}" )
       find_library( LIBGCC_LIBRARIES "gcc_s" PATHS ${_GCCPATH} )
-      find_library( STDCPP_LIBRARIES "stdc++" PATHS ${_GCCPATH} )
       unset( _GCCPATH )
     endif()
     if( NOT LIBGCC_LIBRARIES )
@@ -43,10 +41,6 @@ else()
     elseif( NOT LIBGCC_FIND_QUIETLY )
         message( STATUS "LIBGCC was not found." )
     endif()
-  endif()
-  if( STDCPP_LIBRARIES )
-    set( STDCPP_LIBRARIES ${STDCPP_LIBRARIES} CACHE PATH "stdc++ libraries" )
-    set( STDCPP_FOUND TRUE )
   endif()
 endif()
 

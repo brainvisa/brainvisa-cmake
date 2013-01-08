@@ -99,6 +99,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     # all python modules are copied in install directory but in theory, we should not copy site-packages subdirectory
     # the content of site-packages should be described in different packages.
     if(WIN32)
+      find_library(MSVCR71_LIBRARY msvcr71.dll PATHS ${PYTHON_BIN_DIR} NO_DEFAULT_PATH)
       find_program(IPYTHON_SCRIPT ipython-script.py PATHS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts NO_DEFAULT_PATH)
       find_program(PYCOLOR_SCRIPT pycolor-script.py PATHS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts NO_DEFAULT_PATH)
 
@@ -110,7 +111,11 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       set(PYTHON_TOOLS "${PYTHON_BIN_DIR}/tools")
       set(PYTHON_XMLDOC "${PYTHON_BIN_DIR}/xmldoc")
       set(PYTHON_SUBDIRS "${PYTHON_MODULES_PATH}" "${PYTHON_DLLS}" "${PYTHON_DOC}" "${PYTHON_SIP}" "${PYTHON_TCL}" "${PYTHON_TOOLS}" "${PYTHON_XMLDOC}")
-
+      
+      if ( MSVCR71_LIBRARY )
+        BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${MSVCR71_LIBRARY} )
+      endif()
+      
       BRAINVISA_INSTALL( DIRECTORY ${PYTHON_SUBDIRS}
                          DESTINATION "lib/python" 
                          USE_SOURCE_PERMISSIONS

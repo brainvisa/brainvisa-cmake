@@ -748,14 +748,14 @@ endfunction()
 #
 # Usage:
 #   BRAINVISA_COPY_PYTHON_DIRECTORY( <python directory> <component> 
-#                               <destination directory> [NO_SYMLINKS] )
+#                                    <destination directory> [NO_SYMLINKS] )
 #     <python directory>: python directory to copy
 #     <component>: name of the component passed to BRAINVISA_INSTALL.
 #     <destination directory>: directory where the wiles will be copied
 #         (relative to build directory).
 #   BRAINVISA_COPY_PYTHON_DIRECTORY( <python directory> <component> )
-#     <destination directory> is set to the right most directory name in
-#         <python directory>
+#         <destination directory> is set to the right most directory
+#             name in <python directory>
 #
 # Example:
 #   BRAINVISA_COPY_PYTHON_DIRECTORY(  ${CMAKE_CURRENT_SOURCE_DIR}/python brainvisa_python )
@@ -772,8 +772,8 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
   endif()
 
   list( LENGTH _args _argc )
-  if( ${_argc} GREATER 2 )
-    list( GET _args 2 _destDir )
+  if( ${_argc} GREATER 0 )
+    list( GET _args 0 _destDir )
   else()
     get_filename_component( _destDir "${_pythonDirectory}" NAME )
   endif()

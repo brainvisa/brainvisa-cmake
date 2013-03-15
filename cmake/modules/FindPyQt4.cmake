@@ -52,6 +52,7 @@ else()
 
     find_program( PYQT4_PYLUPDATE_EXECUTABLE NAMES pylupdate4 pylupdate
       DOC "pylupdate program path" )
+    find_program( PYUIC NAMES pyuic4 pyuic DOC "pyuic program path" )
 
     set(PYQT4_FOUND TRUE)
   endif()

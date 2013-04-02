@@ -146,7 +146,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
 
     # install pyconfig.h file since it may be required by some packages
     # using distutils (like matplotlib)
-    find_file( pyconfig "pyconfig.h" PYTHON_INCLUDE_PATH )
+    find_file( pyconfig "pyconfig.h" ${PYTHON_INCLUDE_PATH} )
     if( pyconfig )
       BRAINVISA_INSTALL( FILES "${pyconfig}"
         DESTINATION "include/python${PYTHON_SHORT_VERSION}"

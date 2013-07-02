@@ -69,6 +69,12 @@ if( NOT MINC_volumeio_LIBRARY )
     PATHS ${_directories}
     PATH_SUFFIXES ${_librarySuffixes}
   )
+  if( NOT MINC_volumeio_LIBRARY )
+    find_library( MINC_volumeio_LIBRARY minc_io
+      PATHS ${_directories}
+      PATH_SUFFIXES ${_librarySuffixes}
+    )
+  endif( NOT MINC_volumeio_LIBRARY )
 endif( NOT MINC_volumeio_LIBRARY )
 
 

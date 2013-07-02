@@ -15,7 +15,7 @@ ELSE( MINC_FIND_QUIETLY )
   FIND_PACKAGE(HDF5)
 ENDIF( MINC_FIND_QUIETLY )
 
-IF( NETCDF_FOUND AND HDF5_FOUND )
+IF( NETCDF_FOUND OR HDF5_FOUND )
 
 set( _directories
   "${MINC_DIR}"
@@ -38,13 +38,27 @@ find_library( MINC_minc_LIBRARY minc
     PATHS ${_directories}
     PATH_SUFFIXES ${_librarySuffixes}
 )
-if( NOT MINC_minc_LIBRARY )
-  find_library( MINC_minc_LIBRARY minc2
-    PATHS ${_directories}
-    PATH_SUFFIXES ${_librarySuffixes}
-  )
-endif( NOT MINC_minc_LIBRARY )
 
+if( HDF5_FOUND )
+  find_path( MINC2_INCLUDE_DIR minc2.h
+      PATHS ${_directories}
+      PATH_SUFFIXES ${_includeSuffixes}
+  )
+
+  if( MINC2_INCLUDE_DIR )
+    set( MINC2_FOUND "1" )
+    if( NOT MINC_INCLUDE_DIR )
+      set( MINC_INCLUDE_DIR ${MINC2_INCLUDE_DIR} )
+    endif()
+
+    if( NOT MINC_minc_LIBRARY )
+      find_library( MINC_minc_LIBRARY minc2
+        PATHS ${_directories}
+        PATH_SUFFIXES ${_librarySuffixes}
+      )
+    endif( NOT MINC_minc_LIBRARY )
+  endif()
+endif()
 
 find_library( MINC_volumeio_LIBRARY volume_io
     PATHS ${_directories}
@@ -86,6 +100,6 @@ IF( NOT MINC_FOUND )
   MARK_AS_ADVANCED( MINC_DIR )
 ENDIF( NOT MINC_FOUND )
 
-ELSE( NETCDF_FOUND AND HDF5_FOUND )
-  MESSAGE("Minc libraries requires Netcdf and Hdf5 libraries to be set.")
-ENDIF( NETCDF_FOUND AND HDF5_FOUND )
+ELSE( NETCDF_FOUND OR HDF5_FOUND )
+  MESSAGE("Minc libraries requires Netcdf or Hdf5 libraries to be set.")
+ENDIF( NETCDF_FOUND OR HDF5_FOUND )

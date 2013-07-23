@@ -40,6 +40,9 @@ set( _shareSuffixes
   share/dcmtk
   dcmtk/share/dcmtk
 )
+
+# include directory config
+
 if( NOT DCMTK_PRE_353 )
   find_path( DCMTK_config_INCLUDE_DIR config/osconfig.h
     PATHS ${_directories}
@@ -81,91 +84,191 @@ if( DCMTK_PRE_353 )
 else()
   # For DCMTK >= 3.5.4
 
-
-  find_path( DCMTK_ofstd_INCLUDE_DIR dcmtk/ofstd/ofstdinc.h
-    PATHS ${_directories}
-    PATH_SUFFIXES ${_includeSuffixes}
-  )
-
-  # For DCMTK >= 3.6.0
-  find_path( DCMTK_oflog_INCLUDE_DIR dcmtk/oflog/logger.h
-    PATHS ${_directories}
-    PATH_SUFFIXES ${_includeSuffixes}
-  )
-
+  # include directory dcmdata
   find_path( DCMTK_dcmdata_INCLUDE_DIR dcmtk/dcmdata/dctypes.h
     PATHS ${_directories}
     PATH_SUFFIXES ${_includeSuffixes}
   )
 
-  find_path( DCMTK_dcmnet_INCLUDE_DIR dcmtk/dcmnet/dcmtrans.h
+  # include directory dcmimage
+  find_path( DCMTK_dcmimage_INCLUDE_DIR dcmtk/dcmimage/diargimg.h
     PATHS ${_directories}
     PATH_SUFFIXES ${_includeSuffixes}
   )
 
-  find_path( DCMTK_dcmtls_INCLUDE_DIR dcmtk/dcmtls/tlslayer.h
-    PATHS ${_directories}
-    PATH_SUFFIXES ${_includeSuffixes}
-  )
-
+  # include directory dcmimgle
   find_path( DCMTK_dcmimgle_INCLUDE_DIR dcmtk/dcmimgle/dcmimage.h
     PATHS ${_directories}
     PATH_SUFFIXES ${_includeSuffixes}
   )
 
+  # include directory dcmjpeg
   find_path( DCMTK_dcmjpeg_INCLUDE_DIR dcmtk/dcmjpeg/djdijg16.h
     PATHS ${_directories}
     PATH_SUFFIXES ${_includeSuffixes}
   )
 
+  # include directory dcmjpls
+  find_path( DCMTK_dcmjpls_INCLUDE_DIR dcmtk/dcmjpls/djcodecd.h
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
+  )
+
+  # include directory dcmnet
+  find_path( DCMTK_dcmnet_INCLUDE_DIR dcmtk/dcmnet/dcmtrans.h
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
+  )
+
+  # include directory dcmpstat
+  find_path( DCMTK_dcmpstat_INCLUDE_DIR dcmtk/dcmpstat/dcmpstat.h
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
+  )
+
+  # include directory dcmqrdb
+  find_path( DCMTK_dcmqrdb_INCLUDE_DIR dcmtk/dcmqrdb/dcmqrdba.h
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
+  )
+
+  # include directory dcmsign
+  find_path( DCMTK_dcmsign_INCLUDE_DIR dcmtk/dcmsign/dcsignat.h
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
+  )
+
+  # include directory dcmsr
+  find_path( DCMTK_dcmsr_INCLUDE_DIR dcmtk/dcmsr/dsrbascc.h
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
+  )
+
+  # include directory dcmtls
+  find_path( DCMTK_dcmtls_INCLUDE_DIR dcmtk/dcmtls/tlslayer.h
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
+  )
+
+  # include directory dcmwlm
+  find_path( DCMTK_dcmwlm_INCLUDE_DIR dcmtk/dcmwlm/wldsfs.h
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
+  )
+
+  # include directory oflog
+  find_path( DCMTK_oflog_INCLUDE_DIR dcmtk/oflog/logger.h
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
+  )
+
+  # include directory ofstd
+  find_path( DCMTK_ofstd_INCLUDE_DIR dcmtk/ofstd/ofstdinc.h
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_includeSuffixes}
+  )
+
+
 endif()
 
-find_library( DCMTK_ofstd_LIBRARY ofstd
-    PATHS ${_directories}
-    PATH_SUFFIXES ${_librarySuffixes}
-)
 
-# For DCMTK >= 3.6.0
-find_library(DCMTK_oflog_LIBRARY oflog
-  PATHS ${_directories}
-  PATH_SUFFIXES ${_librarySuffixes}
-)
-
+# find library dcmdata
 find_library( DCMTK_dcmdata_LIBRARY dcmdata
     PATHS ${_directories}
     PATH_SUFFIXES ${_librarySuffixes}
 )
 
-find_library( DCMTK_dcmnet_LIBRARY dcmnet
+# find library dcmimage
+find_library( DCMTK_dcmdata_LIBRARY dcmdata
     PATHS ${_directories}
     PATH_SUFFIXES ${_librarySuffixes}
 )
 
-find_library( DCMTK_dcmtls_LIBRARY dcmtls
-    PATHS ${_directories}
-    PATH_SUFFIXES ${_librarySuffixes}
-)
-
+# find library dcmimgle
 find_library( DCMTK_dcmimgle_LIBRARY dcmimgle
     PATHS ${_directories}
     PATH_SUFFIXES ${_librarySuffixes}
 )
 
+# find library dcmjpeg
 find_library(DCMTK_dcmjpeg_LIBRARY dcmjpeg
   PATHS ${_libraryDirectories}
   PATH_SUFFIXES ${_pathSuffixes}
 )
 
+# find library dcmjpls
+find_library(DCMTK_dcmjpls_LIBRARY dcmjpls
+  PATHS ${_libraryDirectories}
+  PATH_SUFFIXES ${_pathSuffixes}
+)
+
+# find library dcmnet
+find_library( DCMTK_dcmnet_LIBRARY dcmnet
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_librarySuffixes}
+)
+
+# find library dcmpstat
+find_library( DCMTK_dcmpstat_LIBRARY dcmpstat
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_librarySuffixes}
+)
+
+# find library dcmqrdb
+find_library( DCMTK_dcmqrdb_LIBRARY dcmqrdb
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_librarySuffixes}
+)
+
+# find library dcmdsig
+find_library( DCMTK_dcmdsig_LIBRARY dcmdsig
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_librarySuffixes}
+)
+
+# find library dcmsr
+find_library( DCMTK_dcmsr_LIBRARY dcmsr
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_librarySuffixes}
+)
+
+# find library dcmtls
+find_library( DCMTK_dcmtls_LIBRARY dcmtls
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_librarySuffixes}
+)
+
+# find library dcmwlm
+find_library( DCMTK_dcmwlm_LIBRARY dcmwlm
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_librarySuffixes}
+)
+
+# find library oflog
+find_library(DCMTK_oflog_LIBRARY oflog
+  PATHS ${_directories}
+  PATH_SUFFIXES ${_librarySuffixes}
+)
+
+# find library ofstd
+find_library( DCMTK_ofstd_LIBRARY ofstd
+    PATHS ${_directories}
+    PATH_SUFFIXES ${_librarySuffixes}
+)
+
+# find library ijg8
 find_library(DCMTK_ijg8_LIBRARY ijg8
   PATHS ${_libraryDirectories}
   PATH_SUFFIXES ${_pathSuffixes}
 )
 
+# find library ijg12
 find_library(DCMTK_ijg12_LIBRARY ijg12
   PATHS ${_libraryDirectories}
   PATH_SUFFIXES ${_pathSuffixes}
 )
 
+# find library ijg16
 find_library(DCMTK_ijg16_LIBRARY ijg16
   PATHS ${_libraryDirectories}
   PATH_SUFFIXES ${_pathSuffixes}
@@ -197,44 +300,65 @@ if( DCMTK_config_INCLUDE_DIR AND
       ${DCMTK_dcmdata_INCLUDE_DIR}
       ${DCMTK_config_INCLUDE_DIR}
       ${DCMTK_config_INCLUDE_DIR}/dcmtk/config
-      ${DCMTK_ofstd_INCLUDE_DIR}/dcmtk/ofstd
       ${DCMTK_dcmdata_INCLUDE_DIR}/dcmtk/dcmdata
+      ${DCMTK_dcmimage_INCLUDE_DIR}/dcmtk/dcmdata
       ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtk/dcmnet
       ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtk/dcmtls
       ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtk/dcmimgle
       ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtk/dcmjpeg
-#      ${DCMTK_config_INCLUDE_DIR}/config
-#      ${DCMTK_ofstd_INCLUDE_DIR}/ofstd
-#      ${DCMTK_dcmdata_INCLUDE_DIR}/dcmdata
-#      ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmnet
-#      ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtls
-#      ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmimgle
-#      ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmjpeg
+      ${DCMTK_ofstd_INCLUDE_DIR}/dcmtk/ofstd
     )
   ENDIF()
 
   # For DCMTK >= 3.6.0
   IF(DCMTK_oflog_LIBRARY)
    SET(DCMTK_INCLUDE_DIR
-     ${DCMTK_INCLUDE_DIR}
-     ${DCMTK_oflog_INCLUDE_DIR}/oflog
+     ${DCMTK_config_INCLUDE_DIR}
+     ${DCMTK_config_INCLUDE_DIR}/dcmtk/config
+     ${DCMTK_dcmdata_INCLUDE_DIR}/dcmtk/dcmdata
+     ${DCMTK_dcmimage_INCLUDE_DIR}/dcmtk/dcmimage
+     ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtk/dcmimgle
+     ${DCMTK_dcmjpeg_INCLUDE_DIR}/dcmtk/dcmjpeg
+     ${DCMTK_dcmjpls_INCLUDE_DIR}/dcmtk/dcmjpls
+     ${DCMTK_dcmnet_INCLUDE_DIR}/dcmtk/dcmnet
+     ${DCMTK_dcmpstat_INCLUDE_DIR}/dcmtk/dcmpstat
+     ${DCMTK_dcmqrdb_INCLUDE_DIR}/dcmtk/dcmqrdb
+     ${DCMTK_dcmsign_INCLUDE_DIR}/dcmtk/dcmsign
+     ${DCMTK_dcmsr_INCLUDE_DIR}/dcmtk/dcmsr
+     ${DCMTK_dcmtls_INCLUDE_DIR}/dcmtk/dcmtls
+     ${DCMTK_dcmwlm_INCLUDE_DIR}/dcmtk/dcmwlm
      ${DCMTK_oflog_INCLUDE_DIR}/dcmtk/oflog
+     ${DCMTK_ofstd_INCLUDE_DIR}/dcmtk/ofstd
    )
    SET(DCMTK_LIBRARIES
-     ${DCMTK_LIBRARIES}
-     ${DCMTK_dcmimgle_LIBRARY}
+     ${DCMTK_dcmjpeg_LIBRARY}
      ${DCMTK_dcmdata_LIBRARY}
-     ${DCMTK_oflog_LIBRARY}
+     ${DCMTK_dcmimage_LIBRARY}
+     ${DCMTK_dcmimgle_LIBRARY}
+     ${DCMTK_dcmnet_LIBRARY}
+     ${DCMTK_dcmpstat_LIBRARY}
+     ${DCMTK_dcmqrdb_LIBRARY}
+     ${DCMTK_dcmsr_LIBRARY}
+     ${DCMTK_dcmtls_LIBRARY}
+     ${DCMTK_ijg12_LIBRARY}
+     ${DCMTK_ijg16_LIBRARY}
+     ${DCMTK_ijg8_LIBRARY}
      ${DCMTK_ofstd_LIBRARY}
-     ${DCMTK_config_LIBRARY}
+     ${DCMTK_oflog_LIBRARY}
    )
   ELSE(DCMTK_oflog_LIBRARY)
     SET( DCMTK_LIBRARIES
       ${DCMTK_dcmimgle_LIBRARY}
       ${DCMTK_dcmdata_LIBRARY}
       ${DCMTK_ofstd_LIBRARY}
-      ${DCMTK_config_LIBRARY}
-  )
+    )
+    IF(DCMTK_dcmnet_LIBRARY)
+      SET( DCMTK_LIBRARIES
+      ${DCMTK_dcmnet_LIBRARY}
+      ${DCMTK_LIBRARIES}
+      )
+    ENDIF(DCMTK_dcmnet_LIBRARY)
+
   ENDIF(DCMTK_oflog_LIBRARY)
 
   IF( APPLE )
@@ -244,65 +368,40 @@ if( DCMTK_config_INCLUDE_DIR AND
     endif( ZLIB_FOUND )
   ENDIF( APPLE )
 
-  IF(DCMTK_dcmjpeg_LIBRARY)
-   SET(DCMTK_LIBRARIES
-   ${DCMTK_LIBRARIES}
-   ${DCMTK_dcmjpeg_LIBRARY}
-   )
-  ENDIF(DCMTK_dcmjpeg_LIBRARY)
-
-  IF(DCMTK_ijg8_LIBRARY)
-   SET(DCMTK_LIBRARIES
-   ${DCMTK_LIBRARIES}
-   ${DCMTK_ijg8_LIBRARY}
-   )
-  ENDIF(DCMTK_ijg8_LIBRARY)
-  
-  IF(DCMTK_ijg12_LIBRARY)
-   SET(DCMTK_LIBRARIES
-   ${DCMTK_LIBRARIES}
-   ${DCMTK_ijg12_LIBRARY}
-   )
-  ENDIF(DCMTK_ijg12_LIBRARY)
-
-  IF(DCMTK_ijg16_LIBRARY)
-   SET(DCMTK_LIBRARIES
-   ${DCMTK_LIBRARIES}
-   ${DCMTK_ijg16_LIBRARY}
-   )
-  ENDIF(DCMTK_ijg16_LIBRARY)
-
   IF(DCMTK_dcmnet_LIBRARY)
-   SET( DCMTK_LIBRARIES
-   ${DCMTK_dcmnet_LIBRARY}
-   ${DCMTK_LIBRARIES}
-   )
    IF(EXISTS /etc/debian_version AND EXISTS /lib64/libwrap.so.0)
      SET( DCMTK_LIBRARIES
      ${DCMTK_LIBRARIES}
      /lib64/libwrap.so.0
      )
    ELSE()
-    IF(EXISTS /etc/redhat-release AND EXISTS /usr/lib64/libwrap.so.0)
-      SET( DCMTK_LIBRARIES
-      ${DCMTK_LIBRARIES}
-      /usr/lib64/libwrap.so.0
-      )
-    ELSE()
-      IF(EXISTS /etc/debian_version AND EXISTS /lib/libwrap.so.0)
-        SET( DCMTK_LIBRARIES
-        ${DCMTK_LIBRARIES}
-        /lib/libwrap.so.0
-        )
-      ELSE()
-        IF(EXISTS /etc/redhat-release AND EXISTS /usr/lib/libwrap.so.0)
-          SET( DCMTK_LIBRARIES
-          ${DCMTK_LIBRARIES}
-          /usr/lib/libwrap.so.0
-          )
-        ENDIF(EXISTS /etc/redhat-release AND EXISTS /usr/lib/libwrap.so.0)
-      ENDIF(EXISTS /etc/debian_version AND EXISTS /lib/libwrap.so.0)
-    ENDIF()
+     IF(EXISTS /etc/debian_version AND EXISTS /usr/lib/libwrap.so)
+       SET( DCMTK_LIBRARIES
+     	 ${DCMTK_LIBRARIES}
+     	 /usr/lib/libwrap.so
+       )
+     ELSE()
+       IF(EXISTS /etc/redhat-release AND EXISTS /usr/lib64/libwrap.so.0)
+     	 SET( DCMTK_LIBRARIES
+     	 ${DCMTK_LIBRARIES}
+     	 /usr/lib64/libwrap.so.0
+     	 )
+       ELSE()
+     	 IF(EXISTS /etc/debian_version AND EXISTS /lib/libwrap.so.0)
+     	   SET( DCMTK_LIBRARIES
+     	   ${DCMTK_LIBRARIES}
+     	   /lib/libwrap.so.0
+     	   )
+     	 ELSE()
+     	   IF(EXISTS /etc/redhat-release AND EXISTS /usr/lib/libwrap.so.0)
+     	     SET( DCMTK_LIBRARIES
+     	     ${DCMTK_LIBRARIES}
+     	     /usr/lib/libwrap.so.0
+     	     )
+     	   ENDIF(EXISTS /etc/redhat-release AND EXISTS /usr/lib/libwrap.so.0)
+     	 ENDIF(EXISTS /etc/debian_version AND EXISTS /lib/libwrap.so.0)
+       ENDIF()
+     ENDIF()
    ENDIF()
 
   ENDIF(DCMTK_dcmnet_LIBRARY)
@@ -310,7 +409,7 @@ if( DCMTK_config_INCLUDE_DIR AND
   if( DCMTK_dcmtls_LIBRARY )
     find_package( OpenSSL )
     if( OPENSSL_FOUND )
-      set( DCMTK_LIBRARIES ${OPENSSL_LIBRARIES} "${DCMTK_dcmtls_LIBRARY}" ${DCMTK_LIBRARIES} )
+      set( DCMTK_LIBRARIES ${DCMTK_LIBRARIES} ${OPENSSL_LIBRARIES}  )
     endif()
   endif()
 

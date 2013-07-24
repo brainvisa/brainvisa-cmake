@@ -9,7 +9,7 @@
 # OPENSLIDE_VERSION - version of OpenSlide used
 
 find_package(PkgConfig)
-if(PkgConfig_FOUND) # OpenSlide search is supported only through pkg_config.
+if(PKG_CONFIG_FOUND) # OpenSlide search is supported only through pkg_config.
   pkg_search_module(_OPENSLIDE openslide)
   if(_OPENSLIDE_FOUND)
     find_library( OPENSLIDE_LIBRARIES ${_OPENSLIDE_LIBRARIES}

@@ -3,7 +3,6 @@
 
 import sys, os
 from optparse import OptionParser
-import subprocess
 
 parser = OptionParser( description = 'Convert version number from string version or hexadecimal version.',
                        usage = '%prog [options] [dirnames]' )
@@ -13,13 +12,13 @@ parser.add_option( '-v', '--ver', dest='version',
                    
 parser.add_option( '-x', '--hex', dest='hexaver', 
                    action = 'store_true',
-                   default = False,
-                   help = 'Version is an hexadecimal value [default = False].' )
+                   default = True,
+                   help = 'Convert version to an hexadecimal value [default = True].' )
                    
 parser.add_option( '-s', '--str', dest='strver', 
                    action = 'store_true',
-                   default = True,
-                   help = 'Version is a string value [default = True].' )
+                   default = False,
+                   help = 'Convert version to a string value [default = False].' )
                    
 parser.add_option( '-B', '--bytes', dest = 'bytes', 
                    type = 'int',
@@ -28,8 +27,8 @@ parser.add_option( '-B', '--bytes', dest = 'bytes',
                    
 (options, args) = parser.parse_args()
 
-if options.hexaver :
-  options.strver = False
+if options.strver :
+  options.hexaver = False
   
 if not os.isatty( sys.stdin.fileno() ) :
   # We are connected to a file or a pipe through 
@@ -45,21 +44,35 @@ else :
 
 bits = 8 * options.bytes
 for v in versions :
-  if options.hexaver :
-    r = int(v, 0)
-    ver = []
-    while r:
-      ver.insert(0, str(r % pow(2, bits)) )
-      r >>= bits
-      
-    print >> sys.stdout, '.'.join(ver)
-    
+  v = v.rstrip()
   if options.strver :
-    ver = v.split('.')
-    r = 0
-    for c in ver:
-      r <<= bits
-      r += int(c)
+    # Convert hexadecimal version to string version
+    try :
+      r = int(v, 0)
+      ver = []
+      while r:
+        ver.insert(0, str(r % pow(2, bits)) )
+        r >>= bits
+        
+      print >> sys.stdout, '.'.join(ver)
       
-    print >> sys.stdout, hex(r)
+    except ValueError, e:
+      print >> sys.stderr, 'Value \'%s\' is not a valid hexadecimal version value.' % v
+      sys.exit(1)
     
+  if options.hexaver :
+    # Convert string version to hexadecimal version
+    try:
+      ver = v.split('.')
+      r = 0
+      for c in ver:
+        r <<= bits
+        r += int(c)
+        
+      print >> sys.stdout, hex(r)
+        
+    except ValueError, e:
+      print >> sys.stderr, 'Value \'%s\' is not a valid string version value.' % v
+      sys.exit(1)
+
+sys.exit(0)

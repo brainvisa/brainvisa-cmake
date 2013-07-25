@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import sys, os
+from optparse import OptionParser
+import subprocess
+
+parser = OptionParser( description = 'Convert version number from string version or hexadecimal version.',
+                       usage = '%prog [options] [dirnames]' )
+parser.add_option( '-v', '--ver', dest='version', 
+                   default = None,
+                   help = 'Version given as an hexadecimal value.' )
+                   
+parser.add_option( '-x', '--hex', dest='hexaver', 
+                   action = 'store_true',
+                   default = False,
+                   help = 'Version is an hexadecimal value [default = False].' )
+                   
+parser.add_option( '-s', '--str', dest='strver', 
+                   action = 'store_true',
+                   default = True,
+                   help = 'Version is a string value [default = True].' )
+                   
+parser.add_option( '-B', '--bytes', dest = 'bytes', 
+                   type = 'int',
+                   default = 1,
+                   help = 'Number of bytes used to encode version number [default = 1].' )
+                   
+(options, args) = parser.parse_args()
+
+if options.hexaver :
+  options.strver = False
+  
+if not os.isatty( sys.stdin.fileno() ) :
+  # We are connected to a file or a pipe through 
+  # standard input so we must read data from stdin
+  versions = sys.stdin.readlines()
+
+else :
+  if options.version :
+    versions = [options.version]
+  else :
+    print >> sys.stderr, 'No input version specified, please specify one using -v option.'
+    sys.exit(1)
+
+bits = 8 * options.bytes
+for v in versions :
+  if options.hexaver :
+    r = int(v, 0)
+    ver = []
+    while r:
+      ver.insert(0, str(r % pow(2, bits)) )
+      r >>= bits
+      
+    print >> sys.stdout, '.'.join(ver)
+    
+  if options.strver :
+    ver = v.split('.')
+    r = 0
+    for c in ver:
+      r <<= bits
+      r += int(c)
+      
+    print >> sys.stdout, hex(r)
+    

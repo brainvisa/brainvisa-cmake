@@ -396,6 +396,74 @@ function( BRAINVISA_DECLARE_THIRDPARTY_COMPONENT component )
 endfunction()
 
 
+# BRAINVISA_VERSION_CONVERT
+#   Convert version number either to hexadecimal version 
+#   either to string version.
+#
+# Usage:
+#   BRAINVISA_VERSION_CONVERT( <variable> version [HEX] [STR] [BYTES <number_of_bytes>] )
+#
+# Example:
+#   BRAINVISA_VERSION_CONVERT( result "0x30206" STR )
+#   BRAINVISA_VERSION_CONVERT( result "3.2.6" HEX BYTES 2 )
+#
+function( BRAINVISA_VERSION_CONVERT variable version )
+  set( _args "${ARGN}" )
+  
+  # Read HEX option
+  list( FIND _args HEX _result )
+  if( _result EQUAL -1 )
+    set( _hex FALSE )
+  else()
+    set( _hex TRUE )
+    list( REMOVE_AT _args ${_result} )
+  endif()
+
+  # Read STR option
+  list( FIND _args STR _result )
+  if( _result EQUAL -1 )
+    set( _str FALSE )
+  else()
+    set( _str TRUE )
+    list( REMOVE_AT _args ${_result} )
+  endif()
+
+  # Read GET_OUTPUT_FILES option
+  list( FIND _args BYTES _result )
+  if( _result EQUAL -1 )
+    set( _bytes 1 )
+  else()
+    list( REMOVE_AT _args ${_result} )
+    list( GET _args ${_result} _bytes )
+    list( REMOVE_AT _files ${_result} )
+  endif()
+
+  if (_str)
+    set(_opt -s)
+  else()
+    set(_opt -x)
+  endif()
+
+  unset(_result)
+  execute_process( COMMAND "${brainvisa-cmake_DIR}/../../../bin/bv_version" -v ${version} ${_opt} -B ${_bytes}
+                   OUTPUT_VARIABLE ${variable} OUTPUT_STRIP_TRAILING_WHITESPACE
+                   ERROR_VARIABLE _error ERROR_STRIP_TRAILING_WHITESPACE
+                   RESULT_VARIABLE _result )
+
+  if( ${variable} AND _result EQUAL 0 )
+    set(${variable} ${${variable}} PARENT_SCOPE)
+  else()
+    message(FATAL_ERROR "${_error}" )
+  endif()
+
+  unset(_args)
+  unset(_hex)
+  unset(_str)
+  unset(_bytes)
+  unset(_result)
+  unset(_opt)
+endfunction()
+
 # BRAINVISA_SET_PROJECT_VERSION
 #   Read the VERSION file in "${PROJECT_SOURCE_DIR} and parse it to set the
 #   following variables:

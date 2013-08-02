@@ -2442,6 +2442,8 @@ endfunction()
 function( BRAINVISA_PYUIC source_ui_file dest_py_file relative_path )
   if( PYUIC )
     BRAINVISA_GENERATE_TARGET_NAME( target )
+    # ensure the working directory will exist
+    file( MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/${relative_path}" )
     add_custom_command(
       OUTPUT "${CMAKE_BINARY_DIR}/${relative_path}/${dest_py_file}"
       COMMAND ${PYUIC} -o "${dest_py_file}" "${source_ui_file}"

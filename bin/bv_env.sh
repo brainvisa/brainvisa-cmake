@@ -55,6 +55,6 @@ if [ ! -x "$bv_env" ]; then
   bv_env=bv_env
 fi
 
-"$bv_env" > "$tmp"
+"$bv_env" >| "$tmp"
 . "$tmp"
 \rm "$tmp"

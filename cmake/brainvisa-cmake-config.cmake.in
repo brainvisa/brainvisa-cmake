@@ -123,10 +123,11 @@ macro( BRAINVISA_PROJECT )
   if(NOT CPack_CMake_INCLUDED)
     include( CPack )
   endif()
-  
+
   set( ${PROJECT_NAME}_TARGET_COUNT 0 CACHE INTERNAL "Used to generate new targets" )
+  set( ${PROJECT_NAME}-commands "" CACHE INTERNAL "Commands list for component ${PROJECT_NAME}" )
   BRAINVISA_CREATE_MAIN_COMPONENTS()
-  
+
   set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
   set( CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib" )
   # if ( NOT DEFINED WIN32 )

@@ -2,17 +2,24 @@
 # -*- coding: utf-8 -*-
 
 import sys, os
+from optparse import OptionParser
+import subprocess
 
-if len( sys.argv ) >= 2:
-  basedirs = sys.argv[1:]
-  if '-h' in basedirs or '--help' in basedirs:
-    print 'usage:'
-    print sys.argv[0], '[dir1] [dir2] [...]'
-    print 'Clean build directory / directories'
-    print 'If no dir is specified, the current directory is assumed.'
-    print 'Dead links and obsolete python modules (.pyc and .pyo files without a valid .py file next to them) are removed.'
-else:
+parser = OptionParser( description = 'Clean build directory / directories'
+    'If no dir is specified, the current directory is assumed.'
+    'Dead links and obsolete python modules (.pyc and .pyo files without a valid .py file next to them) are removed.',
+    usage='%prog [options] [dirnames]' )
+parser.add_option( '-b', '--bin', dest='binaries', action='store_true',
+  help='also check in all entries in bin/ are still present in Makefile, or obsolete, and erase them if not. Needs to have configured and up-to-date Makefiles' )
+
+(options, args) = parser.parse_args()
+
+if len( args ) == 0:
   basedirs = [ '.' ]
+else:
+  basedirs = args
+
+basedirs0 = list( basedirs )
 
 while basedirs:
   d = basedirs.pop()
@@ -29,4 +36,32 @@ while basedirs:
       if not os.path.exists( pyfile ):
         print 'rm obsolete module', path
         os.unlink( path )
+
+if options.binaries:
+  cwd = os.getcwd()
+  skipped = {}
+  for d in basedirs0:
+    os.chdir( d )
+    bindir = os.path.join( d, 'bin' )
+    if os.path.exists( bindir ):
+      for f in os.listdir( bindir ):
+        if not os.path.islink( os.path.join( bindir, f ) ):
+          if f.startswith( 'bv_' ):
+            sk = skipped.setdefault( bindir, [] )
+            sk.append( f )
+            #print 'skipping', f, '(may be part of bv_cmake)'
+          else:
+            sp = subprocess.Popen( [ 'make', '-q', f ], stdout=subprocess.PIPE,
+              stdin=subprocess.PIPE, stderr=subprocess.PIPE )
+            sp.communicate()
+            code = sp.wait()
+            if code == 2:
+              print 'rm obsolete command', f
+              os.unlink( os.path.join( bindir, f ) )
+  for d, items in skipped.iteritems():
+    print '-- skipped from', d
+    for f in items:
+      print 'skipped', f, '(may be part of bv_cmake)'
+  os.chdir( cwd )
+
 

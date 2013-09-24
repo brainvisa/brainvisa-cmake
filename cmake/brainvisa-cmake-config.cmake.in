@@ -446,7 +446,7 @@ function( BRAINVISA_VERSION_CONVERT variable version )
   endif()
 
   unset(_result)
-  execute_process( COMMAND "${brainvisa-cmake_DIR}/../../../bin/bv_version" -v ${version} ${_opt} -B ${_bytes}
+  execute_process( COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env" "${PYTHON_EXECUTABLE}" "${brainvisa-cmake_DIR}/../../../bin/bv_version" -v ${version} ${_opt} -B ${_bytes}
                    OUTPUT_VARIABLE ${variable} OUTPUT_STRIP_TRAILING_WHITESPACE
                    ERROR_VARIABLE _error ERROR_STRIP_TRAILING_WHITESPACE
                    RESULT_VARIABLE _result )

@@ -8,7 +8,7 @@ parser = OptionParser( description = 'Convert version number from string version
                        usage = '%prog [options] [dirnames]' )
 parser.add_option( '-v', '--ver', dest='version', 
                    default = None,
-                   help = 'Version given as an hexadecimal value.' )
+                   help = 'Version given as an hexadecimal value. If not specified, version is read from the standard input.' )
                    
 parser.add_option( '-x', '--hex', dest='hexaver', 
                    action = 'store_true',
@@ -29,18 +29,17 @@ parser.add_option( '-B', '--bytes', dest = 'bytes',
 
 if options.strver :
   options.hexaver = False
-  
-if not os.isatty( sys.stdin.fileno() ) :
+
+#if not os.isatty( sys.stdin.fileno() ) :
+# isatty() is not a good test: it forbids to run in a cron batch...
+# rather read input when no -v option is specified.
+if options.version is None:
   # We are connected to a file or a pipe through 
   # standard input so we must read data from stdin
   versions = sys.stdin.readlines()
 
 else :
-  if options.version :
-    versions = [options.version]
-  else :
-    print >> sys.stderr, 'No input version specified, please specify one using -v option.'
-    sys.exit(1)
+  versions = [options.version]
 
 bits = 8 * options.bytes
 for v in versions :

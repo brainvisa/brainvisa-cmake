@@ -333,7 +333,7 @@ int main( int argc, char *argv[] )
     path.push_back( current_directory() );
     for( vector< string >::const_iterator it = path.begin(); it != path.end(); ++it ) {
       vector <string> l = split_path( *it );
-      l.push_back( argv[0] )
+      l.push_back( argv[0] );
       if ( file_exists( join_path( l ) ) ) {
         l.pop_back();
         l.pop_back();

@@ -321,6 +321,7 @@ int main( int argc, char *argv[] )
 #endif
     ) {
       // relative directory
+      while( argv0.size() && argv0[ 0 ] == string( "." ) ) argv0.erase( argv0.begin() );
       vector< string > curdir = split_path( current_directory() );
       argv0.insert( argv0.begin(), curdir.begin(), curdir.end() );
     }
@@ -332,11 +333,12 @@ int main( int argc, char *argv[] )
     path.push_back( current_directory() );
     for( vector< string >::const_iterator it = path.begin(); it != path.end(); ++it ) {
       vector <string> l = split_path( *it );
-      l.push_back( argv[0] );
+      l.push_back( argv[0] )
       if ( file_exists( join_path( l ) ) ) {
         l.pop_back();
         l.pop_back();
         install_directory = join_path( l );
+        break;
       }
     }
   }

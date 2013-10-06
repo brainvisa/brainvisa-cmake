@@ -511,9 +511,9 @@ def create_compressed_package( options, selected_packages, dependencies ):
   if not options.output:
     raise UserWarning( 'Ouput file name must be given for this command' )
   # on windows the size of filename is limited, so brainvisa pack cannot be installed in a too long path
-  # and default tmp directory is too long, so use d:/tmp if it exists instead of default tmp directory
-  if ((sys.platform[:3] == 'win') and (os.path.exists("d:/tmp"))):
-    temp_directory = tempfile.mkdtemp(dir="d:/tmp")
+  # and default tmp directory is too long, so use c:/tmp if it exists instead of default tmp directory
+  if ((sys.platform[:3] == 'win') and (os.path.exists("c:/tmp"))):
+    temp_directory = tempfile.mkdtemp(dir="c:/tmp")
   else:
     temp_directory = tempfile.mkdtemp()
   

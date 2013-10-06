@@ -470,7 +470,7 @@ int main( int argc, char *argv[] )
     // }
     
     // Command call
-    int res = spawnvp( P_WAIT, argv[1], &args[0] );
+    int res = spawnvp( P_WAIT, argv[1], (char * const *)&args[0] );
     
     // Free allocated memory
     for(int i = 0; i < args.size(); i++) {

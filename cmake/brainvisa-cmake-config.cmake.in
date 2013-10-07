@@ -1551,7 +1551,20 @@ MACRO( BRAINVISA_GENERATE_DOXYGEN_DOC _inputVariable )
                       COPYONLY )
       SET( _generatedFiles ${_generatedFiles} "${DOXYFILE_HTML_OUTPUT}/${_file}" "${_doxygenBinaryDir}/${_file}" )
     ENDFOREACH( _file ${ARGN} )
-  
+
+    if( DOXYFILE_PREDEFINED )
+      # preprocess DOXYFILE_PREDEFINED items
+      set( _predefined )
+      foreach( _predef ${DOXYFILE_PREDEFINED} )
+        if( _predefined )
+          set( _predefined "${predefined} \"${_predef}\"" )
+        else()
+          set( _predefined "\"${_predef}\"" )
+        endif()
+      endforeach()
+      set( DOXYFILE_PREDEFINED ${_predefined} )
+    endif()
+
     CONFIGURE_FILE( "${brainvisa-cmake_DIR}/Doxyfile.in" "${_doxygenBinaryDir}/Doxyfile" @ONLY )
     #BRAINVISA_GENERATE_TARGET_NAME( _target )
     set(_target "${component}-doxygen")

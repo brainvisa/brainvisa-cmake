@@ -1,6 +1,5 @@
 # Find specific windows regex package
 FIND_PATH(LIBREGEX_INCLUDE_DIR NAMES regex.h)
-
 FIND_LIBRARY(LIBREGEX_LIBRARIES NAMES regex)
 
 # handle the QUIETLY and REQUIRED arguments and set LIBREGEX_FOUND to TRUE if 

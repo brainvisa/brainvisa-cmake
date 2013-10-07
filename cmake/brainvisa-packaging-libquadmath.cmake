@@ -13,11 +13,6 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
       break()
     endif()
   endforeach()
-  
-  if (WIN32)
-    # Add dependency to the quadmath library
-    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libquadmath RUN )
-  endif()
 endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )

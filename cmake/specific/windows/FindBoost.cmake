@@ -14,7 +14,7 @@ foreach( _item ${CMAKE_MODULE_PATH_PREV} )
 endforeach()
 
 # Search boost directory using path
-set(Boost_ADDITIONAL_VERSIONS 1.43.0 1.43)
+set(Boost_ADDITIONAL_VERSIONS 1.51.0 1.51)
 
 # Find system boost package
 find_package( Boost NO_POLICY_SCOPE )

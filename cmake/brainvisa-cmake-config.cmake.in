@@ -129,12 +129,12 @@ macro( BRAINVISA_PROJECT )
   BRAINVISA_CREATE_MAIN_COMPONENTS()
 
   set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
-  set( CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib" )
-  # if ( NOT DEFINED WIN32 )
-    # set( CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib" )
-  # else()
-    # set( CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
-  # endif()
+  if ( WIN32 )
+    # This is necessary for modules to be copied in bin directory
+    set( CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
+  else()
+    set( CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib" )
+  endif()
   
   # Initialize dependency variables
   if( "${BRAINVISA_PACKAGE_TYPE}" STREQUAL "deb" )
@@ -1551,7 +1551,20 @@ MACRO( BRAINVISA_GENERATE_DOXYGEN_DOC _inputVariable )
                       COPYONLY )
       SET( _generatedFiles ${_generatedFiles} "${DOXYFILE_HTML_OUTPUT}/${_file}" "${_doxygenBinaryDir}/${_file}" )
     ENDFOREACH( _file ${ARGN} )
-  
+
+    if( DOXYFILE_PREDEFINED )
+      # preprocess DOXYFILE_PREDEFINED items
+      set( _predefined )
+      foreach( _predef ${DOXYFILE_PREDEFINED} )
+        if( _predefined )
+          set( _predefined "${predefined} \"${_predef}\"" )
+        else()
+          set( _predefined "\"${_predef}\"" )
+        endif()
+      endforeach()
+      set( DOXYFILE_PREDEFINED ${_predefined} )
+    endif()
+
     CONFIGURE_FILE( "${brainvisa-cmake_DIR}/Doxyfile.in" "${_doxygenBinaryDir}/Doxyfile" @ONLY )
     #BRAINVISA_GENERATE_TARGET_NAME( _target )
     set(_target "${component}-doxygen")

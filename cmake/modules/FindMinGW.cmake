@@ -7,7 +7,7 @@
 # MINGW_INCLUDE_DIR - the mingw include directory
 # MINGW_SHARE_DIR - the mingw share directory
 
-if( MINGW_ROOT_DIR and MINGW_LIB_DIR and MINGW_INCLUDE_DIR and MINGW_SHARE_DIR)
+if( MINGW_ROOT_DIR AND MINGW_LIB_DIR AND MINGW_INCLUDE_DIR AND MINGW_SHARE_DIR)
   set( MINGW_FOUND TRUE )
 else()
   # Try to find mingw32-make program

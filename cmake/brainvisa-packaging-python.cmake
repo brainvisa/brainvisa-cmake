@@ -88,7 +88,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           COMMAND "sed" "'1" "s/.*[pP]ython.*/\\#\\!\\/usr\\/bin\\/env" "python/'" "${_instname}" ">${_instname}_temp"
           COMMAND "${CMAKE_COMMAND}" -E "copy" "${_instname}_temp" "${_instname}"
           COMMAND "${CMAKE_COMMAND}" -E "remove" "${_instname}_temp"
-          COMMAND "${PYTHON_EXECUTABLE}" "-c" "'import" "os,stat;os.chmod(\"${_instfile}\",stat.S_IRUSR|stat.S_IRGRP|stat.S_IROTH|stat.S_IWUSR|stat.S_IXUSR|stat.S_IXGRP|stat.S_IXOTH)'"
+          COMMAND "chmod" "a+rx" "${_instname}"
           WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/bin")
         endforeach()
       endif()

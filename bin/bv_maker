@@ -99,7 +99,7 @@ def environmentVariablesSubstitution( path ):
       end += offset
       offset += len( variableContent ) - end + start
       result = result[ :start ] + variableContent + result[ end :  ]
-  return result
+  return os.path.normpath( os.path.realpath( os.path.abspath( result ) ) )
 
 
 
@@ -153,7 +153,7 @@ class GlobalConfiguration( object ):
     self.sourcesDirectories = {}
     self.buildDirectories = {}
     
-    directories = [ os.path.normpath(os.path.abspath(d)) for d in options.directories ]
+    directories = [ os.path.normpath(os.path.realpath(os.path.abspath(d))) for d in options.directories ]
     
     for i in ( 'configuration_file', 'username', 'verbose' ):
       setattr( self, i, getattr( options, i ) )

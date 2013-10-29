@@ -98,7 +98,7 @@ date = time.strftime( '%Y_%m_%d' )
 
 # for separate distribution, fmri is not in this list
 # WARNING : it is necessary to use \" instead of ' in commands because DOS does not support simple quotes
-packages="+type=run +type=usrdoc -project=pyhrf -project=fmri -project=famis -project=sandbox -name=\"web*\" -project=axon_web -project=brainvisa-installer -project=development +name=brainvisa-release -name=\"connectomist*\""
+packages="+type=run +type=usrdoc -project=pyhrf -project=fmri -project=famis -project=sandbox -name=\"web*\" -project=axon_web -project=brainvisa-installer -project=development +name=brainvisa-release -name=\"connectomist*\" -name=morphologist_common"
 if not options.i2bm:
   packages += " -project=nuclear_imaging -project=nuclear_processing -project=optical_imaging -project=data_storage_client -name=bioprocessing -name=\"tms*\" -name=baby -name=\"constellation*\""
 

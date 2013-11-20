@@ -132,6 +132,7 @@ groupsDefinition = {
     'aims/*',
     'brainvisa-share/*',
     'soma/soma-base',
+    'soma/soma-io',
     'anatomist/*',
     'development/brainvisa-cmake',
   ],

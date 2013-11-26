@@ -333,7 +333,10 @@ class SourceDirectory( object ):
       if '/' in componentsPattern:
         if '*' in componentsPattern:
           raise SyntaxError()
-        url = SVN_URL + '/' + componentsPattern
+	if componentsPattern.startswith( 'http' ):
+	  url = componentsPattern
+	else:
+	  url = SVN_URL + '/' + componentsPattern
         if self.configuration.verbose:
           print '    adding url:', url
         self.otherComponentsDirectory.add( ( componentsPattern, versionPattern or componentsPattern )  )
@@ -429,7 +432,10 @@ class SourceDirectory( object ):
           print >> externalsFile, url[ len( BRAINVISA_SVN_URL ) + 1: ], url
         print >> externalsFile
     for source, dest in self.otherComponentsDirectory:
-      print >> externalsFile, dest, SVN_URL + '/' + source
+      if source.startswith( 'http' ):
+	print >> externalsFile, dest, source
+      else:
+	print >> externalsFile, dest, SVN_URL + '/' + source
     externalsFile.close()
 
     self.svncommand( 'propset', 'svn:externals', '--file', externalsFileName, self.directory )

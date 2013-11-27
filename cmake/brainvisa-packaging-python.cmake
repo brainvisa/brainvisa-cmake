@@ -55,8 +55,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       COMPONENT "${component}"
       USE_SOURCE_PERMISSIONS )
       add_custom_command( TARGET install-${component} POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "Python.app/Contents/MacOS/Python" "python"
-        WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/bin")
+        COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "Python.app/Contents/MacOS/Python" "$(BRAINVISA_INSTALL_PREFIX)/bin/python")
     else()
       
       # copy or create a link named python that starts the real python executable (ex. python -> python2.6)
@@ -68,8 +67,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           set( command "create_symlink" )
         endif()
         add_custom_command( TARGET install-${component} POST_BUILD
-          COMMAND "${CMAKE_COMMAND}" -E "${command}" "${name}" "python${CMAKE_EXECUTABLE_SUFFIX}"
-          WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/bin")
+          COMMAND "${CMAKE_COMMAND}" -E "${command}" "${name}" "$(BRAINVISA_INSTALL_PREFIX)/bin/python${CMAKE_EXECUTABLE_SUFFIX}" )
       endif()
 
       BRAINVISA_INSTALL( FILES "${REAL_PYTHON_EXECUTABLE}"
@@ -85,11 +83,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         FOREACH(_instfile ${_instfiles})
           get_filename_component( _instname "${_instfile}" NAME )
           add_custom_command( TARGET install-${component} POST_BUILD
-          COMMAND "sed" "'1" "s/.*[pP]ython.*/\\#\\!\\/usr\\/bin\\/env" "python/'" "${_instname}" ">${_instname}_temp"
-          COMMAND "${CMAKE_COMMAND}" -E "copy" "${_instname}_temp" "${_instname}"
-          COMMAND "${CMAKE_COMMAND}" -E "remove" "${_instname}_temp"
-          COMMAND "chmod" "a+rx" "${_instname}"
-          WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/bin")
+          COMMAND "sed" "'1" "s/.*[pP]ython.*/\\#\\!\\/usr\\/bin\\/env" "python/'" "$(BRAINVISA_INSTALL_PREFIX)/bin/${_instname}" ">$(BRAINVISA_INSTALL_PREFIX)/bin/${_instname}_temp"
+          COMMAND "${CMAKE_COMMAND}" -E "copy" "$(BRAINVISA_INSTALL_PREFIX)/bin/${_instname}_temp" "$(BRAINVISA_INSTALL_PREFIX)/bin/${_instname}"
+          COMMAND "${CMAKE_COMMAND}" -E "remove" "$(BRAINVISA_INSTALL_PREFIX)/bin/${_instname}_temp"
+          COMMAND "chmod" "a+rx" "$(BRAINVISA_INSTALL_PREFIX)/bin/${_instname}" )
         endforeach()
       endif()
 
@@ -133,11 +130,34 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
                           PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
       endif()
     else()
-      BRAINVISA_INSTALL(DIRECTORY "${PYTHON_MODULES_PATH}"
-        DESTINATION "lib"
-        USE_SOURCE_PERMISSIONS
-        COMPONENT "${component}"
-      )
+#       BRAINVISA_INSTALL(DIRECTORY "${PYTHON_MODULES_PATH}"
+#         DESTINATION "lib"
+#         USE_SOURCE_PERMISSIONS
+#         COMPONENT "${component}"
+#       )
+      add_custom_command( TARGET install-${component} PRE_BUILD
+        COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then rsync -a --copy-unsafe-links "${PYTHON_MODULES_PATH}" "$(BRAINVISA_INSTALL_PREFIX)/lib"\;else "${CMAKE_COMMAND}" -E rsync -a --copy-unsafe-links "${PYTHON_MODULES_PATH}" "${CMAKE_INSTALL_PREFIX}/lib"\;fi )
+      if( "${PYTHON_BIN_DIR}" STREQUAL "/usr/bin" )
+        # Ubuntu typical system install
+        # fix wrong _get_default_scheme() in sysconfig.py on Ubuntu 12.04
+        add_custom_command( TARGET install-${component} POST_BUILD
+        COMMAND "sed" "\"s/        return 'posix_local'.*/        return 'posix_prefix'/\"" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig.py" ">$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig_temp.py"
+        COMMAND "${CMAKE_COMMAND}" -E "copy" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig_temp.py" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig.py"
+        COMMAND "${CMAKE_COMMAND}" -E "remove" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig_temp.py" )
+
+        set( _toinstall
+          "/usr/lib/pymodules/python${PYTHON_SHORT_VERSION}"
+          "/usr/lib/pyshared/python${PYTHON_SHORT_VERSION}"
+          "/usr/share/pyshared"
+           )
+        foreach( _dir ${_toinstall} )
+          if( EXISTS "${_dir}" )
+            message( "install ${_dir}" )
+            add_custom_command( TARGET install-${component} PRE_BUILD
+              COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then rsync -a --copy-unsafe-links "${_dir}/*" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages"\;else "${CMAKE_COMMAND}" -E rsync -a --copy-unsafe-links "${_dir}/*" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages"\;fi )
+          endif() # EXISTS "${dir}"
+        endforeach()
+      endif() # "${PYTHON_BIN_DIR}" STREQUAL "/usr/bin"
     endif()
 
     # install pyconfig.h file since it may be required by some packages

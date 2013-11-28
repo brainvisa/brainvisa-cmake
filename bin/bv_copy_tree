@@ -98,7 +98,7 @@ if ( os.path.exists( dest ) and not os.path.isdir( dest ) ) or \
 
 bases = options.base
 if len( bases ) == 0:
-    bases = sources[:]
+    bases = [ os.path.dirname(p) for p in sources ]
 
 if not os.path.exists( dest ):
     os.mkdir( dest )
@@ -127,7 +127,7 @@ while sources:
         continue
     x, rpath, base = is_in_base( source, bases )
     destpath = os.path.join( dest, rpath )
-    # if options.verbose: print source, '->', destpath
+    if options.verbose: print source, '->', destpath, x, rpath, base
     is_extlink, spath, is_link, relpath, base \
         = is_external_link( source, bases )
     if is_link:

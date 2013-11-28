@@ -130,15 +130,12 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
                           PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
       endif()
     else()
-#       BRAINVISA_INSTALL(DIRECTORY "${PYTHON_MODULES_PATH}"
-#         DESTINATION "lib"
-#         USE_SOURCE_PERMISSIONS
-#         COMPONENT "${component}"
-#       )
-      add_custom_command( TARGET install-${component} PRE_BUILD
-        COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then rsync -a --copy-unsafe-links "${PYTHON_MODULES_PATH}" "$(BRAINVISA_INSTALL_PREFIX)/lib"\;else "${CMAKE_COMMAND}" -E rsync -a --copy-unsafe-links "${PYTHON_MODULES_PATH}" "${CMAKE_INSTALL_PREFIX}/lib"\;fi )
+
       if( "${PYTHON_BIN_DIR}" STREQUAL "/usr/bin" )
         # Ubuntu typical system install
+        add_custom_command( TARGET install-${component} PRE_BUILD
+          COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" -e "${PYTHON_MODULES_PATH}/dist-packages" "/usr/lib/python${PYTHON_SHORT_VERSION}" "$(BRAINVISA_INSTALL_PREFIX)/lib" \;else ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" -e "${PYTHON_MODULES_PATH}" "/usr/lib/python${PYTHON_SHORT_VERSION}" "${CMAKE_INSTALL_PREFIX}/lib" \; fi )
+
         # fix wrong _get_default_scheme() in sysconfig.py on Ubuntu 12.04
         add_custom_command( TARGET install-${component} POST_BUILD
         COMMAND "sed" "\"s/        return 'posix_local'.*/        return 'posix_prefix'/\"" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig.py" ">$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig_temp.py"
@@ -146,17 +143,24 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         COMMAND "${CMAKE_COMMAND}" -E "remove" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig_temp.py" )
 
         set( _toinstall
-          "/usr/lib/pymodules/python${PYTHON_SHORT_VERSION}"
-          "/usr/lib/pyshared/python${PYTHON_SHORT_VERSION}"
-          "/usr/share/pyshared"
+          "/usr/lib/python${PYTHON_SHORT_VERSION}/dist-packages/*"
+          "/usr/lib/pymodules/python${PYTHON_SHORT_VERSION}/*"
+          "/usr/lib/pyshared/python${PYTHON_SHORT_VERSION}/*"
+          "/usr/share/pyshared/*"
            )
-        foreach( _dir ${_toinstall} )
-          if( EXISTS "${_dir}" )
-            message( "install ${_dir}" )
-            add_custom_command( TARGET install-${component} PRE_BUILD
-              COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then rsync -a --copy-unsafe-links "${_dir}/*" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages"\;else "${CMAKE_COMMAND}" -E rsync -a --copy-unsafe-links "${_dir}/*" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages"\;fi )
-          endif() # EXISTS "${dir}"
-        endforeach()
+
+          add_custom_command( TARGET install-${component} PRE_BUILD
+            COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${CMAKE_COMMAND} -E make_directory "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${_toinstall} "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \;else ${CMAKE_COMMAND} -E make_directory "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${_toinstall} "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \;fi )
+
+          # TODO: add additional /usr/local or /i2bm/... modules
+
+      else() # "${PYTHON_BIN_DIR}" STREQUAL "/usr/bin"
+
+        BRAINVISA_INSTALL(DIRECTORY "${PYTHON_MODULES_PATH}"
+          DESTINATION "lib"
+          USE_SOURCE_PERMISSIONS
+          COMPONENT "${component}"
+        )
       endif() # "${PYTHON_BIN_DIR}" STREQUAL "/usr/bin"
     endif()
 

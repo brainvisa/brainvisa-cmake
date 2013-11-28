@@ -1,0 +1,158 @@
+#!/usr/bin/env python
+
+from optparse import OptionParser
+import os, sys
+import shutil
+
+def realrealpath( path ):
+    return os.path.abspath( os.path.normpath( os.path.realpath( path ) ) )
+
+
+def is_in_base( path, bases ):
+    rpath = os.path.normpath( os.path.abspath( path ) )
+    for base in bases:
+        if rpath == base or rpath.startswith( base + os.sep ):
+            return ( True, os.path.relpath( rpath, base ), base )
+    return ( False, path, '' )
+
+
+def is_external_link( path, bases ):
+    '''Test if path (normally a symlink) points out of "bases" trees.
+    Returns a tuple of 3 elements:
+    ( is_ext_link, final_path, final_is_symlink, relpath, base )
+    '''
+    if not os.path.islink( path ):
+        return ( False, path, False, path, '' )
+    found = False
+    while not found:
+        lpath = os.readlink( path )
+        if not os.path.isabs( lpath ):
+            path = os.path.normpath( os.path.abspath( os.path.join( 
+                os.path.dirname( path ), lpath ) ) )
+        else:
+            path = os.path.normpath( lpath )
+        found = not os.path.islink( path )
+        inbase, relpath, base = is_in_base( path, bases )
+    return ( not inbase, path, not found, relpath, base )
+
+
+def rel_link( source, dest, destbase ):
+    if not os.path.isabs( source ):
+        source = os.path.normpath( os.path.join( destbase, source ) )
+    relspath = os.path.relpath( source, os.path.dirname( dest ) )
+    if os.path.basename( relspath ) == relspath \
+            and relspath == os.path.basename( dest ):
+        return None # identity
+    return relspath
+
+
+def symlink( reldpath, destpath, simulation ):
+    if os.path.islink( destpath ) \
+            and os.readlink( destpath ) == reldpath:
+        # link already exists and points the correct location
+        return
+    elif os.path.exists( destpath ):
+        raise OSError( 'mismatching file exists: %s' % destpath )
+    if not simulation:
+        os.symlink( reldpath, destpath )
+
+
+def make_ext_symlink( source, dest, ext_links, simulation ):
+    if ext_links.has_key( source ):
+        realsrc = ext_links[ source ]
+        # print 'already copied as', realsrc
+        reldpath = rel_link( realsrc, dest, '' )
+        if reldpath is not None:
+            symlink( reldpath, destpath, simulation )
+    else:
+        # make a real copy, and record this destination
+        ext_links[ source ] = dest
+        if not simulation:
+            shutil.copy2( source, dest )
+
+
+parser = OptionParser( sys.argv[0] + ' [options] source1 [source2] [...] dest'
+    'Copy directories trees, like "cp -a" or "rsync -a --copy-unsafe-links", but try to preserve internal symlinks, and keep a unique copy of actual files for external symlinks.\n' \
+    '' )
+parser.add_option( '-b', '--base', dest='base', action='append', default=[],
+    help='base directory to consider external symlinks. Default is input directories. Several -b options may be passed.' )
+parser.add_option( '-s', '--simulation', dest='simulation', 
+    action='store_true', help='do not perform actual copies, don\'t write anything, just tell what will be done (use with -v option)' )
+parser.add_option( '-v', '--verbose', dest='verbose', action='store_true',
+    help='say what is done' )
+
+options, args = parser.parse_args( sys.argv )
+
+if len( args ) < 3:
+    parser.parse_args( [ '-h' ] )
+
+dest = realrealpath( args[-1] )
+sources = [ realrealpath( p ) for p in args[1:-1] ]
+
+if ( os.path.exists( dest ) and not os.path.isdir( dest ) ) or \
+      ( not os.path.exists( dest ) and len( sources ) > 1 ):
+    raise OSError( 'destination "%s" is not a directory.', dest )
+
+bases = options.base
+if len( bases ) == 0:
+    bases = sources[:]
+
+if not os.path.exists( dest ):
+    os.mkdir( dest )
+    sources = [ os.path.join( sources[0], p ) \
+        for p in os.listdir( sources[0] ) ]
+
+if options.verbose:
+    print 'sources:', sources
+    print 'dest:', dest
+    print 'bases:', bases
+
+ext_links = {} # external links list
+
+#sys.exit( 1 )
+
+while sources:
+    source = sources.pop()
+    if realrealpath( source ) == dest:
+        if options.verbose:
+            print 'skipping', source, ', which is destination directory'
+        continue
+    x, rpath, base = is_in_base( source, bases )
+    destpath = os.path.join( dest, rpath )
+    # if options.verbose: print source, '->', destpath
+    is_extlink, spath, is_link, relpath, base \
+        = is_external_link( source, bases )
+    if is_link:
+        if not is_extlink:
+            # internal symlink
+            if options.verbose: print 'internal symlink:', relpath
+            reldpath = rel_link( relpath, destpath, dest )
+            symlink( reldpath, destpath, options.simulation )
+        else:
+            if options.verbose: print 'external symlink:', relpath
+            make_ext_symlink( spath, destpath, ext_links, options.simulation )
+    elif os.path.isdir( source ):
+        # directory
+        if not options.simulation and not os.path.isdir( destpath ):
+            os.mkdir( destpath )
+        for filename in os.listdir( source ):
+            sources.append( os.path.join( source, filename ) )
+    else:
+        # file
+        if is_extlink:
+            if options.verbose:
+                print 'external symlink -> file:', destpath, '->', relpath, 'from', source
+            make_ext_symlink( spath, destpath, ext_links, options.simulation )
+        elif os.path.islink( source ):
+            reldpath = rel_link( relpath, destpath, dest )
+            if reldpath is None:
+                if options.verbose: print 'identity symlink'
+            else:
+                if options.verbose: print 'internal symlink -> file:', reldpath
+                symlink( reldpath, destpath, options.simulation )
+        else:
+            # regular file
+            if options.verbose: print 'regular file:', spath
+            if not options.simulation:
+                shutil.copy2( spath, destpath )
+

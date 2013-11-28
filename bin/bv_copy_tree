@@ -80,6 +80,8 @@ parser.add_option( '-s', '--simulation', dest='simulation',
     action='store_true', help='do not perform actual copies, don\'t write anything, just tell what will be done (use with -v option)' )
 parser.add_option( '-v', '--verbose', dest='verbose', action='store_true',
     help='say what is done' )
+parser.add_option( '-e', '--exclude', dest='exclude', action='append', 
+    default=[], help='exclude some (source) directories from copies. Several -e options may be passed.' )
 
 options, args = parser.parse_args( sys.argv )
 
@@ -88,6 +90,7 @@ if len( args ) < 3:
 
 dest = realrealpath( args[-1] )
 sources = [ realrealpath( p ) for p in args[1:-1] ]
+exclude = [ realrealpath( p ) for p in options.exclude ]
 
 if ( os.path.exists( dest ) and not os.path.isdir( dest ) ) or \
       ( not os.path.exists( dest ) and len( sources ) > 1 ):
@@ -106,6 +109,7 @@ if options.verbose:
     print 'sources:', sources
     print 'dest:', dest
     print 'bases:', bases
+    print 'exclude:', exclude
 
 ext_links = {} # external links list
 
@@ -113,6 +117,10 @@ ext_links = {} # external links list
 
 while sources:
     source = sources.pop()
+    if realrealpath( source ) in exclude:
+        if options.verbose:
+            print 'skipping excluded %s file/directory' % source
+        continue
     if realrealpath( source ) == dest:
         if options.verbose:
             print 'skipping', source, ', which is destination directory'

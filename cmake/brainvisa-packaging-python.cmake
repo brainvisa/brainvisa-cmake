@@ -59,15 +59,15 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     else()
       
       # copy or create a link named python that starts the real python executable (ex. python -> python2.6)
-      get_filename_component( name "${PYTHON_EXECUTABLE}" NAME )
+      get_filename_component( name "${REAL_PYTHON_EXECUTABLE}" NAME )
       if( NOT name STREQUAL "python" )
         if(WIN32)
-          set( command "copy_if_different" )
+          add_custom_command( TARGET install-${component} POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E "copy_if_different" "$(BRAINVISA_INSTALL_PREFIX)/bin/${name}" "$(BRAINVISA_INSTALL_PREFIX)/bin/python" )
         else()
-          set( command "create_symlink" )
+          add_custom_command( TARGET install-${component} POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "${name}" "$(BRAINVISA_INSTALL_PREFIX)/bin/python" )
         endif()
-        add_custom_command( TARGET install-${component} POST_BUILD
-          COMMAND "${CMAKE_COMMAND}" -E "${command}" "${name}" "$(BRAINVISA_INSTALL_PREFIX)/bin/python${CMAKE_EXECUTABLE_SUFFIX}" )
       endif()
 
       BRAINVISA_INSTALL( FILES "${REAL_PYTHON_EXECUTABLE}"

@@ -257,7 +257,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
   os.chdir(current_dir)
 
   # create scripts that call bv_env before calling the command to setup environment variables
-  if options.bv_env:
+  if options.bv_env or options.wrappers:
     
     # Extensions for which scripts command are not generated
     config_ext = [ '.conf' ]
@@ -270,9 +270,11 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
       specific_env_commands = [ 'brainvisa' ]
     else :
       exe_ext = ''
-      specific_env_commands = list()   
-    env_commands = [ 'bv_env' + exe_ext, 'bv_env.py', 'bv_env.sh', 'bv_unenv', 'bv_unenv.sh' ] + specific_env_commands
-    for command in env_commands:
+      specific_env_commands = list()
+    env_commands = [ 'bv_env' + exe_ext, 'bv_env.py', 'bv_env.sh', 'bv_unenv', 'bv_unenv.sh' ]
+    if options.bv_env: # --bv_env case: also install bv_env* commands
+      specific_env_commands += env_commands
+    for command in specific_env_commands:
       source = os.path.join( brainvisacmake_directory, 'bin', command )
       dest = os.path.join( bindir, command )
       if os.path.exists( dest ):
@@ -283,10 +285,10 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
     if not os.path.exists( realbindir ):
       os.mkdir( realbindir )
     for command in os.listdir( bindir ):
-      if command in env_commands:
+      if command in specific_env_commands:
         continue
       source = os.path.join( bindir, command )
-      
+
       if os.path.isdir( source ):
         if command[-4:] == '.app': # MacOS GUI commands
           dest = os.path.join( realbindir, command )
@@ -862,6 +864,9 @@ Options:
   --no-deps             Do not include dependencies packages.
   --bv_env              Replace commands located in bin directory by a script that calls
                         the command through bv_env.
+  --wrappers            same as --bv_env, but do not copy the executable bv_env
+                        and sibling scripts in the package directory: just do
+                        the wrapping scripts
   --packname            Include the name of the package in the compressed archive. 
                         Available only with pack command. By default, the path in the archive are relative to the pack.
   --compressed-packdir  Name of the directory in compressed archive. 
@@ -896,6 +901,9 @@ Options:
       index += 1
     elif args[ index ] == '--bv_env':
       options.bv_env = True
+      del args[ index ]
+    elif args[ index ] == '--wrappers':
+      options.wrappers = True
       del args[ index ]
     elif args[ index ] == '--packname':
       options.packname = True

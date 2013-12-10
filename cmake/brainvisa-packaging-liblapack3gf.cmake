@@ -15,6 +15,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
     endif()
   endforeach()
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libgfortran2 RUN )
+  string( REGEX MATCH Ubuntu _systemname "${BRAINVISA_SYSTEM_IDENTIFICATION}" )
+  if( _systemname )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libquadmath RUN )
+  endif()
 endfunction()
 
 

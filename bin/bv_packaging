@@ -792,6 +792,7 @@ if __name__ == '__main__':
   options.output = None
   options.dependencies = True
   options.bv_env = False
+  options.wrappers = False
   options.packname = False
   options.compressedpackdir = ''
   options.cmake = 'cmake'

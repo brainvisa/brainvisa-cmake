@@ -16,7 +16,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   
   if( version )
     set( ${package_version} "${version}" PARENT_SCOPE )
-    set( ${package_name} "${component}${version}" PARENT_SCOPE )
+    set( ${package_name} "${component}" PARENT_SCOPE )
   else()
     set( ${package_version} "0.0.0" PARENT_SCOPE )
     set( ${package_name} ${component} PARENT_SCOPE )

@@ -181,3 +181,38 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
 
 endfunction()
 
+# this variable declares the install rule for the dev package
+set( python-dev-installrule TRUE )
+
+function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
+  if(PYTHON_FOUND)
+#     BRAINVISA_INSTALL_DIRECTORY( "${PYTHON_INCLUDE_PATH}" include ${component}-dev )
+    set( directory "${PYTHON_INCLUDE_PATH}" )
+    get_filename_component( destination "${PYTHON_INCLUDE_PATH}" NAME )
+    set( destination "include/${destination}" )
+    # modified copy of BRAINVISA_INSTALL_DIRECTORY
+    file( GLOB_RECURSE allFiles RELATIVE "${directory}" FOLLOW_SYMLINKS "${directory}/*" )
+    foreach( file ${allFiles} )
+      if( NOT "${file}" STREQUAL "pyconfig.h" )
+        get_filename_component( path "${file}" PATH )
+        get_filename_component( name "${file}" NAME )
+        get_filename_component( file2 "${directory}/${path}/${file}" REALPATH )
+        if( EXISTS "${directory}/${path}/${name}" )
+          if( IS_DIRECTORY "${file2}" )
+            BRAINVISA_INSTALL_DIRECTORY( "${file2}" "${destination}/${path}" "${component}-dev" )
+          else()
+            BRAINVISA_INSTALL( PROGRAMS "${file2}"
+              DESTINATION "${destination}/${path}"
+              COMPONENT "${component}-dev" )
+          endif()
+        else()
+          message( "Warning: file \"${directory}/${path}/${name}\" does not exist (probably an invalid link)" )
+        endif()
+      endif()
+    endforeach()
+    set(${component}-dev_PACKAGED TRUE PARENT_SCOPE)
+  else()
+    set(${component}-dev_PACKAGED FALSE PARENT_SCOPE)
+  endif()
+endfunction()
+

@@ -24,3 +24,23 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     set(${component}_PACKAGED FALSE PARENT_SCOPE)
   endif()
 endfunction()
+
+# this variable declares the install rule for the dev package
+set( libsigc++2-dev-installrule TRUE )
+
+function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
+  if( Sigc++2_FOUND )
+    BRAINVISA_INSTALL( FILES "${Sigc++2_INCLUDE_CONFIG_DIR}/sigc++config.h"
+      DESTINATION include
+      COMPONENT ${component}-dev )
+    foreach( _incdir ${Sigc++2_INCLUDE_DIRS} )
+      if( EXISTS "${_incdir}/sigc++" )
+        BRAINVISA_INSTALL_DIRECTORY( "${_incdir}/sigc++" "include/sigc++"
+          ${component}-dev )
+      endif()
+    endforeach()
+    set(${component}-dev_PACKAGED TRUE PARENT_SCOPE)
+  else()
+    set(${component}-dev_PACKAGED FALSE PARENT_SCOPE)
+  endif()
+endfunction()

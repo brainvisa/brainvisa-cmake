@@ -415,12 +415,12 @@ function( BRAINVISA_DECLARE_THIRDPARTY_COMPONENT component )
       # Call component specific functions that create install rules
       if ( BRAINVISA_PACKAGING_THIRDPARTY )
         include( "${_cmakefile}" )
-        if( _dev AND COMMAND BRAINVISA_PACKAGING_COMPONENT_DEV )
+        if( _dev AND ${_dev}-dev-installrule )
           BRAINVISA_PACKAGING_COMPONENT_DEV( "${_dev}" )
         elseif( NOT _dev )
           BRAINVISA_PACKAGING_COMPONENT_RUN( "${component}" )
         else()
-          message( "WARNING: Impossible to package third party component ${component} because file \"${_cmakefile}\" does not contain a BRAINVISA_PACKAGING_COMPONENT_DEV function." )
+          message( "WARNING: Impossible to package third party component ${component} because file \"${_cmakefile}\" does not set the ${component}-installrule variable and contain a BRAINVISA_PACKAGING_COMPONENT_DEV function." )
         endif()
         set(${component}_PACKAGED ${${component}_PACKAGED} PARENT_SCOPE)
       endif()
@@ -991,12 +991,19 @@ function( BRAINVISA_INSTALL_DIRECTORY directory destination component )
   foreach( file ${allFiles} )
     get_filename_component( path "${file}" PATH )
     get_filename_component( name "${file}" NAME )
+    get_filename_component( file2 "${directory}/${path}/${file}" REALPATH )
     if( EXISTS "${directory}/${path}/${name}" )
-      BRAINVISA_INSTALL( PROGRAMS "${directory}/${path}/${name}"
-        DESTINATION "${destination}/${path}"
-        COMPONENT "${component}" )
+      # at the first level under ${directory}, symlinks are not followed,
+      # and we may get a symlink to a directory in ${file}
+      if( IS_DIRECTORY "${file2}" )
+        BRAINVISA_INSTALL_DIRECTORY( "${file2}" "${destination}/${path}" "${component}-dev" )
+      else()
+        BRAINVISA_INSTALL( PROGRAMS "${file2}"
+          DESTINATION "${destination}/${path}"
+          COMPONENT "${component}" )
+      endif()
     else()
-      message( "Warning: file \"${directory}/${path}/${name}\" does not exists (probably an invalid link)" )
+      message( "Warning: file \"${directory}/${path}/${name}\" does not exist (probably an invalid link)" )
     endif()
   endforeach()
 endfunction()

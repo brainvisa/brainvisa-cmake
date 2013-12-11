@@ -47,6 +47,13 @@ if( NOT config_done )
     set( BRAINVISA_SYSTEM_IDENTIFICATION "${BRAINVISA_SYSTEM_IDENTIFICATION}" CACHE STRING "Suffix for system identification in packages name" )
   endif()
 
+  if (NOT DEFINED BRAINVISA_SYSTEM_VERSION)
+    # Get system version
+    set(result)
+    string( REGEX REPLACE "[^-]+-(.*)" "\\1" result "${BRAINVISA_SYSTEM_IDENTIFICATION}" )
+    set( BRAINVISA_SYSTEM_VERSION "${result}" CACHE STRING "Version for system identification in packages name" )
+  endif()
+
   if(NOT DEFINED BRAINVISA_ADVANCED_FEATURE_TEST_MODE)
     option( BRAINVISA_ADVANCED_FEATURE_TEST_MODE "Enable/disable BrainVISA advanced feature test mode" OFF )
   endif()

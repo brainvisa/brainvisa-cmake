@@ -21,6 +21,9 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   endif()
 endfunction()
 
+# this variable declares the install rule for the dev package
+set( libtiff-dev-installrule TRUE )
+
 function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
   if(TIFF_FOUND)
     BRAINVISA_INSTALL( FILES "${TIFF_INCLUDE_DIR}/tiff.h"

@@ -14,7 +14,23 @@ endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   if(EXPAT_FOUND)
-    BRAINVISA_install_RUNTIME_LIBRARIES( ${component} ${EXPAT_LIBRARIES} )
+    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${EXPAT_LIBRARIES} )
+    set(${component}_PACKAGED TRUE PARENT_SCOPE)
+  else()
+    set(${component}_PACKAGED FALSE PARENT_SCOPE)
+  endif()
+endfunction()
+
+# this variable declares the install rule for the dev package
+set( libexpat1-dev-installrule TRUE )
+
+function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
+  if(EXPAT_FOUND)
+    BRAINVISA_INSTALL( FILES "${EXPAT_INCLUDE_DIR}/expat.h"
+      "${EXPAT_INCLUDE_DIR}/expat_config.h"
+      "${EXPAT_INCLUDE_DIR}/expat_external.h"
+      DESTINATION include
+      COMPONENT ${component}-dev )
     set(${component}_PACKAGED TRUE PARENT_SCOPE)
   else()
     set(${component}_PACKAGED FALSE PARENT_SCOPE)

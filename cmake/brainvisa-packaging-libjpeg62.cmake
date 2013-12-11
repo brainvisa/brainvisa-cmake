@@ -22,10 +22,19 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   endif()
 endfunction()
 
+# this variable declares the install rule for the dev package
+set( libjpeg62-dev-installrule TRUE )
+
 function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
   if(JPEG_FOUND)
+    find_file( _jconfig jconfig.h PATHS "${JPEG_INCLUDE_DIR}" NO_DEFAULT_PATH )
+    find_file( _jconfig jconfig.h )
+    find_file( _jconfig jconfig.h PATHS "/usr/include/x86_64-linux-gnu"
+      NO_DEFAULT_PATH )
     BRAINVISA_INSTALL( FILES "${JPEG_INCLUDE_DIR}/jpeglib.h"
       "${JPEG_INCLUDE_DIR}/jerror.h"
+      "${JPEG_INCLUDE_DIR}/jmorecfg.h"
+      "${_jconfig}"
       DESTINATION include
       COMPONENT ${component}-dev )
     set(${component}_PACKAGED TRUE PARENT_SCOPE)

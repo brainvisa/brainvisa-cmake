@@ -25,3 +25,20 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     endif()
   endif()
 endfunction()
+
+# this variable declares the install rule for the dev package
+set( zlib-dev-installrule TRUE )
+
+function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
+  if (ZLIB_FOUND)
+    BRAINVISA_INSTALL( FILES "${ZLIB_INCLUDE_DIR}/zlib.h"
+      "${ZLIB_INCLUDE_DIR}/zconf.h"
+      "${ZLIB_INCLUDE_DIR}/zlibdefs.h"
+      DESTINATION include
+      COMPONENT ${component}-dev )
+    set(${component}_PACKAGED TRUE PARENT_SCOPE)
+  else()
+    set(${component}_PACKAGED FALSE PARENT_SCOPE)
+  endif()
+endfunction()
+

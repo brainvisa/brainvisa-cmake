@@ -22,3 +22,12 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   endif()
 endfunction()
 
+function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
+  if(BLITZ_FOUND)
+    BRAINVISA_INSTALL_DIRECTORY( ${BLITZ_INCLUDE_DIR}/blitz include/blitz ${component}-dev )
+    set(${component}-dev_PACKAGED TRUE PARENT_SCOPE)
+  else()
+    set(${component}-dev_PACKAGED FALSE PARENT_SCOPE)
+  endif()
+endfunction()
+

@@ -12,9 +12,10 @@ def project_description( projectname ):
     '''Brainvisa-cmake project description, to be displayed in the installer'''
     # hard-coded for now.
     descriptions = {
-        'axon' : 'Axon: organizes processing, pipelining, and data management for neuroimaging. It works both as a graphical user interface or batch and programming interfaces, and allows transparent processing distribution on a computing resource.',
+        'axon' : 'Axon organizes processing, pipelining, and data management for neuroimaging. It works both as a graphical user interface or batch and programming interfaces, and allows transparent processing distribution on a computing resource.',
         'aims' : '3D/4D neuroimaging data manipulation and processing library and commands. Includes C++ libraries, command lines, and a Python API.',
         'anatomist' : '3D/4D neuroimaging data viewer. Modular and versatile, Anatomist can display any kind of neuroimaging data (3D/4D images, meshes and textures, fiber tracts, and structured sets of objects such as cortical sulci), in an arbitrary number of views. Allows C++ and Python programming, both for plugins add-ons, as well as complete custom graphical applications design.',
+        'soma' : 'Set of lower-level libraries for neuroimaging processing infrastructure',
     }
     return descriptions.get( projectname, '' )
 

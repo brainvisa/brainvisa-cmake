@@ -20,3 +20,18 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     set(${component}_PACKAGED FALSE PARENT_SCOPE)
   endif()
 endfunction()
+
+function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
+  if(TIFF_FOUND)
+    BRAINVISA_INSTALL( FILES "${TIFF_INCLUDE_DIR}/tiff.h"
+      "${TIFF_INCLUDE_DIR}/tiffio.h"
+      "${TIFF_INCLUDE_DIR}/tiffconf.h"
+      "${TIFF_INCLUDE_DIR}/tiffvers.h"
+      "${TIFF_INCLUDE_DIR}/tiffio.hxx"
+      DESTINATION include 
+      COMPONENT ${component}-dev )
+    set(${component}-dev_PACKAGED TRUE PARENT_SCOPE)
+  else()
+    set(${component}-dev_PACKAGED FALSE PARENT_SCOPE)
+  endif()
+endfunction()

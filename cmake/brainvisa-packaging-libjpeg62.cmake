@@ -22,3 +22,16 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   endif()
 endfunction()
 
+function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
+  if(JPEG_FOUND)
+    BRAINVISA_INSTALL( FILES "${JPEG_INCLUDE_DIR}/jpeglib.h"
+      "${JPEG_INCLUDE_DIR}/jerror.h"
+      DESTINATION include
+      COMPONENT ${component}-dev )
+    set(${component}_PACKAGED TRUE PARENT_SCOPE)
+  else()
+    set(${component}_PACKAGED FALSE PARENT_SCOPE)
+    #MESSAGE( SEND_ERROR "Impossible to create packaging rules for ${component} : the package was not found." )
+  endif()
+endfunction()
+

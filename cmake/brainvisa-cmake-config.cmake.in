@@ -991,12 +991,12 @@ function( BRAINVISA_INSTALL_DIRECTORY directory destination component )
   foreach( file ${allFiles} )
     get_filename_component( path "${file}" PATH )
     get_filename_component( name "${file}" NAME )
-    get_filename_component( file2 "${directory}/${path}/${file}" REALPATH )
+    get_filename_component( file2 "${directory}/${path}/${name}" REALPATH )
     if( EXISTS "${directory}/${path}/${name}" )
       # at the first level under ${directory}, symlinks are not followed,
       # and we may get a symlink to a directory in ${file}
       if( IS_DIRECTORY "${file2}" )
-        BRAINVISA_INSTALL_DIRECTORY( "${file2}" "${destination}/${path}" "${component}-dev" )
+        BRAINVISA_INSTALL_DIRECTORY( "${file2}" "${destination}/${path}/${name}" "${component}-dev" )
       else()
         BRAINVISA_INSTALL( PROGRAMS "${file2}"
           DESTINATION "${destination}/${path}"

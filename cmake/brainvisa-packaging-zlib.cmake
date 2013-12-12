@@ -31,9 +31,12 @@ set( zlib-dev-installrule TRUE )
 
 function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
   if (ZLIB_FOUND)
-    BRAINVISA_INSTALL( FILES "${ZLIB_INCLUDE_DIR}/zlib.h"
-      "${ZLIB_INCLUDE_DIR}/zconf.h"
-      "${ZLIB_INCLUDE_DIR}/zlibdefs.h"
+    set( _files "${ZLIB_INCLUDE_DIR}/zlib.h"
+      "${ZLIB_INCLUDE_DIR}/zconf.h" )
+    if( EXISTS "${ZLIB_INCLUDE_DIR}/zlibdefs.h" )
+      list( APPEND _files "${ZLIB_INCLUDE_DIR}/zlibdefs.h" )
+    endif()
+    BRAINVISA_INSTALL( FILES ${_files}
       DESTINATION include
       COMPONENT ${component}-dev )
     set(${component}_PACKAGED TRUE PARENT_SCOPE)

@@ -31,10 +31,13 @@ function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
     find_file( _jconfig jconfig.h )
     find_file( _jconfig jconfig.h PATHS "/usr/include/x86_64-linux-gnu"
       NO_DEFAULT_PATH )
-    BRAINVISA_INSTALL( FILES "${JPEG_INCLUDE_DIR}/jpeglib.h"
-      "${JPEG_INCLUDE_DIR}/jerror.h"
+    set( _files "${JPEG_INCLUDE_DIR}/jpeglib.h"
       "${JPEG_INCLUDE_DIR}/jmorecfg.h"
-      "${_jconfig}"
+      "${_jconfig}" )
+    if( EXISTS "${JPEG_INCLUDE_DIR}/jerror.h" )
+      list( APPEND _files "${JPEG_INCLUDE_DIR}/jerror.h" )
+    endif()
+    BRAINVISA_INSTALL( FILES ${_files}
       DESTINATION include
       COMPONENT ${component}-dev )
     set(${component}_PACKAGED TRUE PARENT_SCOPE)

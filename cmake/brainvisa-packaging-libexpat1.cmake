@@ -26,9 +26,12 @@ set( libexpat1-dev-installrule TRUE )
 
 function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
   if(EXPAT_FOUND)
-    BRAINVISA_INSTALL( FILES "${EXPAT_INCLUDE_DIR}/expat.h"
-      "${EXPAT_INCLUDE_DIR}/expat_config.h"
-      "${EXPAT_INCLUDE_DIR}/expat_external.h"
+    set( _files "${EXPAT_INCLUDE_DIR}/expat.h"
+      "${EXPAT_INCLUDE_DIR}/expat_external.h" )
+    if( EXISTS "${EXPAT_INCLUDE_DIR}/expat_config.h" )
+      list( APPEND _files "${EXPAT_INCLUDE_DIR}/expat_config.h" )
+    endif()
+    BRAINVISA_INSTALL( FILES ${_files}
       DESTINATION include
       COMPONENT ${component}-dev )
     set(${component}_PACKAGED TRUE PARENT_SCOPE)

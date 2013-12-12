@@ -62,7 +62,7 @@ endfunction()
 # this variable declares the install rule for the dev package
 set( libqtcore4-dev-installrule TRUE )
 
-function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
+function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
   if(QT_QTCORE_FOUND)
     BRAINVISA_INSTALL_DIRECTORY( "${QT_QTCORE_INCLUDE_DIR}" include/qt4/QtCore
       ${component}-dev )

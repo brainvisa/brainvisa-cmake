@@ -26,13 +26,26 @@ endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   if(LAPACK_FOUND)
+    set( _libs ${LAPACK_LIBRARIES} )
     if( APPLE )
       # remove Blas libs from list
-      set( _libs ${LAPACK_LIBRARIES} )
       list( REMOVE_ITEM _libs ${BLAS_LIBRARIES} )
       BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${_libs} )
     else()
-      BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${LAPACK_LIBRARIES} )
+      foreach( lib ${LAPACK_LIBRARIES} )
+        get_filename_component( name ${lib} NAME )
+        get_filename_component( path ${lib} PATH )
+        if( name STREQUAL "liblapack.so.3gf" )
+          # on Ubuntu, liblapack.so.3 is pointed indirectly via a symlink, 
+          # in a different directory, and is also a symlink, so nothing
+          # can identify it is really the file used by libs and executables.
+          # so we need to add it by hand.
+          list( APPEND _libs "${path}/liblapack.so.3" )
+        elseif( name STREQUAL "libblas.so.3gf" ) # same for blas
+          list( APPEND _libs "${path}/libblas.so.3" )
+        endif()
+      endforeach()
+      BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${_libs} )
     endif()
     set(${component}_PACKAGED TRUE PARENT_SCOPE)
   else()

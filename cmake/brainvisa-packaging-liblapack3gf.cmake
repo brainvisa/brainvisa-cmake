@@ -1,5 +1,6 @@
 enable_language(Fortran)
 find_package(LAPACK)
+find_package(BLAS)
 
 function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )
   set( ${package_name} ${component} PARENT_SCOPE )
@@ -15,6 +16,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
     endif()
   endforeach()
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libgfortran2 RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libblas RUN )
   string( REGEX MATCH Ubuntu _systemname "${BRAINVISA_SYSTEM_IDENTIFICATION}" )
   if( _systemname )
     if ( "${BRAINVISA_SYSTEM_VERSION}" VERSION_GREATER "12.0")
@@ -36,7 +38,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         get_filename_component( name ${lib} NAME )
         get_filename_component( path ${lib} PATH )
         if( name STREQUAL "liblapack.so.3gf" )
-          # on Ubuntu, liblapack.so.3 is pointed indirectly via a symlink, 
+          # on Ubuntu, liblapack.so.3 is pointed indirectly via a symlink,
           # in a different directory, and is also a symlink, so nothing
           # can identify it is really the file used by libs and executables.
           # so we need to add it by hand.

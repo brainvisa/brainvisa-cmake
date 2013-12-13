@@ -1,5 +1,12 @@
 find_package( python )
 
+function( BRAINVISA_PYTHON_HAS_MODULE module result )
+  set( ${result} -1 )
+  execute_process( COMMAND "${PYTHON_EXECUTABLE}" "-c" "import ${module}"
+    RESULT_VARIABLE ${result} )
+  set( ${result} ${${result}} PARENT_SCOPE )
+endfunction()
+
 function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )
   set( ${package_name} ${component} PARENT_SCOPE )
   set( ${package_maintainer} "IFR 49" PARENT_SCOPE )
@@ -12,6 +19,17 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libssl RUN )
   # dependency due to matplotlib: some backends are linked to cairo
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libcairo2 RUN )
+  BRAINVISA_PYTHON_HAS_MODULE( "zmq" _res )
+  if( _res EQUAL 0 )
+    find_package( LibZmq )
+    if( LIBZMQ_FOUND )
+      BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libzmq RUN )
+    endif()
+    find_package( LibPgm )
+    if( LIBPGM_FOUND )
+      BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libpgm RUN )
+    endif()
+  endif()
   if( WIN32 )
     # dependency due to matplotlib: some backends are linked to freetype
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libfreetype6 RUN )

@@ -17,9 +17,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         COMPONENT ${component}
         PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ )
     endif()
-    # patch matplotlib.__init__ to search for the data path
-    add_custom_command( TARGET install-${component} POST_BUILD
-        COMMAND "${PYTHON_EXECUTABLE}" "${brainvisa-cmake_DIR}/brainvisa-packaging-python-matplotlib-patchinit.py" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/matplotlib/__init__.py" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/matplotlib/__init__.py" )
+    # patch matplotlib.__init__ to search for the data path: done in python component.
 
     set(${component}_PACKAGED TRUE PARENT_SCOPE)
   else()

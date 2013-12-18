@@ -38,6 +38,10 @@ install( FILES ${_files}
          DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake" )
 install( FILES cmake/CMakeLists.txt
          DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake" )
+file( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/cmake/*.py" )
+install( FILES ${_files}
+         DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake"
+         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
 
 BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/*[^~]" )
 install( FILES ${_files} 

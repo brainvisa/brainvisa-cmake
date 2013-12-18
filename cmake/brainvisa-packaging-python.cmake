@@ -168,10 +168,11 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
            )
 
         set( _uicpdir "/usr/lib/python${PYTHON_SHORT_VERSION}/dist-packages/PyQt4/uic/widget-plugins" )
-        set( _pyside "/usr/lib/python${PYTHON_SHORT_VERSION}/dist-packages/PySide" )
+        set( _pyside1 "/usr/lib/python${PYTHON_SHORT_VERSION}/dist-packages/PySide" )
+        set( _pyside2 "/usr/lib/pyshared/python${PYTHON_SHORT_VERSION}/PySide" )
 
         add_custom_command( TARGET install-${component} PRE_BUILD
-          COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${CMAKE_COMMAND} -E make_directory "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "-e" "${_uicpdir}/kde4.py" "-e" "${_uicpdir}/kde4.pyc" "-e" "${_uicpdir}/qaxcontainer.py" "-e" "${_uicpdir}/qaxcontainer.pyc" "-e" "${_uicpdir}/qscintilla.py" "-e" "${_uicpdir}/qscintilla.pyc" "-e" "${_pyside}" ${_toinstall} "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \;else ${CMAKE_COMMAND} -E make_directory "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "-e" "${_uicpdir}/kde4.py" "-e" "${_uicpdir}/kde4.pyc" "-e" "${_uicpdir}/qaxcontainer.py" "-e" "${_uicpdir}/qaxcontainer.pyc" "-e" "${_uicpdir}/qscintilla.py" "-e" "${_uicpdir}/qscintilla.pyc" "-e" "${_pyside}" ${_toinstall} "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \;fi )
+          COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${CMAKE_COMMAND} -E make_directory "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "-e" "${_uicpdir}/kde4.py" "-e" "${_uicpdir}/kde4.pyc" "-e" "${_uicpdir}/qaxcontainer.py" "-e" "${_uicpdir}/qaxcontainer.pyc" "-e" "${_uicpdir}/qscintilla.py" "-e" "${_uicpdir}/qscintilla.pyc" "-e" "${_pyside1}" "-e" "${_pyside2}" ${_toinstall} "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \;else ${CMAKE_COMMAND} -E make_directory "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "-e" "${_uicpdir}/kde4.py" "-e" "${_uicpdir}/kde4.pyc" "-e" "${_uicpdir}/qaxcontainer.py" "-e" "${_uicpdir}/qaxcontainer.pyc" "-e" "${_uicpdir}/qscintilla.py" "-e" "${_uicpdir}/qscintilla.pyc" "-e" "${_pyside1}" "-e" "${_pyside2}" ${_toinstall} "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \;fi )
 
         BRAINVISA_PYTHON_HAS_MODULE( "matplotlib" _has_mpl )
         if( _has_mpl EQUAL 0 )

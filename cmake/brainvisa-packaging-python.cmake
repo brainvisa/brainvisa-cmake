@@ -3,7 +3,7 @@ find_package( python )
 function( BRAINVISA_PYTHON_HAS_MODULE module result )
   set( ${result} -1 )
   execute_process( COMMAND "${PYTHON_EXECUTABLE}" "-c" "import ${module}"
-    RESULT_VARIABLE ${result} )
+    RESULT_VARIABLE ${result} OUTPUT_VARIABLE _out ERROR_VARIABLE _err )
   set( ${result} ${${result}} PARENT_SCOPE )
 endfunction()
 

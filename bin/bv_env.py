@@ -46,7 +46,7 @@ else:
       this_script = s
       break
 if this_script:
-  install_directory = os.path.dirname( os.path.dirname( this_script ) )
+  install_directory = os.path.dirname( os.path.dirname( os.path.abspath( this_script ) ) )
 
 # Define environment variables modifications
 unset_variables = [ 'SIGRAPH_PATH', 'ANATOMIST_PATH', 'AIMS_PATH' ]

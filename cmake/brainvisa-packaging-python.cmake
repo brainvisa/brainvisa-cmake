@@ -171,13 +171,14 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${CMAKE_COMMAND} -E make_directory "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${_toinstall} "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \;else ${CMAKE_COMMAND} -E make_directory "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${_toinstall} "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \;fi )
 
         BRAINVISA_PYTHON_HAS_MODULE( "matplotlib" _has_mpl )
-        if( _has_mpl )
-        # patch matplotlib.__init__ to search for the data path
-        # this should not be done in brainvisa-install-python-matplotlib
-        # since matplotlib.__init__.py file is installed from here in the
-        # python component.
-        add_custom_command( TARGET install-${component} POST_BUILD
-          COMMAND "${PYTHON_EXECUTABLE}" "${brainvisa-cmake_DIR}/brainvisa-packaging-python-matplotlib-patchinit.py" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/matplotlib/__init__.py" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/matplotlib/__init__.py" )
+        if( _has_mpl EQUAL 0 )
+          BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS python-matplotlib RUN )
+         # patch matplotlib.__init__ to search for the data path
+          # this should not be done in brainvisa-install-python-matplotlib
+          # since matplotlib.__init__.py file is installed from here in the
+          # python component.
+          add_custom_command( TARGET install-${component} POST_BUILD
+            COMMAND "${PYTHON_EXECUTABLE}" "${brainvisa-cmake_DIR}/brainvisa-packaging-python-matplotlib-patchinit.py" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/matplotlib/__init__.py" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/matplotlib/__init__.py" )
         endif()
         # TODO: add additional /usr/local or /i2bm/... modules
 

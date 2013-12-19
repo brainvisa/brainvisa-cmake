@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import brainvisa.compilation_info as pinfo
+from brainvisa.maker.brainvisa_projects import brainvisaComponentsPerProject
+
 
 def project_version( projectname ):
     '''Brainvisa-cmake project version.'''
@@ -23,4 +25,16 @@ def project_description( projectname ):
 def component_version( componentname ):
     '''Brainvisa-cmake component version. Access brainvisa.compilation_info dictionary via a function.'''
     return pinfo.packages_info[ componentname ][ 'version' ]
+
+
+def project_components( projectname ):
+    if projectname in brainvisaComponentsPerProject:
+        return [
+            component for component in \
+                brainvisaComponentsPerProject[ projectname] \
+            if component in pinfo.packages_info ]
+    elif projectname in pinfo.packages_info:
+          return [ projectname ]
+    raise ValueError( 'Unknown project name: %s' % projectname )
+
 

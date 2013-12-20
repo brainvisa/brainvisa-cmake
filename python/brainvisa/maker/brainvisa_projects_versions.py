@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import brainvisa.compilation_info as pinfo
-from brainvisa.maker.brainvisa_projects import brainvisaComponentsPerProject
+from brainvisa.maker.brainvisa_projects import \
+    brainvisaComponentsPerProject, brainvisaComponentsPerGroup
 
 
 def project_version( projectname ):
@@ -27,14 +28,33 @@ def component_version( componentname ):
     return pinfo.packages_info[ componentname ][ 'version' ]
 
 
-def project_components( projectname ):
+def project_components( projectname, remove_private=False ):
     if projectname in brainvisaComponentsPerProject:
         return [
             component for component in \
                 brainvisaComponentsPerProject[ projectname] \
-            if component in pinfo.packages_info ]
+            if __keep_component( component, remove_private ) ]
     elif projectname in pinfo.packages_info:
           return [ projectname ]
     raise ValueError( 'Unknown project name: %s' % projectname )
+
+
+def __keep_component( component, remove_private ):
+    if component not in pinfo.packages_info:
+        return False
+    if not remove_private:
+        return True
+    return not is_private_component( component )
+
+
+def is_private_component( component ):
+    if component not in brainvisaComponentsPerGroup['all']:
+        return False
+    additional_private_components = (
+        'baby', 'tms', 'sulci-data', 'constellation-private',
+        'constellation-gpl', 'bioprocessing', )
+    if component in additional_private_components:
+        return True
+    return False
 
 

@@ -740,15 +740,16 @@ Priority: optional
 Section: multiverse/science''') % package_info
       dependencies = {}
       for dependency_type, dest_package, version_ranges, binary_independent  in packages_dependencies.get( package, () ):
+        print dependency_type, dest_package, version_ranges, binary_independent
         for version_range in version_ranges.split( ';' ):
           dependencies.setdefault( dependency_type, [] ).append( validDebianPackageName( dest_package ) + ( ' ( ' + version_range + ' )' if version_ranges else '' ) )
       for dependency_type in ( 'DEPENDS', 'RECOMMENDS', 'SUGGESTS', 'ENHANCES' ):
         deps = dependencies.get( dependency_type )
         if deps:
           print >> control, dependency_type.capitalize() + ':', ', '.join( deps )
-      deps = dependencies.get( 'RECOMMENDS' )
-      if deps:
-        print >> control, 'Depends:', ', '.join( deps )
+      #deps = dependencies.get( 'RECOMMENDS' )
+      #if deps:
+        #print >> control, 'Depends:', ', '.join( deps )
       control.close()
 
       # Move files installed for this package in deb_directory

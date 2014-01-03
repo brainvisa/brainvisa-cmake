@@ -240,7 +240,10 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
   
   for package in ( selected_packages + dependencies  if options.dependencies else selected_packages ):
     print 'Installing', package
-    command = [ 'make', 'BRAINVISA_INSTALL_PREFIX=' + system_path( install_directory, 'auto2unix' ), 'install-' + packages_info[ package ]['component'] ]
+    install_cmd_name = 'install-' + packages_info[ package ]['component']
+    if package == 'brainvisa-release' and options.installer:
+      install_cmd_name = 'install-brainvisa-release_installer_doc'
+    command = [ 'make', 'BRAINVISA_INSTALL_PREFIX=' + system_path( install_directory, 'auto2unix' ), install_cmd_name ]
     system_call( options, command )
     if list_installed_paths:
       # List files installed by package
@@ -798,6 +801,7 @@ if __name__ == '__main__':
   options.compressedpackdir = ''
   options.cmake = 'cmake'
   options.verbose = False
+  options.installer = False
   
   usage = '''bv_packaging [options] <package_type> [ <selection_rule> ... ]
 
@@ -875,6 +879,9 @@ Options:
                         Available only with pack command. By default, the name of the directory in the archive is the name of the pack.
   --tmp DIRECTORY       Location of temporary directory (default is %(tmp)s).
   --cmake CMAKE_EXE     Location of cmake executable (default = %(cmake)s).
+  --installer           bv_packaging is used for the bv_build_installer tool:
+                        changes only the way the brainvisa-release component
+                        is installed.
 ''' % { 'tmp': repr( tempfile.gettempdir() ),
         'cmake': repr( options.cmake ) }
 
@@ -930,6 +937,9 @@ Options:
         print >> sys.stderr, 'Missing compressed pack dir'
         sys.exit( 1 )
       options.compressedpackdir = args[ index ]
+      del args[ index ]
+    elif args[ index ] == '--installer':
+      options.installer = True
       del args[ index ]
     else:
       index += 1

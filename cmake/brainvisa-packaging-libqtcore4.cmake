@@ -38,8 +38,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           set( command "create_symlink" )
         endif()
         add_custom_command( TARGET install-${component} POST_BUILD
-                          COMMAND "${CMAKE_COMMAND}" -E "${command}" "${qtconfig_name}" "qtconfig"
-                          WORKING_DIRECTORY "$(BRAINVISA_INSTALL_PREFIX)/bin")
+                          COMMAND "${CMAKE_COMMAND}" -E "${command}" "${qtconfig_name}" "$(BRAINVISA_INSTALL_PREFIX)/bin/qtconfig")
       endif()
     endif()
 

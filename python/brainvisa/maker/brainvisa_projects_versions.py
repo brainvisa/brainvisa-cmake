@@ -48,6 +48,7 @@ def __keep_component( component, remove_private ):
 
 
 def is_private_component( component ):
+    '''Private components are not packaged in public releases, but only part of "i2bm" releases.'''
     if component not in brainvisaComponentsPerGroup['all']:
         return False
     additional_private_components = (
@@ -56,5 +57,21 @@ def is_private_component( component ):
     if component in additional_private_components:
         return True
     return False
+
+def is_default_project( projectname ):
+    '''Default projects are selected by default in the installer. They are important components.
+    '''
+    if projectname in ( 'aims', 'anatomist', 'axon', 'brainrat', 
+            'cortical_surface', 'datamind', 'morphologist', 
+            'morphologist_ui' ):
+        return True
+    return False
+
+def is_default_component( componentname ):
+    '''Default components are selected by default in the installer. They are important components. If they are "virtual" and default, then they will be installed anyway, the user will not be able to disable them.'''
+    component = pinfo.packages_info.get( componentname )
+    if not component:
+        return False
+    return component.get( 'default_install', False )
 
 

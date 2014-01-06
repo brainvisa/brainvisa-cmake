@@ -23,3 +23,20 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     set(${component}_PACKAGED FALSE PARENT_SCOPE)
   endif()
 endfunction()
+
+# this variable declares the install rule for the dev package
+set( libminc-dev-installrule TRUE )
+
+function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
+  if(MINC_FOUND)
+    file( GLOB _files "${MINC_INCLUDE_DIR}/ParseArgs.h" "${MINC_INCLUDE_DIR}/acr_*.h" "${MINC_INCLUDE_DIR}/minc*.h" "${MINC_INCLUDE_DIR}/nd_loop.h" "${MINC_INCLUDE_DIR}/time_stamp.h" "${MINC_INCLUDE_DIR}/volume_io.h" "${MINC_INCLUDE_DIR}/voxel_loop.h" )
+    BRAINVISA_INSTALL( FILES ${_files}
+                      DESTINATION "include"
+                      COMPONENT "${component}-dev" )
+    BRAINVISA_INSTALL_DIRECTORY( "${MINC_INCLUDE_DIR}/volume_io" 
+      include/volume_io ${component}-dev )
+    set(${component}-dev_PACKAGED TRUE PARENT_SCOPE)
+  else()
+    set(${component}-dev_PACKAGED FALSE PARENT_SCOPE)
+  endif()
+endfunction()

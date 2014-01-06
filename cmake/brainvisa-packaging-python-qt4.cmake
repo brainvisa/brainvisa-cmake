@@ -47,3 +47,15 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   endif()
 endfunction()
 
+# this variable declares the install rule for the dev package
+set( python-qt4-dev-installrule TRUE )
+
+function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
+  if(PYQT4_FOUND)
+    BRAINVISA_INSTALL_DIRECTORY( "${PYQT4_SIP_DIR}" share/sip/PyQt4
+      ${component}-dev )
+    set(${component}-dev_PACKAGED TRUE PARENT_SCOPE)
+  else()
+    set(${component}-dev_PACKAGED FALSE PARENT_SCOPE)
+  endif()
+endfunction()

@@ -32,3 +32,21 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     set(${component}_PACKAGED FALSE PARENT_SCOPE)
   endif()
 endfunction()
+
+# this variable declares the install rule for the dev package
+set( libopenslide-dev-installrule TRUE )
+
+function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
+  if(OPENSLIDE_FOUND)
+    foreach( _dir ${OPENSLIDE_INCLUDE_DIRS} )
+      get_filename_component( _name ${_dir} NAME )
+      if( "${_name}" STREQUAL "openslide" )
+        BRAINVISA_INSTALL_DIRECTORY( "${_dir}" include/openslide
+          ${component}-dev )
+      endif()
+    endforeach()
+    set(${component}-dev_PACKAGED TRUE PARENT_SCOPE)
+  else()
+    set(${component}-dev_PACKAGED FALSE PARENT_SCOPE)
+  endif()
+endfunction()

@@ -8,7 +8,11 @@ from brainvisa.maker.brainvisa_projects import \
 def project_version( projectname ):
     '''Brainvisa-cmake project version.'''
     # For now, take axon version. Could be specialized by project one day.
-    return pinfo.packages_info[ 'axon' ][ 'version' ]
+    if 'axon' in pinfo.packages_info:
+        return pinfo.packages_info[ 'axon' ][ 'version' ]
+    else:
+        # built without axon: take a default 1.0.0 version
+        return '1.0.0'
 
 
 def project_description( projectname ):

@@ -3,17 +3,23 @@
 
 import sys, os
 from optparse import OptionParser
+from datetime import datetime
+import dateutil.parser
 import subprocess
 
 parser = OptionParser( description = 'Clean build directory / directories'
     'If no dir is specified, the current directory is assumed.'
     'Dead links and obsolete python modules (.pyc and .pyo files without a valid .py file next to them) are removed.',
     usage='%prog [options] [dirnames]' )
+parser.add_option( '-a', '--accesstime', dest='accesstime',
+  help='delete files that have older access time than the one specified.', default = '1971-01-01 00:00:00' )
 parser.add_option( '-b', '--bin', dest='binaries', action='store_true',
   help='also check in all entries in bin/ are still present in Makefile, or obsolete, and erase them if not. Needs to have configured and up-to-date Makefiles' )
 parser.add_option( '-d', '--dir', dest='directories', action='store_true',
   help='remove empty directories. Do not use this option during compilation, since it may remove some useful, temporarily empty, directories...' )
-
+parser.add_option( '-l', '--list', dest='list', action='store_true',
+  help='only list files and directories that will be deleted, do not delete those.' )
+  
 (options, args) = parser.parse_args()
 
 if len( args ) == 0:
@@ -23,6 +29,7 @@ else:
 
 basedirs0 = list( basedirs )
 basermdirs = set()
+accesstime = dateutil.parser.parse(options.accesstime)
 
 while basedirs:
   d = basedirs.pop()
@@ -30,7 +37,9 @@ while basedirs:
   if len( dircontent ) == 0:
     if options.directories:
       print 'rmdir', d
-      os.rmdir( d )
+      if not options.list :
+        os.rmdir( d )
+        
       if d != os.path.dirname( d ):
         basermdirs.add( os.path.dirname( d ) )
   else:
@@ -41,11 +50,17 @@ while basedirs:
       elif os.path.islink( path ):
         if not os.path.exists( path ):
           print 'rm dead link', path
-          os.unlink( path )
+          if not options.list :
+            os.unlink( path )
       elif f.endswith( '.pyc' ) or f.endswith( '.pyo' ):
         pyfile = path[:-1]
         if not os.path.exists( pyfile ):
           print 'rm obsolete module', path
+          if not options.list :
+            os.unlink( path )
+      elif datetime.fromtimestamp(os.stat( path ).st_atime) < accesstime :
+        print 'rm obsolete file', path
+        if not options.list :
           os.unlink( path )
 
 while basermdirs:
@@ -54,7 +69,8 @@ while basermdirs:
   if len( dircontent ) == 0:
     if options.directories:
       print 'rmdir', d
-      os.rmdir( d )
+      if not options.list :
+        os.rmdir( d )
       if d != os.path.dirname( d ):
         basermdirs.add( os.path.dirname( d ) )
 
@@ -78,7 +94,8 @@ if options.binaries:
             code = sp.wait()
             if code == 2:
               print 'rm obsolete command', f
-              os.unlink( os.path.join( bindir, f ) )
+              if not options.list :
+                os.unlink( os.path.join( bindir, f ) )
   for d, items in skipped.iteritems():
     print '-- skipped from', d
     for f in items:

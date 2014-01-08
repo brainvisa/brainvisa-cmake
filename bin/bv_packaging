@@ -449,6 +449,10 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
         os.unlink( anashortcut )
       os.symlink( os.path.join('bin', 'anatomist.app'), ana_shortcut )
     if hasBrainvisa:
+      icns = glob.glob( os.path.join( install_directory, 'share', 'axon*' ) )
+      if not icns:
+        hasBrainvisa = False
+    if hasBrainvisa:
       bv_shortcut += '.app'
       if os.path.exists( bv_shortcut ):
         shutil.rmtree( bv_shortcut, 1 )

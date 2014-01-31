@@ -87,7 +87,7 @@ componentsPerProject = {
  'nuclear_processing': [ 'nuclear_processing-gpl',
                          'nuclear_processing-private' ],
  'optical_imaging' : ['optical_imaging-private', 'optical_imaging-gpl'],
- 'soma': [ 'soma-base',  'soma-io', 'soma-qtgui' ],
+ 'soma': [ 'soma-base',  'soma-io' ],
  'morphologist': [ 'morphologist-private', 'morphologist-gpl', 'baby', 'tms', 'sulci-data', 'sulci-private' ],
  'famis': [ 'famis-private', 'famis-gpl' ],
  'pyhrf': [ 'pyhrf-free', 'pyhrf-gpl' ],

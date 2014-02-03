@@ -601,8 +601,12 @@ class BuildDirectory( object ):
           for component in getBrainVISAComponents( componentsPattern ):
             if self.configuration.verbose:
               print '  considering component:', component
-            git_components = json.load( open( os.path.join( sourceDirectory, 'git_components.json' ) ) )
-            componentSourcesDirectory = git_components.get( component, {} ).get( versionPattern )
+            git_components_json = os.path.join( sourceDirectory, 'git_components.json' )
+            if os.path.exists( git_components_json ):
+              git_components = json.load( open( git_components_json ) )
+              componentSourcesDirectory = git_components.get( component, {} ).get( versionPattern )
+            else:
+              componentSourcesDirectory = None
             if componentSourcesDirectory:
               self.components[ component ] = ( componentSourcesDirectory, None )
               if self.configuration.verbose:

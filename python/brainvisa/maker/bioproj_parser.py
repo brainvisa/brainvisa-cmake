@@ -67,6 +67,7 @@ projects = [
   'ptk',
   'famis',
   'sandbox',
+  'snapbase',
 ]
 
 excludeComponents = [ 'ptk/toolbox-user-*' ]
@@ -111,6 +112,7 @@ groupsDefinition = {
     'nuclear_imaging/*',
     'soma/*',
     'morphologist/*',
+    'snapbase/*',
   ],
   'opensource': [
     'aims/*',
@@ -127,6 +129,7 @@ groupsDefinition = {
     'nuclear_imaging/*-gpl',
     'soma/*',
     'morphologist/*-gpl',
+    'snapbase/*',
   ],
   'anatomist': [
     'aims/*',

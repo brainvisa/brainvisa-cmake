@@ -529,11 +529,9 @@ def create_compressed_package( options, selected_packages, dependencies ):
   if len(options.compressedpackdir) > 0:
     install_directory = os.path.join(temp_directory, options.compressedpackdir)
     os.mkdir(install_directory)    
-  elif options.packname:
+  else:
     install_directory = os.path.join(temp_directory, os.path.basename(options.output))
     os.mkdir(install_directory)
-  else:
-    install_directory = temp_directory
 
   try:
     output = options.output
@@ -801,7 +799,7 @@ if __name__ == '__main__':
   options.dependencies = True
   options.bv_env = False
   options.wrappers = False
-  options.packname = False
+  options.packname = True
   options.compressedpackdir = ''
   options.cmake = 'cmake'
   options.verbose = False
@@ -877,8 +875,8 @@ Options:
   --wrappers            same as --bv_env, but do not copy the executable bv_env
                         and sibling scripts in the package directory: just do
                         the wrapping scripts
-  --packname            Include the name of the package in the compressed archive. 
-                        Available only with pack command. By default, the path in the archive are relative to the pack.
+  --packname            Obsolete. Does nothing. Now the name of the package is always
+                        included in the compressed archive.
   --compressed-packdir  Name of the directory in compressed archive. 
                         Available only with pack command. By default, the name of the directory in the archive is the name of the pack.
   --tmp DIRECTORY       Location of temporary directory (default is %(tmp)s).

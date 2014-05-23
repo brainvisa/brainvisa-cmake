@@ -185,7 +185,7 @@ class GlobalConfiguration( object ):
       bd = BuildDirectory( environmentVariablesSubstitution( options.build_directory ), self )
       self.buildDirectories[ bd.directory ] = bd
       for sd in options.sources_directories:
-        if os.path.exists( os.path.join( sd, 'project_info.cmake' ) ):
+        if os.path.exists( os.path.join( sd, 'project_info.cmake' ) ) or glob.glob( os.path.join( sd, '*', 'info.py' ) ):
           bd.addConfigurationLine( '+ ' + sd )
         else:
           bd.addConfigurationLine( 'all * ' + sd )
@@ -442,9 +442,17 @@ class SourceDirectory( object ):
       dest_path = os.path.join(self.directory,dest_directory)
       self.gitupdate(url, dest_path, git_tag)
       project_info = os.path.join( dest_path, 'project_info.cmake' )
-      if bv_version and os.path.exists( project_info ):
-        project, component, version = read_project_info( project_info )
-        git_components.setdefault( component, {} )[ bv_version ] = dest_path
+      info = glob.glob( os.path.join( dest_path, '*', 'info.py' ) )
+      if bv_version:
+        if os.path.exists( project_info ):
+          project, component, version = read_project_info( project_info )
+          git_components.setdefault( component, {} )[ bv_version ] = dest_path
+        if info:
+          d = {}
+          execfile(info[0],d,d)
+          project = component = d['NAME']
+          version = [str(d['_version_major']),str(d['_version_minor'])]
+          git_components.setdefault( component, {} )[ bv_version ] = dest_path
     json.dump( git_components, open(os.path.join(self.directory,'git_components.json'),'w') )
 
 
@@ -629,12 +637,20 @@ class BuildDirectory( object ):
       project_info = os.path.join( directory, 'project_info.cmake' )
       if os.path.exists( project_info ):
         project, component, version = read_project_info( project_info )
-        if project:
-          self.projects.add( project )
-        if component:
-          self.components[ component ] = ( directory, '.'.join( version ) )
       else:
-        print >> sys.stderr, "WARNING: ignoring directory '%s' because it does not contain project_info.cmake" % directory
+        info = glob.glob(os.path.join( directory, '*', 'info.py' ))
+        if info:
+          d = {}
+          execfile(info[0],d,d)
+          project = component = d['NAME']
+          version = [str(d['_version_major']),str(d['_version_minor'])]
+        else:
+            print >> sys.stderr, "WARNING: ignoring directory '%s' because it does not contain project_info.cmake nor info.py" % directory
+            project = component = version = None
+      if project:
+        self.projects.add( project )
+      if component:
+        self.components[ component ] = ( directory, '.'.join( version ) )
     
     if not os.path.exists( self.directory ):
       os.makedirs( self.directory )
@@ -655,8 +671,14 @@ class BuildDirectory( object ):
       os.stat( directory ) # Raise appropriate error if directory does not exist
       project_info = os.path.join( directory, 'project_info.cmake' )
       if not os.path.exists( project_info ):
-        print >> sys.stderr, "WARNING: ignoring directory '%s' because it does not contain project_info.cmake" % directory
-        del self.components[ component ]
+        info = glob.glob(os.path.join( directory, '*', 'info.py' ))
+        if not info:
+            print >> sys.stderr, "WARNING: ignoring directory '%s' because it does not contain project_info.cmake nor info.py" % directory
+            del self.components[ component ]
+        elif version is None:
+          d= {}
+          execfile(info[0],d,d)
+          self.components[ component ] = ( directory, '%d.%d' % (d['_version_major'], d['_version_minor']) )
       elif version is None:
         version = [ '', '' ]
         p = re.compile( r'\s*set\(\s*([^ \t]*)\s*(.*[^ \t])\s*\)' )
@@ -732,10 +754,10 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
     for directory in self.configurationDirectories:
       os.stat( directory ) # Raise appropriate error if directory does not exist
       project_info = os.path.join( directory, 'project_info.cmake' )
+      project = None
+      component = None
+      version = [ '', '' ]
       if os.path.exists( project_info ):
-        project = None
-        component = None
-        version = [ '', '' ]
         p = re.compile( r'\s*set\(\s*([^ \t]*)\s*(.*[^ \t])\s*\)' )
         for line in open( project_info ):
           match = p.match( line )
@@ -749,27 +771,42 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
               version[ 0 ] = value
             elif variable == 'BRAINVISA_PACKAGE_VERSION_MINOR':
               version[ 1 ] = value
-        if project:
-          self.projects.add( project )
-        if component:
-          self.components[ component ] = ( directory, '.'.join( version ) )
+      else:
+        info = glob.glob(os.path.join( directory, '*', 'info.py' ))
+        if info:
+          d = {}
+          execfile(info[0],d,d)
+          component = project = d['NAME']
+          version[0] = str(d['_version_major'])
+          version[1] = str(d['_version_minor'])
+      if project:
+        self.projects.add( project )
+      if component:
+        self.components[ component ] = ( directory, '.'.join( version ) )
     
     for component, directory_version in self.components.items():
       directory, version = directory_version
       project_info = os.path.join( directory, 'project_info.cmake' )
-      if not os.path.exists( project_info ):
+      info = glob.glob( os.path.join( directory, '*', 'info.py' ))
+      if not os.path.exists( project_info ) and not info:
         del self.components[ component ]
       elif version is None:
         version = [ '', '' ]
-        p = re.compile( r'\s*set\(\s*([^ \t]*)\s*(.*[^ \t])\s*\)' )
-        for line in open( project_info ):
-          match = p.match( line )
-          if match:
-            variable, value = match.groups()
-            if variable == 'BRAINVISA_PACKAGE_VERSION_MAJOR':
-              version[ 0 ] = value
-            elif variable == 'BRAINVISA_PACKAGE_VERSION_MINOR':
-              version[ 1 ] = value
+        if os.path.exists( project_info ):
+            p = re.compile( r'\s*set\(\s*([^ \t]*)\s*(.*[^ \t])\s*\)' )
+            for line in open( project_info ):
+              match = p.match( line )
+              if match:
+                variable, value = match.groups()
+                if variable == 'BRAINVISA_PACKAGE_VERSION_MAJOR':
+                  version[ 0 ] = value
+                elif variable == 'BRAINVISA_PACKAGE_VERSION_MINOR':
+                  version[ 1 ] = value
+        else:
+          d = {}
+          execfile(info[0],d,d)
+          version[0] = str(d['_version_major'])
+          version[1] = str(d['_version_minor'])
         self.components[ component ] = ( directory, '.'.join( version ) )
 
     # Order of projects and components is important for dependencies

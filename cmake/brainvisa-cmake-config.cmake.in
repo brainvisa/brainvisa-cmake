@@ -102,8 +102,70 @@ macro( BRAINVISA_FIND_PACKAGE component )
   endif()
 endmacro()
 
+function(BRAINVISA_TEMPORARY_FILE_NAME variable)
+  set(_base "/tmp/bv_maker_")
+  set(_counter 0)
+  while(EXISTS "${_base}${_counter}")
+    math(EXPR _counter "${_counter} + 1")
+  endwhile(EXISTS "${_base}${_counter}")
+  set(${variable} "${_base}${_counter}" PARENT_SCOPE)
+endfunction()
+
+
+function(BRAINVISA_READ_PROJECT_INFO directory)
+    if(EXISTS "${directory}/project_info.cmake")
+        include("${directory}/project_info.cmake")
+        set(BRAINVISA_PACKAGE_NAME ${BRAINVISA_PACKAGE_NAME} PARENT_SCOPE)
+        set(BRAINVISA_PACKAGE_MAIN_PROJECT ${BRAINVISA_PACKAGE_MAIN_PROJECT} PARENT_SCOPE)
+        set(BRAINVISA_PACKAGE_VERSION_MAJOR ${BRAINVISA_PACKAGE_VERSION_MAJOR} PARENT_SCOPE)
+        set(BRAINVISA_PACKAGE_VERSION_MINOR ${BRAINVISA_PACKAGE_VERSION_MINOR} PARENT_SCOPE)
+        set(BRAINVISA_PACKAGE_VERSION_PATCH ${BRAINVISA_PACKAGE_VERSION_PATCH} PARENT_SCOPE)
+        set(BRAINVISA_PACKAGE_MAINTAINER ${BRAINVISA_PACKAGE_MAINTAINER} PARENT_SCOPE)
+        set(BRAINVISA_PACKAGE_LICENCES ${BRAINVISA_PACKAGE_LICENCES} PARENT_SCOPE)
+    else()
+        file(GLOB_RECURSE infos "${directory}/info.py")
+        list(GET infos 0 info)
+        BRAINVISA_TEMPORARY_FILE_NAME(script)
+        set(script "${script}.py")
+        file(WRITE  "${script}"
+    "execfile('${info}')
+f = open(__file__,'w')
+print >> f, 'set(BRAINVISA_PACKAGE_NAME \"%s\" PARENT_SCOPE)' % NAME
+print >> f, 'set(BRAINVISA_PACKAGE_MAIN_PROJECT \"%s\" PARENT_SCOPE)' % NAME
+print >> f, 'set(BRAINVISA_PACKAGE_VERSION_MAJOR %d PARENT_SCOPE)' % _version_major
+print >> f, 'set(BRAINVISA_PACKAGE_VERSION_MINOR %d PARENT_SCOPE)' % _version_minor
+print >> f, 'set(BRAINVISA_PACKAGE_VERSION_PATCH %d PARENT_SCOPE)' % _version_micro
+print >> f, 'set(BRAINVISA_PACKAGE_MAINTAINER \"%s\" PARENT_SCOPE)' % MAINTAINER
+print >> f, 'set(BRAINVISA_PACKAGE_LICENCES \"%s\" PARENT_SCOPE)' % LICENSE
+    ")
+        execute_process(COMMAND python "${script}")
+        include("${script}")
+        file(REMOVE "${script}")
+    endif()
+endfunction()
+
+
+function( BRAINVISA_FIND_COMPONENT_DIRECTORIES variable project_directory )
+    set( result )
+    file( GLOB_RECURSE projects_info "${path}/${project}/project_info.cmake" )
+    foreach( project_info ${projects_info} )
+        get_filename_component( component_dir "${info}" PATH )
+        list(APPEND result "${component_dir}")
+    endforeach()
+    file( GLOB_RECURSE projects_info "${path}/${project}/info.py" )
+    foreach( project_info ${projects_info} )
+        get_filename_component( component_dir "${info}" PATH )
+        get_filename_component( component_dir "${component_dir}" PATH )
+        list(FIND result "${component_dir}" index)
+        if(index EQUAL -1)
+          list(APPEND result "${component_dir}")
+        endif()
+    endforeach()
+    set(${variable} ${result} PARENT_SCOPE)
+endfunction()
+
 macro( BRAINVISA_PROJECT )
-  include( "${CMAKE_CURRENT_SOURCE_DIR}/project_info.cmake" )
+  BRAINVISA_READ_PROJECT_INFO( "${CMAKE_CURRENT_SOURCE_DIR}" )
   if( NOT DEFINED BRAINVISA_PACKAGE_VERSION )
     set( BRAINVISA_PACKAGE_VERSION "${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}.${BRAINVISA_PACKAGE_VERSION_PATCH}" )
   endif()

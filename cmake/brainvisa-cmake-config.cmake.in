@@ -128,18 +128,23 @@ function(BRAINVISA_READ_PROJECT_INFO directory)
         BRAINVISA_TEMPORARY_FILE_NAME(script)
         set(script "${script}.py")
         file(WRITE  "${script}"
-    "execfile('${info}')
-f = open(__file__,'w')
-print >> f, 'set(BRAINVISA_PACKAGE_NAME \"%s\" PARENT_SCOPE)' % NAME
-print >> f, 'set(BRAINVISA_PACKAGE_MAIN_PROJECT \"%s\" PARENT_SCOPE)' % NAME
-print >> f, 'set(BRAINVISA_PACKAGE_VERSION_MAJOR %d PARENT_SCOPE)' % _version_major
-print >> f, 'set(BRAINVISA_PACKAGE_VERSION_MINOR %d PARENT_SCOPE)' % _version_minor
-print >> f, 'set(BRAINVISA_PACKAGE_VERSION_PATCH %d PARENT_SCOPE)' % _version_micro
-print >> f, 'set(BRAINVISA_PACKAGE_MAINTAINER \"%s\" PARENT_SCOPE)' % MAINTAINER
-print >> f, 'set(BRAINVISA_PACKAGE_LICENCES \"%s\" PARENT_SCOPE)' % LICENSE
-    ")
-        execute_process(COMMAND python "${script}")
-        include("${script}")
+    "import sys, os
+info='${info}'
+execfile(info)
+cmake = os.path.join('${CMAKE_BINARY_DIR}','build_files',NAME,'project_info.cmake')
+if not os.path.exists(cmake) or os.stat(cmake).st_mtime < os.stat(info).st_mtime:
+    f = open(cmake,'w')
+    print >> f, 'set(BRAINVISA_PACKAGE_NAME \"%s\" PARENT_SCOPE)' % NAME
+    print >> f, 'set(BRAINVISA_PACKAGE_MAIN_PROJECT \"%s\" PARENT_SCOPE)' % NAME
+    print >> f, 'set(BRAINVISA_PACKAGE_VERSION_MAJOR %d PARENT_SCOPE)' % _version_major
+    print >> f, 'set(BRAINVISA_PACKAGE_VERSION_MINOR %d PARENT_SCOPE)' % _version_minor
+    print >> f, 'set(BRAINVISA_PACKAGE_VERSION_PATCH %d PARENT_SCOPE)' % _version_micro
+    print >> f, 'set(BRAINVISA_PACKAGE_MAINTAINER \"%s\" PARENT_SCOPE)' % MAINTAINER
+    print >> f, 'set(BRAINVISA_PACKAGE_LICENCES \"%s\" PARENT_SCOPE)' % LICENSE
+sys.stdout.write(cmake)
+")
+        execute_process(COMMAND python "${script}" OUTPUT_VARIABLE cmake)
+        include("${cmake}")
         file(REMOVE "${script}")
     endif()
 endfunction()

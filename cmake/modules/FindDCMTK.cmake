@@ -179,7 +179,7 @@ find_library( DCMTK_dcmdata_LIBRARY dcmdata
 )
 
 # find library dcmimage
-find_library( DCMTK_dcmdata_LIBRARY dcmdata
+find_library( DCMTK_dcmimage_LIBRARY dcmimage
     PATHS ${_directories}
     PATH_SUFFIXES ${_librarySuffixes}
 )

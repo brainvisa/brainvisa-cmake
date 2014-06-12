@@ -97,7 +97,7 @@ components_definition = [
                 },
             }],
             ['soma-qtgui', {
-                'groups': ['all', 'opensource', 'standard'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-qtgui/trunk','soma/soma-qtgui/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-qtgui/branches/4.4','soma/soma-qtgui/branches/4.4'),
@@ -311,6 +311,12 @@ components_definition = [
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-models/branches/4.4','morphologist/sulci-models/branches/4.4'),
                 },
             }],
+            #['morphologist-ui', {
+                #'groups': ['all'],
+                #'branches': {
+                    #'trunk': ('git https://github.com/neurospin/morphologist.git master', 'morphologist/morphologist-ui/trunk'),
+                #},
+            #}],
         ],
     }),
     ('brainrat', {

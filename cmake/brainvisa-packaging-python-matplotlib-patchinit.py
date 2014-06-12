@@ -5,7 +5,7 @@ import os, re, sys
 infile = sys.argv[1]
 outfile = sys.argv[2]
 
-r = re.compile( "((^.*$\n)*)^( *path = '/usr/share/matplotlib/mpl-data')$\n((^.*$\n)*)^( *raise RuntimeError\('Could not find the matplotlib data files'\))$\n+( *# setuptools' namespace_packages may highjack this init file$\n(^.*$\n)*)^( *path = *('/etc') # guaranteed to exist or raise)$\n((^.*$\n?)*)\Z", re.MULTILINE )
+r = re.compile( "((^.*$\n)*)^( *path = '/usr/share/matplotlib/mpl-data')$\n((^.*$\n)*)^( *raise RuntimeError\('Could not find the matplotlib data files'\))$\n+( *# setuptools' namespace_packages may highjack this init file$\n(^.*$\n)*)^( *path = *('/etc') +# guaranteed to exist or raise)$\n((^.*$\n?)*)\Z", re.MULTILINE )
 
 lines = open( infile ).read()
 m = r.match( lines )

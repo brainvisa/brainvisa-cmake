@@ -35,8 +35,8 @@ components_definition = [
                 'groups': ['all', 'anatomist', 'opensource', 'standard','catidb'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/trunk','development/brainvisa-cmake/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/branches/1.3','development/brainvisa-cmake/branches/1.3'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/tags/1.2.1','development/brainvisa-cmake/tags/1.2.1'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/branches/bug_fix','development/brainvisa-cmake/bug_fix'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/tags/1.2.1','development/brainvisa-cmake/tag'),
                 },
             }],
             ['brainvisa-svn', {

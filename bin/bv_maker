@@ -132,6 +132,9 @@ def read_project_info( directory ):
     elif find_info:
       d = {}
       execfile(find_info[0],d,d)
+      for var in ('NAME', 'version_major', 'version_minor'):
+        if var not in d:
+          raise KeyError('Variable %s missing in info file %s' % (var, find_info[0]))
       project = component = d['NAME']
       version = '%s.%s' % (d['version_major'], d['version_minor'])
       return ( project, component, version )

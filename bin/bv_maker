@@ -133,7 +133,7 @@ def read_project_info( directory ):
       d = {}
       execfile(find_info[0],d,d)
       project = component = d['NAME']
-      version = '%s.%s' % (d['_version_major'], d['_version_minor'])
+      version = '%s.%s' % (d['version_major'], d['version_minor'])
       return ( project, component, version )
     else:
       return None

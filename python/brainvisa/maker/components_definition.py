@@ -32,7 +32,7 @@ components_definition = [
     ('development', {
         'components': [
             ['brainvisa-cmake', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard','catidb'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/trunk','development/brainvisa-cmake/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/branches/1.3','development/brainvisa-cmake/branches/1.3'),
@@ -40,7 +40,7 @@ components_definition = [
                 },
             }],
             ['brainvisa-svn', {
-                'groups': ['all', 'opensource', 'standard'],
+                'groups': ['all', 'opensource', 'standard', 'catidb'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-svn/trunk','development/brainvisa-svn/trunk'),
                 },
@@ -68,7 +68,7 @@ components_definition = [
     ('brainvisa-share', {
         'components': [
             ['brainvisa-share', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-share/trunk','brainvisa-share/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-share/branches/4.4','brainvisa-share/branches/4.4'),
@@ -81,7 +81,7 @@ components_definition = [
         'description': 'Set of lower-level libraries for neuroimaging processing infrastructure',
         'components': [
             ['soma-base', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard', 'test'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/trunk','soma/soma-base/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/branches/4.4','soma/soma-base/branches/4.4'),
@@ -89,7 +89,7 @@ components_definition = [
                 },
             }],
             ['soma-io', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io/trunk','soma/soma-io/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io/branches/4.4','soma/soma-io/branches/4.4'),
@@ -105,7 +105,7 @@ components_definition = [
                 },
             }],
             ['corist', {
-                'groups': ['all', 'opensource', 'standard'],
+                'groups': ['all', 'opensource', 'standard', 'catidb'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/corist/trunk','soma/corist/trunk'),
                 },
@@ -124,7 +124,7 @@ components_definition = [
                 },
             }],
             ['soma-io-gpl', {
-                'groups': ['all', 'opensource', 'standard'],
+                'groups': ['all', 'opensource', 'standard', 'catidb'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io-gpl/trunk','soma/soma-io-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io-gpl/branches/1.0','soma/soma-io-gpl/branches/1.0'),
@@ -138,10 +138,9 @@ components_definition = [
                 },
             }],
             ['soma-workflow', {
-                'groups': ['all', 'opensource', 'standard', 'test'],
+                'groups': ['all', 'opensource', 'standard', 'catidb'],
                 'branches': {
-                    #'trunk': ('git https://github.com/neurospin/soma-workflow.git master','soma/soma-workflow/trunk'),
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-workflow/trunk','soma/soma-workflow/trunk'),
+                    'trunk': ('git https://github.com/neurospin/soma-workflow.git master','soma/soma-workflow/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-workflow/branches/2.6','soma/soma-workflow/branches/2.6'),
                     'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-workflow/tags/2.6.0','soma/soma-workflow/tags/2.6.0'),
                 },
@@ -151,7 +150,7 @@ components_definition = [
     ('capsul', {
         'components': [
             ['capsul', {
-                'groups': ['all', 'opensource', 'standard', 'test'],
+                'groups': ['all', 'opensource', 'standard', 'catidb'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/svn/capsul/trunk','capsul/trunk'),
                 },
@@ -162,7 +161,7 @@ components_definition = [
         'description': '3D/4D neuroimaging data manipulation and processing library and commands. Includes C++ libraries, command lines, and a Python API.',
         'components': [
             ['aims-free', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-free/trunk','aims/aims-free/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-free/branches/4.4','aims/aims-free/branches/4.4'),
@@ -170,7 +169,7 @@ components_definition = [
                 },
             }],
             ['aims-gpl', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-gpl/trunk','aims/aims-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-gpl/branches/4.4','aims/aims-gpl/branches/4.4'),
@@ -191,7 +190,7 @@ components_definition = [
         'description': '3D/4D neuroimaging data viewer. Modular and versatile, Anatomist can display any kind of neuroimaging data (3D/4D images, meshes and textures, fiber tracts, and structured sets of objects such as cortical sulci), in an arbitrary number of views. Allows C++ and Python programming, both for plugins add-ons, as well as complete custom graphical applications design.',
         'components': [
             ['anatomist-free', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-free/trunk','anatomist/anatomist-free/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-free/branches/4.4','anatomist/anatomist-free/branches/4.4'),
@@ -199,7 +198,7 @@ components_definition = [
                 },
             }],
             ['anatomist-gpl', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-gpl/trunk','anatomist/anatomist-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-gpl/branches/4.4','anatomist/anatomist-gpl/branches/4.4'),
@@ -564,9 +563,21 @@ components_definition = [
     ('snapbase', {
         'components': [
             ['snapbase', {
-                'groups': ['all', 'opensource', 'standard'],
+                'groups': ['all', 'opensource', 'standard', 'catidb'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/snapbase/trunk','snapbase/trunk'),
+                },
+            }],
+        ],
+    }),
+    ('catidb', {
+        'components': [
+            ['catidb', {
+                'groups': ['all', 'catidb'],
+                'branches': {
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb/trunk','catidb/trunk'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb/branches/release',' catidb/release'),
+                    'brainomics': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb/branches/catidb_brainomics',' catidb/catidb_brainomics'),
                 },
             }],
         ],

@@ -106,8 +106,11 @@ def environmentVariablesSubstitution( path ):
   
 def read_project_info( directory ):
     project_info = os.path.join( directory, 'project_info.cmake' )
-    info =  os.path.join( directory, '*', 'info.py' )
+    info =  os.path.join( directory, 'python', '*', 'info.py' )
     find_info = glob.glob( info )
+    if not find_info:
+        info =  os.path.join( directory, '*', 'info.py' )
+        find_info = glob.glob( info )
     if os.path.exists( project_info ):
       project = None
       component = None
@@ -201,7 +204,9 @@ class GlobalConfiguration( object ):
       bd = BuildDirectory( environmentVariablesSubstitution( options.build_directory ), self )
       self.buildDirectories[ bd.directory ] = bd
       for sd in options.sources_directories:
-        if os.path.exists( os.path.join( sd, 'project_info.cmake' ) ) or glob.glob( os.path.join( sd, '*', 'info.py' ) ):
+        if os.path.exists( os.path.join( sd, 'project_info.cmake' ) ) or \
+           glob.glob( os.path.join( sd, 'python', '*', 'info.py' ) ) or \
+           glob.glob( os.path.join( sd, '*', 'info.py' ) ):
           bd.addConfigurationLine( 'directory ' + sd )
         else:
           bd.addConfigurationLine( 'brainvisa all * ' + sd )
@@ -516,7 +521,7 @@ class SourceDirectory( object ):
         project, component, version = pinfo
         components_sources.setdefault( component, {} )[ bv_version or version ] = dest_path
       else:
-        print 'WARNING: directory %s will be ignored because project_info.cmake or */info.py cannot be found' % os.path.join( self.directory, dest_path )
+        print 'WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % os.path.join( self.directory, dest_path )
     json.dump( components_sources, open(os.path.join(self.directory,'components_sources.json'),'w'), indent=2 )
 
   def svncommand( self, *svnargs ):
@@ -641,7 +646,7 @@ class BuildDirectory( object ):
               print '    adding component %s version %s from %s' %(component, version, directory)
             self.components[component] = (directory,version,version)
           else:
-            print 'WARNING: directory %s will be ignored because project_info.cmake or */info.py cannot be found' % directory
+            print 'WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % directory
         elif first in ('brainvisa_exclude', '-'):
           componentPattern, versionPattern = (rest.split(None,1) + ['*'])[:2]
           for component in find_components( componentPattern ):
@@ -675,7 +680,7 @@ class BuildDirectory( object ):
                     print '    adding component %s version %s from %s' %(component, version, directory)
                   self.components[component] = (directory,version,component_version)
                 else:
-                  print 'WARNING: directory %s will be ignored because project_info.cmake or */info.py cannot be found' % directory
+                  print 'WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % directory
         else:
           SyntaxError()
       projects = set(project_per_component.get(i,i) for i in self.components)

@@ -136,9 +136,9 @@ if not os.path.exists(cmake) or os.stat(cmake).st_mtime < os.stat(info).st_mtime
     f = open(cmake,'w')
     print >> f, 'set(BRAINVISA_PACKAGE_NAME \"%s\" PARENT_SCOPE)' % NAME
     print >> f, 'set(BRAINVISA_PACKAGE_MAIN_PROJECT \"%s\" PARENT_SCOPE)' % NAME
-    print >> f, 'set(BRAINVISA_PACKAGE_VERSION_MAJOR %d PARENT_SCOPE)' % _version_major
-    print >> f, 'set(BRAINVISA_PACKAGE_VERSION_MINOR %d PARENT_SCOPE)' % _version_minor
-    print >> f, 'set(BRAINVISA_PACKAGE_VERSION_PATCH %d PARENT_SCOPE)' % _version_micro
+    print >> f, 'set(BRAINVISA_PACKAGE_VERSION_MAJOR %d PARENT_SCOPE)' % version_major
+    print >> f, 'set(BRAINVISA_PACKAGE_VERSION_MINOR %d PARENT_SCOPE)' % version_minor
+    print >> f, 'set(BRAINVISA_PACKAGE_VERSION_PATCH %d PARENT_SCOPE)' % version_micro
     print >> f, 'set(BRAINVISA_PACKAGE_MAINTAINER \"%s\" PARENT_SCOPE)' % MAINTAINER
     print >> f, 'set(BRAINVISA_PACKAGE_LICENCES \"%s\" PARENT_SCOPE)' % LICENSE
 sys.stdout.write(cmake)

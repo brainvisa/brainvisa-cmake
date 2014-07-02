@@ -573,7 +573,7 @@ components_definition = [
     ('catidb', {
         'components': [
             ['catidb', {
-                'groups': ['all', 'catidb'],
+                'groups': ['catidb'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb/trunk','catidb/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb/branches/release',' catidb/release'),

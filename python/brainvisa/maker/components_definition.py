@@ -310,12 +310,12 @@ components_definition = [
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-models/branches/4.4','morphologist/sulci-models/branches/4.4'),
                 },
             }],
-            #['morphologist-ui', {
-                #'groups': ['all'],
-                #'branches': {
-                    #'trunk': ('git https://github.com/neurospin/morphologist.git master', 'morphologist/morphologist-ui/trunk'),
-                #},
-            #}],
+            ['morphologist-ui', {
+                'groups': ['all'],
+                'branches': {
+                    'trunk': ('git https://github.com/neurospin/morphologist.git master', 'morphologist/morphologist-ui/trunk'),
+                },
+            }],
         ],
     }),
     ('brainrat', {
@@ -573,7 +573,7 @@ components_definition = [
     ('catidb', {
         'components': [
             ['catidb', {
-                'groups': ['all', 'catidb'],
+                'groups': ['catidb'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb/trunk','catidb/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb/branches/release',' catidb/release'),

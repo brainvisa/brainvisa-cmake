@@ -37,6 +37,23 @@ import sys, os, re, pprint, subprocess, glob, shutil, json
 from optparse import OptionParser
 from fnmatch import fnmatchcase
 
+# Ugly hack to backport subprocess.check_ouput method on python < 2.7
+# TODO: remove this once BrainVISA is only compatible with python >= 2.7
+if "check_output" not in dir( subprocess ): # duck punch it in!
+  def f(*popenargs, **kwargs):
+    if 'stdout' in kwargs:
+      raise ValueError('stdout argument not allowed, it will be overridden.')
+    process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
+    output, unused_err = process.communicate()
+    retcode = process.poll()
+    if retcode:
+      cmd = kwargs.get("args")
+      if cmd is None:
+        cmd = popenargs[0]
+      raise subprocess.CalledProcessError(retcode, cmd)
+    return output
+  subprocess.check_output = f
+
 if os.path.exists( sys.argv[0] ):
   this_script = sys.argv[0]
 else:
@@ -541,6 +558,7 @@ class SourceDirectory( object ):
     if os.path.isdir(dest):
       if os.path.exists( os.path.join(dest, '.git') ):
         url = subprocess.check_output( ['git', 'config', '--get', 'remote.origin.url'], cwd=dest ).strip()
+
         if url != src:
           if self.configuration.verbose:
             print 'directory %s refer to git url "%s" that is different from "%s" => git clone' % ( dest, url, src )

@@ -50,10 +50,17 @@ else()
     set( PYQT4_SIP_FLAGS "${PYQT4_SIP_FLAGS}" CACHE STRING "The SIP flags used to build PyQt" )
     mark_as_advanced( PYQT4_SIP_FLAGS )
 
-    find_program( PYQT4_PYLUPDATE_EXECUTABLE NAMES pylupdate4 pylupdate
+	if (WIN32)
+		# Windows 7 does not authorize pylupdate and pylupdate4
+		# to be run using account that is not administrator.
+		# So it was necessary to copy it to pylactualize.
+		# No comment ...
+		set( WIN_PYLUPDATE pylactualize )
+	endif()
+    find_program( PYQT4_PYLUPDATE_EXECUTABLE NAMES "${WIN_PYLUPDATE}" pylupdate4 pylupdate
       DOC "pylupdate program path" )
     find_program( PYUIC NAMES pyuic4 pyuic DOC "pyuic program path" )
-
+	set(WIN_PYLUPDATE)
     set(PYQT4_FOUND TRUE)
   endif()
 

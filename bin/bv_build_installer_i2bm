@@ -10,10 +10,12 @@ from brainvisa.config import fullVersion
 #default_build_repos_dir \
     #= '/neurospin/brainvisa/repositories/build-repos/%(i2bm)s/%(version)s/%(os)s'
 default_mirror_repos_dir \
-    = '/neurospin/brainvisa/repositories/mirrors/%(i2bm)s/%(version)s/%(os)s'
+    = '/neurospin/brainvisa/repositories/%(i2bm)s/repositories/' \
+        '%(version)s/%(os)s'
 default_output \
-    = '/neurospin/brainvisa/repositories/brainvisa_installer-' \
-        '%(os)s-%(version)s-%(i2bm)s'
+    = '/neurospin/brainvisa/repositories/%(i2bm)s/download/installer/' \
+        '%(version)s/brainvisa_installer-' \
+        '%(version)s-%(os)s-%(online)s%(public)s'
 
 parser = OptionParser(usage='%prog [options]',
     version='%prog 1.0',
@@ -30,9 +32,11 @@ parser.add_option('-m', '--mirror_repos', action='store', type='string',
     '%s(i2bm)s, %s(version)s and/or %s(os)s which will be replaced by their '
     'values.\n'
     'Variables values:\n'
-    '  i2bm: "i2bm" if -i option is used, "public" otherwise\n'
-    '  version: soma-base version: %s\n'
-    '  os: "linux32", "linux64", "osx", "win32" for public non-i2bm '
+    '  * i2bm: "i2bm" if -i option is used, "public" otherwise\n'
+    '  * version: soma-base version: %s\n'
+    '  * os: "linux32", "linux64", "osx", "win32" for public non-i2bm\n'
+    '  * public: "-i2bm" or empty\n'
+    '  * online: "online" or "offline"\n'
     'repositories with thirdparty components,\n'
     '      "Ubuntu-14.04-x86_64" etc for i2bm repositories'
     % (default_mirror_repos_dir, '%', '%', '%', fullVersion))
@@ -54,6 +58,8 @@ systems = {'darwin' : 'osx'}
 i2bm_str = 'public'
 osname = platform.system().lower()
 osname = systems.get(osname, osname)
+public = ''
+online = 'online'
 if osname == 'linux':
     if platform.architecture()[0] == '64bit':
         osname += '64'
@@ -62,8 +68,11 @@ if osname == 'linux':
 if options.i2bm:
     i2bm_str = 'i2bm'
     osname = os.getenv('I2BM_OSID')
+    public = '-i2bm'
 
-pathvars = {'i2bm' : i2bm_str, 'os' : osname, 'version' : fullVersion}
+
+pathvars = {'i2bm' : i2bm_str, 'os' : osname, 'version' : fullVersion,
+    'public' : public, 'online' : online}
 
 #build_repos_dir = options.build_repos % pathvars
 mirror_repos_dir = options.mirror_repos % pathvars

@@ -1832,9 +1832,17 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
       list( REMOVE_AT args ${result} )
     endif()
 
-    set( source_directory "${CMAKE_CURRENT_SOURCE_DIR}/${sourceDirectory}" )
+    set( source_directory "${sourceDirectory}" )
+    if( NOT IS_ABSOLUTE "${sourceDirectory}" )
+      set( source_directory "${CMAKE_CURRENT_SOURCE_DIR}/${sourceDirectory}" )
+    endif()
+
     get_filename_component(install_directory "${outputDirectory}" PATH)
-    set( output_directory "${CMAKE_BINARY_DIR}/${outputDirectory}" )
+
+    set( output_directory "${outputDirectory}" )
+    if( NOT IS_ABSOLUTE "${outputDirectory}" )
+      set( output_directory "${CMAKE_BINARY_DIR}/${outputDirectory}" )
+    endif()
 
     if( NOT target )
       set( target ${PROJECT_NAME}-sphinx )

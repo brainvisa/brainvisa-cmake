@@ -16,12 +16,14 @@ def is_in_base( path, bases ):
     return ( False, path, '' )
 
 
-def is_external_link( path, bases ):
+def is_external_link(path, bases):
     '''Test if path (normally a symlink) points out of "bases" trees.
     Returns a tuple of 3 elements:
     ( is_ext_link, final_path, final_is_symlink, relpath, base )
     '''
-    if not os.path.islink( path ):
+    if not os.path.exists(path):
+        raise IOError('file does not exist: %s' % path)
+    if not os.path.islink(path):
         return ( False, path, False, path, '' )
     found = False
     while not found:
@@ -88,9 +90,13 @@ options, args = parser.parse_args( sys.argv )
 if len( args ) < 3:
     parser.parse_args( [ '-h' ] )
 
-dest = realrealpath( args[-1] )
-sources = [ realrealpath( p ) for p in args[1:-1] ]
-exclude = [ realrealpath( p ) for p in options.exclude ]
+dest = realrealpath(args[-1])
+sources = [realrealpath( p ) for p in args[1:-1]]
+exclude = [realrealpath( p ) for p in options.exclude]
+missing = [p for p in sources if not os.path.exists(p)]
+if missing:
+    print >> sys.stderr, 'missing files:', missing
+    sources = [p for p in sources if p not in missing]
 
 if ( os.path.exists( dest ) and not os.path.isdir( dest ) ) or \
       ( not os.path.exists( dest ) and len( sources ) > 1 ):
@@ -128,8 +134,12 @@ while sources:
     x, rpath, base = is_in_base( source, bases )
     destpath = os.path.join( dest, rpath )
     if options.verbose: print source, '->', destpath, x, rpath, base
-    is_extlink, spath, is_link, relpath, base \
-        = is_external_link( source, bases )
+    try:
+        is_extlink, spath, is_link, relpath, base \
+            = is_external_link( source, bases )
+    except IOError, e:
+        print >> sys.stderr, e
+        continue
     if is_link:
         if not is_extlink:
             # internal symlink

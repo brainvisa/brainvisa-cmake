@@ -2491,7 +2491,7 @@ function( BRAINVISA_ADD_TRANSLATION source_share_dir dest_share_dir component)
       SET(_pro_srcs "${_pro_srcs} \"${_pro_src}\"")
     ENDFOREACH()
     FILE(WRITE ${_ts_pro} "SOURCES = ${_pro_srcs}")
-    set( _lupdate_options -source-language "${lang}" )
+    set( _lupdate_options -source-language "${lang}" -noobsolete )
     ADD_CUSTOM_COMMAND(OUTPUT "${tr_dst}" "${qm_dst}"
         COMMAND "${CMAKE_COMMAND}" ARGS -E copy "${tr_source}" "${tr_dst}"
         COMMAND "${QT_LUPDATE_EXECUTABLE}"
@@ -2571,7 +2571,7 @@ function( BRAINVISA_ADD_PYTRANSLATION source_share_dir dest_share_dir component)
       ADD_CUSTOM_COMMAND(OUTPUT "${tr_dst}" "${qm_dst}"
           COMMAND "${CMAKE_COMMAND}" ARGS -E copy "${tr_source}" "${tr_dst}"
           COMMAND "${PYQT4_PYLUPDATE_EXECUTABLE}"
-          ARGS "${_ts_pro}"
+          ARGS -noobsolete "${_ts_pro}"
           COMMAND ${QT_LRELEASE_EXECUTABLE}
           ARGS ${tr_dst} -qm ${qm_dst}
           DEPENDS ${PY_SOURCES} ${UI_SOURCES} "${_ts_pro}" "${tr_source}" )

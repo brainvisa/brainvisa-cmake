@@ -855,8 +855,8 @@ function( BRAINVISA_COPY_FILES component )
       endif()
 
       # custom command attached to the custom target created for the files installation
-      add_custom_command(TARGET ${installTarget} PRE_BUILD
-          COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "$(BRAINVISA_INSTALL_PREFIX)/${_destination}/${_file}"\;else "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "${CMAKE_INSTALL_PREFIX}/${_destination}/${_file}"\;fi )
+      add_custom_command( TARGET ${installTarget} PRE_BUILD
+          COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ] \; then "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "$(BRAINVISA_INSTALL_PREFIX)/${_destination}/${_file}" \; else "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "${CMAKE_INSTALL_PREFIX}/${_destination}/${_file}" \; fi )
 
       set( _targetDepends ${_targetDepends} "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
     else()
@@ -2025,7 +2025,7 @@ function( BRAINVISA_ADD_COMPONENT _component )
   cpack_add_component( ${_component}
                        ${ARGN} )
   add_custom_target( install-${_component}
-                     COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then "${CMAKE_COMMAND}" -DCMAKE_INSTALL_PREFIX=$(BRAINVISA_INSTALL_PREFIX) -DCOMPONENT=${_component} -P "${CMAKE_BINARY_DIR}/cmake_install.cmake"\;else "${CMAKE_COMMAND}" -DCOMPONENT=${_component} -P "${CMAKE_BINARY_DIR}/cmake_install.cmake"\;fi )
+                     COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ] \; then "${CMAKE_COMMAND}" -DCMAKE_INSTALL_PREFIX=\"$(BRAINVISA_INSTALL_PREFIX)\" -DCOMPONENT=${_component} -P "${CMAKE_BINARY_DIR}/cmake_install.cmake" \; else "${CMAKE_COMMAND}" -DCOMPONENT=${_component} -P "${CMAKE_BINARY_DIR}/cmake_install.cmake" \; fi )
   add_dependencies( install-${_group} install-${_component} )
 endfunction()
 
@@ -2419,7 +2419,7 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
 	      # if it is really a symlink and it has a name different from the name of the lib and the link points to the real library
               if(NOT link STREQUAL linkreal AND NOT linkname STREQUAL realname AND linkreal STREQUAL real) 
                 add_custom_command( TARGET install-${component} POST_BUILD
-                        COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then cd "$(BRAINVISA_INSTALL_PREFIX)/${destination}" && "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}"\;else cd "${CMAKE_INSTALL_PREFIX}/${destination}" && "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}"\;fi )
+                        COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ] \; then cd "$(BRAINVISA_INSTALL_PREFIX)/${destination}" && "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}" \; else cd "${CMAKE_INSTALL_PREFIX}/${destination}" && "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}" \; fi )
                 #message("Create symlink $(BRAINVISA_INSTALL_PREFIX)/${destination}/${linkname} -> $(BRAINVISA_INSTALL_PREFIX)/${destination}/${realname}")
               endif()
             endif()
@@ -2491,7 +2491,7 @@ function( BRAINVISA_ADD_TRANSLATION source_share_dir dest_share_dir component)
       SET(_pro_srcs "${_pro_srcs} \"${_pro_src}\"")
     ENDFOREACH()
     FILE(WRITE ${_ts_pro} "SOURCES = ${_pro_srcs}")
-    set( _lupdate_options -source-language "${lang}" )
+    set( _lupdate_options -source-language "${lang}" -noobsolete )
     ADD_CUSTOM_COMMAND(OUTPUT "${tr_dst}" "${qm_dst}"
         COMMAND "${CMAKE_COMMAND}" ARGS -E copy "${tr_source}" "${tr_dst}"
         COMMAND "${QT_LUPDATE_EXECUTABLE}"
@@ -2571,7 +2571,7 @@ function( BRAINVISA_ADD_PYTRANSLATION source_share_dir dest_share_dir component)
       ADD_CUSTOM_COMMAND(OUTPUT "${tr_dst}" "${qm_dst}"
           COMMAND "${CMAKE_COMMAND}" ARGS -E copy "${tr_source}" "${tr_dst}"
           COMMAND "${PYQT4_PYLUPDATE_EXECUTABLE}"
-          ARGS "${_ts_pro}"
+          ARGS -noobsolete "${_ts_pro}"
           COMMAND ${QT_LRELEASE_EXECUTABLE}
           ARGS ${tr_dst} -qm ${qm_dst}
           DEPENDS ${PY_SOURCES} ${UI_SOURCES} "${_ts_pro}" "${tr_source}" )

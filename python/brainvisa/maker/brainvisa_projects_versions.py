@@ -2,7 +2,7 @@
 
 import brainvisa.compilation_info as pinfo
 from brainvisa.maker.brainvisa_projects import \
-    brainvisaComponentsPerProject, brainvisaComponentsPerGroup
+    components_per_project, components_per_group
 
 
 def project_version( projectname ):
@@ -38,10 +38,10 @@ def component_version( componentname ):
 
 
 def project_components( projectname, remove_private=False ):
-    if projectname in brainvisaComponentsPerProject:
+    if projectname in components_per_project:
         return [
             component for component in \
-                brainvisaComponentsPerProject[ projectname] \
+                components_per_project[ projectname] \
             if __keep_component( component, remove_private ) ]
     elif projectname in pinfo.packages_info:
           return [ projectname ]
@@ -58,7 +58,7 @@ def __keep_component( component, remove_private ):
 
 def is_private_component( component ):
     '''Private components are not packaged in public releases, but only part of "i2bm" releases.'''
-    if component not in brainvisaComponentsPerGroup['all']:
+    if component not in components_per_group['all']:
         return False
     additional_private_components = (
         'baby', 'tms', 'sulci-data', 'constellation-private',

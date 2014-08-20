@@ -514,7 +514,7 @@ class SourceDirectory( object ):
     os.chdir( self.directory )
     externalsFileName = os.path.join( self.directory, 'bv_maker.externals' )
     externalsFile = open( externalsFileName, 'w' )
-    for component_version, url, dest_directory, bv_version in self.svnComponents:
+    for component_version, url, dest_directory, bv_version in set(self.svnComponents):
       print >> externalsFile, dest_directory, url
       source_directories.append((dest_directory, bv_version))
     externalsFile.close()

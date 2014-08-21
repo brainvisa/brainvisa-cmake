@@ -190,7 +190,7 @@ class GlobalConfiguration( object ):
                       metavar='DIR', action='append', default=[] )
     parser.add_option( '-c', '--config', dest='configuration_file',
                       help='specify configuration file. Default ="' + defaultConfigurationFile + '"',
-                      metavar='USERNAME', default=None )
+                      metavar='CONFIG', default=None )
     parser.add_option( '-s', '--sources', dest='sources_directories',
                       help='directory containing sources',
                       metavar='DIR', action='append', default=[] )

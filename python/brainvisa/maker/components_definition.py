@@ -1,5 +1,23 @@
 # -*- coding: utf-8 -*-
 components_definition = [
+    ('development', {
+        'components': [
+            ['brainvisa-cmake', {
+                'groups': ['all', 'anatomist', 'opensource', 'standard','catidb'],
+                'branches': {
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/trunk','development/brainvisa-cmake/trunk'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/branches/bug_fix','development/brainvisa-cmake/bug_fix'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/tags/1.2.1','development/brainvisa-cmake/tag'),
+                },
+            }],
+            ['brainvisa-svn', {
+                'groups': ['all', 'opensource', 'standard', 'catidb'],
+                'branches': {
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-svn/trunk','development/brainvisa-svn/trunk'),
+                },
+            }],
+        ],
+    }),
     ('communication', {
         'components': [
             ['documentation', {
@@ -26,32 +44,6 @@ components_definition = [
                 'groups': ['all', 'opensource', 'standard'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/web/trunk','communication/web/trunk'),
-                },
-            }],
-        ],
-    }),
-    ('development', {
-        'components': [
-            ['brainvisa-cmake', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard','catidb'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/trunk','development/brainvisa-cmake/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/branches/bug_fix','development/brainvisa-cmake/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/tags/1.2.1','development/brainvisa-cmake/tag'),
-                },
-            }],
-            ['brainvisa-svn', {
-                'groups': ['all', 'opensource', 'standard', 'catidb'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-svn/trunk','development/brainvisa-svn/trunk'),
-                },
-            }],
-            ['brainvisa-release', {
-                'groups': ['all', 'opensource', 'standard'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/trunk','development/brainvisa-release/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/branches/1.2','development/brainvisa-release/branches/1.2'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/tags/1.2.1','development/brainvisa-release/tags/1.2.1'),
                 },
             }],
         ],
@@ -579,6 +571,18 @@ components_definition = [
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb/trunk','catidb/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb/branches/release',' catidb/release'),
                     'brainomics': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb/branches/catidb_brainomics',' catidb/catidb_brainomics'),
+                },
+            }],
+        ],
+    }),
+    ('release', {
+        'components': [
+            ['brainvisa-release', {
+                'groups': ['all', 'opensource', 'standard'],
+                'branches': {
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/trunk','development/brainvisa-release/trunk'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/branches/1.2','development/brainvisa-release/branches/1.2'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/tags/1.2.1','development/brainvisa-release/tags/1.2.1'),
                 },
             }],
         ],

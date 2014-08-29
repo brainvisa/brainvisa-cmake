@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 components_definition = [
     ('development', {
         'components': [
@@ -15,12 +16,34 @@ components_definition = [
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-svn/trunk','development/brainvisa-svn/trunk'),
                 },
             }],
-            ['brainvisa-release', {
+        ],
+    }),
+    ('communication', {
+        'components': [
+            ['documentation', {
                 'groups': ['all', 'opensource', 'standard'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/trunk','development/brainvisa-release/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/branches/1.2','development/brainvisa-release/branches/1.2'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/tags/1.2.1','development/brainvisa-release/tags/1.2.1'),
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/documentation/trunk','communication/documentation/trunk'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/documentation/branches/4.4','communication/documentation/branches/4.4'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/documentation/tags/4.4.0','communication/documentation/tags/4.4.0'),
+                },
+            }],
+            ['bibliography', {
+                'groups': ['all', 'opensource', 'standard'],
+                'branches': {
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/bibliography/trunk','communication/bibliography/trunk'),
+                },
+            }],
+            ['latex', {
+                'groups': ['all', 'opensource', 'standard'],
+                'branches': {
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/latex/trunk','communication/latex/trunk'),
+                },
+            }],
+            ['web', {
+                'groups': ['all', 'opensource', 'standard'],
+                'branches': {
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/web/trunk','communication/web/trunk'),
                 },
             }],
         ],
@@ -552,32 +575,14 @@ components_definition = [
             }],
         ],
     }),
-    ('communication', {
+    ('release', {
         'components': [
-            ['documentation', {
+            ['brainvisa-release', {
                 'groups': ['all', 'opensource', 'standard'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/documentation/trunk','communication/documentation/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/documentation/branches/4.4','communication/documentation/branches/4.4'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/documentation/tags/4.4.0','communication/documentation/tags/4.4.0'),
-                },
-            }],
-            ['bibliography', {
-                'groups': ['all', 'opensource', 'standard'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/bibliography/trunk','communication/bibliography/trunk'),
-                },
-            }],
-            ['latex', {
-                'groups': ['all', 'opensource', 'standard'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/latex/trunk','communication/latex/trunk'),
-                },
-            }],
-            ['web', {
-                'groups': ['all', 'opensource', 'standard'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/web/trunk','communication/web/trunk'),
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/trunk','development/brainvisa-release/trunk'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/branches/1.2','development/brainvisa-release/branches/1.2'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/tags/1.2.1','development/brainvisa-release/tags/1.2.1'),
                 },
             }],
         ],

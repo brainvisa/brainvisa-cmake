@@ -564,8 +564,13 @@ class SourceDirectory( object ):
             print 'directory %s refer to git url "%s" that is different from "%s" => git clone' % ( dest, url, src )
           clone = True
       else:
+        if os.listdir(dest):
+          print ('\nERROR: directory "%s" is not empty. It will make "git clone command fail.\n'
+                'This error may be due to a repository change for a component (typically\n'
+                'going from Subversion to Git). You must check yourself that you have nothing\n'
+                'to keep in this directory and delete it to make "bv_maker sources" work.' % dest)
         if self.configuration.verbose:
-          print 'directory %s is not a git repository => clone from git %s' % ( os.path.join(dest, '.git'), src )
+          print 'directory %s is not a git repository => clone from git %s' % ( dest, src )
         clone = True
     else:
       if self.configuration.verbose:

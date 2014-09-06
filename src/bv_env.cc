@@ -218,7 +218,7 @@ void unsetenv( const string &variable )
   string envp = variable + "=";
   putenv( envp.c_str() );
 #else
-  setenv( variable.c_str(), NULL, 1 );
+  unsetenv( variable.c_str() );
 #endif
 }
 

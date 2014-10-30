@@ -560,9 +560,16 @@ class SourceDirectory( object ):
         url = subprocess.check_output( ['git', 'config', '--get', 'remote.origin.url'], cwd=dest ).strip()
 
         if url != src:
-          if self.configuration.verbose:
-            print 'directory %s refer to git url "%s" that is different from "%s" => git clone' % ( dest, url, src )
-          clone = True
+          differ = True
+          m1 = re.match('^([^/]+)//(.+@)?(.+)$', url)
+          if m1:
+            m2 = re.match('^([^/]+)//(.+@)?(.+)$', src)
+            if m2 and m2.group(1) ==m1.group(1) and m2.group(3) == m1.group(3):
+              differ = False
+          if differ:
+            if self.configuration.verbose:
+              print 'directory %s refer to git url "%s" that is different from "%s" => git clone' % ( dest, url, src )
+            clone = True
       else:
         if os.listdir(dest):
           print ('\nERROR: directory "%s" is not empty. It will make "git clone command fail.\n'

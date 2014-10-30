@@ -791,6 +791,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
     
   def info( self ):
     self._process_configuration_lines()
+    print 'Build directory: "' + self.directory + '"'
     for component, directory_version in self.components.iteritems():
       directory, selected_version, version = directory_version
       print '  %s (%s) <- %s' % (component, version, directory)

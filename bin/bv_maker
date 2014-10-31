@@ -811,7 +811,7 @@ class VirtualenvDirectory(BuildDirectory):
         self.virtualenv_command(self.directory)
 
     def virtualenv_command(self, env_path):
-        cmd = ["virtualenv"]
+        cmd = ["virtualenv",  "--system-site-packages"]
         cmd.append(env_path)
         system(*cmd)
         pass

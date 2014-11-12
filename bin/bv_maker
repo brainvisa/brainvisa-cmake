@@ -810,7 +810,7 @@ class VirtualenvDirectory(BuildDirectory):
         BuildDirectory.build(self)
         self.virtualenv_command(self.directory)
 
-    def which(program):
+    def which(self, program):
         def is_exe(fpath):
             return os.path.exists(fpath) and os.access(fpath, os.X_OK)
         def ext_candidates(fpath):

@@ -832,7 +832,7 @@ class VirtualenvDirectory(BuildDirectory):
     def virtualenv_command(self, env_path):
         if not self.which("virtualenv"):
             raise ValueError("Cannot find virtual. Please install virtualenv.")
-        active_path = os.path.join(env_path, "activate")
+        active_path = os.path.join(env_path, "bin", "activate")
         if not os.path.isfile(active_path):
             cmd = ["virtualenv",  "--system-site-packages"]
             cmd.append(env_path)

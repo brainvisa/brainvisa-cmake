@@ -838,7 +838,8 @@ class VirtualenvDirectory(BuildDirectory):
             cmd.append(env_path)
             system(*cmd)
         else:
-            print "No need to install virtualenv since it is already installed."
+            print "No need to virtualenv init '%s' since it is already initialized." \
+                % env_path
         pass
 
 commands = {

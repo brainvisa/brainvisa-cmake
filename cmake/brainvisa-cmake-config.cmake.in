@@ -1809,7 +1809,8 @@ endfunction()
 # Usage:
 #
 #   BRAINVISA_GENERATE_SPHINX_DOC( <source directory> <output directory>
-#                                  [TARGET <target_name>] )
+#                                  [TARGET <target_name>]
+#                                  [USER] )
 #
 # Example:
 #
@@ -1818,8 +1819,15 @@ endfunction()
 #
 # if TARGET argument is not specified, the target name defaults to ${PROJECT_NAME}-sphinx
 #
+# if USER is specified, the generated doc will be part of the usrdoc (user
+# documentation) global target, and included in user docs packages.
+# Otherwise, by default, sphinx docs are considered developer docs (devdoc)
+#
 function( BRAINVISA_GENERATE_SPHINX_DOC  )
   if( SPHINX_FOUND AND SPHINXBUILD_EXECUTABLE )
+    set( user FALSE )
+    set( default_target "sphinx" )
+    set( doctype "devdoc" )
     set( args "${ARGN}" )
 
     list( GET args 0 sourceDirectory )
@@ -1829,6 +1837,13 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
     if( NOT result EQUAL -1 )
       list( REMOVE_AT args ${result} )
       list( GET args ${result} target )
+      list( REMOVE_AT args ${result} )
+    endif()
+    list( FIND args USER result )
+    if( NOT result EQUAL -1 )
+      set( user TRUE )
+      set( default_target "usrsphinx" )
+      set( doctype "usrdoc" )
       list( REMOVE_AT args ${result} )
     endif()
 
@@ -1845,7 +1860,7 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
     endif()
 
     if( NOT target )
-      set( target ${PROJECT_NAME}-sphinx )
+      set( target ${PROJECT_NAME}-${default_target} )
     endif()
     add_custom_target( ${target}
                        COMMAND "${CMAKE_COMMAND}" -E make_directory
@@ -1856,13 +1871,13 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
                          ${output_directory}
     )
 
-    add_dependencies( ${PROJECT_NAME}-devdoc ${target} )
+    add_dependencies( ${PROJECT_NAME}-${doctype} ${target} )
 
     # Install HTML documentation
     BRAINVISA_INSTALL( DIRECTORY "${output_directory}"
                        DESTINATION "${install_directory}"
                        USE_SOURCE_PERMISSIONS
-                       COMPONENT ${PROJECT_NAME}-devdoc )
+                       COMPONENT ${PROJECT_NAME}-${doctype} )
   endif()
 endfunction()
 

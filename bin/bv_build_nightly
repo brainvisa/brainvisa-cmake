@@ -79,7 +79,7 @@ bv_configure()
   rm -f "$stderr"
   echo "Configure "
   $binary_dir/bv_maker configure >"$stderr" 2>&1
-  
+
   # if errors detected copy output file into log
   status=$?
   if [ $status -ne 0 ]
@@ -99,6 +99,13 @@ bv_configure()
     # delete output file
     rm -f "$stderr"
   )
+  # remove dead links and obsolete python modules
+  build_dirs=`dirname $binary_dir`
+  build_dirs=`dirname $build_dirs`
+  echo "cleaning bug_fix build tree $build_dirs/bug_fix..." >> "$log"
+  $binary_dir/bv_clean_build_tree -d $build_dirs/bug_fix >"$stderr" 2>&1
+  echo "cleaning trunk build tree $build_dirs/trunk..." >> "$log"
+  $binary_dir/bv_clean_build_tree -d $build_dirs/trunk >"$stderr" 2>&1
 }
 
 bv_build() {

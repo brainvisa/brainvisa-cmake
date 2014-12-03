@@ -95,17 +95,15 @@ bv_configure()
     echo >>"$log"
     echo >>"$log"
   fi
+  # remove dead links and obsolete python modules
+  build_dirs=`dirname $binary_dir`
+  build_dirs=`dirname $build_dirs`
+  $binary_dir/bv_clean_build_tree -d $build_dirs/bug_fix >"$stderr" 2>&1
+  $binary_dir/bv_clean_build_tree -d $build_dirs/trunk >"$stderr" 2>&1
   [ $dellogs = 0 ] || (
     # delete output file
     rm -f "$stderr"
   )
-  # remove dead links and obsolete python modules
-  build_dirs=`dirname $binary_dir`
-  build_dirs=`dirname $build_dirs`
-  echo "cleaning bug_fix build tree $build_dirs/bug_fix..." >> "$log"
-  $binary_dir/bv_clean_build_tree -d $build_dirs/bug_fix >"$stderr" 2>&1
-  echo "cleaning trunk build tree $build_dirs/trunk..." >> "$log"
-  $binary_dir/bv_clean_build_tree -d $build_dirs/trunk >"$stderr" 2>&1
 }
 
 bv_build() {

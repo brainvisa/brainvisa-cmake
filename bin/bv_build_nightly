@@ -77,6 +77,12 @@ bv_configure()
   stderr="/tmp/buildout-configure-$date.tmp"
   # delete log if it already exists
   rm -f "$stderr"
+  # remove dead links and obsolete python modules
+  echo "clean build tree "
+  build_dirs=`dirname $binary_dir`
+  build_dirs=`dirname $build_dirs`
+  $binary_dir/bv_clean_build_tree -d $build_dirs/bug_fix >"$stderr" 2>&1
+  $binary_dir/bv_clean_build_tree -d $build_dirs/trunk >"$stderr" 2>&1
   echo "Configure "
   $binary_dir/bv_maker configure >"$stderr" 2>&1
 
@@ -95,11 +101,6 @@ bv_configure()
     echo >>"$log"
     echo >>"$log"
   fi
-  # remove dead links and obsolete python modules
-  build_dirs=`dirname $binary_dir`
-  build_dirs=`dirname $build_dirs`
-  $binary_dir/bv_clean_build_tree -d $build_dirs/bug_fix >"$stderr" 2>&1
-  $binary_dir/bv_clean_build_tree -d $build_dirs/trunk >"$stderr" 2>&1
   [ $dellogs = 0 ] || (
     # delete output file
     rm -f "$stderr"

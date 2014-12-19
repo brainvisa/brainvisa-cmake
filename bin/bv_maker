@@ -554,57 +554,104 @@ class SourceDirectory( object ):
     cmd.extend( svnargs )
     system( *cmd )
 
-  def gitupdate( self, src, dest, tag='master' ):
-    # Check if it is necessary to clone the git repository
-    clone = False
-    current_branch = None
-    if os.path.isdir(dest):
-      if os.path.exists( os.path.join(dest, '.git') ):
-        url = subprocess.check_output( ['git', 'config', '--get', 'remote.origin.url'], cwd=dest ).strip()
+  def gitupdate( self, src, dest, remote_ref="HEAD" ):
+    # Set a username in src if necessary
+    if '@' not in src and self.configuration.username:
+      url_head, url_tail = src.split('//', 1)
+      src = '%s//%s@%s' % (url_head, self.configuration.username, url_tail)
 
-        if url != src:
-          differ = True
-          m1 = re.match('^([^/]+)//(.+@)?(.+)$', url)
-          if m1:
-            m2 = re.match('^([^/]+)//(.+@)?(.+)$', src)
-            if m2 and m2.group(1) ==m1.group(1) and m2.group(3) == m1.group(3):
-              differ = False
-          if differ:
-            if self.configuration.verbose:
-              print 'directory %s refer to git url "%s" that is different from "%s" => git clone' % ( dest, url, src )
-            clone = True
-      else:
-        if os.listdir(dest):
-          print ('\nERROR: directory "%s" is not empty. It will make "git clone command fail.\n'
-                'This error may be due to a repository change for a component (typically\n'
-                'going from Subversion to Git). You must check yourself that you have nothing\n'
-                'to keep in this directory and delete it to make "bv_maker sources" work.' % dest)
-        if self.configuration.verbose:
-          print 'directory %s is not a git repository => clone from git %s' % ( dest, src )
-        clone = True
-    else:
+    print("Updating git repository {0}".format(dest))
+
+    # Clone repository if it does not exist yet locally
+    if not os.path.exists( os.path.join(dest, '.git') ):
+      if os.path.isdir(dest) and os.listdir(dest):
+        print ('''
+ERROR: directory "%s" is not empty, Git will not be able to clone into it.
+This error may be due to a repository change for a component (typically
+going from Subversion to Git). You must check yourself that you have nothing
+to keep in this directory and delete it to make "bv_maker sources" work.'''
+               % dest)
       if self.configuration.verbose:
-        print 'directory %s does not exist => create and clone from git %s' % ( dest, src )
+        print('directory %s is not a git repository => clone from git %s'
+              % ( dest, src ))
       os.makedirs( dest )
-      clone = True
-    
-    if clone:
-      # Set a username in src if necessary
-      if '@' not in src and self.configuration.username:
-        url_head, url_tail = src.split('//', 1)
-        src = '%s//%s@%s' % (url_head, self.configuration.username, url_tail)
-      system(*['git', 'clone', src, dest], cwd=dest)
-    
-    # Change the current branch if necessary
-    current_branch = subprocess.check_output( ['git', 'branch', '--contains'], cwd=dest )
-    current_branch = current_branch.split()[ -1 ]
-    if tag and tag != current_branch:
-        system(*[ 'git', 'checkout', tag ],cwd=dest)       
-    
-    if not clone:
-      # Import remote repository changes in the current branch
-      # IMPORTANT NOTE: Pull is using merge to import modifications. 
-      system(*['git', 'pull'], cwd=dest)
+      retcode = subprocess.call(['git', 'init', '--quiet'], cwd=dest)
+      if retcode != 0:
+        print('ERROR: could not initialize git repository in {0}'.format(dest))
+        return
+
+    # Get the SHA-1 identifiers of HEAD and refs/bv_head commits
+    try:
+      old_head = subprocess.check_output(
+        ['git', 'rev-parse', '--quiet', '--verify', 'HEAD^{commit}'],
+        cwd=dest)
+    except subprocess.CalledProcessError:
+      old_head = None
+    try:
+      old_bv_head = subprocess.check_output(
+        ['git', 'rev-parse', '--quiet', '--verify', 'refs/bv_head^{commit}'],
+        cwd=dest)
+    except subprocess.CalledProcessError:
+      old_bv_head = None
+
+    # Fetch the remote branch specified in bv_maker.cfg into refs/bv_head
+    retcode = subprocess.call(['git', 'fetch', src,
+                               "+" + remote_ref + ":refs/bv_head"],
+                              cwd=dest)
+    if retcode != 0:
+      print('{0}: could not fetch from git repository {1}'.format(dest, src))
+      return  # Abort for this repository, continue with other repositories
+
+    # Check if we are in detached HEAD state
+    retcode = subprocess.call(['git', 'symbolic-ref', '--quiet', 'HEAD'],
+                              cwd=dest, stdout=open(os.devnull, 'w'))
+    detached_head = False if retcode == 0 else True
+
+    if (not old_head) or (detached_head and old_head == old_bv_head):
+      # HEAD is detached, and is the same as left by the previous bv_maker
+      # run: this is "follower mode", the remote ref can be checked out. This
+      # is safe to do even if there are local uncommitted changes, in which
+      # case "git checkout" will error out appropriately.
+      retcode = subprocess.call(['git', 'checkout', '--quiet',
+                                 '--detach', 'refs/bv_head', '--'], cwd=dest)
+      if retcode != 0:
+        print("""\
+The git repository at {0} could not be updated,
+please refer to the above error message.
+
+If you have made local changes, you should keep track of them in a branch:
+  git checkout -b <my_branch>
+  git add ...
+  git commit
+
+Or, discard your changes and go back to following the upstream version:
+  git checkout bv_head""".format(dest))
+    elif not detached_head:
+      # We are following a branch. Advance the branch if it has not diverged
+      # from upstream. If local commits exist, that would require creating a
+      # merge commit, and we do not want to do that behind the back of the
+      # developer. The (fetch + merge) command sequence is equivalent to "git
+      # pull --ff-only src remote_ref". The merge aborts safely if there are
+      # local uncommitted changes, and prints an appropriate message.
+      retcode = subprocess.call(['git', 'merge', '--ff-only', 'refs/bv_head'],
+                                cwd=dest)
+      if retcode != 0:
+        print("""\
+Upstream changes could not be merged in {0},
+please refer to the above message of "git merge".
+
+If you do not want to develop in this repository anymore, you should
+leave the branch and go back to tracking the upstream version:
+  git checkout bv_head""".format(dest))
+    else:
+      # HEAD is detached but has been moved since last bv_maker run. The user
+      # has likely checked out a tag manually, do not mess with their
+      # repository.
+      print("""\
+The git repository at {0} will not be updated by bv_maker,
+because it is detached at a commit that does not correspond to bv_head.
+If you did not do this on purpose, you should go back to following upstream:
+  git -C '{0}' checkout bv_head""".format(dest))
 
 
   def info( self ):

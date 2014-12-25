@@ -1861,8 +1861,6 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
 
     if( NOT target )
       set( target ${PROJECT_NAME}-${default_target} )
-    endif()
-    if( NOT TARGET target )
       add_custom_target( ${target}
                         COMMAND "${CMAKE_COMMAND}" -E make_directory
                           "${output_directory}"

@@ -1861,15 +1861,15 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
 
     if( NOT target )
       set( target ${PROJECT_NAME}-${default_target} )
-      add_custom_target( ${target}
-                        COMMAND "${CMAKE_COMMAND}" -E make_directory
-                          "${output_directory}"
-                        COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env"
-                          "${SPHINXBUILD_EXECUTABLE}"
-                          ${source_directory}
-                          ${output_directory}
-      )
     endif()
+    add_custom_target( ${target}
+                      COMMAND "${CMAKE_COMMAND}" -E make_directory
+                        "${output_directory}"
+                      COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env"
+                        "${SPHINXBUILD_EXECUTABLE}"
+                        ${source_directory}
+                        ${output_directory}
+    )
 
     add_dependencies( ${PROJECT_NAME}-${doctype} ${target} )
 

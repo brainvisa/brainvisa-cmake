@@ -160,12 +160,6 @@ def read_project_info( directory ):
 
 
 
-
-
-
-
-
-
 class GlobalConfiguration( object ):
   def __init__( self, argv ):
     usage = '''%prog [options] [ command [command options] ]...
@@ -217,7 +211,6 @@ class GlobalConfiguration( object ):
     for i in ( 'configuration_file', 'username', 'verbose' ):
       setattr( self, i, getattr( options, i ) )
 
-   
     if options.build_directory:
       if not options.sources_directories:
         options.sources_directories = [ os.path.dirname( os.path.dirname( this_script ) ) ]
@@ -260,6 +253,12 @@ class GlobalConfiguration( object ):
                 self.buildDirectories[ currentDirectoryObject.directory ] = currentDirectoryObject
               elif self.verbose:
                 print 'Passing ',currentDirectoryObject.directory, 'because it is not in the selected directories.'
+            elif l[ 0 ] == 'virtualenv':
+              currentDirectoryObject = VirtualenvDirectory( environmentVariablesSubstitution( l[ 1 ].strip() ), self )
+              if (not directories or (currentDirectoryObject.directory in directories)):
+                self.buildDirectories[ currentDirectoryObject.directory ] = currentDirectoryObject
+              elif self.verbose:
+                print 'Passing ',currentDirectoryObject.directory, 'because it is not in the selected directories.'
             else:
               raise SyntaxError()
           else:
@@ -269,6 +268,7 @@ class GlobalConfiguration( object ):
             currentDirectoryObject.addConfigurationLine( line )
         except SyntaxError:
           raise SyntaxError( 'Syntax error in ' + repr( options.configuration_file ) + ' on line ' + str( lineCount ) )
+
 
 
 class InfoCommand( object ):
@@ -315,11 +315,12 @@ class ConfigureCommand( object ):
     (options, args) = parser.parse_args( argv )
     if args:
       raise ValueError( 'Invalid option: %s' % args[0] )
-  
-  
+
+
   def __call__( self ):
     for d, o in configuration.buildDirectories.iteritems():
       o.configure()
+
 
 
 class CompileCommand( object ):
@@ -359,6 +360,7 @@ class DocCommand( object ):
     for d, o in configuration.buildDirectories.iteritems():
       o.doc()
 
+
 class TestCommand( object ):
   def __init__( self, argv, configuration ):
     usage = '''%prog [global options] test
@@ -372,6 +374,7 @@ class TestCommand( object ):
   def __call__( self ):
     for d, o in configuration.buildDirectories.iteritems():
       o.test()
+
 
 class SourceDirectory( object ):
   def __init__( self, directory, configuration ):
@@ -447,7 +450,7 @@ class SourceDirectory( object ):
           for component in find_components(componentPattern):
             for version, repo_dir in url_per_component[component].iteritems():
               if fnmatchcase(version, versionPattern):
-                # Remove unwanted svn components
+                # Remove unwanted svn components
                 count = 0
                 for component_version in [i[0] for i in self.svnComponents]:
                   if component_version:
@@ -461,7 +464,7 @@ class SourceDirectory( object ):
                       del self.svnComponents[count]
                       count -= 1
                   count += 1
-                # Remove unwanted git components
+                # Remove unwanted git components
                 count = 0
                 for component_version in [i[0] for i in self.gitComponents]:
                   if component_version:
@@ -551,45 +554,112 @@ class SourceDirectory( object ):
     cmd.extend( svnargs )
     system( *cmd )
 
-  def gitupdate( self, src, dest, tag='master' ):
-    # Check if it is necessary to clone the git repository
-    clone = False
-    current_branch = None
-    if os.path.isdir(dest):
-      if os.path.exists( os.path.join(dest, '.git') ):
-        url = subprocess.check_output( ['git', 'config', '--get', 'remote.origin.url'], cwd=dest ).strip()
+  def gitupdate( self, src, dest, remote_ref="HEAD" ):
+    # Set a username in src if necessary
+    if '@' not in src and self.configuration.username:
+      url_head, url_tail = src.split('//', 1)
+      src = '%s//%s@%s' % (url_head, self.configuration.username, url_tail)
 
-        if url != src:
-          if self.configuration.verbose:
-            print 'directory %s refer to git url "%s" that is different from "%s" => git clone' % ( dest, url, src )
-          clone = True
-      else:
-        if self.configuration.verbose:
-          print 'directory %s is not a git repository => clone from git %s' % ( os.path.join(dest, '.git'), src )
-        clone = True
-    else:
+    print("Updating git repository {0}".format(dest))
+
+    # Clone repository if it does not exist yet locally
+    if not os.path.exists( os.path.join(dest, '.git') ):
+      if os.path.isdir(dest) and os.listdir(dest):
+        print ('''
+ERROR: directory "%s" is not empty, Git will not be able to clone into it.
+This error may be due to a repository change for a component (typically
+going from Subversion to Git). You must check yourself that you have nothing
+to keep in this directory and delete it to make "bv_maker sources" work.'''
+               % dest)
       if self.configuration.verbose:
-        print 'directory %s does not exist => create and clone from git %s' % ( dest, src )
+        print('directory %s is not a git repository => clone from git %s'
+              % ( dest, src ))
       os.makedirs( dest )
-      clone = True
-    
-    if clone:
-      # Set a username in src if necessary
-      if '@' not in src and self.configuration.username:
-        url_head, url_tail = src.split('//', 1)
-        src = '%s//%s@%s' % (url_head, self.configuration.username, url_tail)
-      system(*['git', 'clone', src, dest], cwd=dest)
-    
-    # Change the current branch if necessary
-    current_branch = subprocess.check_output( ['git', 'branch', '--contains'], cwd=dest )
-    current_branch = current_branch.split()[ -1 ]
-    if tag and tag != current_branch:
-        system(*[ 'git', 'checkout', tag ],cwd=dest)       
-    
-    if not clone:
-      # Import remote repository changes in the current branch
-      # IMPORTANT NOTE: Pull is using merge to import modifications. 
-      system(*['git', 'pull'], cwd=dest)
+      retcode = subprocess.call(['git', 'init', '--quiet'], cwd=dest)
+      if retcode != 0:
+        print('ERROR: could not initialize git repository in {0}'.format(dest))
+        return
+
+    # Configure a remote for the developer's convenience
+    retcode = subprocess.call(['git', 'remote', 'set-url', 'origin', src],
+                              cwd=dest, stderr=open(os.devnull, 'w'))
+    if retcode != 0:
+      subprocess.call(['git', 'remote', 'add', 'origin', src],
+                      cwd=dest)
+      # Failure is ignored deliberately (the remote is just for convenience)
+
+    # Get the SHA-1 identifiers of HEAD and refs/bv_head commits
+    try:
+      old_head = subprocess.check_output(
+        ['git', 'rev-parse', '--quiet', '--verify', 'HEAD^{commit}'],
+        cwd=dest)
+    except subprocess.CalledProcessError:
+      old_head = None
+    try:
+      old_bv_head = subprocess.check_output(
+        ['git', 'rev-parse', '--quiet', '--verify', 'refs/bv_head^{commit}'],
+        cwd=dest)
+    except subprocess.CalledProcessError:
+      old_bv_head = None
+
+    # Fetch the remote branch specified in bv_maker.cfg into refs/bv_head
+    retcode = subprocess.call(['git', 'fetch', src,
+                               "+" + remote_ref + ":refs/bv_head"],
+                              cwd=dest)
+    if retcode != 0:
+      print('{0}: could not fetch from git repository {1}'.format(dest, src))
+      return  # Abort for this repository, continue with other repositories
+
+    # Check if we are in detached HEAD state
+    retcode = subprocess.call(['git', 'symbolic-ref', '--quiet', 'HEAD'],
+                              cwd=dest, stdout=open(os.devnull, 'w'))
+    detached_head = False if retcode == 0 else True
+
+    if (not old_head) or (detached_head and old_head == old_bv_head):
+      # HEAD is detached, and is the same as left by the previous bv_maker
+      # run: this is "follower mode", the remote ref can be checked out. This
+      # is safe to do even if there are local uncommitted changes, in which
+      # case "git checkout" will error out appropriately.
+      retcode = subprocess.call(['git', 'checkout', '--quiet',
+                                 '--detach', 'refs/bv_head', '--'], cwd=dest)
+      if retcode != 0:
+        print("""\
+The git repository at {0} could not be updated,
+please refer to the above error message.
+
+If you have made local changes, you should keep track of them in a branch:
+  git checkout -b <my_branch>
+  git add ...
+  git commit
+
+Or, discard your changes and go back to following the upstream version:
+  git checkout bv_head""".format(dest))
+    elif not detached_head:
+      # We are following a branch. Advance the branch if it has not diverged
+      # from upstream. If local commits exist, that would require creating a
+      # merge commit, and we do not want to do that behind the back of the
+      # developer. The (fetch + merge) command sequence is equivalent to "git
+      # pull --ff-only src remote_ref". The merge aborts safely if there are
+      # local uncommitted changes, and prints an appropriate message.
+      retcode = subprocess.call(['git', 'merge', '--ff-only', 'refs/bv_head'],
+                                cwd=dest)
+      if retcode != 0:
+        print("""\
+Upstream changes could not be merged in {0},
+please refer to the above message of "git merge".
+
+If you do not want to develop in this repository anymore, you should
+leave the branch and go back to tracking the upstream version:
+  git checkout bv_head""".format(dest))
+    else:
+      # HEAD is detached but has been moved since last bv_maker run. The user
+      # has likely checked out a tag manually, do not mess with their
+      # repository.
+      print("""\
+The git repository at {0} will not be updated by bv_maker,
+because it is detached at a commit that does not correspond to bv_head.
+If you did not do this on purpose, you should go back to following upstream:
+  git -C '{0}' checkout bv_head""".format(dest))
 
 
   def info( self ):
@@ -604,6 +674,7 @@ class SourceDirectory( object ):
       if component_version:
         component, version = component_version
         print '    component %s (%s)' % (component, version)
+
 
 
 class BuildDirectory( object ):
@@ -779,7 +850,53 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
     for component, directory_version in self.components.iteritems():
       directory, selected_version, version = directory_version
       print '  %s (%s) <- %s' % (component, version, directory)
-    
+
+
+class VirtualenvDirectory(BuildDirectory):
+    '''
+    It does the samething with the BuildDirectory
+    with additional virtualenv init.
+    '''
+
+    def __init__(self, directory, configuration):
+        BuildDirectory.__init__(self, directory, configuration)
+
+    def build(self):
+        BuildDirectory.build(self)
+        self.virtualenv_command(self.directory)
+
+    def which(self, program):
+        def is_exe(fpath):
+            return os.path.exists(fpath) and os.access(fpath, os.X_OK)
+        def ext_candidates(fpath):
+            yield fpath
+            for ext in os.environ.get("PATHEXT", "").split(os.pathsep):
+                yield fpath + ext
+        fpath, fname = os.path.split(program)
+        if fpath:
+            if is_exe(program):
+                return program
+        else:
+            for path in os.environ["PATH"].split(os.pathsep):
+                exe_file = os.path.join(path, program)
+                for candidate in ext_candidates(exe_file):
+                    if is_exe(candidate):
+                        return candidate
+        return None
+
+    def virtualenv_command(self, env_path):
+        if not self.which("virtualenv"):
+            raise ValueError("Cannot find virtual. Please install virtualenv.")
+        active_path = os.path.join(env_path, "bin", "activate")
+        if not os.path.isfile(active_path):
+            cmd = ["virtualenv",  "--system-site-packages"]
+            cmd.append(env_path)
+            system(*cmd)
+        else:
+            print "No need to virtualenv init '%s' since it is already initialized." \
+                % env_path
+        pass
+
 commands = {
   'info': InfoCommand,
   'sources': SourcesCommand,

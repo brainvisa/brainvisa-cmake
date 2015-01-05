@@ -580,6 +580,14 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
         print('ERROR: could not initialize git repository in {0}'.format(dest))
         return
 
+    # Configure a remote for the developer's convenience
+    retcode = subprocess.call(['git', 'remote', 'set-url', 'origin', src],
+                              cwd=dest, stderr=open(os.devnull, 'w'))
+    if retcode != 0:
+      subprocess.call(['git', 'remote', 'add', 'origin', src],
+                      cwd=dest)
+      # Failure is ignored deliberately (the remote is just for convenience)
+
     # Get the SHA-1 identifiers of HEAD and refs/bv_head commits
     try:
       old_head = subprocess.check_output(

@@ -1893,7 +1893,7 @@ endfunction()
 #
 function( BRAINVISA_GENERATE_DOCBOOK_DOC )
   BRAINVISA_FIND_PACKAGE(documentation QUIET)
-  if(DOCUMENTATION_FOUND AND DOCUMENTATION_DOCBOOK)
+  if(DOCUMENTATION_FOUND AND DOCUMENTATION_DOCBOOK AND documentation_SOURCE_DIR)
     set( args "${ARGN}" )
     list( FIND args EXCLUDE result )
     set( exclude )

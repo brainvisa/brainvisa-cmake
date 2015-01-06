@@ -44,6 +44,7 @@ components_definition = [
                 'groups': ['all', 'opensource', 'standard'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/web/trunk','communication/web/trunk'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/web/branches/4.4','communication/web/bug_fix'),
                 },
             }],
         ],

@@ -859,12 +859,12 @@ class VirtualenvDirectory(BuildDirectory):
     '''
 
     def __init__(self, directory, configuration):
-        BuildDirectory.__init__(self, directory, configuration)
+        super(VirtualenvDirectory,self).__init__(directory, configuration)
 
-    def build(self):
-        BuildDirectory.build(self)
+    def configure(self):
         self.virtualenv_command(self.directory)
-
+        super(VirtualenvDirectory,self).configure()
+    
     def which(self, program):
         def is_exe(fpath):
             return os.path.exists(fpath) and os.access(fpath, os.X_OK)

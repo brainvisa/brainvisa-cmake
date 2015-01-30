@@ -14,12 +14,15 @@ components_per_group = {}
 components_per_project = {}
 project_per_component = {}
 url_per_component = {}
+info_per_component = {}
+attributes_per_component = {}
 for project, components in components_definition:
   ordered_projects.append(project)
   for component, component_info in components['components']:
     for group in component_info['groups']:
       components_per_group.setdefault(group,set()).add(component)
       url_per_component[component] = component_info['branches']
+      info_per_component[component] = component_info
     components_per_project.setdefault(project,[]).append(component)
     project_per_component[component] = project
 del project, component, components, component_info, group

@@ -71,7 +71,7 @@ if this_script:
 
 from brainvisa.maker.brainvisa_projects import SVN_URL, find_components, \
      project_per_component, url_per_component, ordered_projects, \
-     components_per_project, components_per_group
+     components_per_project, components_per_group, info_per_component
 
 def system( *args, **kwargs ):
   print ' '.join( args )
@@ -796,12 +796,24 @@ class BuildDirectory( object ):
 
     if not os.path.exists( self.directory ):
       os.makedirs( self.directory )
+
+    self.buildModelPerComponent = {}
+    for component in sortedComponents:
+        build_model = info_per_component[component].get('build_model')
+        if build_model is not None:
+            build_model_class = getattr(__import__(
+                'brainvisa.maker.build_models',
+                fromlist=['pure_python'], level=0),
+                build_model)
+            build_model = build_model_class(component, self.components[component][0], self.directory)
+            self.buildModelPerComponent[component] = build_model
+
     cmakeFile = os.path.join( self.directory, 'bv_maker.cmake' )
     out = open( cmakeFile, 'w' )
     print >> out, 'set( BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" FORCE )'
     print >> out, 'set( _BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" FORCE )'
-    print >> out, 'set( BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" FORCE )'
-    print >> out, 'set( _BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" FORCE )'
+    print >> out, 'set( BRAINVISA_COMPONENTS', ' '.join( c for c in sortedComponents if c not in self.buildModelPerComponent ),'CACHE STRING "BrainVISA components list" FORCE )'
+    print >> out, 'set( _BRAINVISA_COMPONENTS', ' '.join( c for c in sortedComponents if c not in self.buildModelPerComponent ),'CACHE STRING "BrainVISA components list" FORCE )'
     print >> out
     for component, directory_version in self.components.iteritems():
       directory, selected_version, version = directory_version
@@ -830,11 +842,15 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
       command += ['-DBRAINVISA_PACKAGING_THIRDPARTY:BOOL=ON']
 
     system( cwd = self.directory, *command )
-  
+
+    for component, build_model in self.buildModelPerComponent.iteritems():
+        build_model.configure()
   
   def build( self ):
     self._process_configuration_lines()
     system( cwd=self.directory, *( ['make'] + self.make_options.split() ) )
+    for component, build_model in self.buildModelPerComponent.iteritems():
+        build_model.build()
 
   def doc( self ):
     self._process_configuration_lines()

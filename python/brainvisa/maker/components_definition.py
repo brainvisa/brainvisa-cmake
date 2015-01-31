@@ -148,7 +148,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/svn/capsul/trunk','capsul/trunk'),
                 },
-                'pure_python': True,
+                'build_model': 'pure_python',
             }],
         ],
     }),

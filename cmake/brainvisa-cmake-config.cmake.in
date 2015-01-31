@@ -959,7 +959,8 @@ endfunction()
 #
 # Usage:
 #   BRAINVISA_COPY_PYTHON_DIRECTORY( <python directory> <component> 
-#                                    <destination directory> [NO_SYMLINKS] )
+#                                    <destination directory> [NO_SYMLINKS]
+#                                    [INSTALL_ONLY] )
 #     <python directory>: python directory to copy
 #     <component>: name of the component passed to BRAINVISA_INSTALL.
 #     <destination directory>: directory where the wiles will be copied
@@ -979,6 +980,14 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
     set( symlinks TRUE )
   else()
     set( symlinks FALSE )
+    list( REMOVE_AT _args ${result} )
+  endif()
+  # Read INSTALL_ONLY option
+  list( FIND _args INSTALL_ONLY result )
+  if( result EQUAL -1 )
+    set( install_only FALSE )
+  else()
+    set( install_only TRUE )
     list( REMOVE_AT _args ${result} )
   endif()
 
@@ -1011,6 +1020,11 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
     endif( NOT _match )
   endforeach( _i ${_files} )
 
+  if(install_only)
+    set(_nonPythonSources ${_pythonSources} ${_nonPythonSources})
+    set(_pythonSources)
+  endif()
+  
   # List containing all source files and also byte compiled files in the build directory
   set( _targetDepends )
 
@@ -1018,29 +1032,31 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
   foreach(_file ${_pythonSources})
     # Copy the source file in build directory
     set( _fileBuild "${CMAKE_BINARY_DIR}/${_destDir}/${_file}" )
-    if( UNIX OR APPLE )
-      # Make a symlink instead of copying Python source allows to
-      # execute code from the build tree and directly benefit from
-      # modifications in the source tree (without typing make)
-      get_filename_component( _path "${_fileBuild}" PATH )
-      add_custom_command( OUTPUT "${_fileBuild}"
-                          COMMAND "${CMAKE_COMMAND}" -E make_directory "${_path}"
-                          COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_pythonDirectory}/${_file}" "${_fileBuild}"
-                          DEPENDS "${_pythonDirectory}/${_file}" )
-    else()
-      add_custom_command( OUTPUT "${_fileBuild}"
-                          COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_pythonDirectory}/${_file}" "${_fileBuild}"
-                          DEPENDS "${_pythonDirectory}/${_file}" )
-    endif()
+    if( NOT install_only )
+        if( UNIX OR APPLE )
+        # Make a symlink instead of copying Python source allows to
+        # execute code from the build tree and directly benefit from
+        # modifications in the source tree (without typing make)
+        get_filename_component( _path "${_fileBuild}" PATH )
+        add_custom_command( OUTPUT "${_fileBuild}"
+                            COMMAND "${CMAKE_COMMAND}" -E make_directory "${_path}"
+                            COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_pythonDirectory}/${_file}" "${_fileBuild}"
+                            DEPENDS "${_pythonDirectory}/${_file}" )
+        else()
+        add_custom_command( OUTPUT "${_fileBuild}"
+                            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_pythonDirectory}/${_file}" "${_fileBuild}"
+                            DEPENDS "${_pythonDirectory}/${_file}" )
+        endif()
 
-    # Byte compile python code (creating *.pyc and *.pyo)
-    add_custom_command( OUTPUT "${_fileBuild}c"
-                        COMMAND "${PYTHON_EXECUTABLE}" -c "import py_compile\\;py_compile.main\\(\\)" "${_fileBuild}"
-                        DEPENDS "${_fileBuild}" )
-    add_custom_command( OUTPUT "${_fileBuild}o"
-                        COMMAND "${PYTHON_EXECUTABLE}" -O -c "import py_compile\\;py_compile.main\\(\\)" "${_fileBuild}"
-                        DEPENDS "${_fileBuild}" )
-  
+        # Byte compile python code (creating *.pyc and *.pyo)
+        add_custom_command( OUTPUT "${_fileBuild}c"
+                            COMMAND "${PYTHON_EXECUTABLE}" -c "import py_compile\\;py_compile.main\\(\\)" "${_fileBuild}"
+                            DEPENDS "${_fileBuild}" )
+        add_custom_command( OUTPUT "${_fileBuild}o"
+                            COMMAND "${PYTHON_EXECUTABLE}" -O -c "import py_compile\\;py_compile.main\\(\\)" "${_fileBuild}"
+                            DEPENDS "${_fileBuild}" )
+    endif()
+    
     # Install source file and byte compiled files
     get_filename_component( _path "${_file}" PATH )
     BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}" "${_fileBuild}c" "${_fileBuild}o"
@@ -1051,21 +1067,24 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
 
   # Copy other files
   foreach(_file ${_nonPythonSources})
-    set( _fileBuild "${CMAKE_BINARY_DIR}/${_destDir}/${_file}" )
-    if( UNIX OR APPLE )
-      # Make a symlink instead of copying Python source allows to
-      # execute code from the build tree and directly benefit from
-      # modifications in the source tree (without typing make)
-      get_filename_component( _path "${_fileBuild}" PATH )
-      add_custom_command( OUTPUT "${_fileBuild}"
-                          COMMAND "${CMAKE_COMMAND}" -E make_directory "${_path}"
-                          COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_pythonDirectory}/${_file}" "${_fileBuild}"
-                          DEPENDS "${_pythonDirectory}/${_file}" )
-    else()
-      add_custom_command( OUTPUT "${_fileBuild}"
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_pythonDirectory}/${_file}" "${_fileBuild}"
-        DEPENDS "${_pythonDirectory}/${_file}" )
+    if( NOT install_only )
+        set( _fileBuild "${CMAKE_BINARY_DIR}/${_destDir}/${_file}" )
+        if( UNIX OR APPLE )
+        # Make a symlink instead of copying Python source allows to
+        # execute code from the build tree and directly benefit from
+        # modifications in the source tree (without typing make)
+        get_filename_component( _path "${_fileBuild}" PATH )
+        add_custom_command( OUTPUT "${_fileBuild}"
+                            COMMAND "${CMAKE_COMMAND}" -E make_directory "${_path}"
+                            COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_pythonDirectory}/${_file}" "${_fileBuild}"
+                            DEPENDS "${_pythonDirectory}/${_file}" )
+        else()
+        add_custom_command( OUTPUT "${_fileBuild}"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_pythonDirectory}/${_file}" "${_fileBuild}"
+            DEPENDS "${_pythonDirectory}/${_file}" )
+        endif()
     endif()
+    
     # Install source file and byte compiled files
     get_filename_component( _path "${_file}" PATH )
     BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}"

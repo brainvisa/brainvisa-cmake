@@ -9,8 +9,9 @@ SET( BRAINVISA_REAL_SOURCE_DIR "%(source_directory)s")
 BRAINVISA_PROJECT()
 
 BRAINVISA_DEPENDENCY( RUN DEPENDS python RUN ">= 2.5;<< 3.0" )
-#BRAINVISA_COPY_PYTHON_DIRECTORY( "%(source_directory)s/%(component_name)s"
-#                                  ${PROJECT_NAME} python/%(component_name)s )
+BRAINVISA_COPY_PYTHON_DIRECTORY( "%(source_directory)s/%(component_name)s"
+                                 ${PROJECT_NAME} python/%(component_name)s
+                                 INSTALL_ONLY )
 find_package( python REQUIRED )
 find_package( Sphinx )
 

@@ -206,6 +206,32 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         COMPONENT "${component}"
         PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ )
     endif()
+    
+    # Install lib/python${PYTHON_SHORT_VERSION}/site-packages/*
+    # from build dir because it is here that are installed modules
+    # with pip and virtualenv
+    set(site_packages "${CMAKE_BINARY_DIR}/lib/python${PYTHON_SHORT_VERSION}/site-packages")
+    file(GLOB modules RELATIVE "${site_packages}" "${site_packages}/*")
+    foreach(m ${modules})
+        if((NOT m MATCHES ".*\\.egg-info") AND
+           (NOT m MATCHES "distribute.*\\.egg") AND
+           (NOT m MATCHES "pip.*\\.egg") AND
+           (NOT m STREQUAL "easy-install.pth") AND
+           (NOT m STREQUAL "setuptools.pth"))
+            set(fp "${site_packages}/${m}")
+            if(IS_DIRECTORY "${fp}")
+                BRAINVISA_INSTALL(DIRECTORY "${fp}"
+                    DESTINATION "lib/python${PYTHON_SHORT_VERSION}"
+                    USE_SOURCE_PERMISSIONS
+                    COMPONENT "${component}")                    
+            else()
+                BRAINVISA_INSTALL(FILES "${fp}"
+                    DESTINATION "lib/python${PYTHON_SHORT_VERSION}"
+                    PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+                    COMPONENT "${component}")                    
+            endif()
+        endif()
+    endforeach()
 
     set(${component}_PACKAGED TRUE PARENT_SCOPE)
   else()

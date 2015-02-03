@@ -288,6 +288,7 @@ if( DCMTK_config_INCLUDE_DIR AND
     DCMTK_dcmimgle_LIBRARY )
 
   SET( DCMTK_FOUND "YES" )
+  
   IF( DCMTK_PRE_353 )
     SET( DCMTK_INCLUDE_DIR
       ${DCMTK_config_INCLUDE_DIR}
@@ -360,6 +361,14 @@ if( DCMTK_config_INCLUDE_DIR AND
     ENDIF(DCMTK_dcmnet_LIBRARY)
 
   ENDIF(DCMTK_oflog_LIBRARY)
+  
+  IF(DEFINED ENV{DCMTK_DIR})
+  	set(DCMTK_INCLUDE_DIR ${DCMTK_INCLUDE_DIR}
+        $ENV{DCMTK_DIR}/include)
+  ELSEIF(DEFINED DCMTK_DIR)
+  	set(DCMTK_INCLUDE_DIR ${DCMTK_INCLUDE_DIR}
+        ${DCMTK_DIR}/include)
+  ENDIF()
 
   IF( APPLE )
     find_package( ZLIB )
@@ -448,4 +457,3 @@ if( NOT DCMTK_FOUND )
     endif()
   endif()
 endif()
-

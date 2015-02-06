@@ -212,14 +212,20 @@ class GlobalConfiguration( object ):
       setattr( self, i, getattr( options, i ) )
 
     if options.build_directory:
-      if not options.sources_directories:
-        options.sources_directories = [ os.path.dirname( os.path.dirname( this_script ) ) ]
+      if not options.configuration_file:
+          cf = os.path.join(options.build_directory, 'bv_maker.cfg')
+          if os.path.exists(cf):
+            options.configuration_file = cf
+          else:
+            options.configuration_file = defaultConfigurationFile
+      os.environ['BV_MAKER_BUILD'] = options.build_directory
       bd = BuildDirectory( environmentVariablesSubstitution( options.build_directory ), self )
       self.buildDirectories[ bd.directory ] = bd
       for sd in options.sources_directories:
         if os.path.exists( os.path.join( sd, 'project_info.cmake' ) ) or \
            glob.glob( os.path.join( sd, 'python', '*', 'info.py' ) ) or \
            glob.glob( os.path.join( sd, '*', 'info.py' ) ):
+          print '!!', sd
           bd.addConfigurationLine( 'directory ' + sd )
         else:
           bd.addConfigurationLine( 'brainvisa all * ' + sd )

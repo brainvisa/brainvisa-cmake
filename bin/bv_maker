@@ -225,7 +225,6 @@ class GlobalConfiguration( object ):
         if os.path.exists( os.path.join( sd, 'project_info.cmake' ) ) or \
            glob.glob( os.path.join( sd, 'python', '*', 'info.py' ) ) or \
            glob.glob( os.path.join( sd, '*', 'info.py' ) ):
-          print '!!', sd
           bd.addConfigurationLine( 'directory ' + sd )
         else:
           bd.addConfigurationLine( 'brainvisa all * ' + sd )

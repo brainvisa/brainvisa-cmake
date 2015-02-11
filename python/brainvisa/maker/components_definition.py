@@ -146,7 +146,8 @@ components_definition = [
             ['capsul', {
                 'groups': ['all', 'opensource', 'standard', 'catidb'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/svn/capsul/trunk','capsul/trunk'),
+                    'bug_fix': ('git https://github.com/neurospin/capsul.git master','capsul/bug_fix'),
+                    'trunk': ('git https://github.com/neurospin/capsul.git master','capsul/trunk'),
                 },
                 'build_model': 'pure_python',
             }],

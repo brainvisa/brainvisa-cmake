@@ -729,8 +729,6 @@ for i in os.listdir(os.path.dirname(__file__)):
       pass
     else:
       l = line.split( None, 2 )
-      if len(l) != 3:
-        raise SyntaxError()
     self.configurationLines.append( line )
 
   def _process_configuration_lines( self ):
@@ -785,6 +783,25 @@ for i in os.listdir(os.path.dirname(__file__)):
                   self.components[component] = (directory,version,component_version)
                 else:
                   print 'WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % directory
+        elif first == 'pip':
+            if '=' in rest:
+                module, version = rest.split(None, 1)
+            else:
+                module = rest
+                version = None
+            installed_json = os.path.join(self.directory, 'bv_maker_install.json')
+            if os.path.exists(installed_json):
+                installed = json.load(open(installed_json))
+            else:
+                installed = {}
+            pip_installed = installed.setdefault('pip',{})
+            if module not in pip_installed:
+                command = [os.path.join(self.directory,'bin','pip'), 'install', 
+                           ('%s==%s' % (module, version) if version else module)]
+                print 'Running:', ' '.join(command)
+                subprocess.check_call(command)
+                pip_installed[module] = version
+                json.dump(installed, open(installed_json,'w'))
         else:
           SyntaxError()
       projects = set(project_per_component.get(i,i) for i in self.components)

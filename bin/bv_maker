@@ -880,8 +880,20 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
     # set bv_maker path, so that cmake finds its modules
     os.environ['PATH'] = os.path.dirname(this_script) + os.pathsep \
       + os.getenv('PATH')
-    # run cmake
-    system( cwd = self.directory, *command )
+
+    # special case: if bv-cmake is run from the build directory, run cmake
+    # in 2 passes: once to reinstall bv-cmake from sources, and a second time
+    # to actually configure all projects using the newly installed bv-cmake.
+    if self.directory == os.path.dirname(os.path.dirname(this_script)):
+      print '=== bootstraping brainvisa-cmake project ==='
+      system( cwd = self.directory,
+        *(command + ['-DBRAINVISA_CMAKE_BUILD_TYPE=brainvisa-cmake-only']) )
+      print '=== now configuring all other projects ==='
+      system( cwd = self.directory,
+        *(command + ["-DBRAINVISA_CMAKE_BUILD_TYPE=no-brainvisa-cmake"]) )
+    else:
+      # run cmake in a regular way
+      system( cwd = self.directory, *command )
   
   def build( self ):
     self._process_configuration_lines()

@@ -2729,13 +2729,13 @@ function( BRAINVISA_PYUIC source_ui_file dest_py_file relative_path )
     # ensure the working directory will exist
     file( MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/${relative_path}" )
     add_custom_command(
-      OUTPUT "${CMAKE_BINARY_DIR}/${relative_path}/${dest_py_file}"
-      COMMAND ${PYUIC} -o "${dest_py_file}" "${source_ui_file}"
+      OUTPUT "${dest_py_file}"
+      COMMAND ${PYUIC} -o "${dest_py_file}" "${CMAKE_CURRENT_SOURCE_DIR}/${relative_path}/${source_ui_file}"
       WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${relative_path}"
       DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${relative_path}/${source_ui_file}"
     )
     add_custom_target( ${target} ALL
-      DEPENDS "${CMAKE_BINARY_DIR}/${relative_path}/${dest_py_file}"
+      DEPENDS "${dest_py_file}"
       WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${relative_path}"
     )
     BRAINVISA_INSTALL( FILES

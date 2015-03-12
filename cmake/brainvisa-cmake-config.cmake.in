@@ -144,9 +144,11 @@ info='${info}'
 execfile(info)
 cmake = os.path.join('${CMAKE_BINARY_DIR}','build_files',NAME,'project_info.cmake')
 if not os.path.exists(cmake) or os.stat(cmake).st_mtime < os.stat(info).st_mtime:
+    if 'PROJECT' not in dir():
+        PROJECT = NAME # use same name for component and project
     f = open(cmake,'w')
     print >> f, 'set(BRAINVISA_PACKAGE_NAME \"%s\" PARENT_SCOPE)' % NAME
-    print >> f, 'set(BRAINVISA_PACKAGE_MAIN_PROJECT \"%s\" PARENT_SCOPE)' % NAME
+    print >> f, 'set(BRAINVISA_PACKAGE_MAIN_PROJECT \"%s\" PARENT_SCOPE)' % PROJECT
     print >> f, 'set(BRAINVISA_PACKAGE_VERSION_MAJOR %d PARENT_SCOPE)' % version_major
     print >> f, 'set(BRAINVISA_PACKAGE_VERSION_MINOR %d PARENT_SCOPE)' % version_minor
     print >> f, 'set(BRAINVISA_PACKAGE_VERSION_PATCH %d PARENT_SCOPE)' % version_micro

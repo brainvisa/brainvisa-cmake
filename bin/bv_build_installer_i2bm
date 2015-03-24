@@ -10,11 +10,11 @@ from brainvisa.config import fullVersion
 #default_build_repos_dir \
     #= '/neurospin/brainvisa/repositories/build-repos/%(i2bm)s/%(version)s/%(os)s'
 default_mirror_repos_dir \
-    = '/neurospin/brainvisa/repositories/%(i2bm)s/repositories/' \
-        '%(version)s/%(os)s'
+    = '/neurospin/brainvisa/repositories/%(i2bm)s/' \
+        '%(version)s/%(os)s/packages'
 default_output \
-    = '/neurospin/brainvisa/repositories/%(i2bm)s/download/installer/' \
-        '%(version)s/brainvisa_installer-' \
+    = '/neurospin/brainvisa/repositories/%(i2bm)s/' \
+        '%(version)s/%(os)s/brainvisa_installer/brainvisa_installer-' \
         '%(version)s-%(os)s-%(online)s%(public)s'
 
 parser = OptionParser(usage='%prog [options]',

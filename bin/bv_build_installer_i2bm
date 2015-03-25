@@ -14,7 +14,7 @@ default_mirror_repos_dir \
         '%(version)s/%(os)s/packages'
 default_output \
     = '/neurospin/brainvisa/repositories/%(i2bm)s/' \
-        '%(version)s/%(os)s/brainvisa_installer/brainvisa_installer-' \
+        '%(version)s/%(os)s/brainvisa-installer/brainvisa_installer-' \
         '%(version)s-%(os)s-%(online)s%(public)s'
 
 parser = OptionParser(usage='%prog [options]',

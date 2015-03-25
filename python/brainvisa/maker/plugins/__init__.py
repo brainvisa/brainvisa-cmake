@@ -31,3 +31,9 @@
 #
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
+
+def _init_plugins():
+    from brainvisa.maker.brainvisa_plugins_registry import plugins_import
+    plugins_import( __name__ )
+    
+_init_plugins()

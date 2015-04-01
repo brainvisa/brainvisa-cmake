@@ -98,12 +98,12 @@ components_definition = [
                     'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-qtgui/tags/4.4.0','soma/soma-qtgui/tags/4.4.0'),
                 },
             }],
-            ['corist', {
-                'groups': ['all', 'opensource', 'standard', 'catidb'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/corist/trunk','soma/corist/trunk'),
-                },
-            }],
+            #['corist', {
+                #'groups': ['all', 'opensource', 'standard', 'catidb'],
+                #'branches': {
+                    #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/corist/trunk','soma/corist/trunk'),
+                #},
+            #}],
             ['soma-base-gpl', {
                 'groups': ['all', 'opensource', 'standard'],
                 'branches': {
@@ -146,7 +146,7 @@ components_definition = [
             ['capsul', {
                 'groups': ['all', 'opensource', 'standard', 'catidb'],
                 'branches': {
-                    'bug_fix': ('git https://github.com/neurospin/capsul.git master','capsul/bug_fix'),
+                    #'bug_fix': ('git https://github.com/neurospin/capsul.git master','capsul/bug_fix'),
                     'trunk': ('git https://github.com/neurospin/capsul.git master','capsul/trunk'),
                 },
                 'build_model': 'pure_python',

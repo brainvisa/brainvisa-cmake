@@ -348,11 +348,30 @@ if( DCMTK_config_INCLUDE_DIR AND
      ${DCMTK_oflog_LIBRARY}
    )
   ELSE(DCMTK_oflog_LIBRARY)
-    SET( DCMTK_LIBRARIES
-      ${DCMTK_dcmimgle_LIBRARY}
-      ${DCMTK_dcmdata_LIBRARY}
-      ${DCMTK_ofstd_LIBRARY}
-    )
+    IF(DCMTK_PRE_353)
+      SET( DCMTK_LIBRARIES
+        ${DCMTK_dcmimgle_LIBRARY}
+        ${DCMTK_dcmdata_LIBRARY}
+        ${DCMTK_ofstd_LIBRARY}
+      )
+    ELSE()
+        SET(DCMTK_LIBRARIES
+            ${DCMTK_dcmjpeg_LIBRARY}
+            ${DCMTK_dcmdata_LIBRARY}
+            ${DCMTK_dcmdsig_LIBRARY}
+            ${DCMTK_dcmimage_LIBRARY}
+            ${DCMTK_dcmimgle_LIBRARY}
+            ${DCMTK_dcmpstat_LIBRARY}
+            ${DCMTK_dcmqrdb_LIBRARY}
+            ${DCMTK_dcmsr_LIBRARY}
+            ${DCMTK_dcmtls_LIBRARY}
+            ${DCMTK_dcmwlm_LIBRARY}
+            ${DCMTK_ijg12_LIBRARY}
+            ${DCMTK_ijg16_LIBRARY}
+            ${DCMTK_ijg8_LIBRARY}
+            ${DCMTK_ofstd_LIBRARY}
+        )
+    ENDIF()
     IF(DCMTK_dcmnet_LIBRARY)
       SET( DCMTK_LIBRARIES
       ${DCMTK_dcmnet_LIBRARY}

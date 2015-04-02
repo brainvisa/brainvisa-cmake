@@ -10,11 +10,11 @@ from brainvisa.config import fullVersion
 #default_build_repos_dir \
     #= '/neurospin/brainvisa/repositories/build-repos/%(i2bm)s/%(version)s/%(os)s'
 default_mirror_repos_dir \
-    = '/neurospin/brainvisa/repositories/%(i2bm)s/repositories/' \
-        '%(version)s/%(os)s'
+    = '/neurospin/brainvisa/repositories/%(i2bm)s/' \
+        '%(version)s/%(os)s/packages'
 default_output \
-    = '/neurospin/brainvisa/repositories/%(i2bm)s/download/installer/' \
-        '%(version)s/brainvisa_installer-' \
+    = '/neurospin/brainvisa/repositories/%(i2bm)s/' \
+        '%(version)s/%(os)s/brainvisa-installer/brainvisa_installer-' \
         '%(version)s-%(os)s-%(online)s%(public)s'
 
 parser = OptionParser(usage='%prog [options]',
@@ -90,7 +90,7 @@ components = []
 cmd = ['bv_build_installer.py', '-t', 'run', 'dev', 'usrdoc', 'devdoc',
     '--online-only', '-i', output, '-r', mirror_repos_dir]
 if options.i2bm:
-    i2bm_options = ['--no-thirdparty']
+    i2bm_options = ['--no-thirdparty', '--i2bm']
     cmd += i2bm_options
     projects += ['nuclear_imaging', 'data_storage_client', 'optical_imaging']
     components += ['constellation-private', 'constellation-gpl',

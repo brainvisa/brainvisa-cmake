@@ -31,8 +31,8 @@
 #
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
-from brainvisa.maker.brainvisa_projects         import parse_versioning_client_info
-from brainvisa.maker.brainvisa_clients          import normurl
+from brainvisa.maker.brainvisa_projects    import parse_versioning_client_info
+from brainvisa.maker.brainvisa_clients     import normurl
 
 class BranchType:
     """ Branch types that can be used by clients
@@ -46,10 +46,11 @@ class BranchType:
     BUG_FIX = 'bug_fix'
     RELEASE = 'release'
 
-def get_client_component( project,
-                          name,
-                          client_info  ):
-    """ Return a ClientComponent using its associated client information.
+def get_version_control_component( project,
+                                   name,
+                                   client_info  ):
+    """ Return a VersionControlComponent using its associated client
+        information.
     
         @type project: string
         @param project: The project name of the component
@@ -67,33 +68,46 @@ def get_client_component( project,
     from brainvisa.maker.brainvisa_plugins_registry import plugins
 
     client_key, client_url, client_params = parse_versioning_client_info(
-                                                client_info
+                                                client_info[0]
                                             )
+    client_path = client_info[1]
                     
-    client_component_class = None
-    # Try to find in client_components plugins the matching key
-    for c in plugins().get( 'client_components', [] ):
+    version_control_component_class = None
+    # Try to find in version control components plugins the matching key
+    for c in plugins().get( 'version_control_components', [] ):
         if c.client_type().key() == client_key:
-            client_component_class = c
+            version_control_component_class = c
             
-    if client_component_class is not None:
-        return client_component_class( project, name,
-                                       client_url, client_params )
+    if version_control_component_class is not None:
+        return version_control_component_class( project, name,
+                                                client_path,
+                                                client_url, client_params )
         
     else:
         raise RuntimeError( 'Component: %s:%s uses unsupported client key %s.'
                           % ( project, name, client_key ) )
-  
-class ClientComponent(object):
+
+def version_to_list( version ):
+    """ Converts a version string to a list of integers
+    """
+    return [ int(v) for v in version.split( '.' ) ]
+    
+def list_to_version( version_list ):
+    """ Converts a list of integers to a version string
+    """
+    return string.join( [ str(v) for v in version_list ], '.' )
+
+class VersionControlComponent(object):
     """ Base abstract class that is used to get component informations
-        independently of its repository type (svn, ...)
+        independently of its version control type (svn, ...)
     """
     def __init__( self,
                   project,
                   name,
+                  path,
                   url,
                   params = None ):
-        """ ClientComponent constructor
+        """ VersionControlComponent constructor
         
             @type project: string
             @param project: The project name of the component
@@ -101,162 +115,228 @@ class ClientComponent(object):
             @type name: string
             @param name: The name of the component
             
+            @type path: string
+            @param path: The relative path of the component
+            
             @type url: string
             @param url: The client url to build the component
             
             @type params: string
             @param params: The versioning client parameters to use
         """
-        super( ClientComponent, self ).__init__()
+        super( VersionControlComponent, self ).__init__()
                                                 
         self._project = project
         self._name = name
+        self._path = path
         self._url = normurl( url )
         self._params = params
         self._client = self.client_type()()
 
     def client( self ) :
-        """ Returns a Client instance associated to the ClientComponent
+        """ Returns a Client instance associated to the VersionControlComponent
         
             @rtype: Client
-            @return: The Client instance associated to the ClientComponent
+            @return: The Client instance associated to the
+                     VersionControlComponent
         """
         return self._client
 
     @classmethod
     def client_type( cls ) :
         """ Class method that returns a Client class associated to the
-            ClientComponent.
+            VersionControlComponent.
             This method must be implemented by subclasses.
         
             @rtype: Client
-            @return: The Client class associated to the ClientComponent
+            @return: The Client class associated to the VersionControlComponent
         """
-        raise RuntimeError( 'ClientComponent: client_type method is not '
-                          + 'implemented. It must be defined by subclasses.' )
-
-    def url( self ) :
-        """ Returns the url of the ClientComponent.
-        
-            @rtype: string
-            @return: The url of the ClientComponent
-        """
-        return self._url
+        raise RuntimeError( 'VersionControlComponent: client_type method is '
+                          + 'not implemented. It must be defined by '
+                          + 'subclasses.' )
 
     def name( self ) :
-        """ Returns the name of the ClientComponent.
+        """ Returns the name of the VersionControlComponent.
         
             @rtype: string
-            @return: The name of the ClientComponent
+            @return: The name of the VersionControlComponent
         """
         return self._name
 
     def project( self ) :
-        """ Returns the project of the ClientComponent.
+        """ Returns the project of the VersionControlComponent.
         
             @rtype: string
-            @return: The project of the ClientComponent
+            @return: The project of the VersionControlComponent
         """
         return self._project
 
-    def params( self ) :
-        """ Returns the parameters used by the ClientComponent.
+    def path( self ) :
+        """ Returns the local path of the VersionControlComponent.
         
             @rtype: string
-            @return: The parameters used by the ClientComponent
+            @return: The local path of the VersionControlComponent
+        """
+        return self._path
+        
+    def url( self ) :
+        """ Returns the url of the VersionControlComponent.
+        
+            @rtype: string
+            @return: The url of the VersionControlComponent
+        """
+        return self._url
+        
+    def params( self ) :
+        """ Returns the parameters used by the VersionControlComponent.
+        
+            @rtype: string
+            @return: The parameters used by the VersionControlComponent
         """
         return self._params
         
     def branch_version_max( self,
                             branch_type = BranchType.TRUNK,
-                            version_pattern = '*' ):
-        """ Maximum version for a BranchType and a version pattern.
+                            version_patterns = [ '*' ] ):
+        """ Maximum version for a BranchType and a list of version patterns.
             
             @type: string
-            @param branch_type: The svn BranchType to get version list for.
+            @param branch_type: The BranchType to get maximum version for.
             
-            @type: string
-            @param version_pattern: The version pattern to match [Default: *].
+            @type: list
+            @param version_patterns: The version patterns to match
+                                     [Default: [ '*' ] ].
             
             @rtype: string
-            @return: The maximum version for the branch type and version pattern
+            @return: A tuple that contains the maximum version and the branch
+                     name for the branch type and version patterns.
         """
-        branch_version_list = self.branch_version_list(
-                                branch_type = branch_type,
-                                version_pattern = version_pattern
-                              )
-        if (len(branch_version_list) > 0):
-            return max( branch_version_list,
-                        key = lambda v : v.split( '.' ) )
+        branch_versions = self.branch_versions(
+                              branch_type = branch_type,
+                              version_patterns = version_patterns
+                          )
+        if (len(branch_versions) > 0):
+            m =  max( branch_versions.keys(),
+                      key = version_to_list )
+            return ( m, branch_versions[m] )
         
         return None
     
-    def branch_version_list( self,
-                             branch_type = BranchType.TRUNK,
-                             version_pattern = '*' ):
-        """ List available versions for a BranchType and a version pattern.
+    def branch_versions( self,
+                         branch_type = BranchType.TRUNK,
+                         version_patterns = [ '*' ] ):
+        """ Returns a dictionary of branch versions for a BranchType. Versions
+            returned matches at least one of the version patterns.
             This method must be implemented by subclasses.
             
             @type: string
-            @param branch_type: The svn BranchType to get version list for.
+            @param branch_type: The svn BranchType to get versions for.
             
             @type: string
-            @param version_pattern: The version pattern to match [Default: *].
+            @param version_patterns: The list of version patterns to match
+                                     [Default: *].
             
-            @rtype: list
-            @return: The list of matching versions
+            @rtype: dict
+            @return: A dictionary that contains matching versions as keys
+                     and their associated branch name
         """
-        raise RuntimeError( 'ClientComponent: branch_version_list method is not '
-                          + 'implemented. It must be defined by subclasses.' )
-        
+        raise RuntimeError( 'VersionControlComponent: branch_version_list '
+                          + 'method is not implemented. It must be defined by '
+                          + 'subclasses.' )
+    
+    def branch_version( self,
+                        branch_type = BranchType.TRUNK,
+                        branch_name = None ):
+        """ Get the version for a BranchType and a name.
+            This method must be implemented by subclasses.
+            
+            @type: string
+            @param branch_type: The BranchType to get version list for.
+                                [Default: BranchType.TRUNK ]
+            
+            @type: string
+            @param branch_name: The name of branch to get version for
+                                [Default: None ].
+            
+            @rtype: string
+            @return: The version for the branch if was possible to get it,
+                     None otherwise.
+        """
+        raise RuntimeError( 'VersionControlComponent: branch_version method '
+                          + 'is not implemented. It must be defined by '
+                          + 'subclasses.' )
+    
+    def branch_name( self,
+                     branch_type = BranchType.TRUNK,
+                     version = None ):
+        """ Get the name of a branch for a BranchType and a version.
+            This method must be implemented by subclasses.
+            
+            @type: string
+            @param branch_type: The BranchType to get branch name for.
+                                [Default: BranchType.TRUNK ]
+            
+            @type: string
+            @param version: The version of the branch to get name for
+                            [Default: None ].
+            
+            @rtype: string
+            @return: The name of the branch if it was possible to get it,
+                     None otherwise.
+        """
+        raise RuntimeError( 'VersionControlComponent: branch_name method is '
+                          + 'not implemented. It must be defined by '
+                          + 'subclasses.' )
+                          
     def branch_project_info( self,
                              branch_type = BranchType.TRUNK, 
-                             version = None ) :
+                             branch_name = None ) :
         """ Reads project info file for a BranchType and a version.
             This method must be implemented by subclasses.
             
             @type: string
-            @param branch_type: The svn BranchType to get the project info for
+            @param branch_type: The BranchType to get the project info for
                                 [Default: BranchType.TRUNK].
             
             @type: string
-            @param version: The version to get project info for
-                            [Default: None].
+            @param branch_name: The branch to get project info for
+                                [Default: None].
             
             @rtype: tuple
             @return: A tuple containing project name, component name and version
                      read from the project info file.
         """
-        raise RuntimeError( 'ClientComponent: branch_project_info method is '
-                          + 'not implemented. It must be defined by '
+        raise RuntimeError( 'VersionControlComponent: branch_project_info '
+                          + 'method is not implemented. It must be defined by '
                           + 'subclasses.' )
     
     def branch_exists( self,
                        branch_type = BranchType.TRUNK,
-                       version = None ):
+                       branch_name = None ):
         """ Checks that a BranchType version exists.
             This method must be implemented by subclasses.
             
             @type: string
-            @param branch_type: The svn BranchType to check
+            @param branch_type: The BranchType to check
                                 [Default: BranchType.TRUNK].
             
             @type: string
-            @param version: The version to check
-                            [Default: None].
+            @param branch_name: The branch name to check
+                                [Default: None].
             
             @rtype: bool
             @return: True if the branch exists for the specified version,
                      False otherwise.
         """
-        raise RuntimeError( 'ClientComponent: branch_exists method is not '
-                          + 'implemented. It must be defined by subclasses.' )
+        raise RuntimeError( 'VersionControlComponent: branch_exists method is '
+                          + 'not implemented. It must be defined by '
+                          + 'subclasses.' )
   
     def branch_create( self,
                        src_branch_type = BranchType.TRUNK,
-                       src_version = None,
+                       src_branch_name = None,
                        dest_branch_type =  BranchType.BUG_FIX,
-                       dest_version = None,
+                       dest_branch_name = None,
                        message = '',
                        simulate = False,
                        verbose = False ):
@@ -268,26 +348,28 @@ class ClientComponent(object):
                                     [Default: BranchType.TRUNK].
             
             @type: string
-            @param src_version: The source branch version to create from
-                                [Default: None].
+            @param src_branch_name: The source branch name to create from
+                                    [Default: None].
             @type: string
             @param dest_branch_type: The destination BranchType to create
                                     [Default: BranchType.BUG_FIX].
             
             @type: string
-            @param dest_version: The destination branch version to create
-                                [Default: None].
+            @param dest_branch_name: The destination branch name to create
+                                     [Default: None].
             
             @type: string
             @param message: The message to log to create the branch
                             [Default: ''].
         """
-        raise RuntimeError( 'ClientComponent: branch_create method is not '
-                          + 'implemented. It must be defined by subclasses.' )
+        raise RuntimeError( 'VersionControlComponent: branch_create method is '
+                          + 'not implemented. It must be defined by '
+                          + 'subclasses.' )
 
     
     def branch_update_version_info( self,
                                     branch_type = BranchType.TRUNK,
+                                    branch_name = None,
                                     version = None,
                                     message = '',
                                     simulate = False,
@@ -300,55 +382,89 @@ class ClientComponent(object):
                                 [Default: BranchType.TRUNK].
             
             @type: string
-            @param version: The version to update project info file for
+            @param branch_name: The name of the branch to update project info
+                                file for
+                                [Default: None].
+            
+            @type: string
+            @param version: The version to set in the project info file
                             [Default: None].
             
             @type: string
-            @param message: The message used to log the version info update in
-                            svn. [Default: ''].
+            @param message: The message used to log the version info update.
+                            [Default: ''].
                             
             @rtype: bool
             @return: True if the project info version was updated, False 
                      otherwise.
         """
-        raise RuntimeError( 'ClientComponent: branch_update_version_info '
-                          + 'method is not implemented. It must be defined '
-                          + 'by subclasses.' )
+        raise RuntimeError( 'VersionControlComponent: '
+                          + 'branch_update_version_info method is not '
+                          + 'implemented. It must be defined by subclasses.' )
                           
     def branch_merge_version_info( self,
                                    src_branch_type = BranchType.BUG_FIX,
-                                   src_version = None,
+                                   src_branch_name = None,
                                    dest_branch_type = BranchType.TRUNK,
-                                   dest_version = None,
+                                   dest_branch_name = None,
                                    message = '',
                                    simulate = False,
                                    verbose = False ):
         """ Merge the project info file for component branch version.
+            This method must be implemented by subclasses.
             
             @type: string
             @param src_branch_type: The source BranchType to merge project info
-                                    file for [Default: BranchType.TRUNK].
+                                    file for [Default: BranchType.BUG_FIX].
             
             @type: string
-            @param src_version: The source version to merge project info file
-                                for [Default: None].
+            @param src_branch_name: The source branch to merge project info file
+                                    for [Default: None].
 
             @type: string
             @param dest_branch_type: The destination BranchType to merge project
                                      info file for [Default: BranchType.TRUNK].
             
             @type: string
-            @param dest_version: The destination version to merge project info 
-                                 file for [Default: None].
+            @param dest_branch_name: The destination branch to merge project
+                                     info file for [Default: None].
             
             @type: string
-            @param message: The message used to log the merge of version info in
-                            svn. [Default: ''].
+            @param message: The message used to log the merge of version info.
+                            [Default: ''].
             
             @rtype: bool
             @return: True if the project info version was merged, False 
                      otherwise.
         """
-        raise RuntimeError( 'ClientComponent: branch_merge_version_info '
-                          + 'method is not implemented. It must be defined '
-                          + 'by subclasses.' )
+        raise RuntimeError( 'VersionControlComponent: '
+                          + 'branch_merge_version_info method is not '
+                          + 'implemented. It must be defined by subclasses.' )
+                          
+    #def branch_set_alias( self,
+                          #alias,
+                          #branch_type,
+                          #branch_name,
+                          #message = '',
+                          #simulate = False,
+                          #verbose = False ):
+        #""" Set an alias to a component branch version.
+            #This method must be implemented by subclasses.
+            
+            #@type: string
+            #@param branch_type: The BranchType to set alias for.
+            
+            #@type: string
+            #@param branch_name: The name to set alias for.
+
+            #@type: string
+            #@param message: The message used to log the alias set.
+                            #[Default: ''].
+            
+            #@rtype: bool
+            #@return: True if the alias was set, False otherwise.
+        #"""
+        #raise RuntimeError( 'VersionControlComponent: branch_set_alias '
+                          #+ 'method is not implemented. It must be defined '
+                          #+ 'by subclasses.' )
+                          

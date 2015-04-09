@@ -128,7 +128,7 @@ def find_remote_project_info( client,
                     project_info_python_url_pattern,
                     project_info_python_fallback_url_pattern ):
             project_info_python_url = client.glob( pattern )
-        
+            
             if project_info_python_url:
                 return project_info_python_url[0]
   
@@ -158,10 +158,11 @@ def read_remote_project_info( client,
     @rtype: list
     @return: a list that contains project name, component name and version
     """
-    import tempfile
-    
+    import os, tempfile
+    from brainvisa.maker.brainvisa_projects import parse_project_info_cmake, \
+                                                   parse_project_info_python
     project_info_url = find_remote_project_info( client, url )
-    
+
     if project_info_url is not None:
     
         fd, path = tempfile.mkstemp()

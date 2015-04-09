@@ -38,9 +38,9 @@ def parse_project_info_cmake( path ):
   """
   project = None
   component = None
-  version = { 'major' : '',
-              'minor' : '',
-              'micro' : ''}
+  version = { 'major' : '1',
+              'minor' : '0',
+              'micro' : '0'}
 
   p = re.compile( r'\s*set\(\s*([^ \t]*)\s*(.*[^ \t])\s*\)' )
   for line in open( path ):
@@ -71,9 +71,9 @@ def parse_project_info_python( path ):
   """
 
   d = {}
-  version = { 'major' : '',
-              'minor' : '',
-              'micro' : '' }
+  version = { 'major' : '1',
+              'minor' : '0',
+              'micro' : '0' }
   execfile(path, d, d)
   for var in ('NAME', 'version_major', 'version_minor', 'version_micro'):
     if var not in d:

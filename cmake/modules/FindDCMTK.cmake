@@ -192,14 +192,14 @@ find_library( DCMTK_dcmimgle_LIBRARY dcmimgle
 
 # find library dcmjpeg
 find_library(DCMTK_dcmjpeg_LIBRARY dcmjpeg
-  PATHS ${_libraryDirectories}
-  PATH_SUFFIXES ${_pathSuffixes}
+  PATHS ${_directories}
+  PATH_SUFFIXES ${_librarySuffixes}
 )
 
 # find library dcmjpls
 find_library(DCMTK_dcmjpls_LIBRARY dcmjpls
-  PATHS ${_libraryDirectories}
-  PATH_SUFFIXES ${_pathSuffixes}
+  PATHS ${_directories}
+  PATH_SUFFIXES ${_librarySuffixes}
 )
 
 # find library dcmnet
@@ -258,20 +258,20 @@ find_library( DCMTK_ofstd_LIBRARY ofstd
 
 # find library ijg8
 find_library(DCMTK_ijg8_LIBRARY ijg8
-  PATHS ${_libraryDirectories}
-  PATH_SUFFIXES ${_pathSuffixes}
+  PATHS ${_directories}
+  PATH_SUFFIXES ${_librarySuffixes}
 )
 
 # find library ijg12
 find_library(DCMTK_ijg12_LIBRARY ijg12
-  PATHS ${_libraryDirectories}
-  PATH_SUFFIXES ${_pathSuffixes}
+  PATHS ${_directories}
+  PATH_SUFFIXES ${_librarySuffixes}
 )
 
 # find library ijg16
 find_library(DCMTK_ijg16_LIBRARY ijg16
-  PATHS ${_libraryDirectories}
-  PATH_SUFFIXES ${_pathSuffixes}
+  PATHS ${_directories}
+  PATH_SUFFIXES ${_librarySuffixes}
 )
 
 find_file( DCMTK_dict dicom.dic

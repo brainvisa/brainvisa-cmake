@@ -15,6 +15,14 @@ else()
     if( NOT LIBGCC_LIBRARIES )
       file( GLOB LIBGCC_LIBRARIES /lib/libgcc_s.so )
     endif()
+    # fix for CentOS7
+    if( NOT LIBGCC_LIBRARIES )
+      file( GLOB LIBGCC_LIBRARIES /lib64/libgcc_s.so.? )
+      if( NOT LIBGCC_LIBRARIES )
+        file( GLOB LIBGCC_LIBRARIES /lib64/libgcc_s.so )
+      endif()
+    endif()
+    # end of fix for CentOS7
     if( NOT LIBGCC_LIBRARIES )
       execute_process( COMMAND "${CMAKE_CXX_COMPILER}" "-v"
         ERROR_VARIABLE _gcc_v )

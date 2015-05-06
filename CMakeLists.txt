@@ -80,8 +80,8 @@ add_custom_command( OUTPUT "${packageName}"
 add_custom_target( "package" DEPENDS "${packageName}" )
 
 # Check if static linking is available
-include( CheckCXXAcceptsFlag )
-CHECK_CXX_ACCEPTS_FLAG( -static static_link )
+include( CheckCXXCompilerFlag )
+CHECK_CXX_COMPILER_FLAG( -static static_link )
 if( static_link )
   set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static" )
 endif()

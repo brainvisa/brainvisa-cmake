@@ -135,8 +135,8 @@ components_definition = [
                 'groups': ['all', 'opensource', 'standard', 'catidb'],
                 'branches': {
                     'trunk': ('git https://github.com/neurospin/soma-workflow.git master','soma/soma-workflow/trunk'),
-                    'bug_fix': ('git https://github.com/neurospin/soma-workflow.git bug_fix','soma/soma-workflow/trunk'),
-                    'tag': ('git https://github.com/neurospin/soma-workflow.git latest_release','soma/soma-workflow/trunk'),
+                    'bug_fix': ('git https://github.com/neurospin/soma-workflow.git bug_fix','soma/soma-workflow/bug_fix'),
+                    'tag': ('git https://github.com/neurospin/soma-workflow.git latest_release','soma/soma-workflow/latest_release'),
                 },
             }],
         ],
@@ -306,12 +306,12 @@ components_definition = [
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-models/branches/4.4','morphologist/sulci-models/branches/4.4'),
                 },
             }],
-            #['morphologist-ui', {
-                #'groups': ['all'],
-                #'branches': {
-                    #'trunk': ('git https://github.com/neurospin/morphologist.git master', 'morphologist/morphologist-ui/trunk'),
-                #},
-            #}],
+            ['morphologist-ui', {
+                'groups': ['all'],
+                'branches': {
+                    'trunk': ('git https://github.com/neurospin/morphologist.git master', 'morphologist/morphologist-ui/trunk'),
+                },
+            }],
         ],
     }),
     ('brainrat', {

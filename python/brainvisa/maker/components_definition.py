@@ -135,8 +135,8 @@ components_definition = [
                 'groups': ['all', 'opensource', 'standard', 'catidb'],
                 'branches': {
                     'trunk': ('git https://github.com/neurospin/soma-workflow.git master','soma/soma-workflow/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-workflow/branches/2.6','soma/soma-workflow/branches/2.6'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-workflow/tags/2.6.0','soma/soma-workflow/tags/2.6.0'),
+                    'bug_fix': ('git https://github.com/neurospin/soma-workflow.git bug_fix','soma/soma-workflow/trunk'),
+                    'tag': ('git https://github.com/neurospin/soma-workflow.git latest_release','soma/soma-workflow/trunk'),
                 },
             }],
         ],

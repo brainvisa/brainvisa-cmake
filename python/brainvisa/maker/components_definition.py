@@ -78,7 +78,7 @@ components_definition = [
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/trunk','soma/soma-base/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/branches/4.4','soma/soma-base/branches/4.4'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/branches/bug_fix','soma/soma-base/bug_fix'),
                     'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/tags/4.4.0','soma/soma-base/tags/4.4.0'),
                 },
             }],
@@ -210,7 +210,7 @@ components_definition = [
                 'groups': ['all', 'opensource', 'standard'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon/trunk','axon/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon/branches/4.4','axon/branches/4.4'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon/branches/bug_fix','axon/bug_fix'),
                     'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon/tags/4.4.0','axon/tags/4.4.0'),
                 },
             }],

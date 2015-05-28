@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import os
+
 components_definition = [
     ('development', {
         'components': [
@@ -591,3 +593,7 @@ components_definition = [
         ],
     }),
 ]
+
+customize_components_definition = os.path.expanduser('~/.brainvisa/components_definition.py')
+if os.path.exists(customize_components_definition):
+    execfile(customize_components_definition)

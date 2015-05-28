@@ -343,6 +343,14 @@ components_definition = [
                     'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/bioprocessing/tags/4.4.0','brainrat/bioprocessing/tags/4.4.0'),
                 },
             }],
+            ['preclinical-imaging-iam', {
+                'groups': ['all'],
+                'branches': {
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/preclinical-imaging-iam/trunk','brainrat/preclinical-imaging-iam/trunk'),
+                    #'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/preclinical-imaging-iam/branches/bug_fix','brainrat/preclinical-imaging-iam/branches/bug_fix'),
+                    #'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/preclinical-imaging-iam/tags/latest_release','brainrat/preclinical-imaging-iam/tags/latest_release'),
+                },
+            }],
         ],
     }),
     ('connectomist', {

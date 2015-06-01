@@ -32,9 +32,13 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 import posixpath
-from subprocess     import Popen, PIPE, STDOUT
-from urlparse       import urlparse, urlunparse
-  
+from subprocess                         import Popen, PIPE, STDOUT
+from urlparse                           import urlparse, urlunparse
+
+from brainvisa.maker.version_number     import VersionNumber, \
+                                               VersionFormat, \
+                                               version_format_unconstrained
+
 def system( command,
             simulate = False,
             verbose = False ):
@@ -136,7 +140,7 @@ def find_remote_project_info( client,
   
 def read_remote_project_info( client,
                               url,
-                              version_format = '%(major)s.%(minor)s' ):
+                              version_format = version_format_unconstrained ):
     """Search a project_info.cmake or a info.py file
         in subdirectories of the specified url and parses its content.
         Files are searched using the patterns :
@@ -150,10 +154,8 @@ def read_remote_project_info( client,
     @type url: string
     @param url: The url to search project_info.cmake or info.py
     
-    @type version_format: string
-    @param version_format: The format to use to return version. Available 
-                            keys in format string are major, minor and micro.
-                            default: %(major)s.%(minor)s
+    @type version_format: VersionFormat
+    @param version_format: The format to use to return version.
     
     @rtype: list
     @return: a list that contains project name, component name and version
@@ -171,22 +173,26 @@ def read_remote_project_info( client,
         if project_info_url.endswith( '.cmake' ):
             # Read the content of project_info.cmake file
             client.export( project_info_url, path )
-            project_info = parse_project_info_cmake( path )
+            project_info = parse_project_info_cmake(
+                                path,
+                                version_format
+                           )
             os.unlink( path )
         
         elif project_info_url.endswith( '.py' ):
             # Read the content of info.py file
             client.export( project_info_url, path )
-            project_info = parse_project_info_python( path )
+            project_info = parse_project_info_python(
+                                path,
+                                version_format
+                           )
             os.unlink( path )
         
         else:
             raise RuntimeError( 'Url ' + project_info_url + ' has unknown '
                                 + 'extension for project info file.'  )
         
-        if project_info is not None:
-            return tuple( project_info[0:2] + ( version_format %
-                                                project_info[2], ) )
+        return project_info
     
     else:
         return None

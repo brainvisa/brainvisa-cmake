@@ -73,6 +73,8 @@ from brainvisa.maker.brainvisa_projects import SVN_URL, \
      find_components, read_project_info, \
      project_per_component, url_per_component, ordered_projects, \
      components_per_project, components_per_group, info_per_component
+     
+from brainvisa.maker.version_number     import version_format_short
 
 def system( *args, **kwargs ):
   print ' '.join( args )
@@ -505,9 +507,13 @@ class SourceDirectory( object ):
       
     components_sources = {}
     for dest_path, bv_version in source_directories:
-      pinfo = read_project_info( os.path.join(self.directory, dest_path) )
+      pinfo = read_project_info(
+                    os.path.join(self.directory, dest_path),
+                    version_format = version_format_short
+              )
       if pinfo:
         project, component, version = pinfo
+        version = str(version)
         components_sources.setdefault( component, {} )[ bv_version or version ] = dest_path
       else:
         print 'WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % os.path.join( self.directory, dest_path )
@@ -702,9 +708,13 @@ for i in os.listdir(os.path.dirname(__file__)):
         first, rest = line.split(None,1)
         if first in ('directory', '+'):
           directory = os.path.normpath( os.path.abspath( environmentVariablesSubstitution( rest.strip() ) ) )
-          pinfo = read_project_info( directory )
+          pinfo = read_project_info(
+                        directory,
+                        version_format = version_format_short
+                  )
           if pinfo:
             project, component, version = pinfo
+            version = str(version)
             if self.configuration.verbose:
               print '    adding component %s version %s from %s' %(component, version, directory)
             self.components[component] = (directory,version,version)
@@ -736,9 +746,13 @@ for i in os.listdir(os.path.dirname(__file__)):
             for version, directory in components_sources.get(component,{}).iteritems():
               directory = os.path.join(sourceDirectory,directory)
               if fnmatchcase(version, versionPattern):
-                pinfo = read_project_info( directory )
+                pinfo = read_project_info(
+                            directory,
+                            version_format = version_format_short
+                        )
                 if pinfo:
                   project, component, component_version = pinfo
+                  component_version = str(component_version)
                   if self.configuration.verbose:
                     print '    adding component %s version %s from %s' %(component, version, directory)
                   self.components[component] = (directory,version,component_version)

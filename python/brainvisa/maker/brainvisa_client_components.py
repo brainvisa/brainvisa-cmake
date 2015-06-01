@@ -31,6 +31,9 @@
 #
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
+
+from brainvisa.maker.version_number        import VersionNumber, \
+                                                  version_format_release
 from brainvisa.maker.brainvisa_projects    import parse_versioning_client_info
 from brainvisa.maker.brainvisa_clients     import normurl
 
@@ -45,6 +48,23 @@ class BranchType:
     TRUNK = 'trunk'
     BUG_FIX = 'bug_fix'
     RELEASE = 'release'
+
+
+#class BranchVersionReadingMode:
+    #""" Modes available to read branch version
+        #AUTO: branch version is read :
+              #- from branch/name when possible, from project info file in other
+                #cases.
+                #This is fastest mode because it limits version control use but 
+                #but can return incomplete version. For example a bug_fix/2.7
+                #branch wich has a project info 2.7.3 version when read from name
+                #is read 2.7 version.
+              #- or projectversion used for main development and new features integration
+        #PROJECT_INFO_ALWAYS: branch that is never modified and that correspond
+                             #to a release
+    #"""
+    #AUTO = -1
+    #PROJECT_INFO_ALWAYS = 1
 
 def get_version_control_component( project,
                                    name,
@@ -87,16 +107,6 @@ def get_version_control_component( project,
         raise RuntimeError( 'Component: %s:%s uses unsupported client key %s.'
                           % ( project, name, client_key ) )
 
-def version_to_list( version ):
-    """ Converts a version string to a list of integers
-    """
-    return [ int(v) for v in version.split( '.' ) ]
-    
-def list_to_version( version_list ):
-    """ Converts a list of integers to a version string
-    """
-    return string.join( [ str(v) for v in version_list ], '.' )
-
 class VersionControlComponent(object):
     """ Base abstract class that is used to get component informations
         independently of its version control type (svn, ...)
@@ -125,13 +135,14 @@ class VersionControlComponent(object):
             @param params: The versioning client parameters to use
         """
         super( VersionControlComponent, self ).__init__()
-                                                
+        
         self._project = project
         self._name = name
         self._path = path
         self._url = normurl( url )
         self._params = params
         self._client = self.client_type()()
+        self._version_format = version_format_release           # Version format
 
     def client( self ) :
         """ Returns a Client instance associated to the VersionControlComponent
@@ -194,6 +205,30 @@ class VersionControlComponent(object):
             @return: The parameters used by the VersionControlComponent
         """
         return self._params
+
+    def branch_version_is_max( self,
+                               branch_type,
+                               version ):
+        """ Check that a version is the maximum version for a BranchType.
+            
+            @type: string
+            @param branch_type: The BranchType to check maximum version.
+            
+            @type: string
+            @param version: The version to check.
+            
+            @rtype: bool
+            @return: A boolean that is True if the version is the maximum for
+                     the branch_type, False otherwise. When no branch version
+                     exists, version is always the maximum version.
+        """
+        branch_version_max, branch_name = self.branch_version_max( branch_type )
+        
+        # When branch_info or branch_info[0] are None, it means that no version
+        # was found for the specified branch_type. So the given version is
+        # necessarly the maximum version.
+        return ( branch_version_max < VersionNumber( version,
+                                                     format = self._version_format ) )
         
     def branch_version_max( self,
                             branch_type = BranchType.TRUNK,
@@ -216,11 +251,13 @@ class VersionControlComponent(object):
                               version_patterns = version_patterns
                           )
         if (len(branch_versions) > 0):
-            m =  max( branch_versions.keys(),
-                      key = version_to_list )
+            m =  max( branch_versions.keys() )
             return ( m, branch_versions[m] )
         
-        return None
+        return ( VersionNumber(
+                     None,
+                     format = self._version_format
+                 ), None )
     
     def branch_versions( self,
                          branch_type = BranchType.TRUNK,
@@ -246,15 +283,15 @@ class VersionControlComponent(object):
     
     def branch_version( self,
                         branch_type = BranchType.TRUNK,
-                        branch_name = None ):
+                        branch_name = None):
         """ Get the version for a BranchType and a name.
             This method must be implemented by subclasses.
             
-            @type: string
+            @type branch_type: string
             @param branch_type: The BranchType to get version list for.
                                 [Default: BranchType.TRUNK ]
             
-            @type: string
+            @type branch_name: string
             @param branch_name: The name of branch to get version for
                                 [Default: None ].
             
@@ -266,9 +303,54 @@ class VersionControlComponent(object):
                           + 'is not implemented. It must be defined by '
                           + 'subclasses.' )
     
+    def branch_version_inc( self, branch_type, version ):
+        """ Increments the version for a specified branch type.
+            If the branch_type is:
+            - BranchType.TRUNK => the version is incremented at the major position
+                                (position 0). i.e. '1.2.3' => '2.0.0'. If the
+                                version to increment is None, '1' is returned.
+                                
+            - BranchType.BUG_FIX => the version is incremented at the minor position
+                                (position 1). i.e. '1.2.3' => '1.3.0'. If the
+                                version to increment is None, '1.0' is returned.
+                                
+            - BranchType.RELEASE => the version is incremented at the micro position
+                                (position 2). i.e. 1.2.3 => 1.2.4. If the
+                                version to increment is None, '1.0.0' is returned.
+            
+            @type branch_type: BranchType
+            @param branch_type: The type of the branch to increment version for.
+            
+            @type version: string
+            @param version: The version to increment.
+            
+            @rtype: string
+            @return: The incremented version for the branch type.
+        """
+        version = VersionNumber(
+                      version,
+                      format = self._version_format
+                  )
+        
+        if branch_type == BranchType.TRUNK:
+            position = 0
+        
+        elif branch_type == BranchType.BUG_FIX:
+            position = 1
+        
+        elif branch_type == BranchType.RELEASE:
+            position = 2
+        
+        else:
+            raise RuntimeError( 'Unable to increment version:', version,
+                                'for unknown branch type:', branch_type )
+        
+        return version.increment( position = position )
+    
     def branch_name( self,
                      branch_type = BranchType.TRUNK,
-                     version = None ):
+                     version = None,
+                     use_alias = True ):
         """ Get the name of a branch for a BranchType and a version.
             This method must be implemented by subclasses.
             
@@ -280,6 +362,11 @@ class VersionControlComponent(object):
             @param version: The version of the branch to get name for
                             [Default: None ].
             
+            @type use_alias: bool
+            @param use_alias: Specify that the branch alias must be used
+                              when needed
+                              [Default: True ].
+                              
             @rtype: string
             @return: The name of the branch if it was possible to get it,
                      None otherwise.

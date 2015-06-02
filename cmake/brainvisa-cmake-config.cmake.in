@@ -147,18 +147,32 @@ if not os.path.exists(cmake) or os.stat(cmake).st_mtime < os.stat(info).st_mtime
     if 'PROJECT' not in dir():
         PROJECT = NAME # use same name for component and project
     f = open(cmake,'w')
-    print >> f, 'set(BRAINVISA_PACKAGE_NAME \"%s\" PARENT_SCOPE)' % NAME
-    print >> f, 'set(BRAINVISA_PACKAGE_MAIN_PROJECT \"%s\" PARENT_SCOPE)' % PROJECT
-    print >> f, 'set(BRAINVISA_PACKAGE_VERSION_MAJOR %d PARENT_SCOPE)' % version_major
-    print >> f, 'set(BRAINVISA_PACKAGE_VERSION_MINOR %d PARENT_SCOPE)' % version_minor
-    print >> f, 'set(BRAINVISA_PACKAGE_VERSION_PATCH %d PARENT_SCOPE)' % version_micro
-    print >> f, 'set(BRAINVISA_PACKAGE_MAINTAINER \"%s\" PARENT_SCOPE)' % MAINTAINER
-    print >> f, 'set(BRAINVISA_PACKAGE_LICENCES \"%s\" PARENT_SCOPE)' % LICENSE
+    try:
+        # check mandatory variables definitions in info.py
+        for name in ('NAME', 'version_major', 'version_minor', 'version_micro', 'LICENSE'):
+            if name not in locals():
+                raise RuntimeError('No value found for %s. This variable should be defined in %s' % (name, info))
+        print >> f, 'set(BRAINVISA_PACKAGE_NAME \"%s\" PARENT_SCOPE)' % NAME
+        print >> f, 'set(BRAINVISA_PACKAGE_MAIN_PROJECT \"%s\" PARENT_SCOPE)' % PROJECT
+        print >> f, 'set(BRAINVISA_PACKAGE_VERSION_MAJOR %d PARENT_SCOPE)' % version_major
+        print >> f, 'set(BRAINVISA_PACKAGE_VERSION_MINOR %d PARENT_SCOPE)' % version_minor
+        print >> f, 'set(BRAINVISA_PACKAGE_VERSION_PATCH %d PARENT_SCOPE)' % version_micro
+        if 'MAINTAINTER' in locals():
+            print >> f, 'set(BRAINVISA_PACKAGE_MAINTAINER \"%s\" PARENT_SCOPE)'
+        print >> f, 'set(BRAINVISA_PACKAGE_LICENCES \"%s\" PARENT_SCOPE)' % LICENSE
+    except:
+        os.remove(cmake)
+        raise
 sys.stdout.write(cmake)
 ")
-        execute_process(COMMAND python "${script}" OUTPUT_VARIABLE cmake)
-        include("${cmake}")
-        file(REMOVE "${script}")
+        execute_process(COMMAND python "${script}" OUTPUT_VARIABLE cmake ERROR_VARIABLE error)
+        if(error)
+            message(FATAL_ERROR "${error}")
+        endif()
+        if(EXISTS "${cmake}")
+            include("${cmake}")
+            file(REMOVE "${script}")
+        endif()
     endif()
 endfunction()
 

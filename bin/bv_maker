@@ -526,6 +526,30 @@ class SourceDirectory( object ):
     cmd.extend( svnargs )
     system( *cmd )
 
+  def get_git_remotes(self, dest):
+    cmd_output = subprocess.check_output(['git', 'remote', '-v'], cwd=dest)
+    remotes = {}
+    for line in cmd_output.split('\n'):
+      remotere = re.compile('^([^ ]+)[\s|\t]+([^ ]+)\s+([^ ]+)\s*$')
+      m = remotere.match(line)
+      if not m:
+        continue
+      remote, url, io = m.group(1), m.group(2), m.group(3)
+      if remote not in remotes:
+        if url.startswith('git@'):
+          protocol = 'git'
+          prefix, address = url.split(':')
+          prefix += ':'
+        elif url.startswith('https://'):
+          protocol = 'https'
+          address = url[8:].split('/')
+          prefix = url[:8] + address[0] + '/'
+          address = '/'.join(address[1:])
+        else:
+          raise ValueError('unknown git protocol in: %s' % line)
+        remotes[remote] = protocol, prefix, address
+    return remotes
+
   def gitupdate( self, src, dest, remote_ref="HEAD" ):
     # Set a username in src if necessary
     if '@' not in src and self.configuration.username:
@@ -552,6 +576,12 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
         print('ERROR: could not initialize git repository in {0}'.format(dest))
         return
 
+    remotes = self.get_git_remotes(dest)
+    if 'origin' in remotes:
+        remote = remotes['origin']
+        if src.endswith(remote[2]):
+          # user has configured manually a different protocol: respect it.
+          src = remote[1] + remote[2]
     # Configure a remote for the developer's convenience
     retcode = subprocess.call(['git', 'remote', 'set-url', 'origin', src],
                               cwd=dest, stderr=open(os.devnull, 'w'))
@@ -574,7 +604,14 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
     except subprocess.CalledProcessError:
       old_bv_head = None
 
-    # Fetch the remote branch specified in bv_maker.cfg into refs/bv_head
+    # Fetch the remotes specified in bv_maker.cfg into refs/bv_head
+    remotes = self.get_git_remotes(dest)
+    for remote in remotes:
+      retcode = subprocess.call(['git', 'fetch', remote],
+                                cwd=dest)
+      if retcode != 0:
+        print('{0}: could not fetch from git repository {1}'.format(dest, src))
+
     retcode = subprocess.call(['git', 'fetch', src,
                                "+" + remote_ref + ":refs/bv_head"],
                               cwd=dest)

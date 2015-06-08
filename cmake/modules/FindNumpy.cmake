@@ -13,17 +13,28 @@ endif (NUMPY_INCLUDE_DIR)
 
 find_package(python REQUIRED)
 EXEC_PROGRAM ("${PYTHON_EXECUTABLE}"
-  ARGS "-c" "\"import numpy; print numpy.get_include()\""
-  OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
+  ARGS "-c" "\"import numpy; print '>>BEGIN NPY CONFIG<<'; print numpy.get_include(); print '>>END NPY CONFIG<<'\""
+  OUTPUT_VARIABLE NUMPY_INCLUDE_DIR_WRAPPED
   ERROR_QUIET
   RETURN_VALUE NUMPY_NOT_FOUND)
 
 if (NUMPY_NOT_FOUND EQUAL 0)
+
+  string( REGEX MATCH ">>BEGIN NPY CONFIG<<.(.*).>>END NPY CONFIG<<"
+    _dummy "${NUMPY_INCLUDE_DIR_WRAPPED}"
+  )
+  set( NUMPY_INCLUDE_DIR "${CMAKE_MATCH_1}")
+
   set (NUMPY_FOUND TRUE)
   set (NUMPY_INCLUDE_DIR ${NUMPY_INCLUDE_DIR} CACHE STRING "Numpy include path")
   EXEC_PROGRAM ("${PYTHON_EXECUTABLE}"
-    ARGS "-c" "\"import numpy; print numpy.version.version\""
-    OUTPUT_VARIABLE NUMPY_VERSION)
+    ARGS "-c" "\"import numpy; print '>>BEGIN NPY CONFIG<<'; print numpy.version.version; print '>>END NPY CONFIG<<'\""
+    OUTPUT_VARIABLE NUMPY_VERSION_WRAPPED)
+  string( REGEX MATCH ">>BEGIN NPY CONFIG<<.(.*).>>END NPY CONFIG<<"
+    _dummy "${NUMPY_VERSION_WRAPPED}"
+  )
+  set( NUMPY_VERSION "${CMAKE_MATCH_1}")
+
 else ()
   if( NUMPY_INCLUDE_DIR )
     message( "Numpy detection failed - output message: ${NUMPY_INCLUDE_DIR}" )

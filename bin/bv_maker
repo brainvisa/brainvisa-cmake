@@ -546,7 +546,10 @@ class SourceDirectory( object ):
           prefix = url[:8] + address[0] + '/'
           address = '/'.join(address[1:])
         else:
-          raise ValueError('unknown git protocol in: %s' % line)
+          # assume local repository
+          protocol = ''
+          prefix = ''
+          address = url
         remotes[remote] = protocol, prefix, address
     return remotes
 

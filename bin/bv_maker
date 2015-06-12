@@ -902,9 +902,12 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
       command = [ 'cmake' ]
 
     command += self.cmake_options.split()
-    command += [ '-DCMAKE_BUILD_TYPE:STRING=' + self.build_type, cmake_path( self.directory ) ]
+    command += [ '-DCMAKE_BUILD_TYPE:STRING=' + self.build_type, cmake_path(
+      self.directory ) ]
     if self.packaging_thirdparty.upper() == 'ON':
       command += ['-DBRAINVISA_PACKAGING_THIRDPARTY:BOOL=ON']
+    elif self.packaging_thirdparty.upper() == 'OFF':
+      command += ['-DBRAINVISA_PACKAGING_THIRDPARTY:BOOL=OFF']
 
     for component, build_model in self.buildModelPerComponent.iteritems():
         build_model.configure()

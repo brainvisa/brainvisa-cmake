@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import os.path as osp
 
@@ -80,9 +81,16 @@ class PurePythonComponentBuild(object):
                                  '%s_src' % self.component_name)
         if not osp.exists(src_directory):
             os.makedirs(src_directory)
-        cmakelists_content = cmake_template % dict(file=__file__,
+        # It is necessary to escape backslash ('\') characters because
+        # cmake interpretes it in CMakeLists.txt files.
+        cmakelists_content = cmake_template % dict(
+            file=os.path.normpath(
+                    __file__
+                 ).replace( '\\', '\\\\' ),
             component_name=self.component_name,
-            source_directory=self.source_directory)
+            source_directory= os.path.normpath(
+                                  self.source_directory
+                              ).replace( '\\', '\\\\' ) )
         cmakelists_path = osp.join(src_directory, 'CMakeLists.txt')
         write_cmakelists = False
         if osp.exists(cmakelists_path):

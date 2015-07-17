@@ -1,49 +1,52 @@
-#! /bin/sh
+# bv_unenv.sh: unset the environment which was set up by bv_env in a shell.
+#
+# Usage:
+#   . bv_unenv.sh
 
-exists() {
-  type -t $1 > /dev/null
+# Create a temporary file with mktemp if available
+bv_env_tempfile=$(mktemp -t bv_env.XXXXXXXXXX 2>/dev/null)
+
+# Fall back to making up a file name
+if ! [ -w "$bv_env_tempfile" ]
+then
+    bv_env_i=0
+    bv_env_tempfile=${TMPDIR:-/tmp}/bv_env-$$-$bv_env_i
+    while [ -e "$bv_env_tempfile" ]; do
+        bv_env_i=$(($bv_env_i+1))
+        bv_env_tempfile=${TMPDIR:-/tmp}/bv_env-$$-$bv_env_i
+    done
+    unset bv_env_i
+    # Create the temporary file, making sure not to overwrite an existing file
+    (umask 077 && set -C && : > "$bv_env_tempfile") || {
+        echo "bv_unenv.sh: error creating $bv_env_tempfile, aborting" >&2
+        unset bv_env_tempfile
+        return 1
+    }
+fi
+
+bv_env_cleanup() {
+    rm -f "$bv_env_tempfile"
+    unset bv_env_tempfile
 }
 
-mktemp=`type -t mktemp`
-if [ -z "$mktemp" ]; then
-  i=0
-  tmp="/tmp/bv_unenv-$$-$i"
-  while [ -e "$tmp" ]; do
-    i=$(($i+1))
-    tmp="/tmp/bv_unenv-$$-$i"
-  done
-else
-  tmp=`mktemp -t bv_unenv.XXXXXXXXXX`
-fi
 
-if [ $# -gt 0 ]; then
-  bv_unenv="$1/bin/bv_unenv"
-else
-  if [ "`basename "$0"`" = "bv_unenv.sh" ]; then
-    bv_unenv="`dirname "$0"`"
-    bv_unenv="$bv_unenv/bv_unenv"
-  else
-    bv_unenv=bv_unenv
-    # Try to find bv_unenv location in the shell history
-    exists history && exists tail && exists awk
-    if [ $? -eq 0 ]; then
-      bv_unenv_command=`history | tail -n 1 | awk '{print $3}'`
-      if [ -n "$bv_unenv_command" ];then
-        bv_unenv=`dirname $bv_unenv_command`
-        bv_unenv="$bv_unenv/bv_unenv"
-      fi
-    fi
-  fi
-fi
-# get fullpath of bv_env
-bv_unenv_dir=`dirname $bv_unenv`
-if [ -n "$bv_unenv_dir" ];then
-  bv_unenv="`cd $bv_unenv_dir;pwd`/bv_unenv"
-fi
-if [ ! -x "$bv_unenv" ]; then
-  bv_unenv=bv_unenv
-fi
+# Contrary to bv_env.sh, we know that bv_unenv is in the PATH so we do not have
+# to guess its location.
+bv_unenv >| "$bv_env_tempfile" || {
+    echo "bv_unenv.sh: error while using bv_unenv, aborting" >&2
+    bv_env_cleanup
+    return 1
+}
 
-"$bv_unenv" > "$tmp"
-source "$tmp"
-\rm "$tmp"
+. "$bv_env_tempfile" || {
+    echo "bv_unenv.sh: error while sourcing the output of $bv_env" >&2
+    bv_env_cleanup
+    hash -r
+    return 1
+}
+
+bv_env_cleanup
+
+# Empty the cache of known command locations, which is necessary to take
+# changes of $PATH into account under some shells.
+hash -r

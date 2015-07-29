@@ -92,14 +92,6 @@ components_definition = [
                     'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io/tags/4.4.0','soma/soma-io/tags/4.4.0'),
                 },
             }],
-            ['soma-qtgui', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-qtgui/trunk','soma/soma-qtgui/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-qtgui/branches/4.4','soma/soma-qtgui/branches/4.4'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-qtgui/tags/4.4.0','soma/soma-qtgui/tags/4.4.0'),
-                },
-            }],
             ['soma-database', {
                 'groups': ['all', 'opensource', 'standard'],
                 'branches': {

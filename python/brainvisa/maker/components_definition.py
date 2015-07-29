@@ -308,12 +308,13 @@ components_definition = [
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-models/branches/bug_fix','morphologist/sulci-models/bug_fix'),
                 },
             }],
-            #['morphologist-ui', {
-                #'groups': ['all'],
-                #'branches': {
-                    #'trunk': ('git https://github.com/neurospin/morphologist.git master', 'morphologist/morphologist-ui/trunk'),
-                #},
-            #}],
+            ['morphologist-ui', {
+                'groups': ['all', 'standard'],
+                'branches': {
+                    'trunk': ('git https://github.com/neurospin/morphologist.git master', 'morphologist/morphologist-ui/trunk'),
+                    'bug_fix': ('git https://github.com/neurospin/morphologist.git master', 'morphologist/morphologist-ui/bug_fix'),
+                },
+            }],
         ],
     }),
     ('brainrat', {

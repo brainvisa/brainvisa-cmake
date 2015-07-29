@@ -31,6 +31,7 @@
 #
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
+import sys
 import posixpath
 from subprocess                         import Popen, PIPE, STDOUT
 from urlparse                           import urlparse, urlunparse
@@ -74,6 +75,9 @@ def system( command,
         output = cmd.stdout.read()
         cmd.wait()
         if cmd.returncode != 0:
+            if verbose:
+                print output
+                sys.stdout.flush()
             raise SystemError( 'System command exited with error code '
                                 + repr( cmd.returncode ) + ': ' 
                                 + ' '.join( ('"' + i + '"' for i in command) ) )
@@ -168,6 +172,8 @@ def read_remote_project_info( client,
     if project_info_url is not None:
     
         fd, path = tempfile.mkstemp()
+        os.close(fd)
+        os.unlink(path)
         project_info = None
     
         if project_info_url.endswith( '.cmake' ):
@@ -191,7 +197,6 @@ def read_remote_project_info( client,
         else:
             raise RuntimeError( 'Url ' + project_info_url + ' has unknown '
                                 + 'extension for project info file.'  )
-        
         return project_info
     
     else:

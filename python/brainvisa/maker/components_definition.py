@@ -100,19 +100,6 @@ components_definition = [
                     'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-qtgui/tags/4.4.0','soma/soma-qtgui/tags/4.4.0'),
                 },
             }],
-            #['corist', {
-                #'groups': ['all', 'opensource', 'standard', 'catidb'],
-                #'branches': {
-                    #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/corist/trunk','soma/corist/trunk'),
-                #},
-            #}],
-            ['soma-base-gpl', {
-                'groups': ['all', 'opensource', 'standard'],
-                'branches': {
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base-gpl/branches/1.0','soma/soma-base-gpl/branches/1.0'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base-gpl/tags/1.0.0','soma/soma-base-gpl/tags/1.0.0'),
-                },
-            }],
             ['soma-database', {
                 'groups': ['all', 'opensource', 'standard'],
                 'branches': {
@@ -125,12 +112,6 @@ components_definition = [
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io-gpl/trunk','soma/soma-io-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io-gpl/branches/1.0','soma/soma-io-gpl/branches/1.0'),
                     'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io-gpl/tags/1.0.0','soma/soma-io-gpl/tags/1.0.0'),
-                },
-            }],
-            ['soma-pipeline', {
-                'groups': ['all', 'opensource', 'standard'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-pipeline/trunk','soma/soma-pipeline/trunk'),
                 },
             }],
             ['soma-workflow', {
@@ -282,7 +263,7 @@ components_definition = [
                 'groups': ['all', 'standard'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-data/trunk','morphologist/sulci-data/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-data/branches/4.2','morphologist/sulci-data/branches/4.2'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-data/trunk','morphologist/sulci-data/bug_fix'),
                     'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-data/tags/2008','morphologist/sulci-data/tags/2008'),
                 },
             }],
@@ -292,13 +273,6 @@ components_definition = [
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-private/trunk','morphologist/sulci-private/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-private/branches/bug_fix','morphologist/sulci-private/bug_fix'),
                     'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-private/tags/4.4.0','morphologist/sulci-private/tags/4.4.0'),
-                },
-            }],
-            ['morphologist-common', {
-                'groups': ['all', 'standard'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/morphologist-common/trunk','morphologist/morphologist-common/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/morphologist-common/branches/1.0','morphologist/morphologist-common/branches/1.0'),
                 },
             }],
             ['sulci-models', {
@@ -437,28 +411,16 @@ components_definition = [
             }],
         ],
     }),
-    ('famis', {
-        'components': [
-            ['famis-private', {
-                'groups': ['all'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/famis/famis-private/trunk','famis/famis-private/trunk'),
-                },
-            }],
-        ],
-    }),
-    ('fmri', {
-        'components': [
-            ['fmri-gpl', {
-                'groups': ['all'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/fmri/fmri-gpl/trunk','fmri/fmri-gpl/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/fmri/fmri-gpl/branches/4.0','fmri/fmri-gpl/branches/4.0'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/fmri/fmri-gpl/tags/4.0.0','fmri/fmri-gpl/tags/4.0.0'),
-                },
-            }],
-        ],
-    }),
+    #('famis', {
+        #'components': [
+            #['famis-private', {
+                #'groups': ['all'],
+                #'branches': {
+                    #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/famis/famis-private/trunk','famis/famis-private/trunk'),
+                #},
+            #}],
+        #],
+    #}),
     ('nuclear_imaging', {
         'components': [
             ['nuclear_imaging-gpl', {
@@ -499,26 +461,26 @@ components_definition = [
             }],
         ],
     }),
-    ('optical_imaging', {
-        'components': [
-            ['optical_imaging-private', {
-                'groups': ['all'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/optical_imaging/optical_imaging-private/trunk','optical_imaging/optical_imaging-private/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/optical_imaging/optical_imaging-private/branches/4.2','optical_imaging/optical_imaging-private/branches/4.2'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/optical_imaging/optical_imaging-private/tags/4.2.2','optical_imaging/optical_imaging-private/tags/4.2.2'),
-                },
-            }],
-            ['optical_imaging-gpl', {
-                'groups': ['all'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/optical_imaging/optical_imaging-gpl/trunk','optical_imaging/optical_imaging-gpl/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/optical_imaging/optical_imaging-gpl/branches/4.2','optical_imaging/optical_imaging-gpl/branches/4.2'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/optical_imaging/optical_imaging-gpl/tags/4.2.2','optical_imaging/optical_imaging-gpl/tags/4.2.2'),
-                },
-            }],
-        ],
-    }),
+    #('optical_imaging', {
+        #'components': [
+            #['optical_imaging-private', {
+                #'groups': ['all'],
+                #'branches': {
+                    #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/optical_imaging/optical_imaging-private/trunk','optical_imaging/optical_imaging-private/trunk'),
+                    #'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/optical_imaging/optical_imaging-private/branches/4.2','optical_imaging/optical_imaging-private/branches/4.2'),
+                    #'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/optical_imaging/optical_imaging-private/tags/4.2.2','optical_imaging/optical_imaging-private/tags/4.2.2'),
+                #},
+            #}],
+            #['optical_imaging-gpl', {
+                #'groups': ['all'],
+                #'branches': {
+                    #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/optical_imaging/optical_imaging-gpl/trunk','optical_imaging/optical_imaging-gpl/trunk'),
+                    #'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/optical_imaging/optical_imaging-gpl/branches/4.2','optical_imaging/optical_imaging-gpl/branches/4.2'),
+                    #'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/optical_imaging/optical_imaging-gpl/tags/4.2.2','optical_imaging/optical_imaging-gpl/tags/4.2.2'),
+                #},
+            #}],
+        #],
+    #}),
     ('ptk', {
         'components': [
             ['pyptk', {
@@ -541,32 +503,22 @@ components_definition = [
             }],
         ],
     }),
-    ('pyhrf', {
-        'components': [
-            ['pyhrf-free', {
-                'groups': ['all'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/pyhrf/pyhrf-free/trunk','pyhrf/pyhrf-free/trunk'),
-                },
-            }],
-            ['pyhrf-gpl', {
-                'groups': ['all'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/pyhrf/pyhrf-gpl/trunk','pyhrf/pyhrf-gpl/trunk'),
-                },
-            }],
-        ],
-    }),
-    ('sandbox', {
-        'components': [
-            ['nictk', {
-                'groups': ['all'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/sandbox/nictk/trunk','sandbox/nictk/trunk'),
-                },
-            }],
-        ],
-    }),
+    #('pyhrf', {
+        #'components': [
+            #['pyhrf-free', {
+                #'groups': ['all'],
+                #'branches': {
+                    #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/pyhrf/pyhrf-free/trunk','pyhrf/pyhrf-free/trunk'),
+                #},
+            #}],
+            #['pyhrf-gpl', {
+                #'groups': ['all'],
+                #'branches': {
+                    #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/pyhrf/pyhrf-gpl/trunk','pyhrf/pyhrf-gpl/trunk'),
+                #},
+            #}],
+        #],
+    #}),
     ('snapbase', {
         'components': [
             ['snapbase', {

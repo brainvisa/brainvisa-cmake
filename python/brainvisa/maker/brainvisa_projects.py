@@ -7,6 +7,8 @@ SVN_URL = 'https://bioproj.extra.cea.fr/neurosvn'
 BRAINVISA_SVN_URL = SVN_URL + '/brainvisa'
 
 from brainvisa.maker.components_definition import components_definition
+from brainvisa.maker.version_number        import VersionNumber, \
+                                                  version_format_unconstrained
 
 ordered_projects = [] # Keeping the order of project is important because this
                       # is the way configuration dependencies are handled
@@ -27,7 +29,10 @@ for project, components in components_definition:
     project_per_component[component] = project
 del project, component, components, component_info, group
 
-def parse_project_info_cmake( path ):
+def parse_project_info_cmake(
+    path,
+    version_format = version_format_unconstrained
+):
   """Parses a project_info.cmake file
   
   @type path: string
@@ -38,9 +43,10 @@ def parse_project_info_cmake( path ):
   """
   project = None
   component = None
-  version = { 'major' : '',
-              'minor' : '',
-              'micro' : ''}
+  version = VersionNumber(
+                '1.0.0',
+                format = version_format
+            )
 
   p = re.compile( r'\s*set\(\s*([^ \t]*)\s*(.*[^ \t])\s*\)' )
   for line in open( path ):
@@ -51,16 +57,19 @@ def parse_project_info_cmake( path ):
         component = value
       elif variable == 'BRAINVISA_PACKAGE_MAIN_PROJECT':
         project = value
-      elif variable == 'BRAINVISA_PACKAGE_VERSION_MAJOR':
-        version[ 'major' ] = value
-      elif variable == 'BRAINVISA_PACKAGE_VERSION_MINOR':
-        version[ 'minor' ] = value
-      elif (variable == 'BRAINVISA_PACKAGE_VERSION_PATCH') :
-        version[ 'micro' ] = value
+      elif variable == 'BRAINVISA_PACKAGE_VERSION_MAJOR' and len(version) > 0:
+        version[ 0 ] = value
+      elif variable == 'BRAINVISA_PACKAGE_VERSION_MINOR' and len(version) > 1:
+        version[ 1 ] = value
+      elif variable == 'BRAINVISA_PACKAGE_VERSION_PATCH' and len(version) > 2:
+        version[ 2 ] = value
         
   return ( project, component, version )
 
-def parse_project_info_python( path ):
+def parse_project_info_python(
+    path,
+    version_format = version_format_unconstrained
+):
   """Parses an info.py file
   
   @type path: string
@@ -71,18 +80,24 @@ def parse_project_info_python( path ):
   """
 
   d = {}
-  version = { 'major' : '',
-              'minor' : '',
-              'micro' : '' }
+  version = VersionNumber(
+                '1.0.0',
+                format = version_format
+            )
   execfile(path, d, d)
   for var in ('NAME', 'version_major', 'version_minor', 'version_micro'):
     if var not in d:
       raise KeyError('Variable %s missing in info file %s' % (var, path))
     
   project = component = d['NAME']
-  version['major'] = d['version_major']
-  version['minor'] = d['version_minor']
-  version['micro'] = d['version_micro']
+  if len(version) > 0:
+    version[0] = d['version_major']
+    
+    if len(version) > 1:
+      version[1] = d['version_minor']
+    
+      if len(version) > 2:
+        version[2] = d['version_micro']
   
   return ( project, component, version )
 
@@ -123,7 +138,7 @@ def find_project_info( directory ):
   return None
 
 def read_project_info( directory,
-                       version_format = '%(major)s.%(minor)s' ):
+                       version_format = version_format_unconstrained ):
   """Find the project_info.cmake or the info.py file
      contained in a directory and parses its content.
      Files are searched using the patterns :
@@ -134,10 +149,8 @@ def read_project_info( directory,
   @type directory: string
   @param directory: The directory to search project_info.cmake or info.py
   
-  @type version_format: string
-  @param version_format: The format to use to return version. Available 
-                         keys in format string are major, minor and micro.
-                         default: %(major)s.%(minor)s
+  @type version_format: VersionFormat
+  @param version_format: The version format to use to parse version.
   
   @rtype: tuple
   @return: A tuple that contains project name, component name and version
@@ -148,18 +161,22 @@ def read_project_info( directory,
   if project_info_path is not None:
     
     if project_info_path.endswith( '.cmake' ):
-      project_info = parse_project_info_cmake( project_info_path )
+      project_info = parse_project_info_cmake(
+                         project_info_path,
+                         version_format = version_format
+                     )
       
     elif project_info_path.endswith( '.py' ):
-        project_info = parse_project_info_python( project_info_path )
+        project_info = parse_project_info_python(
+                           project_info_path,
+                           version_format = version_format
+                       )
         
     else:
       raise RuntimeError( 'File ' + project_info_path + ' has unknown '
                         + 'extension for project info file.'  )
-      
-    if project_info is not None:
-      return tuple( project_info[0:2]
-                 + (version_format % project_info[2], ) )
+    
+    return project_info
     
   else:
     return None

@@ -136,13 +136,14 @@ function(BRAINVISA_READ_PROJECT_INFO directory)
     else()
         file(GLOB_RECURSE infos "${directory}/info.py")
         list(GET infos 0 info)
+        file(TO_CMAKE_PATH "${info}" info)
         BRAINVISA_TEMPORARY_FILE_NAME(script)
         set(script "${script}.py")
         file(WRITE  "${script}"
     "import sys, os
-info='${info}'
+info=os.path.normpath('${info}')
 execfile(info)
-cmake = os.path.join('${CMAKE_BINARY_DIR}','build_files',NAME,'project_info.cmake')
+cmake = os.path.join(os.path.normpath('${CMAKE_BINARY_DIR}'),'build_files',NAME,'project_info.cmake')
 if not os.path.exists(cmake) or os.stat(cmake).st_mtime < os.stat(info).st_mtime:
     if 'PROJECT' not in dir():
         PROJECT = NAME # use same name for component and project
@@ -206,6 +207,9 @@ macro( BRAINVISA_PROJECT )
     set( BRAINVISA_PACKAGE_VERSION "${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}.${BRAINVISA_PACKAGE_VERSION_PATCH}" )
   endif()
 
+  if( CMAKE_MAJOR_VERSION GREATER 2 )
+    cmake_policy(SET CMP0048 OLD)
+  endif()
   project( ${BRAINVISA_PACKAGE_NAME} ${ARGN} )
   
   set( ${PROJECT_NAME}_VERSION_MAJOR ${BRAINVISA_PACKAGE_VERSION_MAJOR} )

@@ -14,7 +14,7 @@ parser = OptionParser( description = 'Clean build directory / directories'
 parser.add_option( '-a', '--accesstime', dest='accesstime',
   help='delete files that have older access time than the one specified.', default = '1971-01-01 00:00:00' )
 parser.add_option( '-b', '--bin', dest='binaries', action='store_true',
-  help='also check in all entries in bin/ are still present in Makefile, or obsolete, and erase them if not. Needs to have configured and up-to-date Makefiles' )
+  help='also check if all entries in bin/ are still present in Makefile, or obsolete, and erase them if not. Needs to have configured and up-to-date Makefiles' )
 parser.add_option( '-d', '--dir', dest='directories', action='store_true',
   help='remove empty directories. Do not use this option during compilation, since it may remove some useful, temporarily empty, directories...' )
 parser.add_option( '-l', '--list', dest='list', action='store_true',
@@ -66,14 +66,15 @@ while basedirs:
 
 while basermdirs:
   d = basermdirs.pop()
-  dircontent = os.listdir( d )
-  if len( dircontent ) == 0:
-    if options.directories:
-      print 'rmdir', d
-      if not options.list :
-        os.rmdir( d )
-      if d != os.path.dirname( d ):
-        basermdirs.add( os.path.dirname( d ) )
+  if os.path.isdir(d):
+    dircontent = os.listdir( d )
+    if len( dircontent ) == 0:
+      if options.directories:
+        print 'rmdir', d
+        if not options.list :
+          os.rmdir( d )
+        if d != os.path.dirname( d ):
+          basermdirs.add( os.path.dirname( d ) )
 
 if options.binaries:
   cwd = os.getcwd()

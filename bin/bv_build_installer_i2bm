@@ -33,7 +33,7 @@ parser.add_option('-m', '--mirror_repos', action='store', type='string',
     'values.\n'
     'Variables values:\n'
     '  * i2bm: "i2bm" if -i option is used, "public" otherwise\n'
-    '  * version: soma-base version: %s\n'
+    '  * version: axon version: %s\n'
     '  * os: "linux32", "linux64", "osx", "win32" for public non-i2bm\n'
     '  * public: "-i2bm" or empty\n'
     '  * online: "online" or "offline"\n'

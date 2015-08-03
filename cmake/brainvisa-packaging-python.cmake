@@ -155,9 +155,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" -e "${PYTHON_MODULES_PATH}/dist-packages" "/usr/lib/python${PYTHON_SHORT_VERSION}" "$(BRAINVISA_INSTALL_PREFIX)/lib" \;else ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" -e "${PYTHON_MODULES_PATH}" "/usr/lib/python${PYTHON_SHORT_VERSION}"  "${CMAKE_INSTALL_PREFIX}/lib" \; fi )
 
         # fix wrong _get_default_scheme() in sysconfig.py on Ubuntu 12.04
+        # and remove replacement from /usr/local to /usr
         add_custom_command( TARGET install-${component} POST_BUILD
           COMMAND "sed" "\"s/        return 'posix_local'.*/        return 'posix_prefix'/\"" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig.py" ">$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig_temp.py"
-          COMMAND "${CMAKE_COMMAND}" -E "copy" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig_temp.py" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig.py"
+          COMMAND "sed" "s/\\.replace\\(\\\"\"\\/usr\\/local\\\",\\\"\\/usr\\\",1\"\\)//" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig_temp.py" ">$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig.py"
           COMMAND "${CMAKE_COMMAND}" -E "remove" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig_temp.py" )
 
         set( _toinstall

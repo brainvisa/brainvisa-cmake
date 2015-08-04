@@ -415,27 +415,28 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
         os.symlink(dest, os.path.join(realbindir, os.path.basename(source)))
         
   # make easy shortcuts for BV and anatomist if they are packaged
+  root_shortcuts = []
   hasAnatomist = ("anatomist-free" in selected_packages) or ("anatomist-free" in dependencies)
   ana_shortcut = os.path.join(install_directory, "anatomist")
+  if hasAnatomist:
+    root_shortcuts.append([ana_shortcut, "anatomist", False]) # False is not script
   hasBrainvisa = ("axon" in selected_packages) or ("axon" in dependencies)
   bv_shortcut = os.path.join(install_directory, "BrainVISA")
+  if hasBrainvisa:
+    root_shortcuts.append([bv_shortcut, "brainvisa", True]) # True is script
+  hasMorphologistUI = ("morphologist-ui" in selected_packages) \
+    or ("morphologist-ui" in dependencies)
+  morpho_shortcut = os.path.join(install_directory, "morphologist")
+  if hasMorphologistUI:
+    root_shortcuts.append([morpho_shortcut, "morphologist", True])
   # Windows
   if sys.platform[:3] == 'win':
-    if hasAnatomist:
-      ana_shortcut += ".bat"
-      out = open( ana_shortcut, 'w' )
+    for shortcut, exe_name, is_script in root_shortcuts:
+      shortcut += ".bat"
+      out = open( shortcut, 'w' )
       out.write( '''@setlocal
 @set directory="%~d0%~p0"
-@call "%directory:~1,-1%bin\\anatomist.bat" %*
-@endlocal
-  ''' )
-      out.close()
-    if hasBrainvisa:
-      bv_shortcut += ".bat"
-      out = open( bv_shortcut, 'w' )
-      out.write( '''@setlocal
-@set directory="%~d0%~p0"
-@call "%directory:~1,-1%bin\\brainvisa.bat" %*
+@call "%directory:~1,-1%bin\\''' + exe_name + '''.bat" %*
 @endlocal
   ''' )
       out.close()
@@ -443,61 +444,55 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
   # Macos
   elif sys.platform[:6] == 'darwin':
     # Build MacOS X clickable icons
-    if hasAnatomist:
-      ana_shortcut += ".app"
-      if os.path.exists( ana_shortcut ):
-        os.unlink( anashortcut )
-      os.symlink( os.path.join('bin', 'anatomist.app'), ana_shortcut )
-    if hasBrainvisa:
-      icns = glob.glob( os.path.join( install_directory, 'share', 'axon*' ) )
-      if not icns:
-        hasBrainvisa = False
-    if hasBrainvisa:
-      bv_shortcut += '.app'
-      if os.path.exists( bv_shortcut ):
-        shutil.rmtree( bv_shortcut, 1 )
-      os.makedirs( os.path.join( bv_shortcut, 'Contents', 'MacOS' ) )
-      os.makedirs( os.path.join( bv_shortcut, 'Contents', 'Resources' ) )
-      os.symlink( '../../../bin/brainvisa', 
-                  os.path.join( bv_shortcut, 'Contents', 
-                                'MacOS', 'brainvisa' ) )
-      icns = glob.glob( os.path.join( install_directory, 'share', 'axon*' ) )
-      if icns:
-        icns = os.path.join( '../../../share', os.path.basename( icns[0] ), 
-          'icons/brainvisa.icns' )
-      os.symlink( icns, os.path.join( bv_shortcut, 'Contents', 
-                  'Resources', 'brainvisa.icns' ) )
-      f = open( os.path.join( bv_shortcut, 'Contents', 'PkgInfo' ), 'w' )
-      print >> f, 'APPL????'
-      f.close()
-      f = open( os.path.join( bv_shortcut, 'Contents', 'Info.plist' ), 'w' )
-      print >> f, '''<?xml version="1.0" encoding="UTF-8"?>
+    for shortcut, exe_name, is_script in root_shortcuts:
+      if not is_script:
+        shortcut += ".app"
+        if os.path.exists( shortcut ):
+          os.unlink( shortcut )
+        os.symlink( os.path.join('bin', '.app' % exe_name), shortcut )
+      else:
+        shortcut += '.app'
+        if os.path.exists( shortcut ):
+          shutil.rmtree( shortcut, 1 )
+        os.makedirs( os.path.join( shortcut, 'Contents', 'MacOS' ) )
+        os.makedirs( os.path.join( shortcut, 'Contents', 'Resources' ) )
+        os.symlink( '../../../bin/%s' % exe_name,
+                    os.path.join( shortcut, 'Contents', 'MacOS', 'brainvisa' ) )
+        icns = glob.glob( os.path.join( install_directory, 'share', 'axon*' ) )
+        if icns:
+          icns = os.path.join( '../../../share', os.path.basename( icns[0] ),
+            'icons/brainvisa.icns' )
+          os.symlink( icns, os.path.join( shortcut, 'Contents',
+                      'Resources', '%s.icns' % exe_name ) )
+        f = open( os.path.join( shortcut, 'Contents', 'PkgInfo' ), 'w' )
+        print >> f, 'APPL????'
+        f.close()
+        f = open( os.path.join( shortcut, 'Contents', 'Info.plist' ), 'w' )
+        print >> f, '''<?xml version="1.0" encoding="UTF-8"?>
   <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
   <plist version="1.0">
   <dict>
           <key>CFBundleExecutable</key>
-          <string>brainvisa</string>
+          <string>%s</string>
           <key>CFBundleIconFile</key>
-          <string>brainvisa.icns</string>
+          <string>%s.icns</string>
           <key>CFBundleIdentifier</key>
-          <string>brainvisa</string>
+          <string>%s</string>
           <key>CFBundlePackageType</key>
           <string>APPL</string>
   </dict>
-  </plist>'''
-      f.close()
-      bv_shortcut=os.path.join( bv_shortcut, 'Contents', 
-                                'MacOS', 'brainvisa' )
-  # Linux
-  else:
-    if hasAnatomist:
-      if os.path.exists( ana_shortcut ):
-        os.unlink( ana_shortcut )
-      os.symlink( os.path.join( 'bin', 'anatomist' ), ana_shortcut )
+  </plist>''' % (exe_name, exe_name, exe_name)
+        f.close()
+
     if hasBrainvisa:
-      if os.path.exists( bv_shortcut ):
-        os.unlink( bv_shortcut )
-      os.symlink( os.path.join('bin', 'brainvisa'), bv_shortcut )
+      bv_shortcut=os.path.join( bv_shortcut, 'Contents', 'MacOS', 'brainvisa' )
+
+  else:
+    # Linux
+    for shortcut, exe_name, is_script in root_shortcuts:
+      if os.path.exists( shortcut ):
+        os.unlink( shortcut )
+      os.symlink( os.path.join( 'bin', exe_name ), shortcut )
 
   # Update brainvisa shared database
   if hasBrainvisa and ("brainvisa-share" in selected_packages):

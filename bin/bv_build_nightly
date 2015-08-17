@@ -91,7 +91,7 @@ bv_configure()
   if [ $status -ne 0 ]
   then
     echo "==================================================" >>"$log"
-    echo " bv_maker configure" >>"$log"
+    echo " bv_maker configure: $binary_dir" >>"$log"
     echo "==================================================" >>"$log"
     echo >>"$log"
     echo "PATH: "$PATH >>"$log"
@@ -120,7 +120,7 @@ bv_build() {
   if [ $status -ne 0 ]
   then
     echo "==================================================" >>"$log"
-    echo "     command: bv_maker build " >>"$log"
+    echo "     command: bv_maker build: $binary_dir" >>"$log"
     echo "==================================================" >>"$log"
     echo >>"$log"
     echo "PATH: "$PATH >>"$log"
@@ -149,7 +149,7 @@ bv_test() {
   if [ $status -ne 0 ]
   then
     echo "==================================================" >>"$log"
-    echo "     command: bv_maker test " >>"$log"
+    echo "     command: bv_maker test: $binary_dir" >>"$log"
     echo "==================================================" >>"$log"
     echo >>"$log"
     echo "PATH: "$PATH >>"$log"
@@ -178,7 +178,7 @@ bv_doc() {
   then
     echo "==================================================" >>"$log"
     echo "   documentation:" >>"$log"
-    echo "         command: bv_maker doc" >>"$log"
+    echo "         command: bv_maker doc: $binary_dir" >>"$log"
     echo "==================================================" >>"$log"
     echo >>"$log"
     echo "PATH: "$PATH >>"$log"

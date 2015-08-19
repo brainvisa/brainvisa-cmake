@@ -279,7 +279,7 @@ components_definition = [
                 },
             }],
             ['morphologist-ui', {
-                'groups': ['all', 'standard'],
+                'groups': ['all', 'opensource', 'standard'],
                 'branches': {
                     'trunk': ('git https://github.com/neurospin/morphologist.git master', 'morphologist/morphologist-ui/trunk'),
                     'bug_fix': ('git https://github.com/neurospin/morphologist.git master', 'morphologist/morphologist-ui/bug_fix'),

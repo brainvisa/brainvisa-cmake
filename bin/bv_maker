@@ -9,9 +9,9 @@
 #
 # This software is governed by the CeCILL-B license under
 # French law and abiding by the rules of distribution of free software.
-# You can  use, modify and/or redistribute the software under the 
+# You can  use, modify and/or redistribute the software under the
 # terms of the CeCILL-B license as circulated by CEA, CNRS
-# and INRIA at the following URL "http://www.cecill.info". 
+# and INRIA at the following URL "http://www.cecill.info".
 #
 # As a counterpart to the access to the source code and  rights to copy,
 # modify and redistribute granted by the license, users are provided only
@@ -26,657 +26,706 @@
 # therefore means  that it is reserved for developers  and  experienced
 # professionals having in-depth computer knowledge. Users are therefore
 # encouraged to load and test the software's suitability as regards their
-# requirements in conditions enabling the security of their systems and/or 
-# data to be ensured and,  more generally, to use and operate it in the 
+# requirements in conditions enabling the security of their systems and/or
+# data to be ensured and,  more generally, to use and operate it in the
 # same conditions as regards security.
 #
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
-import sys, os, re, pprint, subprocess, glob, shutil, json
+import sys
+import os
+import re
+import pprint
+import subprocess
+import glob
+import shutil
+import json
 from optparse import OptionParser
 from fnmatch import fnmatchcase
 import tempfile
 
 # Ugly hack to backport subprocess.check_ouput method on python < 2.7
 # TODO: remove this once BrainVISA is only compatible with python >= 2.7
-if "check_output" not in dir( subprocess ): # duck punch it in!
+if "check_output" not in dir(subprocess):  # duck punch it in!
     def f(*popenargs, **kwargs):
-          if 'stdout' in kwargs:
-              raise ValueError(
-                  'stdout argument not allowed, it will be overridden.')
-          process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs,
-                                     **kwargs)
-          output, unused_err = process.communicate()
-          retcode = process.poll()
-          if retcode:
-              cmd = kwargs.get("args")
-              if cmd is None:
-                  cmd = popenargs[0]
-              raise subprocess.CalledProcessError(retcode, cmd)
-          return output
+        if 'stdout' in kwargs:
+            raise ValueError(
+                'stdout argument not allowed, it will be overridden.')
+        process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs,
+                                   **kwargs)
+        output, unused_err = process.communicate()
+        retcode = process.poll()
+        if retcode:
+            cmd = kwargs.get("args")
+            if cmd is None:
+                cmd = popenargs[0]
+            raise subprocess.CalledProcessError(retcode, cmd)
+        return output
     subprocess.check_output = f
 
-if os.path.exists( sys.argv[0] ):
-  this_script = sys.argv[0]
+if os.path.exists(sys.argv[0]):
+    this_script = sys.argv[0]
 else:
-  this_script = None
-  for p in os.environ.get( 'PATH', '' ).split( os.pathsep ) + [ os.curdir ]:
-    s = os.path.join( p, sys.argv[0] )
-    if os.path.exists( s ):
-      this_script = s
-      break
+    this_script = None
+    for p in os.environ.get('PATH', '').split(os.pathsep) + [os.curdir]:
+        s = os.path.join(p, sys.argv[0])
+        if os.path.exists(s):
+            this_script = s
+            break
 if this_script:
-  this_script = os.path.normpath( os.path.abspath( this_script ) )
-  python_modules = os.path.join( os.path.dirname( os.path.dirname( this_script ) ), 'python' )
-  if os.path.isdir( python_modules ):
-    sys.path.insert( 0, python_modules )
+    this_script = os.path.normpath(os.path.abspath(this_script))
+    python_modules = os.path.join(
+        os.path.dirname(os.path.dirname(this_script)), 'python')
+    if os.path.isdir(python_modules):
+        sys.path.insert(0, python_modules)
 
 from brainvisa.maker.brainvisa_projects import SVN_URL, \
-     find_components, read_project_info, \
-     project_per_component, url_per_component, ordered_projects, \
-     components_per_project, components_per_group, info_per_component
-     
-from brainvisa.maker.version_number     import version_format_short
+    find_components, read_project_info, \
+    project_per_component, url_per_component, ordered_projects, \
+    components_per_project, components_per_group, info_per_component
 
-def system( *args, **kwargs ):
-  print ' '.join( args )
-  popen = subprocess.Popen( args, **kwargs )
-  popen.communicate()
-  if popen.returncode != 0:
-    raise OSError( 'Command failed: %s' % ' '.join( ( repr(i) for i in args ) ) )
-
-def cmake_path( path ):
-  if sys.platform == 'win32':
-    return path.replace( '\\', '/' )
-  else :
-    return path
-    
-def copy_brainvisa_cmake( installDir ):
-  global this_script
-  sourceDir = os.path.dirname( os.path.dirname( this_script ) )
-  samefile = getattr( os.path, 'samefile', None )
-  if samefile:
-    samefile = samefile( sourceDir, installDir )
-  else:
-    samefile = sourceDir == installDir
-  if samefile:
-    return
-  import brainvisa.maker
-  for f in open( os.path.join( os.path.dirname( brainvisa.maker.__file__ ), 'installed_files.txt' ) ):
-    p, f = os.path.split( f.strip() )
-    d = os.path.join( installDir, p )
-    if not os.path.exists( d ):
-      os.makedirs( d )
-    shutil.copy( os.path.join( sourceDir, p, f ), d )
-    
+from brainvisa.maker.version_number import version_format_short
 
 
-def environmentVariablesSubstitution( path ):
-  result = path
-  r = re.compile( r'\$([A-Za-z0-9_]*)' )
-  offset = 0
-  for m in r.finditer( path ):
-    variableContent = os.environ.get( m.group(1) )
-    if variableContent is not None:
-      start, end = m.span()
-      start += offset
-      end += offset
-      offset += len( variableContent ) - end + start
-      result = result[ :start ] + variableContent + result[ end :  ]
-  return os.path.normpath( os.path.realpath( os.path.abspath( result ) ) )
-
-class GlobalConfiguration( object ):
-  def __init__( self, argv ):
-    usage = '''%prog [options] [ command [command options] ]...
-    
-    This program is for the management of source retrieval, configuration and compilation of BrainVISA projects.
-    
-    In order to work, the commands svn and svnadmin must be installed on your system. On some Linux systems they are in two separate packages (e.g. subversion and subversion-tools).
-    
-    Commands:
-      sources: Create or updated selected sources directories from Subversion repository.
-      configure: Create and configure selected build directories with CMake.
-      build: compile all selected build directories.
-      doc: Generate documentation (docbook, epydoc, doxygen)
-      test: Execute tests using ctest.
-    
-    To get help for a specific command, use -h option of the command. Example: "%prog build -h".
-    '''
-    defaultConfigurationFile = os.path.join( os.environ[ 'HOME' ], '.brainvisa', 'bv_maker.cfg' )
-    parser = OptionParser(usage=usage)
-    parser.add_option( '-d', '--directory', dest='directories',
-                      help='Restrict actions to a selected directory. May be used several times to process several directories.',
-                      metavar='DIR', action='append', default=[] )
-    parser.add_option( '-c', '--config', dest='configuration_file',
-                      help='specify configuration file. Default ="' + defaultConfigurationFile + '"',
-                      metavar='CONFIG', default=None )
-    parser.add_option( '-s', '--sources', dest='sources_directories',
-                      help='directory containing sources',
-                      metavar='DIR', action='append', default=[] )
-    parser.add_option( '-b', '--build', dest='build_directory',
-                      help='build directory',
-                      metavar='DIR', default=None )
-    parser.add_option( '--username', dest='username',
-                      help='specify user login to use with the svn server',
-                      metavar='USERNAME', default='' )
-    parser.add_option( '-v', '--verbose', dest='verbose', action='store_true',
-                      help='show as much information as possible' )
-    
-    (options, args) = parser.parse_args( argv )
-    if args:
-      raise ValueError( 'Invalid option: %s' % args[0] )
-    packages = []
-    lineCount = 0
-    currentDirectoryObject = None
-    self.sourcesDirectories = {}
-    self.buildDirectories = {}
-
-    directories = [os.path.normpath(os.path.realpath(os.path.abspath(d)))
-                   for d in options.directories]
-
-    for i in ( 'configuration_file', 'username', 'verbose' ):
-      setattr( self, i, getattr( options, i ) )
-
-    if options.build_directory:
-      if not options.configuration_file:
-          cf = os.path.join(options.build_directory, 'bv_maker.cfg')
-          if os.path.exists(cf):
-            options.configuration_file = cf
-          else:
-            options.configuration_file = defaultConfigurationFile
-      os.environ['BV_MAKER_BUILD'] = options.build_directory
-      bd = BuildDirectory( environmentVariablesSubstitution( options.build_directory ), self )
-      self.buildDirectories[ bd.directory ] = bd
-      for sd in options.sources_directories:
-        if os.path.exists( os.path.join( sd, 'project_info.cmake' ) ) or \
-           glob.glob( os.path.join( sd, 'python', '*', 'info.py' ) ) or \
-           glob.glob( os.path.join( sd, '*', 'info.py' ) ):
-          bd.addConfigurationLine( 'directory ' + sd )
-        else:
-          bd.addConfigurationLine( 'brainvisa all * ' + sd )
-    elif not options.configuration_file:
-      options.configuration_file = defaultConfigurationFile
-   
-    if options.configuration_file:
-      # Read configuration file
-      for line in open( options.configuration_file ):
-        lineCount += 1
-        line = line.strip()
-        # skip comments
-        if not line or line[0] == '#' or line.startswith( '//' ): continue
-        try:
-          if line[0] == '[':
-            if line[-1] != ']': raise SyntaxError()
-            l = line[1:-1].split( None, 1 )
-            if len( l ) != 2:
-              raise SyntaxError()
-            if l[ 0 ] == 'source':
-              pass
-              currentDirectoryObject = SourceDirectory( environmentVariablesSubstitution( l[ 1 ].strip() ), self )
-              if (not directories or (currentDirectoryObject.directory in directories)):
-                self.sourcesDirectories[ currentDirectoryObject.directory ] = currentDirectoryObject
-              elif self.verbose:
-                print 'Passing ',currentDirectoryObject.directory, 'because it is not in the selected directories.'
-            elif l[ 0 ] == 'build':
-              pass
-              currentDirectoryObject = BuildDirectory( environmentVariablesSubstitution( l[ 1 ].strip() ), self )
-              if (not directories or (currentDirectoryObject.directory in directories)):
-                self.buildDirectories[ currentDirectoryObject.directory ] = currentDirectoryObject
-              elif self.verbose:
-                print 'Passing ',currentDirectoryObject.directory, 'because it is not in the selected directories.'
-            elif l[ 0 ] == 'virtualenv':
-              currentDirectoryObject = VirtualenvDirectory( environmentVariablesSubstitution( l[ 1 ].strip() ), self )
-              if (not directories or (currentDirectoryObject.directory in directories)):
-                self.buildDirectories[ currentDirectoryObject.directory ] = currentDirectoryObject
-              elif self.verbose:
-                print 'Passing ',currentDirectoryObject.directory, 'because it is not in the selected directories.'
-            else:
-              raise SyntaxError()
-          else:
-            if currentDirectoryObject is None: raise SyntaxError()
-            if self.verbose:
-              print '  processing line:', repr( line )
-            currentDirectoryObject.addConfigurationLine( line )
-        except SyntaxError:
-          raise SyntaxError( 'Syntax error in ' + repr( options.configuration_file ) + ' on line ' + str( lineCount ) )
-
-    # store options and args
-    self.options = options
-    self.args = args
+def system(*args, **kwargs):
+    print ' '.join(args)
+    popen = subprocess.Popen(args, **kwargs)
+    popen.communicate()
+    if popen.returncode != 0:
+        raise OSError('Command failed: %s' %
+                      ' '.join((repr(i) for i in args)))
 
 
-
-class InfoCommand( object ):
-  def __init__( self, argv, configuration ):
-    usage = '''%prog [global options] info [options]
-    
-    Display information about configuration, sources directories and build directories.'''
-    parser = OptionParser(usage=usage)
-    (options, args) = parser.parse_args( argv )
-    if args:
-      raise ValueError( 'Invalid option: %s' % args[0] )
-  
-  
-  def __call__( self ):
-    print 'Configuration file:', configuration.configuration_file
-    for d, o in configuration.sourcesDirectories.iteritems():
-      o.info()
-    for d, o in configuration.buildDirectories.iteritems():
-      o.info()
-
-
-class SourcesCommand( object ):
-  def __init__( self, argv, configuration ):
-    usage = '''%prog [global options] sources [options]
-    
-    Create or updated selected sources directories from Subversion repository.'''
-    parser = OptionParser(usage=usage)
-    parser.add_option( '--no-svn', dest='svn', action='store_false',
-                      default=True,
-                      help='don\'t update svn sources')
-    parser.add_option( '--no-git', dest='git', action='store_false',
-                      default=True,
-                      help='don\'t update git sources')
-    (options, args) = parser.parse_args( argv )
-    if args:
-      raise ValueError( 'Invalid option: %s' % args[0] )
-    self.options = options
-    self.args = args
-  
-  
-  def __call__( self ):
-    for d, o in configuration.sourcesDirectories.iteritems():
-      o.process(self.options, self.args)
-
-
-class ConfigureCommand( object ):
-  def __init__( self, argv, configuration ):
-    usage = '''%prog [global options] configure [options]
-    
-    Create or updated selected build directories.'''
-    parser = OptionParser(usage=usage)
-    parser.add_option('-c', '--clean', dest='clean', action='store_true',
-                      default=False,
-                      help='clean build tree (using bv_clean_build_tree -d) '
-                      'before configuring')
-    (options, args) = parser.parse_args( argv )
-    if args:
-      raise ValueError( 'Invalid option: %s' % args[0] )
-    self.options = options
-    self.args = args
-
-
-  def __call__( self ):
-    for d, o in configuration.buildDirectories.iteritems():
-      o.configure(self.options, self.args)
-
-
-
-class CompileCommand( object ):
-  def __init__( self, argv, configuration ):
-    command = [ ( 'build' if i == 'compile' else i ) for i in sys.argv ]
-    raise ValueError( 'Command "compile" have been renamed to "build". Please use the following command-line: %s' % ' '.join( ( repr(i) for i in command ) ) )
-  
-
-
-class BuildCommand( object ):
-  def __init__( self, argv, configuration ):
-    usage = '''%prog [global options] configure [options]
-    
-    Compile selected build directories.'''
-    parser = OptionParser(usage=usage)
-    parser.add_option('-c', '--clean', dest='clean', action='store_true',
-                      default=False,
-                      help='clean build tree (using '
-                      'bv_clean_build_tree -d -b) before building')
-    (options, args) = parser.parse_args( argv )
-    if args:
-      raise ValueError( 'Invalid option: %s' % args[0] )
-    self.options = options
-    self.args = args
-  
-  
-  def __call__( self ):
-    for d, o in configuration.buildDirectories.iteritems():
-      o.build(self.options, self.args)
-
-class DocCommand( object ):
-  def __init__( self, argv, configuration ):
-    usage = '''%prog [global options] doc [options]
-    
-    Generate documentation (docbook, epydoc, doxygen).'''
-    parser = OptionParser(usage=usage)
-    (options, args) = parser.parse_args( argv )
-    if args:
-      raise ValueError( 'Invalid option: %s' % args[0] )
-  
-  
-  def __call__( self ):
-    for d, o in configuration.buildDirectories.iteritems():
-      o.doc()
-
-
-class TestCommand( object ):
-  def __init__( self, argv, configuration ):
-    usage = '''%prog [global options] test
-    
-    Executes ctest.'''
-    parser = OptionParser(usage=usage)
-    (options, args) = parser.parse_args( argv )
-    if args:
-      raise ValueError( 'Invalid option: %s' % args[0] )
-  
-  def __call__( self ):
-    for d, o in configuration.buildDirectories.iteritems():
-      o.test()
-
-
-class SourceDirectory( object ):
-  def __init__( self, directory, configuration ):
-    self.configuration = configuration
-    self.directory = os.path.normpath( os.path.abspath( directory ) )
-    self.configurationLines = []
-    self.svnComponents = []
-    self.gitComponents = []
-    if self.configuration.verbose:
-      print 'Processing source directory %s' % self.directory
-    
-  def addConfigurationLine( self, line, virtual=False, component_version=None ):
-    # Supported lines in bv_maker.cfg for [ source ... ]:
-    #    git <url> <git_tag> [<dest_directory> [<bv_version>]]
-    #    svn <url> [<dest_directory> [<bv_version>]]
-    #    brainvisa <component_pattern> <version_pattern>
-    #    brainvisa_exclude <component_pattern> [<version_pattern>]
-    #    + soma/soma-base/trunk [<dest_directory>] [<bv_version>]]
-    #    + https://svn.url [<dest_directory>] [<bv_version>]]
-    #    + <component_pattern> <version_pattern>
-    #    - <component_pattern> [<version_pattern>]
-    l = line.split()
-    sign = l[0]
-    if sign == 'git':
-      if len(l) < 3 or len( l ) > 5:
-        raise SyntaxError()
-      sign, url, git_tag, dest_directory, bv_version = ( l + [ None, None ] )[:5]
-      if self.configuration.verbose:
-        print '    adding repository: git', url, git_tag
-        print '                   in:', os.path.join(self.directory,dest_directory)
-        if component_version:
-          print '                  for: %s version %s' % component_version
-      self.gitComponents.append( (component_version, url, git_tag, dest_directory, bv_version) )
+def cmake_path(path):
+    if sys.platform == 'win32':
+        return path.replace('\\', '/')
     else:
-      if len(l) < 2 or len( l ) > 4:
-        raise SyntaxError()    
-      sign, componentPattern, versionPattern, bv_version = ( l + [ None, None ] )[:4]
-      if sign == 'svn' or (sign == '+' and '/' in componentPattern):
-        if '*' in componentPattern:
-          raise SyntaxError()
-        if componentPattern.startswith( 'http' ):
-          url = componentPattern
-          dest_directory = versionPattern
-        else:
-          url = SVN_URL + '/' + componentPattern
-          dest_directory = versionPattern
-          if dest_directory is None:
-            dest_directory = componentPattern
-        if dest_directory is None:
-          raise SyntaxError()
+        return path
+
+
+def copy_brainvisa_cmake(installDir):
+    global this_script
+    sourceDir = os.path.dirname(os.path.dirname(this_script))
+    samefile = getattr(os.path, 'samefile', None)
+    if samefile:
+        samefile = samefile(sourceDir, installDir)
+    else:
+        samefile = sourceDir == installDir
+    if samefile:
+        return
+    import brainvisa.maker
+    for f in open(os.path.join(os.path.dirname(brainvisa.maker.__file__), 'installed_files.txt')):
+        p, f = os.path.split(f.strip())
+        d = os.path.join(installDir, p)
+        if not os.path.exists(d):
+            os.makedirs(d)
+        shutil.copy(os.path.join(sourceDir, p, f), d)
+
+
+def environmentVariablesSubstitution(path):
+    result = path
+    r = re.compile(r'\$([A-Za-z0-9_]*)')
+    offset = 0
+    for m in r.finditer(path):
+        variableContent = os.environ.get(m.group(1))
+        if variableContent is not None:
+            start, end = m.span()
+            start += offset
+            end += offset
+            offset += len(variableContent) - end + start
+            result = result[:start] + variableContent + result[end:]
+    return os.path.normpath(os.path.realpath(os.path.abspath(result)))
+
+
+class GlobalConfiguration(object):
+
+    def __init__(self, argv):
+        usage = '''%prog [options] [ command [command options] ]...
+
+This program is for the management of source retrieval, configuration and compilation of BrainVISA projects.
+
+In order to work, the commands svn and svnadmin must be installed on your system. On some Linux systems they are in two separate packages (e.g. subversion and subversion-tools).
+
+Commands:
+  sources: Create or updated selected sources directories from Subversion repository.
+  configure: Create and configure selected build directories with CMake.
+  build: compile all selected build directories.
+  doc: Generate documentation (docbook, epydoc, doxygen)
+  test: Execute tests using ctest.
+
+To get help for a specific command, use -h option of the command. Example: "%prog build -h".
+'''
+        defaultConfigurationFile = os.path.join(
+            os.environ['HOME'], '.brainvisa', 'bv_maker.cfg')
+        parser = OptionParser(usage=usage)
+        parser.add_option('-d', '--directory', dest='directories',
+                          help='Restrict actions to a selected directory. May be used several times to process several directories.',
+                          metavar='DIR', action='append', default=[])
+        parser.add_option('-c', '--config', dest='configuration_file',
+                          help='specify configuration file. Default ="' +
+                          defaultConfigurationFile + '"',
+                          metavar='CONFIG', default=None)
+        parser.add_option('-s', '--sources', dest='sources_directories',
+                          help='directory containing sources',
+                          metavar='DIR', action='append', default=[])
+        parser.add_option('-b', '--build', dest='build_directory',
+                          help='build directory',
+                          metavar='DIR', default=None)
+        parser.add_option('--username', dest='username',
+                          help='specify user login to use with the svn server',
+                          metavar='USERNAME', default='')
+        parser.add_option(
+            '-v', '--verbose', dest='verbose', action='store_true',
+            help='show as much information as possible')
+
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+        packages = []
+        lineCount = 0
+        currentDirectoryObject = None
+        self.sourcesDirectories = {}
+        self.buildDirectories = {}
+
+        directories = [os.path.normpath(os.path.realpath(os.path.abspath(d)))
+                       for d in options.directories]
+
+        for i in ('configuration_file', 'username', 'verbose'):
+            setattr(self, i, getattr(options, i))
+
+        if options.build_directory:
+            if not options.configuration_file:
+                cf = os.path.join(options.build_directory, 'bv_maker.cfg')
+                if os.path.exists(cf):
+                    options.configuration_file = cf
+                else:
+                    options.configuration_file = defaultConfigurationFile
+            os.environ['BV_MAKER_BUILD'] = options.build_directory
+            bd = BuildDirectory(
+                environmentVariablesSubstitution(options.build_directory),
+                self)
+            self.buildDirectories[bd.directory] = bd
+            for sd in options.sources_directories:
+                if os.path.exists(os.path.join(sd, 'project_info.cmake')) \
+                    or glob.glob(os.path.join(sd, 'python', '*', 'info.py')) \
+                    or glob.glob(os.path.join(sd, '*', 'info.py')):
+                    bd.addConfigurationLine('directory ' + sd)
+                else:
+                    bd.addConfigurationLine('brainvisa all * ' + sd)
+        elif not options.configuration_file:
+            options.configuration_file = defaultConfigurationFile
+
+        if options.configuration_file:
+            # Read configuration file
+            for line in open(options.configuration_file):
+                lineCount += 1
+                line = line.strip()
+                # skip comments
+                if not line or line[0] == '#' or line.startswith('//'):
+                    continue
+                try:
+                    if line[0] == '[':
+                        if line[-1] != ']':
+                            raise SyntaxError()
+                        l = line[1:-1].split(None, 1)
+                        if len(l) != 2:
+                            raise SyntaxError()
+                        if l[0] == 'source':
+                            pass
+                            currentDirectoryObject = SourceDirectory(
+                                environmentVariablesSubstitution(l[1].strip()), self)
+                            if (not directories or (currentDirectoryObject.directory in directories)):
+                                self.sourcesDirectories[
+                                    currentDirectoryObject.directory] = currentDirectoryObject
+                            elif self.verbose:
+                                print 'Passing ', currentDirectoryObject.directory, 'because it is not in the selected directories.'
+                        elif l[0] == 'build':
+                            pass
+                            currentDirectoryObject = BuildDirectory(
+                                environmentVariablesSubstitution(l[1].strip()), self)
+                            if (not directories or (currentDirectoryObject.directory in directories)):
+                                self.buildDirectories[
+                                    currentDirectoryObject.directory] = currentDirectoryObject
+                            elif self.verbose:
+                                print 'Passing ', currentDirectoryObject.directory, 'because it is not in the selected directories.'
+                        elif l[0] == 'virtualenv':
+                            currentDirectoryObject = VirtualenvDirectory(
+                                environmentVariablesSubstitution(l[1].strip()), self)
+                            if (not directories or (currentDirectoryObject.directory in directories)):
+                                self.buildDirectories[
+                                    currentDirectoryObject.directory] = currentDirectoryObject
+                            elif self.verbose:
+                                print 'Passing ', currentDirectoryObject.directory, 'because it is not in the selected directories.'
+                        else:
+                            raise SyntaxError()
+                    else:
+                        if currentDirectoryObject is None:
+                            raise SyntaxError()
+                        if self.verbose:
+                            print '  processing line:', repr(line)
+                        currentDirectoryObject.addConfigurationLine(line)
+                except SyntaxError:
+                    raise SyntaxError('Syntax error in ' + repr(
+                        options.configuration_file) + ' on line ' + str(lineCount))
+
+        # store options and args
+        self.options = options
+        self.args = args
+
+
+class InfoCommand(object):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] info [options]
+
+    Display information about configuration, sources directories and build directories.'''
+        parser = OptionParser(usage=usage)
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+
+    def __call__(self):
+        print 'Configuration file:', configuration.configuration_file
+        for d, o in configuration.sourcesDirectories.iteritems():
+            o.info()
+        for d, o in configuration.buildDirectories.iteritems():
+            o.info()
+
+
+class SourcesCommand(object):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] sources [options]
+
+    Create or updated selected sources directories from Subversion repository.'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('--no-svn', dest='svn', action='store_false',
+                          default=True,
+                          help='don\'t update svn sources')
+        parser.add_option('--no-git', dest='git', action='store_false',
+                          default=True,
+                          help='don\'t update git sources')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        for d, o in configuration.sourcesDirectories.iteritems():
+            o.process(self.options, self.args)
+
+
+class ConfigureCommand(object):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] configure [options]
+
+    Create or updated selected build directories.'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('-c', '--clean', dest='clean', action='store_true',
+                          default=False,
+                          help='clean build tree (using bv_clean_build_tree -d) '
+                          'before configuring')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        for d, o in configuration.buildDirectories.iteritems():
+            o.configure(self.options, self.args)
+
+
+class CompileCommand(object):
+
+    def __init__(self, argv, configuration):
+        command = [('build' if i == 'compile' else i) for i in sys.argv]
+        raise ValueError('Command "compile" have been renamed to "build". Please use the following command-line: %s' %
+                         ' '.join((repr(i) for i in command)))
+
+
+class BuildCommand(object):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] configure [options]
+
+    Compile selected build directories.'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('-c', '--clean', dest='clean', action='store_true',
+                          default=False,
+                          help='clean build tree (using '
+                          'bv_clean_build_tree -d -b) before building')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        for d, o in configuration.buildDirectories.iteritems():
+            o.build(self.options, self.args)
+
+
+class DocCommand(object):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] doc [options]
+
+    Generate documentation (docbook, epydoc, doxygen).'''
+        parser = OptionParser(usage=usage)
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+
+    def __call__(self):
+        for d, o in configuration.buildDirectories.iteritems():
+            o.doc()
+
+
+class TestCommand(object):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] test
+
+    Executes ctest.'''
+        parser = OptionParser(usage=usage)
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+
+    def __call__(self):
+        for d, o in configuration.buildDirectories.iteritems():
+            o.test()
+
+
+class SourceDirectory(object):
+
+    def __init__(self, directory, configuration):
+        self.configuration = configuration
+        self.directory = os.path.normpath(os.path.abspath(directory))
+        self.configurationLines = []
+        self.svnComponents = []
+        self.gitComponents = []
         if self.configuration.verbose:
-          print '    adding repository: svn', url, component_version
-          print '                   in:', os.path.join(self.directory,dest_directory)
-          if component_version:
-            print '                  for: %s version %s' % component_version
-            
-        self.svnComponents.append( (component_version, url, dest_directory, bv_version) )
-      elif sign in ('brainvisa', '+'):
-        if versionPattern is None:
-          raise SyntaxError()
-        for component in find_components( componentPattern ):
-          project = project_per_component[component]
-          for version, repo_dir in url_per_component[component].iteritems():
-            repo, dir = repo_dir
-            if fnmatchcase(version, versionPattern):
-              self.addConfigurationLine('%s %s %s' % (repo, dir, version), virtual=True, component_version=(component,version))
-      elif sign in ('-', 'brainvisa_exclude'):
-        if '/' in componentPattern:
-          raise SyntaxError()
+            print 'Processing source directory %s' % self.directory
+
+    def addConfigurationLine(self, line, virtual=False, component_version=None):
+        # Supported lines in bv_maker.cfg for [ source ... ]:
+        #    git <url> <git_tag> [<dest_directory> [<bv_version>]]
+        #    svn <url> [<dest_directory> [<bv_version>]]
+        #    brainvisa <component_pattern> <version_pattern>
+        #    brainvisa_exclude <component_pattern> [<version_pattern>]
+        #    + soma/soma-base/trunk [<dest_directory>] [<bv_version>]]
+        #    + https://svn.url [<dest_directory>] [<bv_version>]]
+        #    + <component_pattern> <version_pattern>
+        #    - <component_pattern> [<version_pattern>]
+        l = line.split()
+        sign = l[0]
+        if sign == 'git':
+            if len(l) < 3 or len(l) > 5:
+                raise SyntaxError()
+            sign, url, git_tag, dest_directory, bv_version = (
+                l + [None, None])[:5]
+            if self.configuration.verbose:
+                print '    adding repository: git', url, git_tag
+                print '                   in:', os.path.join(self.directory, dest_directory)
+                if component_version:
+                    print '                  for: %s version %s' % component_version
+            self.gitComponents.append(
+                (component_version, url, git_tag, dest_directory, bv_version))
         else:
-          if versionPattern is None:
-            versionPattern = '*'
-          for component in find_components(componentPattern):
-            for version, repo_dir in url_per_component[component].iteritems():
-              if fnmatchcase(version, versionPattern):
-                # Remove unwanted svn components
-                count = 0
-                for component_version in [i[0] for i in self.svnComponents]:
-                  if component_version:
-                    c, v = component_version
-                    if c == component and v == version:
-                      if self.configuration.verbose:
-                        component_version, url, dest_directory, bv_version = self.svnComponents[count]
-                        print '    removing repository: svn', url
-                        print '                     in:', os.path.join(self.directory,dest_directory)
-                        print '                    for: %s version %s' % component_version
-                      del self.svnComponents[count]
-                      count -= 1
-                  count += 1
-                # Remove unwanted git components
-                count = 0
-                for component_version in [i[0] for i in self.gitComponents]:
-                  if component_version:
-                    c, v = component_version
-                    if c == component and v == version:
-                      if self.configuration.verbose:
-                        component_version, url, git_tag, dest_directory, bv_version = self.gitComponents[count]
-                        print '    removing repository: git', url, git_tag
-                        print '                     in:', os.path.join(self.directory,dest_directory)
-                        print '                    for: %s version %s' % component_version
-                      del self.gitComponents[count]
-                      count -= 1
-                  count += 1
-      else:
-        raise SyntaxError( 'Line cannot begin with "%s"' % sign )
-    if not virtual:
-      self.configurationLines.append( line )
-  
-  
-  def process( self, options, args ):
-    if not os.path.exists( self.directory ):
-      os.makedirs( self.directory )
-    clientFile = open( os.path.join( self.directory, 'bv_maker.cfg' ), 'w' )
-    print >> clientFile, '\n'.join( self.configurationLines )
+            if len(l) < 2 or len(l) > 4:
+                raise SyntaxError()
+            sign, componentPattern, versionPattern, bv_version = (
+                l + [None, None])[:4]
+            if sign == 'svn' or (sign == '+' and '/' in componentPattern):
+                if '*' in componentPattern:
+                    raise SyntaxError()
+                if componentPattern.startswith('http'):
+                    url = componentPattern
+                    dest_directory = versionPattern
+                else:
+                    url = SVN_URL + '/' + componentPattern
+                    dest_directory = versionPattern
+                    if dest_directory is None:
+                        dest_directory = componentPattern
+                if dest_directory is None:
+                    raise SyntaxError()
+                if self.configuration.verbose:
+                    print '    adding repository: svn', url, component_version
+                    print '                   in:', os.path.join(self.directory, dest_directory)
+                    if component_version:
+                        print '                  for: %s version %s' % component_version
 
-    repositoryDirectory = os.path.join( self.directory, '.repository' )
-    checkout = False
-    if not os.path.exists( repositoryDirectory ):
-      os.makedirs( repositoryDirectory )
-      # Because of a bug in svnadmin on MacOS, I cannot use an absolute name for the directory to create.
-      # When I try "svnadmin create /neurospin/brainvisa/cmake_mac/", I have the following error:
-      # svnadmin: '/neurospin/brainvisa/cmake_mac' is a subdirectory of an existing repository rooted at '/neurospin'
-      # But it works if I do "cd /neurospin/brainvisa && vnadmin create cmake_mac"
-      cwd, dir = os.path.split( repositoryDirectory )
-      system( 'svnadmin', 'create', dir, cwd=cwd )
-      
-      if len( os.path.splitdrive(repositoryDirectory)[0] ) > 0:
-        # This is for windows absolute pathes
-        repositoryDirectory = '/' + repositoryDirectory.replace(os.path.sep, "/")
-        
-      self.svncommand( 'checkout',  'file://' + repositoryDirectory, self.directory )
-      checkout = True
+                self.svnComponents.append(
+                    (component_version, url, dest_directory, bv_version))
+            elif sign in ('brainvisa', '+'):
+                if versionPattern is None:
+                    raise SyntaxError()
+                for component in find_components(componentPattern):
+                    project = project_per_component[component]
+                    for version, repo_dir in url_per_component[component].iteritems():
+                        repo, dir = repo_dir
+                        if fnmatchcase(version, versionPattern):
+                            self.addConfigurationLine(
+                                '%s %s %s' % (repo, dir, version), virtual=True, component_version=(component, version))
+            elif sign in ('-', 'brainvisa_exclude'):
+                if '/' in componentPattern:
+                    raise SyntaxError()
+                else:
+                    if versionPattern is None:
+                        versionPattern = '*'
+                    for component in find_components(componentPattern):
+                        for version, repo_dir in url_per_component[component].iteritems():
+                            if fnmatchcase(version, versionPattern):
+                                # Remove unwanted svn components
+                                count = 0
+                                for component_version in [i[0] for i in self.svnComponents]:
+                                    if component_version:
+                                        c, v = component_version
+                                        if c == component and v == version:
+                                            if self.configuration.verbose:
+                                                component_version, url, dest_directory, bv_version = self.svnComponents[
+                                                    count]
+                                                print '    removing repository: svn', url
+                                                print '                     in:', os.path.join(self.directory, dest_directory)
+                                                print '                    for: %s version %s' % component_version
+                                            del self.svnComponents[count]
+                                            count -= 1
+                                    count += 1
+                                # Remove unwanted git components
+                                count = 0
+                                for component_version in [i[0] for i in self.gitComponents]:
+                                    if component_version:
+                                        c, v = component_version
+                                        if c == component and v == version:
+                                            if self.configuration.verbose:
+                                                component_version, url, git_tag, dest_directory, bv_version = self.gitComponents[
+                                                    count]
+                                                print '    removing repository: git', url, git_tag
+                                                print '                     in:', os.path.join(self.directory, dest_directory)
+                                                print '                    for: %s version %s' % component_version
+                                            del self.gitComponents[count]
+                                            count -= 1
+                                    count += 1
+            else:
+                raise SyntaxError('Line cannot begin with "%s"' % sign)
+        if not virtual:
+            self.configurationLines.append(line)
 
-    source_directories = []
+    def process(self, options, args):
+        if not os.path.exists(self.directory):
+            os.makedirs(self.directory)
+        clientFile = open(os.path.join(self.directory, 'bv_maker.cfg'), 'w')
+        print >> clientFile, '\n'.join(self.configurationLines)
 
-    # Update SVN repositories
-    
-    current_dir=os.getcwd()
-    # Go to the sources directory
-    os.chdir( self.directory )
-    externalsFileName = os.path.join( self.directory, 'bv_maker.externals' )
-    externalsFile = open( externalsFileName, 'w' )
-    for component_version, url, dest_directory, bv_version in set(self.svnComponents):
-      print >> externalsFile, dest_directory, url
-      source_directories.append((dest_directory, bv_version))
-    externalsFile.close()
-    self.svncommand( 'propset', 'svn:externals', '--file', externalsFileName, self.directory )
-    self.svncommand( 'commit', '-m', '', self.directory )
-    if options.svn:
-      self.svncommand( 'update', self.directory )
-    os.chdir( current_dir )
+        repositoryDirectory = os.path.join(self.directory, '.repository')
+        checkout = False
+        if not os.path.exists(repositoryDirectory):
+            os.makedirs(repositoryDirectory)
+            # Because of a bug in svnadmin on MacOS, I cannot use an absolute name for the directory to create.
+            # When I try "svnadmin create /neurospin/brainvisa/cmake_mac/", I have the following error:
+            # svnadmin: '/neurospin/brainvisa/cmake_mac' is a subdirectory of an existing repository rooted at '/neurospin'
+            # But it works if I do "cd /neurospin/brainvisa && vnadmin create
+            # cmake_mac"
+            cwd, dir = os.path.split(repositoryDirectory)
+            system('svnadmin', 'create', dir, cwd=cwd)
 
-    # update Git Repositories
+            if len(os.path.splitdrive(repositoryDirectory)[0]) > 0:
+                # This is for windows absolute pathes
+                repositoryDirectory = '/' + \
+                    repositoryDirectory.replace(os.path.sep, "/")
 
-    if options.git:
-      for component_version, url, git_tag, dest_directory, bv_version in self.gitComponents:
-        if dest_directory is None:
-          dest_directory = url.rsplit('/', 1)[ -1 ]
-          if dest_directory.endswith('.git'):
-            dest_directory = dest_directory[ :-4 ]
-        dest_path = os.path.join(self.directory,dest_directory)
-        self.gitupdate(url, dest_path, git_tag)
-        source_directories.append((dest_path,bv_version))
+            self.svncommand(
+                'checkout',  'file://' + repositoryDirectory, self.directory)
+            checkout = True
 
-    components_sources = {}
-    for dest_path, bv_version in source_directories:
-      pinfo = read_project_info(
-                    os.path.join(self.directory, dest_path),
-                    version_format = version_format_short
-              )
-      if pinfo:
-        project, component, version = pinfo
-        version = str(version)
-        components_sources.setdefault( component, {} )[ bv_version or version ] = dest_path
-      else:
-        print 'WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % os.path.join( self.directory, dest_path )
-    json.dump( components_sources, open(os.path.join(self.directory,'components_sources.json'),'w'), indent=2 )
+        source_directories = []
 
-  def svncommand( self, *svnargs ):
-    cmd = [ 'svn' ]
-    if self.configuration.username:
-      cmd += [ ' --username', self.configuration.username ]
-    cmd.extend( svnargs )
-    system( *cmd )
+        # Update SVN repositories
 
-  def get_git_remotes(self, dest):
-    cmd_output = subprocess.check_output(['git', 'remote', '-v'], cwd=dest)
-    remotes = {}
-    for line in cmd_output.split('\n'):
-      remotere = re.compile('^([^ ]+)[\s|\t]+([^ ]+)\s+([^ ]+)\s*$')
-      m = remotere.match(line)
-      if not m:
-        continue
-      remote, url, io = m.group(1), m.group(2), m.group(3)
-      if remote not in remotes:
-        if url.startswith('git@'):
-          protocol = 'git'
-          prefix, address = url.split(':')
-          prefix += ':'
-        elif url.startswith('https://'):
-          protocol = 'https'
-          address = url[8:].split('/')
-          prefix = url[:8] + address[0] + '/'
-          address = '/'.join(address[1:])
-        else:
-          # assume local repository
-          protocol = ''
-          prefix = ''
-          address = url
-        remotes[remote] = protocol, prefix, address
-    return remotes
+        current_dir = os.getcwd()
+        # Go to the sources directory
+        os.chdir(self.directory)
+        externalsFileName = os.path.join(self.directory, 'bv_maker.externals')
+        externalsFile = open(externalsFileName, 'w')
+        for component_version, url, dest_directory, bv_version in set(self.svnComponents):
+            print >> externalsFile, dest_directory, url
+            source_directories.append((dest_directory, bv_version))
+        externalsFile.close()
+        self.svncommand('propset', 'svn:externals',
+                        '--file', externalsFileName, self.directory)
+        self.svncommand('commit', '-m', '', self.directory)
+        if options.svn:
+            self.svncommand('update', self.directory)
+        os.chdir(current_dir)
 
-  def gitupdate( self, src, dest, remote_ref="HEAD" ):
-    # Set a username in src if necessary
-    if '@' not in src and self.configuration.username:
-      url_head, url_tail = src.split('//', 1)
-      src = '%s//%s@%s' % (url_head, self.configuration.username, url_tail)
+        # update Git Repositories
 
-    print("Updating git repository {0}".format(dest))
+        if options.git:
+            for component_version, url, git_tag, dest_directory, bv_version in self.gitComponents:
+                if dest_directory is None:
+                    dest_directory = url.rsplit('/', 1)[-1]
+                    if dest_directory.endswith('.git'):
+                        dest_directory = dest_directory[:-4]
+                dest_path = os.path.join(self.directory, dest_directory)
+                self.gitupdate(url, dest_path, git_tag)
+                source_directories.append((dest_path, bv_version))
 
-    # Clone repository if it does not exist yet locally
-    if not os.path.exists( os.path.join(dest, '.git') ):
-      if os.path.isdir(dest) and os.listdir(dest):
-        print ('''
+        components_sources = {}
+        for dest_path, bv_version in source_directories:
+            pinfo = read_project_info(
+                os.path.join(self.directory, dest_path),
+                version_format=version_format_short
+            )
+            if pinfo:
+                project, component, version = pinfo
+                version = str(version)
+                components_sources.setdefault(component, {})[
+                    bv_version or version] = dest_path
+            else:
+                print 'WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % os.path.join(self.directory, dest_path)
+        json.dump(components_sources, open(
+            os.path.join(self.directory, 'components_sources.json'), 'w'), indent=2)
+
+    def svncommand(self, *svnargs):
+        cmd = ['svn']
+        if self.configuration.username:
+            cmd += [' --username', self.configuration.username]
+        cmd.extend(svnargs)
+        system(*cmd)
+
+    def get_git_remotes(self, dest):
+        cmd_output = subprocess.check_output(['git', 'remote', '-v'], cwd=dest)
+        remotes = {}
+        for line in cmd_output.split('\n'):
+            remotere = re.compile('^([^ ]+)[\s|\t]+([^ ]+)\s+([^ ]+)\s*$')
+            m = remotere.match(line)
+            if not m:
+                continue
+            remote, url, io = m.group(1), m.group(2), m.group(3)
+            if remote not in remotes:
+                if url.startswith('git@'):
+                    protocol = 'git'
+                    prefix, address = url.split(':')
+                    prefix += ':'
+                elif url.startswith('https://'):
+                    protocol = 'https'
+                    address = url[8:].split('/')
+                    prefix = url[:8] + address[0] + '/'
+                    address = '/'.join(address[1:])
+                else:
+                    # assume local repository
+                    protocol = ''
+                    prefix = ''
+                    address = url
+                remotes[remote] = protocol, prefix, address
+        return remotes
+
+    def gitupdate(self, src, dest, remote_ref="HEAD"):
+        # Set a username in src if necessary
+        if '@' not in src and self.configuration.username:
+            url_head, url_tail = src.split('//', 1)
+            src = '%s//%s@%s' % (
+                url_head, self.configuration.username, url_tail)
+
+        print("Updating git repository {0}".format(dest))
+
+        # Clone repository if it does not exist yet locally
+        if not os.path.exists(os.path.join(dest, '.git')):
+            if os.path.isdir(dest) and os.listdir(dest):
+                print ('''
 ERROR: directory "%s" is not empty, Git will not be able to clone into it.
 This error may be due to a repository change for a component (typically
 going from Subversion to Git). You must check yourself that you have nothing
 to keep in this directory and delete it to make "bv_maker sources" work.'''
-               % dest)
-      if self.configuration.verbose:
-        print('directory %s is not a git repository => clone from git %s'
-              % ( dest, src ))
-      os.makedirs( dest )
-      retcode = subprocess.call(['git', 'init', '--quiet'], cwd=dest)
-      if retcode != 0:
-        print('ERROR: could not initialize git repository in {0}'.format(dest))
-        return
+                       % dest)
+            if self.configuration.verbose:
+                print('directory %s is not a git repository => clone from git %s'
+                      % (dest, src))
+            os.makedirs(dest)
+            retcode = subprocess.call(['git', 'init', '--quiet'], cwd=dest)
+            if retcode != 0:
+                print(
+                    'ERROR: could not initialize git repository in {0}'.format(dest))
+                return
 
-    remotes = self.get_git_remotes(dest)
-    if 'origin' in remotes:
-        remote = remotes['origin']
-        if src.endswith(remote[2]):
-          # user has configured manually a different protocol: respect it.
-          src = remote[1] + remote[2]
-    # Configure a remote for the developer's convenience
-    retcode = subprocess.call(['git', 'remote', 'set-url', 'origin', src],
-                              cwd=dest, stderr=open(os.devnull, 'w'))
-    if retcode != 0:
-      subprocess.call(['git', 'remote', 'add', 'origin', src],
-                      cwd=dest)
-      # Failure is ignored deliberately (the remote is just for convenience)
+        remotes = self.get_git_remotes(dest)
+        if 'origin' in remotes:
+            remote = remotes['origin']
+            if src.endswith(remote[2]):
+                    # user has configured manually a different protocol:
+                    # respect it.
+                src = remote[1] + remote[2]
+        # Configure a remote for the developer's convenience
+        retcode = subprocess.call(['git', 'remote', 'set-url', 'origin', src],
+                                  cwd=dest, stderr=open(os.devnull, 'w'))
+        if retcode != 0:
+            subprocess.call(['git', 'remote', 'add', 'origin', src],
+                            cwd=dest)
+            # Failure is ignored deliberately (the remote is just for
+            # convenience)
 
-    # Get the SHA-1 identifiers of HEAD and refs/bv_head commits
-    try:
-      old_head = subprocess.check_output(
-        ['git', 'rev-parse', '--quiet', '--verify', 'HEAD^{commit}'],
-        cwd=dest)
-    except subprocess.CalledProcessError:
-      old_head = None
-    try:
-      old_bv_head = subprocess.check_output(
-        ['git', 'rev-parse', '--quiet', '--verify', 'refs/bv_head^{commit}'],
-        cwd=dest)
-    except subprocess.CalledProcessError:
-      old_bv_head = None
+        # Get the SHA-1 identifiers of HEAD and refs/bv_head commits
+        try:
+            old_head = subprocess.check_output(
+                ['git', 'rev-parse', '--quiet', '--verify', 'HEAD^{commit}'],
+                cwd=dest)
+        except subprocess.CalledProcessError:
+            old_head = None
+        try:
+            old_bv_head = subprocess.check_output(
+                ['git', 'rev-parse', '--quiet',
+                 '--verify', 'refs/bv_head^{commit}'],
+                cwd=dest)
+        except subprocess.CalledProcessError:
+            old_bv_head = None
 
-    # Fetch the remotes specified in bv_maker.cfg into refs/bv_head
-    remotes = self.get_git_remotes(dest)
-    for remote in remotes:
-      # get stderr in a separate stream since git finds it funny to print
-      # normal operation messages in stderr.
-      stderr_str = tempfile.NamedTemporaryFile()
-      retcode = subprocess.call(['git', 'fetch', remote],
-                                cwd=dest, stderr=stderr_str)
-      stderr_str.flush()
-      stderr_content = open(stderr_str.name).read()
-      stderr_str.close()
+        # Fetch the remotes specified in bv_maker.cfg into refs/bv_head
+        remotes = self.get_git_remotes(dest)
+        for remote in remotes:
+            # get stderr in a separate stream since git finds it funny to print
+            # normal operation messages in stderr.
+            stderr_str = tempfile.NamedTemporaryFile()
+            retcode = subprocess.call(['git', 'fetch', remote],
+                                      cwd=dest, stderr=stderr_str)
+            stderr_str.flush()
+            stderr_content = open(stderr_str.name).read()
+            stderr_str.close()
 
-      if retcode != 0:
-        sys.stderr.write(stderr_content)
-        print('{0}: could not fetch from git repository {1}'.format(dest, src))
-      else:
-        # if no error, the output is sent to stdout, not stderr.
-        sys.stdout.write(stderr_content)
+            if retcode != 0:
+                sys.stderr.write(stderr_content)
+                print(
+                    '{0}: could not fetch from git repository {1}'.format(dest, src))
+            else:
+                # if no error, the output is sent to stdout, not stderr.
+                sys.stdout.write(stderr_content)
 
-    retcode = subprocess.call(['git', 'fetch', src,
-                               "+" + remote_ref + ":refs/bv_head"],
-                              cwd=dest)
-    if retcode != 0:
-      print('{0}: could not fetch from git repository {1}'.format(dest, src))
-      return  # Abort for this repository, continue with other repositories
+        retcode = subprocess.call(['git', 'fetch', src,
+                                   "+" + remote_ref + ":refs/bv_head"],
+                                  cwd=dest)
+        if retcode != 0:
+            print(
+                '{0}: could not fetch from git repository {1}'.format(dest, src))
+            return  # Abort for this repository, continue with other repositories
 
-    # Check if we are in detached HEAD state
-    retcode = subprocess.call(['git', 'symbolic-ref', '--quiet', 'HEAD'],
-                              cwd=dest, stdout=open(os.devnull, 'w'))
-    detached_head = False if retcode == 0 else True
+        # Check if we are in detached HEAD state
+        retcode = subprocess.call(['git', 'symbolic-ref', '--quiet', 'HEAD'],
+                                  cwd=dest, stdout=open(os.devnull, 'w'))
+        detached_head = False if retcode == 0 else True
 
-    if (not old_head) or (detached_head and old_head == old_bv_head):
-      # HEAD is detached, and is the same as left by the previous bv_maker
-      # run: this is "follower mode", the remote ref can be checked out. This
-      # is safe to do even if there are local uncommitted changes, in which
-      # case "git checkout" will error out appropriately.
-      retcode = subprocess.call(['git', 'checkout', '--quiet',
-                                 '--detach', 'refs/bv_head', '--'], cwd=dest)
-      if retcode != 0:
-        print("""\
+        if (not old_head) or (detached_head and old_head == old_bv_head):
+            # HEAD is detached, and is the same as left by the previous bv_maker
+            # run: this is "follower mode", the remote ref can be checked out. This
+            # is safe to do even if there are local uncommitted changes, in which
+            # case "git checkout" will error out appropriately.
+            retcode = subprocess.call(['git', 'checkout', '--quiet',
+                                       '--detach', 'refs/bv_head', '--'], cwd=dest)
+            if retcode != 0:
+                print("""\
 The git repository at {0} could not be updated,
 please refer to the above error message.
 
@@ -687,338 +736,374 @@ If you have made local changes, you should keep track of them in a branch:
 
 Or, discard your changes and go back to following the upstream version:
   git checkout bv_head""".format(dest))
-    elif not detached_head:
-      # We are following a branch. Advance the branch if it has not diverged
-      # from upstream. If local commits exist, that would require creating a
-      # merge commit, and we do not want to do that behind the back of the
-      # developer. The (fetch + merge) command sequence is equivalent to "git
-      # pull --ff-only src remote_ref". The merge aborts safely if there are
-      # local uncommitted changes, and prints an appropriate message.
-      retcode = subprocess.call(['git', 'merge', '--ff-only', 'refs/bv_head'],
-                                cwd=dest)
-      if retcode != 0:
-        print("""\
+        elif not detached_head:
+            # We are following a branch. Advance the branch if it has not diverged
+            # from upstream. If local commits exist, that would require creating a
+            # merge commit, and we do not want to do that behind the back of the
+            # developer. The (fetch + merge) command sequence is equivalent to "git
+            # pull --ff-only src remote_ref". The merge aborts safely if there are
+            # local uncommitted changes, and prints an appropriate message.
+            retcode = subprocess.call(
+                ['git', 'merge', '--ff-only', 'refs/bv_head'],
+                cwd=dest)
+            if retcode != 0:
+                print("""\
 Upstream changes could not be merged in {0},
 please refer to the above message of "git merge".
 
 If you do not want to develop in this repository anymore, you should
 leave the branch and go back to tracking the upstream version:
   git checkout bv_head""".format(dest))
-    else:
-      # HEAD is detached but has been moved since last bv_maker run. The user
-      # has likely checked out a tag manually, do not mess with their
-      # repository.
-      print("""\
+        else:
+            # HEAD is detached but has been moved since last bv_maker run. The user
+            # has likely checked out a tag manually, do not mess with their
+            # repository.
+            print("""\
 The git repository at {0} will not be updated by bv_maker,
 because it is detached at a commit that does not correspond to bv_head.
 If you did not do this on purpose, you should go back to following upstream:
   git -C '{0}' checkout bv_head""".format(dest))
 
-
-  def info( self ):
-    print 'Source directory: "' + self.directory + '"'
-    for component_version, url, dest_directory, bv_version in self.svnComponents:
-      print '  %s <- svn %s' % (dest_directory, url)
-      if component_version:
-        component, version = component_version
-        print '    component %s (%s)' % (component, version)
-    for component_version, url, git_tag, dest_directory, bv_version in self.gitComponents:
-      print '  %s <- git %s' % (dest_directory, url)
-      if component_version:
-        component, version = component_version
-        print '    component %s (%s)' % (component, version)
-
+    def info(self):
+        print 'Source directory: "' + self.directory + '"'
+        for component_version, url, dest_directory, bv_version in self.svnComponents:
+            print '  %s <- svn %s' % (dest_directory, url)
+            if component_version:
+                component, version = component_version
+                print '    component %s (%s)' % (component, version)
+        for component_version, url, git_tag, dest_directory, bv_version in self.gitComponents:
+            print '  %s <- git %s' % (dest_directory, url)
+            if component_version:
+                component, version = component_version
+                print '    component %s (%s)' % (component, version)
 
 
-class BuildDirectory( object ):
-  _validOptions = set( ( 'build_type', 'make_options', 'cmake_options',
-                         'packaging_thirdparty' ) )
-  
-  sitecustomize_content = '''import os
+class BuildDirectory(object):
+    _validOptions = set(('build_type', 'make_options', 'cmake_options',
+                         'packaging_thirdparty'))
+
+    sitecustomize_content = '''import os
 
 for i in os.listdir(os.path.dirname(__file__)):
     if i.endswith('.py') and i != '__init__.py':
         module = i[:-3]
         __import__('sitecustomize.%s' % module)
 '''
-  def __init__( self, directory, configuration ):
-    self.configuration = configuration
-    self.directory = os.path.normpath( os.path.abspath( directory ) )
-    self.configurationLines = []
-    #self.configurationDirectories = []
-    self.projects = set()
-    self.components = {}
-    self.build_type = ''
-    self.make_options = ''
-    self.cmake_options = ''
-    self.packaging_thirdparty = ''
-    self._configuration_lines_processed = False
-  
-  
-  def addConfigurationLine( self, line ):
-    # Supported lines in bv_maker.cfg for [ build ... ]:
-    #    directory <directory>
-    #    brainvisa <component_pattern> <version_pattern> <source_directory>
-    #    brainvisa_exclude <component_pattern> [<version_pattern>]
-    #    + <directory>
-    #    - <component_pattern> [<version_pattern>]
-    #    <component_pattern> <version_pattern> <source_directory>
-    i = line.find( '=' )
-    if i > 0:
-      option = line[ :i ].strip()
-      value = line[ i+1: ].strip()
-      if option not in self._validOptions:
-        raise SyntaxError()
-      setattr( self, option, value )
-    elif line[ 0 ] == '+':
-        if '*' in line:
-          raise SyntaxError()
-    elif line[ 0 ] == '-':
-      pass
-    else:
-      l = line.split( None, 2 )
-    self.configurationLines.append( line )
 
-  def _process_configuration_lines( self ):
-    if not self._configuration_lines_processed:
-      if self.configuration.verbose:
-        print 'Processing build directory %s' % self.directory
-      for line in self.configurationLines:
-        if '=' in line:
-          continue
-        first, rest = line.split(None,1)
-        if first in ('directory', '+'):
-          directory = os.path.normpath( os.path.abspath( environmentVariablesSubstitution( rest.strip() ) ) )
-          pinfo = read_project_info(
-                        directory,
-                        version_format = version_format_short
-                  )
-          if pinfo:
-            project, component, version = pinfo
-            version = str(version)
-            if self.configuration.verbose:
-              print '    adding component %s version %s from %s' %(component, version, directory)
-            self.components[component] = (directory,version,version)
-          else:
-            print 'WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % directory
-        elif first in ('brainvisa_exclude', '-'):
-          componentPattern, versionPattern = (rest.split(None,1) + ['*'])[:2]
-          for component in find_components( componentPattern ):
-            dir_version = self.components.get(component)
-            if dir_version:
-              dir, selected_version, component_version = dir_version
-              if fnmatchcase(selected_version, versionPattern):
-                if self.configuration.verbose:
-                  print '    removing component %s version %s from %s' %(component, version, dir)
-                del self.components[component]
-        elif first == 'brainvisa' or (first in project_per_component) or \
-             (first in components_per_group) or \
-             (first in components_per_project) or '*' in first:
-          if first == 'brainvisa':
-            l = rest.split( None, 2 )
-            componentPattern, versionPattern, sourceDirectory = l
-          else:
-            l = rest.split(None, 1)
-            componentPattern = first
-            versionPattern, sourceDirectory = l
-          sourceDirectory = os.path.normpath( os.path.abspath( environmentVariablesSubstitution( sourceDirectory ) ) )
-          components_sources = json.load(open(os.path.join(sourceDirectory,'components_sources.json')))
-          for component in find_components(componentPattern):
-            for version, directory in components_sources.get(component,{}).iteritems():
-              directory = os.path.join(sourceDirectory,directory)
-              if fnmatchcase(version, versionPattern):
-                pinfo = read_project_info(
-                            directory,
-                            version_format = version_format_short
-                        )
-                if pinfo:
-                  project, component, component_version = pinfo
-                  component_version = str(component_version)
-                  if self.configuration.verbose:
-                    print '    adding component %s version %s from %s' %(component, version, directory)
-                  self.components[component] = (directory,version,component_version)
-                else:
-                  print 'WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % directory
-        elif first == 'pip':
-            if '=' in rest:
-                module, version = rest.split(None, 1)
-            else:
-                module = rest
-                version = None
-            installed_json = os.path.join(self.directory, 'bv_maker_install.json')
-            if os.path.exists(installed_json):
-                installed = json.load(open(installed_json))
-            else:
-                installed = {}
-            pip_installed = installed.setdefault('pip',{})
-            if module not in pip_installed:
-                command = [os.path.join(self.directory,'bin','pip'), 'install', 
-                           ('%s==%s' % (module, version) if version else module)]
-                print 'Running:', ' '.join(command)
-                subprocess.check_call(command)
-                pip_installed[module] = version
-                json.dump(installed, open(installed_json,'w'))
+    def __init__(self, directory, configuration):
+        self.configuration = configuration
+        self.directory = os.path.normpath(os.path.abspath(directory))
+        self.configurationLines = []
+        # self.configurationDirectories = []
+        self.projects = set()
+        self.components = {}
+        self.build_type = ''
+        self.make_options = ''
+        self.cmake_options = ''
+        self.packaging_thirdparty = ''
+        self._configuration_lines_processed = False
+
+    def addConfigurationLine(self, line):
+        # Supported lines in bv_maker.cfg for [ build ... ]:
+        #    directory <directory>
+        #    brainvisa <component_pattern> <version_pattern> <source_directory>
+        #    brainvisa_exclude <component_pattern> [<version_pattern>]
+        #    + <directory>
+        #    - <component_pattern> [<version_pattern>]
+        #    <component_pattern> <version_pattern> <source_directory>
+        i = line.find('=')
+        if i > 0:
+            option = line[:i].strip()
+            value = line[i + 1:].strip()
+            if option not in self._validOptions:
+                raise SyntaxError()
+            setattr(self, option, value)
+        elif line[0] == '+':
+            if '*' in line:
+                raise SyntaxError()
+        elif line[0] == '-':
+            pass
         else:
-          SyntaxError()
-      projects = set(project_per_component.get(i,i) for i in self.components)
-      self.projects = [i for i in ordered_projects if i in projects]
-      self.projects.extend(projects-set(self.projects))
-      self._configuration_lines_processed = True
-  
-  
-  def configure( self, options, args ):
-    self._process_configuration_lines()
-    # Order of projects and components is important for dependencies
-    sortedProjects = [ p for p in ordered_projects if p in self.projects ]
-    sortedComponents = []
-    components = set( self.components )
-    for project in sortedProjects:
-      for component in components_per_project[project]:
-        if component in components:
-          sortedComponents.append( component )
-          components.remove( component )
-    sortedComponents.extend( components )
+            l = line.split(None, 2)
+        self.configurationLines.append(line)
 
-    if not os.path.exists( self.directory ):
-      os.makedirs( self.directory )
+    def _process_configuration_lines(self):
+        if not self._configuration_lines_processed:
+            if self.configuration.verbose:
+                print 'Processing build directory %s' % self.directory
+            for line in self.configurationLines:
+                if '=' in line:
+                    continue
+                first, rest = line.split(None, 1)
+                if first in ('directory', '+'):
+                    directory = os.path.normpath(
+                        os.path.abspath(environmentVariablesSubstitution(
+                            rest.strip())))
+                    pinfo = read_project_info(
+                        directory,
+                        version_format=version_format_short
+                    )
+                    if pinfo:
+                        project, component, version = pinfo
+                        version = str(version)
+                        if self.configuration.verbose:
+                            print '    adding component %s version %s from %s' % (component, version, directory)
+                        self.components[component] = (
+                            directory, version, version)
+                    else:
+                        print 'WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % directory
+                elif first in ('brainvisa_exclude', '-'):
+                    componentPattern, versionPattern = (
+                        rest.split(None, 1) + ['*'])[:2]
+                    for component in find_components(componentPattern):
+                        dir_version = self.components.get(component)
+                        if dir_version:
+                            dir, selected_version, component_version \
+                                = dir_version
+                            if fnmatchcase(selected_version, versionPattern):
+                                if self.configuration.verbose:
+                                    print '    removing component %s version %s from %s' % (component, version, dir)
+                                del self.components[component]
+                elif first == 'brainvisa' or (first in project_per_component) \
+                        or (first in components_per_group) \
+                        or (first in components_per_project) or '*' in first:
+                    if first == 'brainvisa':
+                        l = rest.split(None, 2)
+                        componentPattern, versionPattern, sourceDirectory = l
+                    else:
+                        l = rest.split(None, 1)
+                        componentPattern = first
+                        versionPattern, sourceDirectory = l
+                    sourceDirectory = os.path.normpath(
+                        os.path.abspath(environmentVariablesSubstitution(
+                            sourceDirectory)))
+                    components_sources = json.load(
+                        open(os.path.join(sourceDirectory,
+                                          'components_sources.json')))
+                    for component in find_components(componentPattern):
+                        for version, directory \
+                                in components_sources.get(component,
+                                                          {}).iteritems():
+                            directory = os.path.join(
+                                sourceDirectory, directory)
+                            if fnmatchcase(version, versionPattern):
+                                pinfo = read_project_info(
+                                    directory,
+                                    version_format=version_format_short
+                                )
+                                if pinfo:
+                                    project, component, component_version \
+                                        = pinfo
+                                    component_version = str(component_version)
+                                    if self.configuration.verbose:
+                                        print '    adding component %s version %s from %s' \
+                                            % (component, version, directory)
+                                    self.components[component] = (
+                                        directory, version, component_version)
+                                else:
+                                    print 'WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % directory
+                elif first == 'pip':
+                    if '=' in rest:
+                        module, version = rest.split(None, 1)
+                    else:
+                        module = rest
+                        version = None
+                    installed_json = os.path.join(
+                        self.directory, 'bv_maker_install.json')
+                    if os.path.exists(installed_json):
+                        installed = json.load(open(installed_json))
+                    else:
+                        installed = {}
+                    pip_installed = installed.setdefault('pip', {})
+                    if module not in pip_installed:
+                        command = [os.path.join(
+                            self.directory, 'bin', 'pip'), 'install',
+                            ('%s==%s' % (module, version) if version
+                             else module)]
+                        print 'Running:', ' '.join(command)
+                        subprocess.check_call(command)
+                        pip_installed[module] = version
+                        json.dump(installed, open(installed_json, 'w'))
+                else:
+                    SyntaxError()
+            projects = set(project_per_component.get(i, i)
+                           for i in self.components)
+            self.projects = [i for i in ordered_projects if i in projects]
+            self.projects.extend(projects - set(self.projects))
+            self._configuration_lines_processed = True
 
-    if options.clean:
-      my_path = os.path.dirname(__file__)
-      bv_clean = os.path.join(my_path, 'bv_clean_build_tree')
-      print 'cleaning build tree', self.directory
-      subprocess.call([sys.executable, bv_clean, '-d', self.directory])
+    def configure(self, options, args):
+        self._process_configuration_lines()
+        # Order of projects and components is important for dependencies
+        sortedProjects = [p for p in ordered_projects if p in self.projects]
+        sortedComponents = []
+        components = set(self.components)
+        for project in sortedProjects:
+            for component in components_per_project[project]:
+                if component in components:
+                    sortedComponents.append(component)
+                    components.remove(component)
+        sortedComponents.extend(components)
 
-    # Create a sitecustomize Python package that imports all modules it
-    # contains during Python startup. This is mainly used to modify sys.path
-    # to include pure Python components source (see module 
-    # brainvisa.maker.build_models.pure_python). This package is used only
-    # in build directory, it is not installed in packages (to date there is
-    # one exception to this in axon component, see Axon's CMakeLists.txt).
-    sitecustomize_dir = os.path.join(self.directory, 'python', 'sitecustomize')
-    if not os.path.exists(sitecustomize_dir):
-        os.makedirs(sitecustomize_dir)
-    open(os.path.join(sitecustomize_dir,'__init__.py'), 'w').write(
-        self.sitecustomize_content)
-    # Remove existing sitecustomize.py (was generated by older Axon)
-    for i in glob.glob(sitecustomize_dir + '.py*'):
-        os.remove(i)
-    
-    if not os.path.exists( self.directory ):
-      os.makedirs( self.directory )
-    
-    self.buildModelPerComponent = {}
-    for component in sortedComponents:
-        build_model = info_per_component.get(component, {}).get('build_model')
-        if build_model is not None:
-            build_model_class = getattr(__import__(
-                'brainvisa.maker.build_models',
-                fromlist=['pure_python'], level=0),
-                build_model)
-            build_model = build_model_class(component, self.components[component][0], self.directory)
-            self.buildModelPerComponent[component] = build_model
+        if not os.path.exists(self.directory):
+            os.makedirs(self.directory)
 
-    cmakeFile = os.path.join( self.directory, 'bv_maker.cmake' )
-    out = open( cmakeFile, 'w' )
-    print >> out, 'set( BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" FORCE )'
-    print >> out, 'set( _BRAINVISA_PROJECTS', ' '.join( sortedProjects ),'CACHE STRING "BrainVISA Projects list" FORCE )'
-    print >> out, 'set( BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" FORCE )'
-    print >> out, 'set( _BRAINVISA_COMPONENTS', ' '.join( sortedComponents ),'CACHE STRING "BrainVISA components list" FORCE )'
-    print >> out
-    for component, directory_version in self.components.iteritems():
-      directory, selected_version, version = directory_version
-      if component in self.buildModelPerComponent:
-        print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + cmake_path( self.directory )+ '/build_files/' + component + '_src' + '" CACHE STRING "Sources directory for component ' + component + '" FORCE )'
-      else:
-        print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + cmake_path( directory ) + '" CACHE STRING "Sources directory for component ' + component + '" FORCE )'
-      print >> out, 'set( ' + component + '_DIR "' + cmake_path( self.directory ) + '/share/' + component + '-' + version + '/cmake" CACHE STRING "Directory used for find_package( ' + component + ' )" FORCE )'
-      print >> out, 'set( ' + component + '_VERSION "' + version + '" )'
+        if options.clean:
+            my_path = os.path.dirname(__file__)
+            bv_clean = os.path.join(my_path, 'bv_clean_build_tree')
+            print 'cleaning build tree', self.directory
+            subprocess.call([sys.executable, bv_clean, '-d', self.directory])
 
-    cmakeLists = os.path.join( self.directory, 'CMakeLists.txt' )
-    out.close()
-    out = open( cmakeLists, 'w' )
-    print >> out, '''
+        # Create a sitecustomize Python package that imports all modules it
+        # contains during Python startup. This is mainly used to modify
+        # sys.path to include pure Python components source (see module
+        # brainvisa.maker.build_models.pure_python). This package is used only
+        # in build directory, it is not installed in packages (to date there is
+        # one exception to this in axon component, see Axon's CMakeLists.txt).
+        sitecustomize_dir = os.path.join(
+            self.directory, 'python', 'sitecustomize')
+        if not os.path.exists(sitecustomize_dir):
+            os.makedirs(sitecustomize_dir)
+        open(os.path.join(sitecustomize_dir, '__init__.py'), 'w').write(
+            self.sitecustomize_content)
+        # Remove existing sitecustomize.py (was generated by older Axon)
+        for i in glob.glob(sitecustomize_dir + '.py*'):
+            os.remove(i)
+
+        if not os.path.exists(self.directory):
+            os.makedirs(self.directory)
+
+        self.buildModelPerComponent = {}
+        for component in sortedComponents:
+            build_model = info_per_component.get(
+                component, {}).get('build_model')
+            if build_model is not None:
+                build_model_class = getattr(__import__(
+                    'brainvisa.maker.build_models',
+                    fromlist=['pure_python'], level=0),
+                    build_model)
+                build_model = build_model_class(
+                    component, self.components[component][0], self.directory)
+                self.buildModelPerComponent[component] = build_model
+
+        cmakeFile = os.path.join(self.directory, 'bv_maker.cmake')
+        out = open(cmakeFile, 'w')
+        print >> out, 'set( BRAINVISA_PROJECTS', ' '.join(
+            sortedProjects), 'CACHE STRING "BrainVISA Projects list" FORCE )'
+        print >> out, 'set( _BRAINVISA_PROJECTS', ' '.join(
+            sortedProjects), 'CACHE STRING "BrainVISA Projects list" FORCE )'
+        print >> out, 'set( BRAINVISA_COMPONENTS', ' '.join(
+            sortedComponents), 'CACHE STRING "BrainVISA components list" FORCE )'
+        print >> out, 'set( _BRAINVISA_COMPONENTS', ' '.join(
+            sortedComponents), 'CACHE STRING "BrainVISA components list" FORCE )'
+        print >> out
+        for component, directory_version in self.components.iteritems():
+            directory, selected_version, version = directory_version
+            if component in self.buildModelPerComponent:
+                print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + cmake_path(self.directory ) + '/build_files/' + \
+                    component + '_src' + '" CACHE STRING "Sources directory for component ' + \
+                    component + '" FORCE )'
+            else:
+                print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + cmake_path(
+                    directory) + '" CACHE STRING "Sources directory for component ' + component + '" FORCE )'
+            print >> out, 'set( ' + component + '_DIR "' + cmake_path(self.directory ) + '/share/' + component + \
+                '-' + version + \
+                '/cmake" CACHE STRING "Directory used for find_package( ' + \
+                component + \
+                ' )" FORCE )'
+            print >> out, 'set( ' + component + '_VERSION "' + version + '" )'
+
+        cmakeLists = os.path.join(self.directory, 'CMakeLists.txt')
+        out.close()
+        out = open(cmakeLists, 'w')
+        print >> out, '''
 cmake_minimum_required( VERSION 2.6 )
 set( CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}" ${CMAKE_PREFIX_PATH} )
 find_package( brainvisa-cmake NO_POLICY_SCOPE )
 include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 '''
-    out.close()
-    if sys.platform == 'win32':
-      command = [ 'cmake', '-G', 'MSYS Makefiles' ]
-    else:
-      command = [ 'cmake' ]
+        out.close()
+        if sys.platform == 'win32':
+            command = ['cmake', '-G', 'MSYS Makefiles']
+        else:
+            command = ['cmake']
 
-    command += self.cmake_options.split()
-    command += [ '-DCMAKE_BUILD_TYPE:STRING=' + self.build_type, cmake_path(
-      self.directory ) ]
-    if self.packaging_thirdparty.upper() == 'ON':
-      command += ['-DBRAINVISA_PACKAGING_THIRDPARTY:BOOL=ON']
-    elif self.packaging_thirdparty.upper() == 'OFF':
-      command += ['-DBRAINVISA_PACKAGING_THIRDPARTY:BOOL=OFF']
+        command += self.cmake_options.split()
+        command += ['-DCMAKE_BUILD_TYPE:STRING=' + self.build_type, cmake_path(
+                    self.directory)]
+        if self.packaging_thirdparty.upper() == 'ON':
+            command += ['-DBRAINVISA_PACKAGING_THIRDPARTY:BOOL=ON']
+        elif self.packaging_thirdparty.upper() == 'OFF':
+            command += ['-DBRAINVISA_PACKAGING_THIRDPARTY:BOOL=OFF']
 
-    for component, build_model in self.buildModelPerComponent.iteritems():
-        build_model.configure()
+        for component, build_model in self.buildModelPerComponent.iteritems():
+            build_model.configure()
 
-    # set bv_maker path, so that cmake finds its modules
-    os.environ['PATH'] = os.path.dirname(this_script) + os.pathsep \
-      + os.getenv('PATH')
+        # set bv_maker path, so that cmake finds its modules
+        os.environ['PATH'] = os.path.dirname(this_script) + os.pathsep \
+            + os.getenv('PATH')
 
-    # special case: if bv-cmake is run from the build directory, run cmake
-    # in 2 passes: once to reinstall bv-cmake from sources, and a second time
-    # to actually configure all projects using the newly installed bv-cmake.
-    if self.directory == os.path.dirname(os.path.dirname(this_script)):
-      print '=== bootstraping brainvisa-cmake project ==='
-      system( cwd = self.directory,
-        *(command + ['-DBRAINVISA_CMAKE_BUILD_TYPE=brainvisa-cmake-only']) )
-      print '=== now configuring all other projects ==='
-      system( cwd = self.directory,
-        *(command + ["-DBRAINVISA_CMAKE_BUILD_TYPE=no-brainvisa-cmake"]) )
-    else:
-      # run cmake in a regular way
-      system( cwd = self.directory, *command )
-  
-  def build( self, options, args ):
-    self._process_configuration_lines()
-    if options.clean:
-      my_path = os.path.dirname(__file__)
-      bv_clean = os.path.join(my_path, 'bv_clean_build_tree')
-      print 'cleaning build tree', self.directory
-      subprocess.call([sys.executable, bv_clean, '-d', '-b', self.directory])
+        # special case: if bv-cmake is run from the build directory, run cmake
+        # in 2 passes: once to reinstall bv-cmake from sources, and a second
+        # time to actually configure all projects using the newly installed
+        # bv-cmake.
+        if self.directory == os.path.dirname(os.path.dirname(this_script)):
+            print '=== bootstraping brainvisa-cmake project ==='
+            system(cwd=self.directory,
+                   *(command + ['-DBRAINVISA_CMAKE_BUILD_TYPE=brainvisa-cmake-only']))
+            print '=== now configuring all other projects ==='
+            system(cwd=self.directory,
+                   *(command + ["-DBRAINVISA_CMAKE_BUILD_TYPE=no-brainvisa-cmake"]))
+        else:
+            # run cmake in a regular way
+            system(cwd=self.directory, *command)
 
-    system( cwd=self.directory, *( ['make'] + self.make_options.split() ) )
+    def build(self, options, args):
+        self._process_configuration_lines()
+        if options.clean:
+            my_path = os.path.dirname(__file__)
+            bv_clean = os.path.join(my_path, 'bv_clean_build_tree')
+            print 'cleaning build tree', self.directory
+            subprocess.call(
+                [sys.executable, bv_clean, '-d', '-b', self.directory])
 
-  def doc( self ):
-    self._process_configuration_lines()
-    system( cwd=self.directory, *( ['make'] + self.make_options.split() + ['-j1', 'doc'] ) )
-  
-  def test( self ):
-    self._process_configuration_lines()
-    system( cwd=self.directory, *( ['ctest', '--output-on-failure'] ) )
-    
-  def info( self ):
-    self._process_configuration_lines()
-    print 'Build directory: "' + self.directory + '"'
-    for component, directory_version in self.components.iteritems():
-      directory, selected_version, version = directory_version
-      print '  %s (%s) <- %s' % (component, version, directory)
+        system(cwd=self.directory, *(['make'] + self.make_options.split()))
+
+    def doc(self):
+        self._process_configuration_lines()
+        system(cwd=self.directory, *
+               (['make'] + self.make_options.split() + ['-j1', 'doc']))
+
+    def test(self):
+        self._process_configuration_lines()
+        system(cwd=self.directory, *(['ctest', '--output-on-failure']))
+
+    def info(self):
+        self._process_configuration_lines()
+        print 'Build directory: "' + self.directory + '"'
+        for component, directory_version in self.components.iteritems():
+            directory, selected_version, version = directory_version
+            print '  %s (%s) <- %s' % (component, version, directory)
 
 
 class VirtualenvDirectory(BuildDirectory):
+
     '''
     It does the samething with the BuildDirectory
     with additional virtualenv init.
     '''
 
     def __init__(self, directory, configuration):
-        super(VirtualenvDirectory,self).__init__(directory, configuration)
+        super(VirtualenvDirectory, self).__init__(directory, configuration)
 
     def configure(self):
         self.virtualenv_command(self.directory)
-        super(VirtualenvDirectory,self).configure()
-    
+        super(VirtualenvDirectory, self).configure()
+
     def which(self, program):
         def is_exe(fpath):
             return os.path.exists(fpath) and os.access(fpath, os.X_OK)
+
         def ext_candidates(fpath):
             yield fpath
             for ext in os.environ.get("PATHEXT", "").split(os.pathsep):
@@ -1049,39 +1134,40 @@ class VirtualenvDirectory(BuildDirectory):
         pass
 
 commands = {
-  'info': InfoCommand,
-  'sources': SourcesCommand,
-  'configure': ConfigureCommand,
-  'build': BuildCommand,
-  'doc': DocCommand,
-  'test': TestCommand,
+    'info': InfoCommand,
+    'sources': SourcesCommand,
+    'configure': ConfigureCommand,
+    'build': BuildCommand,
+    'doc': DocCommand,
+    'test': TestCommand,
 }
-default_commands = [ 'sources', 'configure', 'build' ]
-options_by_command = { None: [] }
+default_commands = ['sources', 'configure', 'build']
+options_by_command = {None: []}
 command = None
 for i in sys.argv[1:]:
-  if i in commands:
-    command = i
-    if command in options_by_command:
-      raise ValueError( 'Command %s used twice' % command )
-    options_by_command[ command ] = []
-  else:
-    options_by_command[ command ].append( i )
+    if i in commands:
+        command = i
+        if command in options_by_command:
+            raise ValueError('Command %s used twice' % command)
+        options_by_command[command] = []
+    else:
+        options_by_command[command].append(i)
 
 # Initialize global configuration
-configuration = GlobalConfiguration( options_by_command[ None ] )
+configuration = GlobalConfiguration(options_by_command[None])
 
 # Parse commands options and prepare them for processing in the correct order
 todo = []
-if len( options_by_command ) == 1:
-  # No command selected => do all default commands
-  for i in default_commands:
-    options_by_command[ i ] = []
+if len(options_by_command) == 1:
+    # No command selected => do all default commands
+    for i in default_commands:
+        options_by_command[i] = []
 # Ordered command list
-for command in [ 'info', 'sources', 'configure', 'build', 'test', 'doc' ]:
-  if command in options_by_command:
-    todo.append( commands[ command ]( options_by_command[ command ], configuration ) )
+for command in ['info', 'sources', 'configure', 'build', 'test', 'doc']:
+    if command in options_by_command:
+        todo.append(
+            commands[command](options_by_command[command], configuration))
 
 # Execute selected commands
 for f in todo:
-  f()
+    f()

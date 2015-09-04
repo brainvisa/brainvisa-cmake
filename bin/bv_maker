@@ -886,7 +886,7 @@ for i in os.listdir(os.path.dirname(__file__)):
       my_path = os.path.dirname(__file__)
       bv_clean = os.path.join(my_path, 'bv_clean_build_tree')
       print 'cleaning build tree', self.directory
-      subprocess.call([bv_clean, '-d', self.directory])
+      subprocess.call([sys.executable, bv_clean, '-d', self.directory])
 
     # Create a sitecustomize Python package that imports all modules it
     # contains during Python startup. This is mainly used to modify sys.path
@@ -983,7 +983,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
       my_path = os.path.dirname(__file__)
       bv_clean = os.path.join(my_path, 'bv_clean_build_tree')
       print 'cleaning build tree', self.directory
-      subprocess.call([bv_clean, '-d', '-b', self.directory])
+      subprocess.call([sys.executable, bv_clean, '-d', '-b', self.directory])
 
     system( cwd=self.directory, *( ['make'] + self.make_options.split() ) )
 

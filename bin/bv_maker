@@ -36,23 +36,26 @@
 import sys, os, re, pprint, subprocess, glob, shutil, json
 from optparse import OptionParser
 from fnmatch import fnmatchcase
+import tempfile
 
 # Ugly hack to backport subprocess.check_ouput method on python < 2.7
 # TODO: remove this once BrainVISA is only compatible with python >= 2.7
 if "check_output" not in dir( subprocess ): # duck punch it in!
-  def f(*popenargs, **kwargs):
-    if 'stdout' in kwargs:
-      raise ValueError('stdout argument not allowed, it will be overridden.')
-    process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
-    output, unused_err = process.communicate()
-    retcode = process.poll()
-    if retcode:
-      cmd = kwargs.get("args")
-      if cmd is None:
-        cmd = popenargs[0]
-      raise subprocess.CalledProcessError(retcode, cmd)
-    return output
-  subprocess.check_output = f
+    def f(*popenargs, **kwargs):
+          if 'stdout' in kwargs:
+              raise ValueError(
+                  'stdout argument not allowed, it will be overridden.')
+          process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs,
+                                     **kwargs)
+          output, unused_err = process.communicate()
+          retcode = process.poll()
+          if retcode:
+              cmd = kwargs.get("args")
+              if cmd is None:
+                  cmd = popenargs[0]
+              raise subprocess.CalledProcessError(retcode, cmd)
+          return output
+    subprocess.check_output = f
 
 if os.path.exists( sys.argv[0] ):
   this_script = sys.argv[0]
@@ -168,9 +171,10 @@ class GlobalConfiguration( object ):
     currentDirectoryObject = None
     self.sourcesDirectories = {}
     self.buildDirectories = {}
-    
-    directories = [ os.path.normpath(os.path.realpath(os.path.abspath(d))) for d in options.directories ]
-   
+
+    directories = [os.path.normpath(os.path.realpath(os.path.abspath(d)))
+                   for d in options.directories]
+
     for i in ( 'configuration_file', 'username', 'verbose' ):
       setattr( self, i, getattr( options, i ) )
 
@@ -237,6 +241,10 @@ class GlobalConfiguration( object ):
         except SyntaxError:
           raise SyntaxError( 'Syntax error in ' + repr( options.configuration_file ) + ' on line ' + str( lineCount ) )
 
+    # store options and args
+    self.options = options
+    self.args = args
+
 
 
 class InfoCommand( object ):
@@ -264,14 +272,22 @@ class SourcesCommand( object ):
     
     Create or updated selected sources directories from Subversion repository.'''
     parser = OptionParser(usage=usage)
+    parser.add_option( '--no-svn', dest='svn', action='store_false',
+                      default=True,
+                      help='don\'t update svn sources')
+    parser.add_option( '--no-git', dest='git', action='store_false',
+                      default=True,
+                      help='don\'t update git sources')
     (options, args) = parser.parse_args( argv )
     if args:
       raise ValueError( 'Invalid option: %s' % args[0] )
+    self.options = options
+    self.args = args
   
   
   def __call__( self ):
     for d, o in configuration.sourcesDirectories.iteritems():
-      o.process()
+      o.process(self.options, self.args)
 
 
 class ConfigureCommand( object ):
@@ -280,14 +296,20 @@ class ConfigureCommand( object ):
     
     Create or updated selected build directories.'''
     parser = OptionParser(usage=usage)
+    parser.add_option('-c', '--clean', dest='clean', action='store_true',
+                      default=False,
+                      help='clean build tree (using bv_clean_build_tree -d) '
+                      'before configuring')
     (options, args) = parser.parse_args( argv )
     if args:
       raise ValueError( 'Invalid option: %s' % args[0] )
+    self.options = options
+    self.args = args
 
 
   def __call__( self ):
     for d, o in configuration.buildDirectories.iteritems():
-      o.configure()
+      o.configure(self.options, self.args)
 
 
 
@@ -304,14 +326,20 @@ class BuildCommand( object ):
     
     Compile selected build directories.'''
     parser = OptionParser(usage=usage)
+    parser.add_option('-c', '--clean', dest='clean', action='store_true',
+                      default=False,
+                      help='clean build tree (using '
+                      'bv_clean_build_tree -d -b) before building')
     (options, args) = parser.parse_args( argv )
     if args:
       raise ValueError( 'Invalid option: %s' % args[0] )
+    self.options = options
+    self.args = args
   
   
   def __call__( self ):
     for d, o in configuration.buildDirectories.iteritems():
-      o.build()
+      o.build(self.options, self.args)
 
 class DocCommand( object ):
   def __init__( self, argv, configuration ):
@@ -452,7 +480,7 @@ class SourceDirectory( object ):
       self.configurationLines.append( line )
   
   
-  def process( self ):
+  def process( self, options, args ):
     if not os.path.exists( self.directory ):
       os.makedirs( self.directory )
     clientFile = open( os.path.join( self.directory, 'bv_maker.cfg' ), 'w' )
@@ -491,20 +519,22 @@ class SourceDirectory( object ):
     externalsFile.close()
     self.svncommand( 'propset', 'svn:externals', '--file', externalsFileName, self.directory )
     self.svncommand( 'commit', '-m', '', self.directory )
-    self.svncommand( 'update', self.directory )
+    if options.svn:
+      self.svncommand( 'update', self.directory )
     os.chdir( current_dir )
 
     # update Git Repositories
 
-    for component_version, url, git_tag, dest_directory, bv_version in self.gitComponents:
-      if dest_directory is None:
-        dest_directory = url.rsplit('/', 1)[ -1 ]
-        if dest_directory.endswith('.git'):
-          dest_directory = dest_directory[ :-4 ]
-      dest_path = os.path.join(self.directory,dest_directory)
-      self.gitupdate(url, dest_path, git_tag)
-      source_directories.append((dest_path,bv_version))
-      
+    if options.git:
+      for component_version, url, git_tag, dest_directory, bv_version in self.gitComponents:
+        if dest_directory is None:
+          dest_directory = url.rsplit('/', 1)[ -1 ]
+          if dest_directory.endswith('.git'):
+            dest_directory = dest_directory[ :-4 ]
+        dest_path = os.path.join(self.directory,dest_directory)
+        self.gitupdate(url, dest_path, git_tag)
+        source_directories.append((dest_path,bv_version))
+
     components_sources = {}
     for dest_path, bv_version in source_directories:
       pinfo = read_project_info(
@@ -610,10 +640,21 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
     # Fetch the remotes specified in bv_maker.cfg into refs/bv_head
     remotes = self.get_git_remotes(dest)
     for remote in remotes:
+      # get stderr in a separate stream since git finds it funny to print
+      # normal operation messages in stderr.
+      stderr_str = tempfile.NamedTemporaryFile()
       retcode = subprocess.call(['git', 'fetch', remote],
-                                cwd=dest)
+                                cwd=dest, stderr=stderr_str)
+      stderr_str.flush()
+      stderr_content = open(stderr_str.name).read()
+      stderr_str.close()
+
       if retcode != 0:
+        sys.stderr.write(stderr_content)
         print('{0}: could not fetch from git repository {1}'.format(dest, src))
+      else:
+        # if no error, the output is sent to stdout, not stderr.
+        sys.stdout.write(stderr_content)
 
     retcode = subprocess.call(['git', 'fetch', src,
                                "+" + remote_ref + ":refs/bv_head"],
@@ -825,7 +866,7 @@ for i in os.listdir(os.path.dirname(__file__)):
       self._configuration_lines_processed = True
   
   
-  def configure( self ):
+  def configure( self, options, args ):
     self._process_configuration_lines()
     # Order of projects and components is important for dependencies
     sortedProjects = [ p for p in ordered_projects if p in self.projects ]
@@ -840,6 +881,12 @@ for i in os.listdir(os.path.dirname(__file__)):
 
     if not os.path.exists( self.directory ):
       os.makedirs( self.directory )
+
+    if options.clean:
+      my_path = os.path.dirname(__file__)
+      bv_clean = os.path.join(my_path, 'bv_clean_build_tree')
+      print 'cleaning build tree', self.directory
+      subprocess.call([sys.executable, bv_clean, '-d', self.directory])
 
     # Create a sitecustomize Python package that imports all modules it
     # contains during Python startup. This is mainly used to modify sys.path
@@ -930,8 +977,14 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
       # run cmake in a regular way
       system( cwd = self.directory, *command )
   
-  def build( self ):
+  def build( self, options, args ):
     self._process_configuration_lines()
+    if options.clean:
+      my_path = os.path.dirname(__file__)
+      bv_clean = os.path.join(my_path, 'bv_clean_build_tree')
+      print 'cleaning build tree', self.directory
+      subprocess.call([sys.executable, bv_clean, '-d', '-b', self.directory])
+
     system( cwd=self.directory, *( ['make'] + self.make_options.split() ) )
 
   def doc( self ):

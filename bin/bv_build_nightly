@@ -81,10 +81,8 @@ bv_configure()
   echo "clean build tree "
   build_dirs=`dirname $binary_dir`
   build_dirs=`dirname $build_dirs`
-  $binary_dir/bv_clean_build_tree -d $build_dirs/bug_fix >"$stderr" 2>&1
-  $binary_dir/bv_clean_build_tree -d $build_dirs/trunk >"$stderr" 2>&1
   echo "Configure "
-  $binary_dir/bv_maker configure >"$stderr" 2>&1
+  $binary_dir/bv_maker configure -c >"$stderr" 2>&1
 
   # if errors detected copy output file into log
   status=$?
@@ -113,7 +111,7 @@ bv_build() {
   rm -f "$stderr"
   # build target, redirecting all output
   echo "Build "
-  $binary_dir/bv_maker build >"$stderr" 2>&1
+  $binary_dir/bv_maker build -c >"$stderr" 2>&1
 
   status=$?
   # if errors detected copy output file into log

@@ -314,6 +314,7 @@ if( DCMTK_config_INCLUDE_DIR AND
   # For DCMTK >= 3.6.0
   IF(DCMTK_oflog_LIBRARY)
    SET(DCMTK_INCLUDE_DIR
+     ${DCMTK_dcmdata_INCLUDE_DIR}
      ${DCMTK_config_INCLUDE_DIR}
      ${DCMTK_config_INCLUDE_DIR}/dcmtk/config
      ${DCMTK_dcmdata_INCLUDE_DIR}/dcmtk/dcmdata
@@ -380,7 +381,9 @@ if( DCMTK_config_INCLUDE_DIR AND
     ENDIF(DCMTK_dcmnet_LIBRARY)
 
   ENDIF(DCMTK_oflog_LIBRARY)
-  
+
+  LIST(REMOVE_DUPLICATES DCMTK_INCLUDE_DIR)
+
   IF(DEFINED ENV{DCMTK_DIR})
   	set(DCMTK_INCLUDE_DIR ${DCMTK_INCLUDE_DIR}
         $ENV{DCMTK_DIR}/include)

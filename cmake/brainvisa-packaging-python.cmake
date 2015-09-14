@@ -224,12 +224,12 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
                 BRAINVISA_INSTALL(DIRECTORY "${fp}"
                     DESTINATION "lib/python${PYTHON_SHORT_VERSION}"
                     USE_SOURCE_PERMISSIONS
-                    COMPONENT "${component}")                    
+                    COMPONENT "${component}")
             else()
                 BRAINVISA_INSTALL(FILES "${fp}"
                     DESTINATION "lib/python${PYTHON_SHORT_VERSION}"
                     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-                    COMPONENT "${component}")                    
+                    COMPONENT "${component}")
             endif()
         endif()
     endforeach()
@@ -256,7 +256,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
       if( NOT "${file}" STREQUAL "pyconfig.h" )
         get_filename_component( path "${file}" PATH )
         get_filename_component( name "${file}" NAME )
-        get_filename_component( file2 "${directory}/${path}/${file}" REALPATH )
+        get_filename_component( file2 "${directory}/${path}/${name}" REALPATH )
         if( EXISTS "${directory}/${path}/${name}" )
           if( IS_DIRECTORY "${file2}" )
             BRAINVISA_INSTALL_DIRECTORY( "${file2}" "${destination}/${path}" "${component}-dev" )

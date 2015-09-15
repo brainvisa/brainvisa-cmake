@@ -449,7 +449,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
         shortcut += ".app"
         if os.path.exists( shortcut ):
           os.unlink( shortcut )
-        os.symlink( os.path.join('bin', '.app' % exe_name), shortcut )
+        os.symlink( os.path.join('bin', '%s.app' % exe_name), shortcut )
       else:
         shortcut += '.app'
         if os.path.exists( shortcut ):
@@ -457,7 +457,8 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
         os.makedirs( os.path.join( shortcut, 'Contents', 'MacOS' ) )
         os.makedirs( os.path.join( shortcut, 'Contents', 'Resources' ) )
         os.symlink( '../../../bin/%s' % exe_name,
-                    os.path.join( shortcut, 'Contents', 'MacOS', 'brainvisa' ) )
+                    os.path.join( shortcut, 'Contents', 'MacOS',
+                                 'brainvisa' ) )
         icns = glob.glob( os.path.join( install_directory, 'share', 'axon*' ) )
         if icns:
           icns = os.path.join( '../../../share', os.path.basename( icns[0] ),

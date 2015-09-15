@@ -65,7 +65,7 @@ def is_private_component( component ):
         return False
     additional_private_components = (
         'baby', 'tms', 'sulci-data', 'constellation-private',
-        'constellation-gpl', 'bioprocessing', )
+        'constellation-gpl', 'bioprocessing', 'preclinical-imaging-iam', )
     if component in additional_private_components:
         return True
     return False

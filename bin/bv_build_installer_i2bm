@@ -96,7 +96,8 @@ projects = ['aims', 'anatomist', 'axon', 'soma', 'brainrat', 'brainvisa-share',
     'snapbase']
 components = []
 cmd = ['bv_build_installer.py', '-t', 'run', 'dev', 'usrdoc', 'devdoc',
-    '--online-only', '-i', output, '-r', mirror_repos_dir]
+    '--online-only', '-i', output, '-r', mirror_repos_dir,
+    '--platform_name', osname]
 if options.i2bm:
     i2bm_options = ['--no-thirdparty', '--i2bm']
     cmd += i2bm_options

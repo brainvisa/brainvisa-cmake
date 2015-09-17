@@ -106,7 +106,7 @@ class PurePythonComponentBuild(object):
         if write_cmakelists:
             open(cmakelists_path,'w').write(cmakelists_content)
 
-        if options.clean:
+        if self.options.clean:
             import brainvisa
             # look for <my_path>/bin when we are in <my_path>/python/brainvisa
             my_path = os.path.dirname(os.path.dirname(

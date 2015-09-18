@@ -67,6 +67,13 @@ parser.add_option('-o', '--output', action='store', type='string',
     dest='output', default=default_output,
     help='output intaller (default: %s). Same syntax as for '
     '--mirror_repos' % default_output)
+parser.add_option('--skip-repos', dest='skip_repos',
+    action='store_true',
+    help='Skip initial (temp) repository creation. Assumes it has already been done.')
+
+parser.add_option('--skip-repogen', dest='skip_repogen',
+    action='store_true',
+    help='Skip repogen (final repository creation + compression). Assumes it has already been done.')
 
 options, args = parser.parse_args()
 if len( args ) > 0:
@@ -104,6 +111,10 @@ if options.i2bm:
     projects += ['nuclear_imaging', 'data_storage_client', 'optical_imaging']
     components += ['constellation-private', 'constellation-gpl',
         'bioprocessing']
+if options.skip_repos:
+    cmd.append('--skip-repos')
+if options.skip_repogen:
+    cmd.append('--skip-repogen')
 cmd += ['-p'] + projects
 if len(components) != 0:
   cmd += ['-n'] + components

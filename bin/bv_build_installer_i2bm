@@ -17,6 +17,26 @@ default_output \
         '%(version)s/%(os)s/brainvisa-installer/brainvisa_installer-' \
         '%(version)s-%(os)s-%(online)s%(public)s'
 
+systems = {'darwin' : 'osx'}
+i2bm_str = 'public'
+osname = platform.system().lower()
+osname = systems.get(osname, osname)
+public = ''
+online = 'online'
+if osname == 'linux':
+    if platform.architecture()[0] == '64bit':
+        osname += '64'
+    else:
+        osname += '32'
+    # determine libc version - using ctypes and calling C
+    # gnu_get_libc_version() function
+    # Note: plaform.libc_ver() is completely bogus.
+    import ctypes
+    libc = ctypes.cdll.LoadLibrary("libc.so.6")
+    gnu_get_libc_version = libc.gnu_get_libc_version
+    gnu_get_libc_version.restype = ctypes.c_char_p
+    osname += '-glibc-' + '.'.join(gnu_get_libc_version().split('.')[:2])
+
 parser = OptionParser(usage='%prog [options]',
     version='%prog 1.0',
     description='Creates a BrainVISA repository/packager from the current '
@@ -34,12 +54,11 @@ parser.add_option('-m', '--mirror_repos', action='store', type='string',
     'Variables values:\n'
     '  * i2bm: "i2bm" if -i option is used, "public" otherwise\n'
     '  * version: axon version: %s\n'
-    '  * os: "linux32", "linux64", "osx", "win32" for public non-i2bm\n'
+    '  * os: "linux32-glibc-2.6", "linux64-glibc-2.15" etc., "osx", "win32", here: %s\n'
     '  * public: "-i2bm" or empty\n'
     '  * online: "online" or "offline"\n'
     'repositories with thirdparty components,\n'
-    '      "Ubuntu-14.04-x86_64" etc for i2bm repositories'
-    % (default_mirror_repos_dir, '%', '%', '%', fullVersion))
+    % (default_mirror_repos_dir, '%', '%', '%', fullVersion, osname))
 #parser.add_option('-b', '--build_repos', action='store', type='string',
     #dest='build_repos', default=default_build_repos_dir,
     #help='Build repository directory (default: %s). Same syntax as for '
@@ -54,17 +73,6 @@ if len( args ) > 0:
   parser.error('Invalid arguments. Try %s --help" to get some help.'
     % sys.argv[0])
 
-systems = {'darwin' : 'osx'}
-i2bm_str = 'public'
-osname = platform.system().lower()
-osname = systems.get(osname, osname)
-public = ''
-online = 'online'
-if osname == 'linux':
-    if platform.architecture()[0] == '64bit':
-        osname += '64'
-    else:
-        osname += '32'
 if options.i2bm:
     i2bm_str = 'i2bm'
     osname = os.getenv('I2BM_OSID')
@@ -88,7 +96,8 @@ projects = ['aims', 'anatomist', 'axon', 'soma', 'brainrat', 'brainvisa-share',
     'snapbase']
 components = []
 cmd = ['bv_build_installer.py', '-t', 'run', 'dev', 'usrdoc', 'devdoc',
-    '--online-only', '-i', output, '-r', mirror_repos_dir]
+    '--online-only', '-i', output, '-r', mirror_repos_dir,
+    '--platform_name', osname]
 if options.i2bm:
     i2bm_options = ['--no-thirdparty', '--i2bm']
     cmd += i2bm_options

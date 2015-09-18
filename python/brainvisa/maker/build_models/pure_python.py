@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import sys
 import os.path as osp
 import distutils.spawn
 import subprocess

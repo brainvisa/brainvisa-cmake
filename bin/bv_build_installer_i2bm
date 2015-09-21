@@ -82,7 +82,7 @@ if len( args ) > 0:
 
 if options.i2bm:
     i2bm_str = 'i2bm'
-    osname = os.getenv('I2BM_OSID')
+    #osname = os.getenv('I2BM_OSID')
     public = '-i2bm'
 
 

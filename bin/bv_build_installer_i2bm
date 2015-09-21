@@ -108,7 +108,7 @@ cmd = ['bv_build_installer.py', '-t', 'run', 'dev', 'usrdoc', 'devdoc',
 if options.i2bm:
     i2bm_options = ['--no-thirdparty', '--i2bm']
     cmd += i2bm_options
-    projects += ['nuclear_imaging', 'data_storage_client', 'optical_imaging']
+    projects += ['nuclear_imaging', 'data_storage_client']
     components += ['constellation-private', 'constellation-gpl',
         'bioprocessing']
 if options.skip_repos:

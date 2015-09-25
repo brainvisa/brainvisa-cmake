@@ -689,12 +689,12 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
         for remote in remotes:
             # get stderr in a separate stream since git finds it funny to print
             # normal operation messages in stderr.
-            stderr_str = tempfile.NamedTemporaryFile()
+            stderr_str = tempfile.NamedTemporaryFile(delete=False)
             retcode = subprocess.call(['git', 'fetch', remote],
                                       cwd=dest, stderr=stderr_str)
-            stderr_str.flush()
             stderr_str.close()
             stderr_content = open(stderr_str.name).read()
+            os.unlink(stderr_str.name)
 
             if retcode != 0:
                 sys.stderr.write(stderr_content)

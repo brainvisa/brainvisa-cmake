@@ -693,8 +693,8 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
             retcode = subprocess.call(['git', 'fetch', remote],
                                       cwd=dest, stderr=stderr_str)
             stderr_str.flush()
-            stderr_content = open(stderr_str.name).read()
             stderr_str.close()
+            stderr_content = open(stderr_str.name).read()
 
             if retcode != 0:
                 sys.stderr.write(stderr_content)

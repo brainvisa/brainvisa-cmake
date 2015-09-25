@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys, os
+import sys, os, re
 from optparse import OptionParser
 from datetime import datetime
 import dateutil.parser
@@ -76,6 +76,20 @@ while basermdirs:
         if d != os.path.dirname( d ):
           basermdirs.add( os.path.dirname( d ) )
 
+def parse_cmake_executables(directory):
+  cmake_cache = os.path.join(directory, 'CMakeCache.txt')
+  if not os.path.exists(cmake_cache):
+    # no cmake cache: no built executables
+    return []
+  cmds_re = re.compile('^.*-commands:INTERNAL=(.+)$')
+  all_cmds = []
+  for line in open(cmake_cache).xreadlines():
+    m = cmds_re.match(line)
+    if m:
+      cmds = m.group(1).split(';')
+      all_cmds += cmds
+  return all_cmds
+
 if options.binaries:
   cwd = os.getcwd()
   skipped = {}
@@ -83,6 +97,7 @@ if options.binaries:
     os.chdir( d )
     bindir = os.path.join( d, 'bin' )
     if os.path.exists( bindir ):
+      all_cmds = parse_cmake_executables(d)
       for f in os.listdir( bindir ):
         if not os.path.islink( os.path.join( bindir, f ) ):
           if f.startswith( 'bv_' ):
@@ -90,11 +105,7 @@ if options.binaries:
             sk.append( f )
             #print 'skipping', f, '(may be part of bv_cmake)'
           else:
-            sp = subprocess.Popen( [ 'make', '-q', f ], stdout=subprocess.PIPE,
-              stdin=subprocess.PIPE, stderr=subprocess.PIPE )
-            sp.communicate()
-            code = sp.wait()
-            if code == 2:
+            if f not in all_cmds:
               print 'rm obsolete command', f
               if not options.list :
                 os.unlink( os.path.join( bindir, f ) )

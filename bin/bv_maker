@@ -952,6 +952,8 @@ for i in os.listdir(os.path.dirname(__file__)):
             my_path = os.path.dirname(__file__)
             bv_clean = os.path.join(my_path, 'bv_clean_build_tree')
             print 'cleaning build tree', self.directory
+            # clean and remove empty dirs. Don't use -b option here
+            # because configuration has to be done first.
             subprocess.call([sys.executable, bv_clean, '-d', self.directory])
 
         # Create a sitecustomize Python package that imports all modules it
@@ -1065,8 +1067,10 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
             my_path = os.path.dirname(__file__)
             bv_clean = os.path.join(my_path, 'bv_clean_build_tree')
             print 'cleaning build tree', self.directory
+            # don't remove empty dirs here since configure may have created
+            # directories which will be used during build
             subprocess.call(
-                [sys.executable, bv_clean, '-d', '-b', self.directory])
+                [sys.executable, bv_clean, '-b', self.directory])
 
         system(cwd=self.directory, *(['make'] + self.make_options.split()))
 

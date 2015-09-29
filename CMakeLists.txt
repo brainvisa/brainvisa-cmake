@@ -81,9 +81,11 @@ add_custom_target( "package" DEPENDS "${packageName}" )
 
 add_executable( bv_env src/bv_env.cc )
 
-# Enable static linking if available
-include( CheckCXXCompilerFlag )
-CHECK_CXX_COMPILER_FLAG( -static static_link )
+# Enable static linking if available. We cannot use CheckCXXAcceptsFlag since
+# the linking step is not checked with that function.
+include( CheckCXXSourceCompiles )
+set(CMAKE_REQUIRED_FLAGS "-static")
+CHECK_CXX_SOURCE_COMPILES( "int main() { return 0; }" static_link )
 if( static_link )
   set_target_properties( bv_env PROPERTIES LINK_FLAGS -static )
 endif()

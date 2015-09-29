@@ -79,13 +79,17 @@ add_custom_command( OUTPUT "${packageName}"
 )
 add_custom_target( "package" DEPENDS "${packageName}" )
 
-# Check if static linking is available
-include( CheckCXXCompilerFlag )
-CHECK_CXX_COMPILER_FLAG( -static static_link )
-if( static_link )
-  set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static" )
-endif()
 add_executable( bv_env src/bv_env.cc )
+
+# Enable static linking if available. We cannot use CheckCXXAcceptsFlag since
+# the linking step is not checked with that function.
+include( CheckCXXSourceCompiles )
+set(CMAKE_REQUIRED_FLAGS "-static")
+CHECK_CXX_SOURCE_COMPILES( "int main() { return 0; }" static_link )
+if( static_link )
+  set_target_properties( bv_env PROPERTIES LINK_FLAGS -static )
+endif()
+
 set_target_properties( bv_env PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
 install( TARGETS bv_env
          DESTINATION bin )

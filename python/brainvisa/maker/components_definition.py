@@ -437,26 +437,26 @@ components_definition = [
             }],
         ],
     }),
-    ('nuclear_processing', {
-        'components': [
-            ['nuclear_processing-gpl', {
-                'groups': ['all'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_processing/nuclear_processing-gpl/trunk','nuclear_processing/nuclear_processing-gpl/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_processing/nuclear_processing-gpl/branches/4.2','nuclear_processing/nuclear_processing-gpl/branches/4.2'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_processing/nuclear_processing-gpl/tags/4.0.1','nuclear_processing/nuclear_processing-gpl/tags/4.0.1'),
-                },
-            }],
-            ['nuclear_processing-private', {
-                'groups': ['all'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_processing/nuclear_processing-private/trunk','nuclear_processing/nuclear_processing-private/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_processing/nuclear_processing-private/branches/4.2','nuclear_processing/nuclear_processing-private/branches/4.2'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_processing/nuclear_processing-private/tags/4.0.1','nuclear_processing/nuclear_processing-private/tags/4.0.1'),
-                },
-            }],
-        ],
-    }),
+    #('nuclear_processing', {
+        #'components': [
+            #['nuclear_processing-gpl', {
+                #'groups': ['all'],
+                #'branches': {
+                    #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_processing/nuclear_processing-gpl/trunk','nuclear_processing/nuclear_processing-gpl/trunk'),
+                    #'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_processing/nuclear_processing-gpl/branches/4.2','nuclear_processing/nuclear_processing-gpl/branches/4.2'),
+                    #'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_processing/nuclear_processing-gpl/tags/4.0.1','nuclear_processing/nuclear_processing-gpl/tags/4.0.1'),
+                #},
+            #}],
+            #['nuclear_processing-private', {
+                #'groups': ['all'],
+                #'branches': {
+                    #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_processing/nuclear_processing-private/trunk','nuclear_processing/nuclear_processing-private/trunk'),
+                    #'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_processing/nuclear_processing-private/branches/4.2','nuclear_processing/nuclear_processing-private/branches/4.2'),
+                    #'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_processing/nuclear_processing-private/tags/4.0.1','nuclear_processing/nuclear_processing-private/tags/4.0.1'),
+                #},
+            #}],
+        #],
+    #}),
     #('optical_imaging', {
         #'components': [
             #['optical_imaging-private', {

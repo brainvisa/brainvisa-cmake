@@ -146,11 +146,14 @@ class PurePythonComponentBuild(object):
         if write_cmakelists:
             open(cmakelists_path,'w').write(cmakelists_content)
 
-        cmake_dir = osp.join(src_directory, 'cmake')
+        name, component, version = read_project_info(self.source_directory)
+        cmake_dir = osp.join(self.build_directory,
+                             'share', 
+                             '%s-%s.%s' % (self.component_name, version[0], version[1]),
+                             'cmake')
         if not os.path.exists(cmake_dir):
             os.makedirs(cmake_dir)
         cmake_config_path = osp.join(cmake_dir, '%s-config.cmake' % self.component_name)
-        name, component, version = read_project_info(self.source_directory)
         cmake_config_content = cmake_config_template % dict(
             file = source_file,
             component = self.component_name,

@@ -36,7 +36,7 @@ if( EXISTS "%(source_directory)s/bin" )
 endif()
 
 BRAINVISA_GENERATE_SPHINX_DOC( "%(source_directory)s/doc/source"
-    "share/doc/capsul-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}" )
+    "share/doc/%(component_name)s-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}" )
 
 set( BV_ENV_PYTHON_CMD 
      "${CMAKE_BINARY_DIR}/bin/bv_env" "${PYTHON_EXECUTABLE}" )

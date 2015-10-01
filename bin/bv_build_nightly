@@ -77,10 +77,6 @@ bv_configure()
   stderr="/tmp/buildout-configure-$date.tmp"
   # delete log if it already exists
   rm -f "$stderr"
-  # remove dead links and obsolete python modules
-  echo "clean build tree "
-  build_dirs=`dirname $binary_dir`
-  build_dirs=`dirname $build_dirs`
   echo "Configure "
   $binary_dir/bv_maker configure -c >"$stderr" 2>&1
 
@@ -88,9 +84,9 @@ bv_configure()
   status=$?
   if [ $status -ne 0 ]
   then
-    echo "==================================================" >>"$log"
-    echo " bv_maker configure: $binary_dir" >>"$log"
-    echo "==================================================" >>"$log"
+    echo "====================" >>"$log"
+    echo " bv_maker configure" >>"$log"
+    echo "====================" >>"$log"
     echo >>"$log"
     echo "PATH: "$PATH >>"$log"
     echo "${LIBRARY_PATHVAR}: "${!LIBRARY_PATHVAR} >>"$log"
@@ -117,9 +113,9 @@ bv_build() {
   # if errors detected copy output file into log
   if [ $status -ne 0 ]
   then
-    echo "==================================================" >>"$log"
-    echo "     command: bv_maker build: $binary_dir" >>"$log"
-    echo "==================================================" >>"$log"
+    echo "=============================" >>"$log"
+    echo "     command: bv_maker build" >>"$log"
+    echo "=============================" >>"$log"
     echo >>"$log"
     echo "PATH: "$PATH >>"$log"
     echo "${LIBRARY_PATHVAR}: "${!LIBRARY_PATHVAR} >>"$log"
@@ -146,9 +142,9 @@ bv_test() {
   # if errors detected copy output file into log
   if [ $status -ne 0 ]
   then
-    echo "==================================================" >>"$log"
-    echo "     command: bv_maker test: $binary_dir" >>"$log"
-    echo "==================================================" >>"$log"
+    echo "============================" >>"$log"
+    echo "     command: bv_maker test" >>"$log"
+    echo "============================" >>"$log"
     echo >>"$log"
     echo "PATH: "$PATH >>"$log"
     echo "${LIBRARY_PATHVAR}: "${!LIBRARY_PATHVAR} >>"$log"
@@ -174,10 +170,10 @@ bv_doc() {
   # if errors detected copy output file into log
   if [ $status -ne 0 ]
   then
-    echo "==================================================" >>"$log"
+    echo "===============================" >>"$log"
     echo "   documentation:" >>"$log"
-    echo "         command: bv_maker doc: $binary_dir" >>"$log"
-    echo "==================================================" >>"$log"
+    echo "         command: bv_maker doc" >>"$log"
+    echo "===============================" >>"$log"
     echo >>"$log"
     echo "PATH: "$PATH >>"$log"
     echo "${LIBRARY_PATHVAR}: "${!LIBRARY_PATHVAR} >>"$log"

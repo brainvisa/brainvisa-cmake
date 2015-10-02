@@ -27,3 +27,21 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     set(${component}_PACKAGED FALSE PARENT_SCOPE)
   endif()
 endfunction()
+
+# this variable declares the install rule for the dev package
+set( libpng12-dev-installrule TRUE )
+
+function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
+  if(PNG12_FOUND)
+    file( GLOB _files "${PNG12_INCLUDE_DIR}/png*.h" )
+    BRAINVISA_INSTALL( FILES ${_files}
+                      DESTINATION "include"
+                      COMPONENT "${component}-dev" )
+    BRAINVISA_INSTALL_DIRECTORY( "${PNG12_INCLUDE_DIR}/volume_io"
+      include/volume_io ${component}-dev )
+    set(${component}-dev_PACKAGED TRUE PARENT_SCOPE)
+  else()
+    set(${component}-dev_PACKAGED FALSE PARENT_SCOPE)
+  endif()
+endfunction()
+

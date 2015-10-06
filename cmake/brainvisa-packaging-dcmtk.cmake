@@ -33,7 +33,7 @@ endfunction()
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   if(DCMTK_FOUND)
     # install DCMTK libs if they are not static
-    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${DCMTK_LIBRARIES} LIBRARY )
+    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${DCMTK_LIBRARIES} )
     if( EXISTS "${DCMTK_dict}" )
       get_filename_component( dict "${DCMTK_dict}" REALPATH )
       BRAINVISA_INSTALL( FILES "${dict}"

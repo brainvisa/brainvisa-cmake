@@ -33,7 +33,7 @@ if( NOT config_done )
   endif()
   
   unset( BRAINVISA_THIRDPARTY_COMPONENTS CACHE )
-  option( BRAINVISA_PACKAGING_THIRDPARTY "Include packaging rules for third-party software" ON )
+  option( BRAINVISA_PACKAGING_THIRDPARTY "Include packaging rules for third-party software" OFF )
   #mark_as_advanced( BRAINVISA_PACKAGING_THIRDPARTY )
   if( NOT DEFINED BRAINVISA_SYSTEM_IDENTIFICATION )
     execute_process( COMMAND "${brainvisa-cmake_DIR}/../../../bin/bv_system_info" -s 

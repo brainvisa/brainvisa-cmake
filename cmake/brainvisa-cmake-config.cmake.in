@@ -1072,20 +1072,24 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
         add_custom_command( OUTPUT "${_fileBuild}"
                             COMMAND "${CMAKE_COMMAND}" -E make_directory "${_path}"
                             COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_pythonDirectory}/${_file}" "${_fileBuild}"
-                            DEPENDS "${_pythonDirectory}/${_file}" )
+                            DEPENDS "${_pythonDirectory}/${_file}"
+                            VERBATIM )
         else()
         add_custom_command( OUTPUT "${_fileBuild}"
                             COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_pythonDirectory}/${_file}" "${_fileBuild}"
-                            DEPENDS "${_pythonDirectory}/${_file}" )
+                            DEPENDS "${_pythonDirectory}/${_file}"
+                            VERBATIM )
         endif()
 
         # Byte compile python code (creating *.pyc and *.pyo)
         add_custom_command( OUTPUT "${_fileBuild}c"
-                            COMMAND "${PYTHON_EXECUTABLE}" -c "import py_compile\\;py_compile.main\\(\\)" "${_fileBuild}"
-                            DEPENDS "${_fileBuild}" )
+                            COMMAND "${PYTHON_EXECUTABLE}" -c "import py_compile;py_compile.main()" "${_fileBuild}"
+                            DEPENDS "${_fileBuild}" 
+                            VERBATIM )
         add_custom_command( OUTPUT "${_fileBuild}o"
-                            COMMAND "${PYTHON_EXECUTABLE}" -O -c "import py_compile\\;py_compile.main\\(\\)" "${_fileBuild}"
-                            DEPENDS "${_fileBuild}" )
+                            COMMAND "${PYTHON_EXECUTABLE}" -O -c "import py_compile;py_compile.main()" "${_fileBuild}"
+                            DEPENDS "${_fileBuild}"
+                            VERBATIM )
     endif()
     
     # Install source file and byte compiled files
@@ -1108,11 +1112,13 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
         add_custom_command( OUTPUT "${_fileBuild}"
                             COMMAND "${CMAKE_COMMAND}" -E make_directory "${_path}"
                             COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_pythonDirectory}/${_file}" "${_fileBuild}"
-                            DEPENDS "${_pythonDirectory}/${_file}" )
+                            DEPENDS "${_pythonDirectory}/${_file}"
+                            VERBATIM )
         else()
         add_custom_command( OUTPUT "${_fileBuild}"
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_pythonDirectory}/${_file}" "${_fileBuild}"
-            DEPENDS "${_pythonDirectory}/${_file}" )
+            DEPENDS "${_pythonDirectory}/${_file}"
+            VERBATIM )
         endif()
     endif()
     

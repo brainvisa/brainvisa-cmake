@@ -1599,6 +1599,9 @@ function( BRAINVISA_ADD_EXECUTABLE name )
   if (NOT _is_script)
     # Add executable only if it is not a script
     add_executable( ${name} ${_exe_args} )
+    add_custom_target( ${name}-clean
+                       "${CMAKE_COMMAND}" -E remove -f "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${name}"
+                       COMMENT "Cleaning ${name} ..." )
     if( _commandname )
       set_property( TARGET ${name} PROPERTY OUTPUT_NAME "${_commandname}" )
     endif()

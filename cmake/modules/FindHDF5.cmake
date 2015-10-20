@@ -7,28 +7,42 @@
 #
 # Need to look for Netcdf and hdf5 as well
 
+if( NOT HDF5_FOUND )
+  if( CMAKE_VERSION VERSION_GREATER "2.8" )
+      set( _tmp_path ${CMAKE_MODULE_PATH} )
+      list( REMOVE_ITEM CMAKE_MODULE_PATH "${brainvisa-cmake_DIR}/modules" )
+      find_package( HDF5 )
+      set( CMAKE_MODULE_PATH ${_tmp_path} )
 
-FIND_PATH( HDF5_INCLUDE_DIR hdf5.h
-  ${HDF5_DIR}/include
-  /usr/include 
-)
+  else()
 
-FIND_LIBRARY( HDF5_LIBRARY hdf5
-  ${HDF5_DIR}/lib
-  /usr/lib
-)
+    # cmake < 2.8
+
+    FIND_PATH( HDF5_INCLUDE_DIR hdf5.h
+      ${HDF5_DIR}/include
+      /usr/include
+    )
+
+    FIND_LIBRARY( HDF5_LIBRARY hdf5
+      ${HDF5_DIR}/lib
+      /usr/lib
+    )
 
 
 
-IF( HDF5_INCLUDE_DIR )
-IF( HDF5_LIBRARY )
+    IF( HDF5_INCLUDE_DIR )
+    IF( HDF5_LIBRARY )
 
-  SET( HDF5_FOUND "YES" )
+      SET( HDF5_FOUND "YES" )
 
-ENDIF( HDF5_LIBRARY )
-ENDIF( HDF5_INCLUDE_DIR )
+    ENDIF( HDF5_LIBRARY )
+    ENDIF( HDF5_INCLUDE_DIR )
 
-IF( NOT HDF5_FOUND )
-  SET( HDF5_DIR "" CACHE PATH "Root of HDF5 source tree (optional)." )
-  MARK_AS_ADVANCED( HDF5_DIR )
-ENDIF( NOT HDF5_FOUND )
+    IF( NOT HDF5_FOUND )
+      SET( HDF5_DIR "" CACHE PATH "Root of HDF5 source tree (optional)." )
+      MARK_AS_ADVANCED( HDF5_DIR )
+    ENDIF( NOT HDF5_FOUND )
+
+  endif()
+endif()
+

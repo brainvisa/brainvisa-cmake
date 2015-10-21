@@ -52,7 +52,7 @@ if( NOT HDF5_FOUND )
   IF( HDF5_LIBRARIES )
 
     # for compatibility with our older code
-    set( HDF5_LIBRARY ${HDF5_LIBRARIES} CACHE FILEPATH )
+    set( HDF5_LIBRARY ${HDF5_LIBRARIES} CACHE FILEPATH "HDF5 library" )
     SET( HDF5_FOUND "YES" )
 
   ENDIF( HDF5_LIBRARIES )

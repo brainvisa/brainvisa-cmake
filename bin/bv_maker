@@ -357,7 +357,7 @@ class BuildCommand(object):
         parser.add_option('-c', '--clean', dest='clean', action='store_true',
                           default=False,
                           help='clean build tree (using '
-                          'bv_clean_build_tree -d -b) before building')
+                          'bv_clean_build_tree -b) before building')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
@@ -802,6 +802,7 @@ for i in os.listdir(os.path.dirname(__file__)):
         self.cmake_options = ''
         self.packaging_thirdparty = ''
         self._configuration_lines_processed = False
+        self.clean_commands = True
 
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ build ... ]:
@@ -1064,13 +1065,17 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
     def build(self, options, args):
         self._process_configuration_lines()
         if options.clean:
+            if self.clean_commands:
+                clean_opts = ['-b']
+            else:
+                clean_opts = []
             my_path = os.path.dirname(__file__)
             bv_clean = os.path.join(my_path, 'bv_clean_build_tree')
             print 'cleaning build tree', self.directory
             # don't remove empty dirs here since configure may have created
             # directories which will be used during build
             subprocess.call(
-                [sys.executable, bv_clean, '-b', self.directory])
+                [sys.executable, bv_clean] + clean_opts + [self.directory])
 
         system(cwd=self.directory, *(['make'] + self.make_options.split()))
 
@@ -1100,6 +1105,7 @@ class VirtualenvDirectory(BuildDirectory):
 
     def __init__(self, directory, configuration):
         super(VirtualenvDirectory, self).__init__(directory, configuration)
+        self.clean_commands = False
 
     def configure(self, options, args):
         self.virtualenv_command(self.directory)

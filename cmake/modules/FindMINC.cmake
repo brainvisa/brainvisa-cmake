@@ -82,9 +82,9 @@ if( NOT MINC_volumeio_LIBRARY )
       PATHS ${_directories}
       PATH_SUFFIXES ${_librarySuffixes}
     )
-  if( MINC_volumeio_LIBRARY )
-    set( _minc_hdf5_version "2" )
-  endif()
+    if( MINC_volumeio_LIBRARY )
+      set( _minc_hdf5_version "2" )
+    endif()
   endif( NOT MINC_volumeio_LIBRARY )
 endif( NOT MINC_volumeio_LIBRARY )
 
@@ -95,7 +95,7 @@ IF( MINC_volumeio_LIBRARY )
 
   SET( MINC_FOUND "YES" )
 
-  set( LIBMINC_DEFINITIONS CACHE STRING "MINC library definitions" )
+  set( LIBMINC_DEFINITIONS )
   if( _minc_hdf5_version STREQUAL "1" )
     set( LIBMINC_DEFINITIONS "-DH5_USE_16_API" )
   endif()
@@ -125,6 +125,11 @@ IF( MINC_volumeio_LIBRARY )
 #     set( LIBMINC_DEFINITIONS ${LIBMINC_DEFINITIONS} -DMINC2=1 -DHAVE_MINC2=1 )
     set( LIBMINC_DEFINITIONS ${LIBMINC_DEFINITIONS} -DHAVE_MINC2=1 )
   ENDIF(HAVE_MINC2)
+
+  message("##### LIBMINC_DEFINITIONS: ${LIBMINC_DEFINITIONS}")
+  message("HAVE_MINC1: ${HAVE_MINC1}")
+  message("HAVE_MINC2: ${HAVE_MINC2}")
+  set( LIBMINC_DEFINITIONS ${LIBMINC_DEFINITIONS} CACHE STRING "MINC library definitions" )
 
 ENDIF( MINC_volumeio_LIBRARY )
 ENDIF( MINC_minc_LIBRARY )

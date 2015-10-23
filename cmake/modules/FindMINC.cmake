@@ -45,8 +45,14 @@ if( HDF5_FOUND )
       PATH_SUFFIXES ${_includeSuffixes}
   )
 
+  if( MINC_INCLUDE_DIR )
+      set(HAVE_MINC1    ON)
+  endif()
+
   if( MINC2_INCLUDE_DIR )
     set( MINC2_FOUND "1" )
+    set(HAVE_MINC2    1)
+
     if( NOT MINC_INCLUDE_DIR )
       set( MINC_INCLUDE_DIR ${MINC2_INCLUDE_DIR} )
     endif()
@@ -59,6 +65,8 @@ if( HDF5_FOUND )
     endif( NOT MINC_minc_LIBRARY )
   endif()
 endif()
+
+set( _minc_hdf5_version "1" )
 
 find_library( MINC_volumeio_LIBRARY volume_io
     PATHS ${_directories}
@@ -74,6 +82,9 @@ if( NOT MINC_volumeio_LIBRARY )
       PATHS ${_directories}
       PATH_SUFFIXES ${_librarySuffixes}
     )
+  if( MINC_volumeio_LIBRARY )
+    set( _minc_hdf5_version "2" )
+  endif()
   endif( NOT MINC_volumeio_LIBRARY )
 endif( NOT MINC_volumeio_LIBRARY )
 
@@ -84,18 +95,36 @@ IF( MINC_volumeio_LIBRARY )
 
   SET( MINC_FOUND "YES" )
 
-  SET(MINC_INCLUDE_DIRS
+  set( LIBMINC_DEFINITIONS CACHE STRING "MINC library definitions" )
+  if( _minc_hdf5_version STREQUAL "1" )
+    set( LIBMINC_DEFINITIONS "-DH5_USE_16_API" )
+  endif()
+
+  SET(LIBMINC_INCLUDE_DIRS
      ${MINC_INCLUDE_DIR}
      ${NETCDF_INCLUDE_DIR}
      ${HDF5_INCLUDE_DIR}
+     CACHE FILEPATH "MINC include paths"
   )
 
-  SET(MINC_LIBRARIES
+  SET(LIBMINC_LIBRARIES
     ${MINC_volumeio_LIBRARY}
     ${MINC_minc_LIBRARY}
     ${NETCDF_LIBRARY}
     ${HDF5_LIBRARY}
+    CACHE FILEPATH "MINC libraries"
   )
+
+  IF(HAVE_MINC1)
+    set( LIBMINC_DEFINITIONS ${LIBMINC_DEFINITIONS} -DHAVE_MINC1=1 )
+  ENDIF(HAVE_MINC1)
+
+  IF(HAVE_MINC2)
+    SET(MINC2 "1")
+      # -DMINC2=1 causes problems for now in aimsminc
+#     set( LIBMINC_DEFINITIONS ${LIBMINC_DEFINITIONS} -DMINC2=1 -DHAVE_MINC2=1 )
+    set( LIBMINC_DEFINITIONS ${LIBMINC_DEFINITIONS} -DHAVE_MINC2=1 )
+  ENDIF(HAVE_MINC2)
 
 ENDIF( MINC_volumeio_LIBRARY )
 ENDIF( MINC_minc_LIBRARY )

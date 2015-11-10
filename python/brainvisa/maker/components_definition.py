@@ -552,6 +552,9 @@ components_definition = [
     }),
 ]
 
-customize_components_definition = os.path.expanduser('~/.brainvisa/components_definition.py')
-if os.path.exists(customize_components_definition):
-    execfile(customize_components_definition)
+customize_components_definition = [os.path.expanduser('~/.brainvisa/components_definition.py')]
+if 'BV_MAKER_BUILD' in os.environ:
+    customize_components_definition.append(os.path.join(os.environ['BV_MAKER_BUILD'], 'components_definition.py'))
+for ccd in customize_components_definition:
+    if os.path.exists(ccd):
+        execfile(ccd)

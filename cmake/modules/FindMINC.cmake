@@ -18,7 +18,7 @@ ENDIF( MINC_FIND_QUIETLY )
 IF( NETCDF_FOUND OR HDF5_FOUND )
 
 set( _directories
-  "${MINC_DIR}"
+  "${MINC_DIR}" "/usr/lib/x86_64-linux-gnu"
 )
 set( _librarySuffixes
   lib
@@ -68,25 +68,35 @@ endif()
 
 set( _minc_hdf5_version "1" )
 
-find_library( MINC_volumeio_LIBRARY volume_io
-    PATHS ${_directories}
-    PATH_SUFFIXES ${_librarySuffixes}
+
+if( MINC_volumeio_LIBRARY AND NOT EXISTS ${MINC_volumeio_LIBRARY} )
+  set( MINC_volumeio_LIBRARY "" CACHE "Minc IO lib" )
+endif()
+
+find_library( MINC_volumeio_LIBRARY volume_io2
+  PATHS ${_directories}
+  HINTS /usr/lib/x86_64-linux-gnu
+  PATH_SUFFIXES ${_librarySuffixes}
 )
-if( NOT MINC_volumeio_LIBRARY )
-  find_library( MINC_volumeio_LIBRARY volume_io2
+if( NOT MINC_volumeio_LIBRARY OR NOT EXISTS ${MINC_volumeio_LIBRARY} )
+  find_library( MINC_volumeio_LIBRARY minc_io
     PATHS ${_directories}
+    HINTS /usr/lib/x86_64-linux-gnu
     PATH_SUFFIXES ${_librarySuffixes}
   )
-  if( NOT MINC_volumeio_LIBRARY )
-    find_library( MINC_volumeio_LIBRARY minc_io
+  if( MINC_volumeio_LIBRARY AND EXISTS ${MINC_volumeio_LIBRARY} )
+    set( _minc_hdf5_version "2" )
+  endif()
+endif()
+
+if( NOT MINC_volumeio_LIBRARY OR NOT EXISTS ${MINC_volumeio_LIBRARY} )
+  find_library( MINC_volumeio_LIBRARY volume_io
       PATHS ${_directories}
+      HINTS /usr/lib/x86_64-linux-gnu
       PATH_SUFFIXES ${_librarySuffixes}
-    )
-    if( MINC_volumeio_LIBRARY )
-      set( _minc_hdf5_version "2" )
-    endif()
-  endif( NOT MINC_volumeio_LIBRARY )
-endif( NOT MINC_volumeio_LIBRARY )
+  )
+endif()
+
 
 
 IF( MINC_INCLUDE_DIR )

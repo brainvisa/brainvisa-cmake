@@ -13,9 +13,12 @@ else()
     if( NOT LIBQUADMATH_LIBRARIES )
       execute_process( COMMAND "${CMAKE_CXX_COMPILER}" "-v"
         ERROR_VARIABLE _gcc_v )
-      string( REGEX MATCH "gcc version ([0-9]+.[0-9]+)" _gccver "${_gcc_v}" )
+      string( REGEX MATCH "gcc version (([0-9]+)(.[0-9]+)?)" _gccver "${_gcc_v}" )
       set( GCC_VERSION ${CMAKE_MATCH_1} CACHE STRING "gcc version" )
-      set( _GCCPATH "/usr/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}" )
+      set( _GCCPATH
+        "/usr/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}"
+        "/usr/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${CMAKE_MATCH_2}"
+      )
       find_library( LIBQUADMATH_LIBRARIES quadmath quadmath-0 PATHS ${_GCCPATH} )
       if( NOT LIBQUADMATH_LIBRARIES )
         file( GLOB LIBQUADMATH_LIBRARIES "${_GCCPATH}/libquadmath.so" )

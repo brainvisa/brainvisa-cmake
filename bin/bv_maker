@@ -80,10 +80,8 @@ if this_script:
     if os.path.isdir(python_modules):
         sys.path.insert(0, python_modules)
 
-from brainvisa.maker.brainvisa_projects import SVN_URL, \
-    find_components, read_project_info, \
-    project_per_component, url_per_component, ordered_projects, \
-    components_per_project, components_per_group, info_per_component
+import brainvisa.maker.components_definition
+import brainvisa.maker.brainvisa_projects as brainvisa_projects
 
 from brainvisa.maker.version_number import version_format_short
 
@@ -202,6 +200,9 @@ To get help for a specific command, use -h option of the command. Example: "%pro
                 else:
                     options.configuration_file = defaultConfigurationFile
             os.environ['BV_MAKER_BUILD'] = options.build_directory
+            reload(brainvisa.maker.components_definition)
+            reload(brainvisa_projects)
+            
             bd = BuildDirectory(
                 environmentVariablesSubstitution(options.build_directory),
                 self)
@@ -448,7 +449,7 @@ class SourceDirectory(object):
                     url = componentPattern
                     dest_directory = versionPattern
                 else:
-                    url = SVN_URL + '/' + componentPattern
+                    url = brainvisa_projects.SVN_URL + '/' + componentPattern
                     dest_directory = versionPattern
                     if dest_directory is None:
                         dest_directory = componentPattern
@@ -465,9 +466,9 @@ class SourceDirectory(object):
             elif sign in ('brainvisa', '+'):
                 if versionPattern is None:
                     raise SyntaxError()
-                for component in find_components(componentPattern):
-                    project = project_per_component[component]
-                    for version, repo_dir in url_per_component[component].iteritems():
+                for component in brainvisa_projects.find_components(componentPattern):
+                    project = brainvisa_projects.project_per_component[component]
+                    for version, repo_dir in brainvisa_projects.url_per_component[component].iteritems():
                         repo, dir = repo_dir
                         if fnmatchcase(version, versionPattern):
                             self.addConfigurationLine(
@@ -478,8 +479,8 @@ class SourceDirectory(object):
                 else:
                     if versionPattern is None:
                         versionPattern = '*'
-                    for component in find_components(componentPattern):
-                        for version, repo_dir in url_per_component[component].iteritems():
+                    for component in brainvisa_projects.find_components(componentPattern):
+                        for version, repo_dir in brainvisa_projects.url_per_component[component].iteritems():
                             if fnmatchcase(version, versionPattern):
                                 # Remove unwanted svn components
                                 count = 0
@@ -577,7 +578,7 @@ class SourceDirectory(object):
 
         components_sources = {}
         for dest_path, bv_version in source_directories:
-            pinfo = read_project_info(
+            pinfo = brainvisa_projects.read_project_info(
                 os.path.join(self.directory, dest_path),
                 version_format=version_format_short
             )
@@ -840,7 +841,7 @@ for i in os.listdir(os.path.dirname(__file__)):
                     directory = os.path.normpath(
                         os.path.abspath(environmentVariablesSubstitution(
                             rest.strip())))
-                    pinfo = read_project_info(
+                    pinfo = brainvisa_projects.read_project_info(
                         directory,
                         version_format=version_format_short
                     )
@@ -856,7 +857,7 @@ for i in os.listdir(os.path.dirname(__file__)):
                 elif first in ('brainvisa_exclude', '-'):
                     componentPattern, versionPattern = (
                         rest.split(None, 1) + ['*'])[:2]
-                    for component in find_components(componentPattern):
+                    for component in brainvisa_projects.find_components(componentPattern):
                         dir_version = self.components.get(component)
                         if dir_version:
                             dir, selected_version, component_version \
@@ -865,9 +866,9 @@ for i in os.listdir(os.path.dirname(__file__)):
                                 if self.configuration.verbose:
                                     print '    removing component %s version %s from %s' % (component, version, dir)
                                 del self.components[component]
-                elif first == 'brainvisa' or (first in project_per_component) \
-                        or (first in components_per_group) \
-                        or (first in components_per_project) or '*' in first:
+                elif first == 'brainvisa' or (first in brainvisa_projects.project_per_component) \
+                        or (first in brainvisa_projects.components_per_group) \
+                        or (first in brainvisa_projects.components_per_project) or '*' in first:
                     if first == 'brainvisa':
                         l = rest.split(None, 2)
                         componentPattern, versionPattern, sourceDirectory = l
@@ -881,14 +882,14 @@ for i in os.listdir(os.path.dirname(__file__)):
                     components_sources = json.load(
                         open(os.path.join(sourceDirectory,
                                           'components_sources.json')))
-                    for component in find_components(componentPattern):
+                    for component in brainvisa_projects.find_components(componentPattern):
                         for version, directory \
                                 in components_sources.get(component,
                                                           {}).iteritems():
                             directory = os.path.join(
                                 sourceDirectory, directory)
                             if fnmatchcase(version, versionPattern):
-                                pinfo = read_project_info(
+                                pinfo = brainvisa_projects.read_project_info(
                                     directory,
                                     version_format=version_format_short
                                 )
@@ -927,20 +928,20 @@ for i in os.listdir(os.path.dirname(__file__)):
                         json.dump(installed, open(installed_json, 'w'))
                 else:
                     SyntaxError()
-            projects = set(project_per_component.get(i, i)
+            projects = set(brainvisa_projects.project_per_component.get(i, i)
                            for i in self.components)
-            self.projects = [i for i in ordered_projects if i in projects]
+            self.projects = [i for i in brainvisa_projects.ordered_projects if i in projects]
             self.projects.extend(projects - set(self.projects))
             self._configuration_lines_processed = True
 
     def configure(self, options, args):
         self._process_configuration_lines()
         # Order of projects and components is important for dependencies
-        sortedProjects = [p for p in ordered_projects if p in self.projects]
+        sortedProjects = [p for p in brainvisa_projects.ordered_projects if p in self.projects]
         sortedComponents = []
         components = set(self.components)
         for project in sortedProjects:
-            for component in components_per_project[project]:
+            for component in brainvisa_projects.components_per_project[project]:
                 if component in components:
                     sortedComponents.append(component)
                     components.remove(component)
@@ -978,7 +979,7 @@ for i in os.listdir(os.path.dirname(__file__)):
 
         self.buildModelPerComponent = {}
         for component in sortedComponents:
-            build_model = info_per_component.get(
+            build_model = brainvisa_projects.info_per_component.get(
                 component, {}).get('build_model')
             if build_model is not None:
                 build_model_class = getattr(__import__(

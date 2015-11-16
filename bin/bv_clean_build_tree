@@ -34,7 +34,7 @@ if len( args ) == 0:
 else:
   basedirs = args
 
-excluded_base_dirs = ['lib', 'bin', 'local', 'src']
+excluded_base_dirs = ['lib', 'bin', 'local', 'src', '.svn', '.git']
 excluded_dirs = []
 for d in basedirs:
     excluded_dirs += [os.path.join(d, ed) for ed in excluded_base_dirs]

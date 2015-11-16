@@ -9,17 +9,24 @@ import subprocess
 
 parser = OptionParser( description = 'Clean build directory / directories'
     'If no dir is specified, the current directory is assumed.'
-    'Dead links and obsolete python modules (.pyc and .pyo files without a valid .py file next to them) are removed.',
+    'Dead links and obsolete python modules (.pyc and .pyo files without a '
+    'valid .py file next to them) are removed.',
     usage='%prog [options] [dirnames]' )
 parser.add_option( '-a', '--accesstime', dest='accesstime',
-  help='delete files that have older access time than the one specified.', default = '1971-01-01 00:00:00' )
+    help='delete files that have older access time than the one specified.',
+    default = '1971-01-01 00:00:00' )
 parser.add_option( '-b', '--bin', dest='binaries', action='store_true',
-  help='also check if all entries in bin/ are still present in Makefile, or obsolete, and erase them if not. Needs to have configured and up-to-date Makefiles' )
+    help='also check if all entries in bin/ are still present in Makefile, or '
+    'obsolete, and erase them if not. Needs to have configured and up-to-date '
+    'Makefiles' )
 parser.add_option( '-d', '--dir', dest='directories', action='store_true',
-  help='remove empty directories. Do not use this option during compilation, since it may remove some useful, temporarily empty, directories...' )
+    help='remove empty directories. Do not use this option during '
+    'compilation, since it may remove some useful, temporarily empty, '
+    'directories...' )
 parser.add_option( '-l', '--list', dest='list', action='store_true',
-  help='only list files and directories that will be deleted, do not delete those.' )
-  
+    help='only list files and directories that will be deleted, do not delete '
+    'those.' )
+
 (options, args) = parser.parse_args()
 
 if len( args ) == 0:
@@ -27,92 +34,103 @@ if len( args ) == 0:
 else:
   basedirs = args
 
-basedirs0 = list( basedirs )
+excluded_base_dirs = ['lib', 'bin', 'local', 'src']
+excluded_dirs = []
+for d in basedirs:
+    excluded_dirs += [os.path.join(d, ed) for ed in excluded_base_dirs]
+
+basedirs0 = list(basedirs)
 basermdirs = set()
 accesstime = dateutil.parser.parse(options.accesstime)
 
 while basedirs:
-  d = basedirs.pop()
-  dircontent = os.listdir( d )
-  for f in dircontent:
-    path = os.path.join( d, f )
-    if os.path.isdir( path ):
-      basedirs.append( path )
-    elif os.path.islink( path ):
-      if not os.path.exists( path ):
-        print 'rm dead link', path
-        if not options.list :
-          os.unlink( path )
-    elif f.endswith( '.pyc' ) or f.endswith( '.pyo' ):
-      pyfile = path[:-1]
-      if not os.path.exists( pyfile ):
-        print 'rm obsolete module', path
-        if not options.list :
-          os.unlink( path )
-    elif datetime.fromtimestamp(os.stat( path ).st_atime) < accesstime :
-      print 'rm obsolete file', path
-      if not options.list :
-        os.unlink( path )
+    d = basedirs.pop()
+    if isinstance(d, tuple):
+        d, excluded = d
+    else:
+        excluded = False
+    if d in excluded_dirs:
+        excluded = True
+    dircontent = os.listdir(d)
+    for f in dircontent:
+        path = os.path.join(d, f)
+        if os.path.isdir(path):
+            basedirs.append((path, excluded))
+        elif os.path.islink(path):
+            if not os.path.exists(path):
+                print 'rm dead link', path
+                if not options.list:
+                    os.unlink(path)
+        elif f.endswith('.pyc') or f.endswith('.pyo'):
+            pyfile = path[:-1]
+            if not excluded and not os.path.exists(pyfile):
+                print 'rm obsolete module', path
+                if not options.list:
+                    os.unlink(path)
+        elif datetime.fromtimestamp(os.stat(path).st_atime) < accesstime:
+            print 'rm obsolete file', path
+            if not options.list:
+                os.unlink(path)
 
-  dircontent = os.listdir( d )
-  if len( dircontent ) == 0:
-    if options.directories:
-      print 'rmdir', d
-      if not options.list :
-        os.rmdir( d )
+    dircontent = os.listdir(d)
+    if len(dircontent) == 0:
+        if options.directories:
+            print 'rmdir', d
+            if not options.list :
+                os.rmdir(d)
 
-      if d != os.path.dirname( d ):
-        basermdirs.add( os.path.dirname( d ) )
+            if d != os.path.dirname(d):
+                basermdirs.add(os.path.dirname(d))
 
 while basermdirs:
-  d = basermdirs.pop()
-  if os.path.isdir(d):
-    dircontent = os.listdir( d )
-    if len( dircontent ) == 0:
-      if options.directories:
-        print 'rmdir', d
-        if not options.list :
-          os.rmdir( d )
-        if d != os.path.dirname( d ):
-          basermdirs.add( os.path.dirname( d ) )
+    d = basermdirs.pop()
+    if os.path.isdir(d):
+        dircontent = os.listdir(d)
+        if len(dircontent) == 0:
+            if options.directories:
+                print 'rmdir', d
+                if not options.list :
+                    os.rmdir(d)
+                if d != os.path.dirname(d):
+                    basermdirs.add(os.path.dirname(d))
 
 def parse_cmake_executables(directory):
-  cmake_cache = os.path.join(directory, 'CMakeCache.txt')
-  if not os.path.exists(cmake_cache):
-    # no cmake cache: no built executables
-    return []
-  cmds_re = re.compile('^.*-commands:INTERNAL=(.+)$')
-  all_cmds = []
-  for line in open(cmake_cache).xreadlines():
-    m = cmds_re.match(line)
-    if m:
-      cmds = m.group(1).split(';')
-      all_cmds += cmds
-  return all_cmds
+    cmake_cache = os.path.join(directory, 'CMakeCache.txt')
+    if not os.path.exists(cmake_cache):
+        # no cmake cache: no built executables
+        return []
+    cmds_re = re.compile('^.*-commands:INTERNAL=(.+)$')
+    all_cmds = []
+    for line in open(cmake_cache).xreadlines():
+        m = cmds_re.match(line)
+        if m:
+            cmds = m.group(1).split(';')
+            all_cmds += cmds
+    return all_cmds
 
 if options.binaries:
-  cwd = os.getcwd()
-  skipped = {}
-  for d in basedirs0:
-    os.chdir( d )
-    bindir = os.path.join( d, 'bin' )
-    if os.path.exists( bindir ):
-      all_cmds = parse_cmake_executables(d)
-      for f in os.listdir( bindir ):
-        if not os.path.islink( os.path.join( bindir, f ) ):
-          if f.startswith( 'bv_' ):
-            sk = skipped.setdefault( bindir, [] )
-            sk.append( f )
-            #print 'skipping', f, '(may be part of bv_cmake)'
-          else:
-            if f not in all_cmds:
-              print 'rm obsolete command', f
-              if not options.list :
-                os.unlink( os.path.join( bindir, f ) )
-  for d, items in skipped.iteritems():
-    print '-- skipped from', d
-    for f in items:
-      print 'skipped', f, '(may be part of bv_cmake)'
-  os.chdir( cwd )
+    cwd = os.getcwd()
+    skipped = {}
+    for d in basedirs0:
+        os.chdir(d)
+        bindir = os.path.join(d, 'bin')
+        if os.path.exists(bindir):
+            all_cmds = parse_cmake_executables(d)
+            for f in os.listdir(bindir):
+                if not os.path.islink(os.path.join(bindir, f)):
+                    if f.startswith('bv_'):
+                        sk = skipped.setdefault(bindir, [])
+                        sk.append(f)
+                        #print 'skipping', f, '(may be part of bv_cmake)'
+                    else:
+                        if f not in all_cmds:
+                            print 'rm obsolete command', f
+                            if not options.list :
+                                os.unlink(os.path.join(bindir, f))
+    for d, items in skipped.iteritems():
+        print '-- skipped from', d
+        for f in items:
+            print 'skipped', f, '(may be part of bv_cmake)'
+    os.chdir(cwd)
 
 

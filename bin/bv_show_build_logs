@@ -8,21 +8,43 @@ from PyQt4 import QtCore, QtGui
 
 logfiles = ['/home/a-sac-ns-brainvisa/builds.log']
 todel_files = []
+ssh_user = ''
+
+parser = optparse.OptionParser('Display BrainVisa build logs in a GUI')
+parser.add_option('-i', '--input', dest='logfile', action='append',
+    help='input log file(s) [default: %s]' % str(logfiles), default=logfiles)
+parser.add_option('-u', '--user', dest='user',
+    help='user for ssh access. default: not specified, use current one')
+
+options, args = parser.parse_args(sys.argv)
+logfiles = options.logfile
+
+if options.user:
+    ssh_user = options.user + '@'
+
+if not os.path.exists(logfiles[0]):
+    try:
+        neurospin_log = '/tmp/build-neurospin.log'
+        print 'retreiving neurospin log'
+        subprocess.check_call(['scp', '%sis208611:%s'
+                               % (ssh_user, logfiles[0]),
+                              neurospin_log])
+        todel_files.append(neurospin_log)
+        logfiles = [neurospin_log]
+    except:
+        pass
+
 try:
     michael_log = '/tmp/build-michael.log'
-    subprocess.check_call(['scp', 'michael:/home/i2bm-research/builds.log',
+    print 'retreiving michael log'
+    subprocess.check_call(['scp',
+                           '%smichael:/home/i2bm-research/builds.log'
+                              % ssh_user,
                            michael_log])
     todel_files = [michael_log]
     logfiles.append(michael_log)
 except:
     pass
-
-parser = optparse.OptionParser('Display BrainVisa build logs in a GUI')
-parser.add_option('-i', '--input', dest='logfile', action='append',
-    help='input log file(s) [default: %s]' % str(logfiles), default=logfiles)
-
-options, args = parser.parse_args(sys.argv)
-logfiles = options.logfile
 
 app = QtGui.QApplication(sys.argv)
 mw = QtGui.QMainWindow(None)
@@ -56,9 +78,6 @@ for logfile in logfiles:
             tv.item(i, 2).setBackground( QtGui.QBrush( \
                 QtGui.QColor(192, 255, 192)))
 
-for file in todel_files:
-    os.unlink(file)
-
 tv.sortItems(0, QtCore.Qt.DescendingOrder)
 # tv.sortByColumn( 0, QtCore.Qt.DescendingOrder )
 p = mw.menuBar().addMenu('File')
@@ -66,3 +85,6 @@ p.addAction(QtGui.QIcon(), '&Quit', app.quit, QtGui.QKeySequence.Quit)
 mw.resize(800, 800)
 mw.show()
 app.exec_()
+
+for file in todel_files:
+    os.unlink(file)

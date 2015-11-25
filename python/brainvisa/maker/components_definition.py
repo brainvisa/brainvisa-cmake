@@ -541,6 +541,7 @@ components_definition = [
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb_api/trunk','catidb_api/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb_api/bug_fix',' catidb_api/bug_fix'),
                 },
+                'build_model': 'pure_python',
             }],
         ],
     }),

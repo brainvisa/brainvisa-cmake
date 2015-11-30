@@ -987,7 +987,7 @@ for i in os.listdir(os.path.dirname(__file__)):
                     fromlist=['pure_python'], level=0),
                     build_model)
                 build_model = build_model_class(
-                    component, self.components[component][0], self.directory,
+                    component, self.components[component][0], self,
                     options=options, args=args)
                 self.buildModelPerComponent[component] = build_model
 

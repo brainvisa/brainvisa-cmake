@@ -43,6 +43,37 @@ basedirs0 = list(basedirs)
 basermdirs = set()
 accesstime = dateutil.parser.parse(options.accesstime)
 
+def clean_lib_dir(directory):
+    if sys.platform.startswith('linux'):
+        libre = re.compile('^lib(.*)\.so\..*$')
+        liblink = 'lib%s.so'
+    elif sys.platform == 'darwin':
+        libre = re.compile('^lib(.*)(\.[0-9]+)+\.dylib$')
+        liblink = 'lib%s.dylib'
+    elif sys.platform.startswith('win'):
+        libre = re.compile('lib(.*)((\.[0-9]+)+)\.dll$')
+        liblink = None
+        libs = {}
+    for f in os.listdir(directory):
+        m = libre.match(f)
+        if m:
+          if liblink:
+              link_f = os.path.join(directory, liblink % m.group(1))
+              if os.path.islink(link_f) and os.readlink(link_f) != f:
+                  print 'obsolete lib:', f
+                  os.unlink(os.path.join(directory, f))
+          else:
+              libs.setdefault(m.group(1), []).append((f, m.group(2)))
+    #if liblink is None: # windows: sort DLL versions
+        #for libame, libs_def in libs.iteritems():
+            #lib_vers = [l[1] for l in libs_def]
+            #versions = sorted(lib_vers)
+            #for ver in versions[:-1]:
+                #i = lib_vers.index(ver)
+                #print 'obsolete lib:', libs_def[i][0]
+                #os.unlink(os.path.join(d, libs_def[i][0]))
+
+
 while basedirs:
     d = basedirs.pop()
     if isinstance(d, tuple):
@@ -52,6 +83,8 @@ while basedirs:
     if d in excluded_dirs:
         excluded = True
     dircontent = os.listdir(d)
+    if 'lib' in dircontent:
+        clean_lib_dir(os.path.join(d, 'lib'))
     for f in dircontent:
         path = os.path.join(d, f)
         if os.path.isdir(path):

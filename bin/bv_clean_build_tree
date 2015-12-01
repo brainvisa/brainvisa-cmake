@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys, os, re
+import sys, os, re, shutil
 from optparse import OptionParser
 from datetime import datetime
 import dateutil.parser
@@ -65,13 +65,30 @@ def clean_lib_dir(directory):
           else:
               libs.setdefault(m.group(1), []).append((f, m.group(2)))
     #if liblink is None: # windows: sort DLL versions
-        #for libame, libs_def in libs.iteritems():
+        #for libname, libs_def in libs.iteritems():
             #lib_vers = [l[1] for l in libs_def]
             #versions = sorted(lib_vers)
             #for ver in versions[:-1]:
                 #i = lib_vers.index(ver)
                 #print 'obsolete lib:', libs_def[i][0]
-                #os.unlink(os.path.join(d, libs_def[i][0]))
+                #os.unlink(os.path.join(directory, libs_def[i][0]))
+
+
+def clean_share_dir(directory):
+    comp_re = re.compile('^(.*)-([0-9.]+)$')
+    comps = {}
+    for f in os.listdir(directory):
+        m = comp_re.match(f)
+        if m:
+            comps.setdefault(m.group(1), []).append((f, m.group(2)))
+
+    for comp_name, comp_def in comps.iteritems():
+        comp_vers = [l[1] for l in comp_def]
+        versions = sorted(comp_vers)
+        for ver in versions[:-1]:
+            i = comp_vers.index(ver)
+            print 'obsolete directory:', comp_def[i][0]
+            shutil.rmtree(os.path.join(directory, comp_def[i][0]))
 
 
 while basedirs:
@@ -82,9 +99,15 @@ while basedirs:
         excluded = False
     if d in excluded_dirs:
         excluded = True
+
     dircontent = os.listdir(d)
-    if 'lib' in dircontent:
+    if 'lib' in dircontent and 'lib' not in excluded_dirs:
         clean_lib_dir(os.path.join(d, 'lib'))
+    if 'share' in dircontent and 'share' not in excluded_dirs:
+        clean_share_dir(os.path.join(d, 'share'))
+        if os.path.isdir(os.path.join(d, 'share', 'doc')):
+            clean_share_dir(os.path.join(d, 'share', 'doc'))
+
     for f in dircontent:
         path = os.path.join(d, f)
         if os.path.isdir(path):

@@ -165,6 +165,10 @@ def parse_cmake_executables(directory):
         if m:
             cmds = m.group(1).split(';')
             all_cmds += cmds
+    # the following may be installed by virtualenv
+    all_cmds += ['python', 'pip', 'pip-2.7', 'easy_install', 'activate',
+                 'activate.csh', 'activate.fish', 'activate_this.py',
+                 'easy_install-2.7']
     return all_cmds
 
 if options.binaries:

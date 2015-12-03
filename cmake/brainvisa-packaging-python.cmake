@@ -50,16 +50,17 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       endif()
     endif()
 
-    find_program(IPYTHON_EXECUTABLE ipython PATHS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts NO_DEFAULT_PATH)
-    find_program(PYCOLOR_EXECUTABLE pycolor PATHS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts NO_DEFAULT_PATH)
-
+    set( _find_exe ipython pycolor pip easy_install activate
+          activate.csh activate.fish activate_this.py )
     set( _instfiles )
-    if( IPYTHON_EXECUTABLE )
-      list( APPEND _instfiles "${IPYTHON_EXECUTABLE}" )
-    endif()
-    if( PYCOLOR_EXECUTABLE )
-      list( APPEND _instfiles "${PYCOLOR_EXECUTABLE}" )
-    endif()
+    foreach( _exe ${_find_exe} )
+      set( _exe_path "python_${_exe}_path" )
+      find_program( ${_exe_path} ${_exe}
+        HINTS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts)
+      if( _exe_path )
+        list( APPEND _instfiles "${${_exe_path}}" )
+      endif()
+    endforeach()
 
     if( _python_app )
       if( _instfiles )
@@ -75,7 +76,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       add_custom_command( TARGET install-${component} POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "Python.app/Contents/MacOS/Python" "$(BRAINVISA_INSTALL_PREFIX)/bin/python")
     else()
-      
+
       # copy or create a link named python that starts the real python executable (ex. python -> python2.6)
       get_filename_component( name "${REAL_PYTHON_EXECUTABLE}" NAME )
       if( NOT name STREQUAL "python" )
@@ -89,16 +90,17 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       endif()
 
       BRAINVISA_INSTALL( FILES "${REAL_PYTHON_EXECUTABLE}"
-      DESTINATION "bin"
-      COMPONENT "${component}"
-      PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
-
-      if( NOT WIN32 )
-        BRAINVISA_INSTALL( FILES ${_instfiles}
         DESTINATION "bin"
         COMPONENT "${component}"
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
-        FOREACH(_instfile ${_instfiles})
+
+      if( NOT WIN32 )
+        BRAINVISA_INSTALL( FILES ${_instfiles}
+          DESTINATION "bin"
+          COMPONENT "${component}"
+          PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
+
+        foreach(_instfile ${_instfiles})
           get_filename_component( _instname "${_instfile}" NAME )
           add_custom_command( TARGET install-${component} POST_BUILD
           COMMAND "sed" "'1" "s/.*[pP]ython.*/\\#\\!\\/usr\\/bin\\/env" "python/'" "$(BRAINVISA_INSTALL_PREFIX)/bin/${_instname}" ">$(BRAINVISA_INSTALL_PREFIX)/bin/${_instname}_temp"
@@ -111,12 +113,13 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     endif()
 
     BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${PYTHON_LIBRARY} )
-  
-    # all python modules are copied in install directory but in theory, we should not copy site-packages subdirectory
+
+    # all python modules are copied in install directory but in theory, we
+    # should not copy site-packages subdirectory
     # the content of site-packages should be described in different packages.
     if(WIN32)
-      find_program(IPYTHON_SCRIPT ipython-script.py PATHS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts NO_DEFAULT_PATH)
-      find_program(PYCOLOR_SCRIPT pycolor-script.py PATHS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts NO_DEFAULT_PATH)
+      find_program(IPYTHON_SCRIPT ipython-script.py HINTS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts)
+      find_program(PYCOLOR_SCRIPT pycolor-script.py HINTS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts)
 
       set(PYTHON_DLLS "${PYTHON_BIN_DIR}/DLLs")
       set(PYTHON_DOC "${PYTHON_BIN_DIR}/Doc")
@@ -125,7 +128,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       set(PYTHON_TCL "${PYTHON_BIN_DIR}/tcl")
       set(PYTHON_TOOLS "${PYTHON_BIN_DIR}/tools")
       set(PYTHON_XMLDOC "${PYTHON_BIN_DIR}/xmldoc")
-      set(PYTHON_SUBDIRS "${PYTHON_MODULES_PATH}" "${PYTHON_DLLS}" "${PYTHON_DOC}" "${PYTHON_SIP}" "${PYTHON_TCL}" "${PYTHON_TOOLS}" "${PYTHON_XMLDOC}")
+      set(PYTHON_SUBDIRS ${PYTHON_MODULES_PATH} "${PYTHON_DLLS}" "${PYTHON_DOC}" "${PYTHON_SIP}" "${PYTHON_TCL}" "${PYTHON_TOOLS}" "${PYTHON_XMLDOC}")
       
       BRAINVISA_INSTALL( DIRECTORY ${PYTHON_SUBDIRS}
                          DESTINATION "lib/python" 
@@ -149,10 +152,15 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       endif()
     else()
 
-      if( "${PYTHON_BIN_DIR}" STREQUAL "/usr/bin" )
+      if( "${PYTHON_BIN_DIR}" STREQUAL "/usr/bin"
+          OR "${PYTHON_BIN_DIR}" STREQUAL "${CMAKE_BINARY_DIR}/bin" )
         # Ubuntu typical system install
-        add_custom_command( TARGET install-${component} PRE_BUILD
-          COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" -e "${PYTHON_MODULES_PATH}/dist-packages" "/usr/lib/python${PYTHON_SHORT_VERSION}" "$(BRAINVISA_INSTALL_PREFIX)/lib" \;else ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" -e "${PYTHON_MODULES_PATH}" "/usr/lib/python${PYTHON_SHORT_VERSION}"  "${CMAKE_INSTALL_PREFIX}/lib" \; fi )
+        set( _inv_pypath ${PYTHON_MODULES_PATH} )
+        list( REVERSE _inv_pypath )
+        foreach( _pypath ${_inv_pypath} )
+          add_custom_command( TARGET install-${component} PRE_BUILD
+            COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" -e "${_pypath}/dist-packages" "${_pypath}" "$(BRAINVISA_INSTALL_PREFIX)/lib" \;else ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" -e "${_pypath}" "${_pypath}"  "${CMAKE_INSTALL_PREFIX}/lib" \; fi )
+        endforeach()
 
         # fix wrong _get_default_scheme() in sysconfig.py on Ubuntu 12.04
         # and remove replacement from /usr/local to /usr
@@ -161,20 +169,46 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           COMMAND "sed" "s/\\.replace\\(\\\"\"\\/usr\\/local\\\",\\\"\\/usr\\\",1\"\\)//" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig_temp.py" ">$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig.py"
           COMMAND "${CMAKE_COMMAND}" -E "remove" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig_temp.py" )
 
-        set( _toinstall
-          "/usr/lib/python${PYTHON_SHORT_VERSION}/dist-packages/*"
+        set( _toinstall )
+        set( _uicpdir )
+        set( _pyside1 )
+        set( _pyside2 )
+        set( _pyside3 )
+        foreach( _pypath ${_inv_pypath} )
+          if( EXISTS "${_pypath}/dist-packages" )
+            list( APPEND _toinstall "${_pypath}/dist-packages/*" )
+            if( EXISTS "${_pypath}/dist-packages/PyQt4/uic/widget-plugins" )
+              list( APPEND _uicpdir
+                "${_pypath}/dist-packages/PyQt4/uic/widget-plugins" )
+            endif()
+            if( EXISTS "${_pypath}/dist-packages/PySide" )
+              list( APPEND _pyside1 "${_pypath}/dist-packages/PySide" )
+            endif()
+          endif()
+        endforeach()
+        set( _toinstall ${_toinstall}
           "/usr/lib/pymodules/python${PYTHON_SHORT_VERSION}/*"
           "/usr/lib/pyshared/python${PYTHON_SHORT_VERSION}/*"
           "/usr/share/pyshared/*"
-           )
-
-        set( _uicpdir "/usr/lib/python${PYTHON_SHORT_VERSION}/dist-packages/PyQt4/uic/widget-plugins" )
-        set( _pyside1 "/usr/lib/python${PYTHON_SHORT_VERSION}/dist-packages/PySide" )
+        )
         set( _pyside2 "/usr/lib/pyshared/python${PYTHON_SHORT_VERSION}/PySide" )
         set( _pyside3 "/usr/share/pyshared/PySide" )
 
+        set( _exclude )
+        set( _uicpdir_excl "kde4.py" "kde4.pyc" "qaxcontainer.py" "qaxcontainer.pyc" "qscintilla.py" "qscintilla.pyc" )
+        foreach( _excl ${_uicpdir} )
+          list( APPEND _exclude "-e" "${_excl}" )
+          foreach( _file ${_uicpdir_excl} )
+            list( APPEND _exclude "-e" "${_excl}/${_file}" )
+          endforeach()
+        endforeach()
+        foreach( _excl ${_pyside1} ${_pyside2} ${_pyside3} )
+          if( EXISTS "${_excl}" )
+            list( APPEND _exclude "-e" "${_excl}" )
+          endif()
+        endforeach()
         add_custom_command( TARGET install-${component} PRE_BUILD
-          COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${CMAKE_COMMAND} -E make_directory "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "-e" "${_uicpdir}/kde4.py" "-e" "${_uicpdir}/kde4.pyc" "-e" "${_uicpdir}/qaxcontainer.py" "-e" "${_uicpdir}/qaxcontainer.pyc" "-e" "${_uicpdir}/qscintilla.py" "-e" "${_uicpdir}/qscintilla.pyc" "-e" "${_pyside1}" "-e" "${_pyside2}" "-e" "${_pyside3}" ${_toinstall} "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \;else ${CMAKE_COMMAND} -E make_directory "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "-e" "${_uicpdir}/kde4.py" "-e" "${_uicpdir}/kde4.pyc" "-e" "${_uicpdir}/qaxcontainer.py" "-e" "${_uicpdir}/qaxcontainer.pyc" "-e" "${_uicpdir}/qscintilla.py" "-e" "${_uicpdir}/qscintilla.pyc" "-e" "${_pyside1}" "-e" "${_pyside2}" "-e" "${_pyside3}" ${_toinstall} "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \;fi )
+          COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${CMAKE_COMMAND} -E make_directory "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${_exclude} ${_toinstall} "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \;else ${CMAKE_COMMAND} -E make_directory "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${_exclude} ${_toinstall} "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \;fi )
 
         BRAINVISA_PYTHON_HAS_MODULE( "matplotlib" _has_mpl )
         if( _has_mpl EQUAL 0 )

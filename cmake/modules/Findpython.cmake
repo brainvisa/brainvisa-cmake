@@ -29,7 +29,9 @@ else()
     OUTPUT_VARIABLE _fullVersion OUTPUT_STRIP_TRAILING_WHITESPACE )
   string(REPLACE "." "" _versionNoDot ${_version} )
   message( STATUS "Using python ${_fullVersion}: ${PYTHON_EXECUTABLE}" )
-  
+  execute_process( COMMAND "${PYTHON_EXECUTABLE}" "-c" "import sys; print \";\".join(sys.path)"
+    OUTPUT_VARIABLE _pythonpath OUTPUT_STRIP_TRAILING_WHITESPACE )
+
   set( PYTHON_VERSION "${_fullVersion}" CACHE STRING "Python full version (e.g. \"2.6.2\")" )
   set( PYTHON_SHORT_VERSION "${_version}" CACHE STRING "Python short version (e.g. \"2.6\")" )
   
@@ -60,21 +62,50 @@ else()
       python${_version}
   )
   mark_as_advanced( PYTHON_INCLUDE_PATH )
-  
-  find_path( PYTHON_MODULES_PATH
+
+  find_path( PYTHON_MODULES_PATH2
+    NAMES platform.py
+    HINTS
+      "${_prefix}/lib"
+      ${_pythonpath}
+      ${PYTHON_FRAMEWORK_INCLUDES}
+      [HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${_version}\\InstallPath]/include
+    PATH_SUFFIXES
+      python${_version}
+  )
+  find_path( PYTHON_MODULES_PATH1
     NAMES os.py
-    PATHS
+    HINTS
       "${_prefix}/lib"
       ${PYTHON_FRAMEWORK_INCLUDES}
       [HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${_version}\\InstallPath]/include
     PATH_SUFFIXES
       python${_version}
   )
+  # keep paths ending with "site-packages"
+  set( PYTHON_MODULES_PATH3 )
+  foreach( _mod ${_pythonpath} )
+    get_filename_component( _modname ${_mod} NAME )
+    if( ${_modname} STREQUAL "site-packages" )
+      get_filename_component( _modpath ${_mod} PATH )
+      if( EXISTS ${_modpath} )
+        list( APPEND PYTHON_MODULES_PATH3 ${_modpath} )
+      endif()
+    endif()
+  endforeach()
+  set( _mod_paths ${PYTHON_MODULES_PATH3} ${PYTHON_MODULES_PATH1}
+    ${PYTHON_MODULES_PATH2} )
+  list( REMOVE_DUPLICATES _mod_paths )
+  set( PYTHON_MODULES_PATH ${_mod_paths}
+    CACHE PATH "Python main modules paths" )
   mark_as_advanced( PYTHON_MODULES_PATH )
-  
+  unset( PYTHON_MODULES_PATH1 CACHE )
+  unset( PYTHON_MODULES_PATH2 CACHE )
+  unset( PYTHON_MODULES_PATH3 CACHE )
+
   find_library( PYTHON_LIBRARY
     NAMES python${_versionNoDot} python${_version} python
-    PATHS
+    HINTS
       "${_prefix}/lib"
       ${PYTHON_FRAMEWORK_LIBRARIES}
       [HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${_version}\\InstallPath]/libs

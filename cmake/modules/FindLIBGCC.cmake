@@ -7,10 +7,8 @@ if( LIBGCC_LIBRARIES )
   # already found  
   set( LIBGCC_FOUND TRUE )
 else()
-  message("#### looking for libgcc_s.so")
   find_library( LIBGCC_LIBRARIES NAMES gcc_s gcc_s_dw2-1 )
   if( NOT LIBGCC_LIBRARIES )
-    message("#### not found 1")
     # On Ubuntu 10.4 libgcc_s is in /lib/libgcc_s.so.1 and CMake cannot find it
     # because there is no /lib/libgcc_s.so
     file( GLOB LIBGCC_LIBRARIES /lib/libgcc_s.so.? )

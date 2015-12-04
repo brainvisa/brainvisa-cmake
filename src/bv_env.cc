@@ -394,6 +394,13 @@ int main( int argc, char *argv[] )
     set_variables[ "PYTHONHOME" ] = install_directory;
 #endif
 
+  // use PyQt rather than Pyside if not already specified in QT_API envar
+  // because if PySide is used while not installed on the binary package python
+  // it can cause crashes.
+  char *qtapi = getenv( "QT_API" );
+  if( !qtapi )
+    set_variables[ "QT_API" ] = "pyqt";
+
   map< string, string > backup_variables;
   for( vector< string >::const_iterator it = unset_variables.begin(); it != unset_variables.end(); ++it ) {
     string env = getenv( *it );

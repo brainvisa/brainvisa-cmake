@@ -28,21 +28,27 @@ def getWindowsRelease():
 
   # Find out the registry key and some general version infos
   maj,min,buildno,plat,csd = GetVersionEx()
-
+  
+  regkey = 'SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion'
+  keyCurVer = RegOpenKeyEx(HKEY_LOCAL_MACHINE,regkey)
+  productName = platform._win32_getvalue(keyCurVer,
+              'ProductName',
+              ('',1))[0]
+  # Close key
+  RegCloseKey(keyCurVer)
+    
   if (plat == VER_PLATFORM_WIN32_NT) and (maj == 5) and (min == 2) :
     # Need to check window server 2003 or windows XP
-    regkey = 'SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion'
-    keyCurVer = RegOpenKeyEx(HKEY_LOCAL_MACHINE,regkey)
-    productName = platform._win32_getvalue(keyCurVer,
-                'ProductName',
-                ('',1))[0]
-    # Close key
-    RegCloseKey(keyCurVer)
     if ( 'XP' in productName ) :
       result = 'XP'
 
   elif ( (plat == VER_PLATFORM_WIN32_NT) and (maj == 6) ) :
-    result = 'Vista'
+    # Need to check window Vista or windows 7
+    if ( '7' in productName ):
+      result = '7'
+      
+    else:
+      result = 'Vista'
 
   if result is None:
     result = platform.win32_ver()[0]

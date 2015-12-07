@@ -28,9 +28,13 @@ def project_description( projectname ):
         'soma' : 'Set of lower-level libraries for neuroimaging processing infrastructure',
         'morphologist' : 'Anatomical MRI (T1) analysis toolbox, featuring cortex and sulci segmentation, and sulci analysis tools, by the <a href="http://lnao.fr">LNAO team</a>.',
         'morphologist-ui' : 'New graphical interface for the Morphologist main pipelines',
-        'cortical_surface' : 'Cortex-based surfacic parameterization and analysis toolbox from the <a href="http://www.lsis.org">LSIS team</a>. Homepage: <a href="http://olivier.coulon.perso.esil.univmed.fr/brainvisa.html">http://olivier.coulon.perso.esil.univmed.fr/brainvisa.html</a>.<br/>Also contains the FreeSurfer toolbox for BrainVisa, by the LNAO team.',
+        'cortical_surface' : 'Cortex-based surfacic parameterization and analysis toolbox from the <a href="http://www.meca-brain.org/softwares/">MeCA group</a>. Homepage: <a href="http://www.meca-brain.org/softwares/">http://www.meca-brain.org/softwares/</a>.<br/>Also contains the FreeSurfer toolbox for BrainVisa, by the LNAO team.',
         'brainrat' : 'Ex vivo 3D reconstruction and analysis toolbox, from the <a href="http://www-dsv.cea.fr/dsv/instituts/institut-d-imagerie-biomedicale-i2bm/services/mircen-mircen/unite-cnrs-ura2210-lmn/fiches-thematiques/traitement-et-analyse-d-images-biomedicales-multimodales-du-cerveau-normal-ou-de-modeles-precliniques-de-maladies-cerebrales">BioPICSEL CEA team</a>. Homepage: <a href="http://brainvisa.info/doc/brainrat-gpl/brainrat_man/en/html/index.html">http://brainvisa.info/doc/brainrat-gpl/brainrat_man/en/html/index.html</a>',
         'datamind' : 'Statistics, data mining, machine learning.',
+        'capsul': 'New pipelining infrastructure for the future of BrainVISA',
+        'connectomist': 'The older (connectomist-1) toolbox for white matter fibers processing',
+        'snapbase': 'Automation of snapshots for the QC of large databases',
+        'brainvisa-share': 'Data used by several projects',
     }
     return descriptions.get( projectname, '' )
 
@@ -75,7 +79,7 @@ def is_default_project( projectname ):
     '''
     if projectname in ( 'aims', 'anatomist', 'axon', 'brainrat', 
             'cortical_surface', 'datamind', 'morphologist', 
-            'morphologist_ui' ):
+            'morphologist_ui', 'snapbase' ):
         return True
     return False
 

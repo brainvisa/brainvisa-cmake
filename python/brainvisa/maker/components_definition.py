@@ -557,6 +557,17 @@ components_definition = [
             }],
         ],
     }),
+    ('longitudinal_pipelines', {
+        'components': [
+            ['longitudinal_pipelines', {
+                'groups': ['all'],
+                'branches': {
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/longitudinal_pipelines/trunk',
+                              'longitudinal_pipelines/trunk'),
+                },
+            }],
+        ],
+    }),
 ]
 
 customize_components_definition = [os.path.expanduser('~/.brainvisa/components_definition.py')]

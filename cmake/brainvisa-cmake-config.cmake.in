@@ -359,8 +359,8 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
     add_custom_target( install-${PROJECT_NAME}-devdoc )
   endif()
   add_dependencies( install-${PROJECT_NAME}-doc install-${PROJECT_NAME}-usrdoc install-${PROJECT_NAME}-devdoc )
-  add_dependencies( install-${PROJECT_NAME}-usrdoc ${PROJECT_NAME}-usrdoc )
-  add_dependencies( install-${PROJECT_NAME}-devdoc ${PROJECT_NAME}-devdoc )
+#  add_dependencies( install-${PROJECT_NAME}-usrdoc ${PROJECT_NAME}-usrdoc )
+#  add_dependencies( install-${PROJECT_NAME}-devdoc ${PROJECT_NAME}-devdoc )
 
   BRAINVISA_ADD_COMPONENT_GROUP( "${PROJECT_NAME}-thirdparty"
                            PARENT_GROUP thirdparty

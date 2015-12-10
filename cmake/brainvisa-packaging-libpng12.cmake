@@ -37,8 +37,6 @@ function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
     BRAINVISA_INSTALL( FILES ${_files}
                       DESTINATION "include"
                       COMPONENT "${component}-dev" )
-    BRAINVISA_INSTALL_DIRECTORY( "${PNG12_INCLUDE_DIR}/volume_io"
-      include/volume_io ${component}-dev )
     set(${component}-dev_PACKAGED TRUE PARENT_SCOPE)
   else()
     set(${component}-dev_PACKAGED FALSE PARENT_SCOPE)

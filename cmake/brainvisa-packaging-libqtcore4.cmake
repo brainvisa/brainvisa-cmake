@@ -6,6 +6,14 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   set( ${package_version} "${QT_VERSION_MAJOR}.${QT_VERSION_MINOR}.${QT_VERSION_PATCH}" PARENT_SCOPE )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libstdc++6 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libgcc1 RUN )
+  if( UNIX )
+    # this (weak) dependency is only present on linux/ubuntu
+    find_package( Libicui18n QUIET )
+    if( LIBICUI18N_FOUND )
+      BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN
+        RECOMMENDS libicui18n RUN )
+    endif()
+  endif()
 endfunction()
 
 

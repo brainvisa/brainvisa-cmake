@@ -48,12 +48,12 @@ parser.add_option('-i', '--i2bm',
     help = 'Creates a repository for I2BM users, some private packages are '
         'included, and system components removed.')
 parser.add_option('-m', '--mirror_repos', action='store', type='string',
-    dest='mirror_repos', default=default_mirror_repos_dir,
+    dest='mirror_repos', default='',
     help='Mirror repository directory (default: %s).\n'
     'The directory specification may contain string formatting variables '
     '%s(i2bm)s, %s(version)s and/or %s(os)s which will be replaced by their '
     'values.\n'
-    'If the --data option is used, the data repository directory is: %s'
+    'If the --data option is used, the data repository directory is: %s\n'
     'Variables values:\n'
     '  * i2bm: "i2bm" if -i option is used, "public" otherwise\n'
     '  * version: axon version: %s\n'
@@ -103,7 +103,12 @@ pathvars = {'i2bm' : i2bm_str, 'os' : osname, 'version' : fullVersion,
     'public' : public, 'online' : online}
 
 #build_repos_dir = options.build_repos % pathvars
-mirror_repos_dir = options.mirror_repos % pathvars
+if options.mirror_repos == '':
+    if options.data:
+        mirror_repos_dir = default_share_mirror_dir
+    else:
+        mirror_repos_dir = default_mirror_repos_dir
+mirror_repos_dir = mirror_repos_dir % pathvars
 output = options.output % pathvars
 
 if options.data:

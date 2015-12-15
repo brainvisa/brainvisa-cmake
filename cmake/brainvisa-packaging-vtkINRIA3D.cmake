@@ -8,7 +8,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
     set( ${package_version} "${vtkINRIA3D_VERSION_MAJOR}.${vtkINRIA3D_VERSION_MINOR}" PARENT_SCOPE )
   endif()
 
-  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libvtk5.4 RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libvtk${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION} RUN )
 endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )

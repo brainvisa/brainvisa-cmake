@@ -12,6 +12,8 @@ from brainvisa.config import fullVersion
 default_mirror_repos_dir \
     = '/neurospin/brainvisa/repositories/%(i2bm)s/' \
         '%(version)s/%(os)s/packages'
+default_share_mirror_dir \
+    = '/neurospin/brainvisa/repositories/public/%(version)s/data/packages'
 default_output \
     = '/neurospin/brainvisa/repositories/%(i2bm)s/' \
         '%(version)s/%(os)s/brainvisa-installer/brainvisa_installer-' \
@@ -51,6 +53,7 @@ parser.add_option('-m', '--mirror_repos', action='store', type='string',
     'The directory specification may contain string formatting variables '
     '%s(i2bm)s, %s(version)s and/or %s(os)s which will be replaced by their '
     'values.\n'
+    'If the --data option is used, the data repository directory is: %s'
     'Variables values:\n'
     '  * i2bm: "i2bm" if -i option is used, "public" otherwise\n'
     '  * version: axon version: %s\n'
@@ -58,7 +61,8 @@ parser.add_option('-m', '--mirror_repos', action='store', type='string',
     '  * public: "-i2bm" or empty\n'
     '  * online: "online" or "offline"\n'
     'repositories with thirdparty components,\n'
-    % (default_mirror_repos_dir, '%', '%', '%', fullVersion, osname))
+    % (default_mirror_repos_dir, '%', '%', '%', default_share_mirror_dir,
+       fullVersion, osname))
 #parser.add_option('-b', '--build_repos', action='store', type='string',
     #dest='build_repos', default=default_build_repos_dir,
     #help='Build repository directory (default: %s). Same syntax as for '
@@ -80,6 +84,10 @@ parser.add_option('--skip-existing', dest='skip_existing',
     help='Don\'t rebuild components which already have a directory in '
     'the temporary repository directory.')
 
+parser.add_option('--data', dest='data', action='store_true',
+    help='package OS-independent data repository (brainvisa-share and '
+    'sulci-models) instead of the software repository')
+
 options, args = parser.parse_args()
 if len( args ) > 0:
   parser.error('Invalid arguments. Try %s --help" to get some help.'
@@ -98,19 +106,17 @@ pathvars = {'i2bm' : i2bm_str, 'os' : osname, 'version' : fullVersion,
 mirror_repos_dir = options.mirror_repos % pathvars
 output = options.output % pathvars
 
-print 'paths:'
-#print 'build repos:', build_repos_dir
-print 'mirror:', mirror_repos_dir
-print 'installer:', output
-
-projects = ['aims', 'anatomist', 'axon', 'soma', 'brainrat', 'brainvisa-share',
-    'capsul', 'connectomist', 'cortical_surface', 'datamind', 'morphologist',
-    'snapbase']
-components = []
-cmd = [sys.executable, os.path.join(os.path.dirname(sys.argv[0]), 
-                                    'bv_build_installer.py'), 
-    '-t', 'run', 'dev', 'usrdoc', 'devdoc',
-    '--online-only', '-i', output, '-r', mirror_repos_dir,
+if options.data:
+    projects = ['brainvisa-share']
+    components = ['sulci-models']
+else:
+    projects = ['aims', 'anatomist', 'axon', 'soma', 'brainrat',
+        'capsul', 'connectomist', 'cortical_surface', 'datamind',
+        'morphologist', 'snapbase']
+    components = []
+cmd = [sys.executable, os.path.join(os.path.dirname(sys.argv[0]),
+                                    'bv_build_installer.py'),
+    '-t', 'run', 'dev', 'usrdoc', 'devdoc', '-r', mirror_repos_dir,
     '--platform_name', osname]
 if options.i2bm:
     i2bm_options = ['--no-thirdparty', '--i2bm']
@@ -118,6 +124,11 @@ if options.i2bm:
     projects += ['nuclear_imaging', 'data_storage_client']
     components += ['constellation-private', 'constellation-gpl',
         'bioprocessing']
+if options.data:
+    cmd += ['--repository-only', '--no-dependencies', '--no-thirdparty',
+            '--data']
+else:
+    cmd += ['-i', output, '--online-only']
 if options.skip_repos:
     cmd.append('--skip-repos')
 if options.skip_repogen:
@@ -128,6 +139,11 @@ cmd += ['-p'] + projects
 if len(components) != 0:
   cmd += ['-n'] + components
 
+print 'paths:'
+#print 'build repos:', build_repos_dir
+print 'mirror:', mirror_repos_dir
+if not options.data:
+    print 'installer:', output
 print 'command:', cmd
 subprocess.check_call(cmd)
 

@@ -108,6 +108,8 @@ if options.mirror_repos == '':
         mirror_repos_dir = default_share_mirror_dir
     else:
         mirror_repos_dir = default_mirror_repos_dir
+else:
+    mirror_repos_dir = options.mirror_repos
 mirror_repos_dir = mirror_repos_dir % pathvars
 output = options.output % pathvars
 

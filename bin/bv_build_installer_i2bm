@@ -75,6 +75,11 @@ parser.add_option('--skip-repogen', dest='skip_repogen',
     action='store_true',
     help='Skip repogen (final repository creation + compression). Assumes it has already been done.')
 
+parser.add_option('--skip-existing', dest='skip_existing',
+    action='store_true',
+    help='Don\'t rebuild components which already have a directory in '
+    'the temporary repository directory.')
+
 options, args = parser.parse_args()
 if len( args ) > 0:
   parser.error('Invalid arguments. Try %s --help" to get some help.'
@@ -117,6 +122,8 @@ if options.skip_repos:
     cmd.append('--skip-repos')
 if options.skip_repogen:
     cmd.append('--skip-repogen')
+if options.skip_existing:
+    cmd.append('--skip-existing')
 cmd += ['-p'] + projects
 if len(components) != 0:
   cmd += ['-n'] + components

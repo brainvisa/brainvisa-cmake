@@ -350,6 +350,13 @@ int main( int argc, char *argv[] )
   set_variables[ "BRAINVISA_SHARE" ] = install_directory + PATH_SEP + "share";
 #ifdef __APPLE__
   set_variables[ "QT_PLUGIN_PATH" ] = install_directory + PATH_SEP + "lib" + PATH_SEP + "qt-plugins";
+#else
+  if( file_exists( install_directory + PATH_SEP + "lib" + PATH_SEP
+    + "qt-plugins" ) )
+  {
+    // binary install: remove any QT_PLUGIN_PATH naming system libs
+    unset_variables.push_back( "QT_PLUGIN_PATH" );
+  }
 #endif
   map< string, vector< string > > path_prepend;
   

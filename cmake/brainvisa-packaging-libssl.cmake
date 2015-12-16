@@ -6,12 +6,29 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   if( LIBSSL_LIBRARIES )
     foreach( lib ${LIBSSL_LIBRARIES} )
       get_filename_component( real "${lib}" REALPATH )
-      string( REGEX MATCH "^.*libssl${CMAKE_SHARED_LIBRARY_SUFFIX}[.](.*)$" match "${real}" )
+      if( NOT WIN32 )
+        string( REGEX MATCH "^.*libssl${CMAKE_SHARED_LIBRARY_SUFFIX}[.]([0-9]([.][0-9]+)*)$" match "${real}" )
+      else()
+        # First, try to find version using PkgConfig
+        find_package( PkgConfig )
+        PKG_CHECK_MODULES(PKGCONFIG_LIBSSL libssl)
+        
+        # Because BrainVISA installer does not support characters in version number,
+        # we always remove characters in versions (i.e. version 1.0.1e => 1.0.1)
+        if( PKGCONFIG_LIBSSL_LIBRARIES )
+          string( REGEX MATCH "^([0-9](.[0-9]+)*).*$" match "${PKGCONFIG_LIBSSL_VERSION}" )
+        else()
+          # Then, try to find version in install directory name, this
+          string( REGEX MATCH "^.*/[^/]*-([0-9](.[0-9]+)*)[^-./]*[^/]*/lib/libssl${CMAKE_SHARED_LIBRARY_SUFFIX}(.*)$" match "${real}" )
+        endif()
+      endif()
+      
       if( match )
         set( version "${CMAKE_MATCH_1}" )
         break()
-      endif()
+      endif()    
     endforeach()
+
   endif()
   
   if( version )

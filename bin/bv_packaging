@@ -419,16 +419,18 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
 
   # make easy shortcuts for BV and anatomist if they are packaged
   root_shortcuts = []
-  hasAnatomist = ("anatomist-free" in selected_packages) or ("anatomist-free" in dependencies)
+  hasAnatomist = ("anatomist-free" in selected_packages) \
+    or (options.dependencies and ("anatomist-free" in dependencies))
   ana_shortcut = os.path.join(install_directory, "anatomist")
   if hasAnatomist:
     root_shortcuts.append([ana_shortcut, "anatomist", False]) # False is not script
-  hasBrainvisa = ("axon" in selected_packages) or ("axon" in dependencies)
+  hasBrainvisa = ("axon" in selected_packages) \
+    or (options.dependencies and ("axon" in dependencies))
   bv_shortcut = os.path.join(install_directory, "BrainVISA")
   if hasBrainvisa:
     root_shortcuts.append([bv_shortcut, "brainvisa", True]) # True is script
   hasMorphologistUI = ("morphologist-ui" in selected_packages) \
-    or ("morphologist-ui" in dependencies)
+    or (options.dependencies and ("morphologist-ui" in dependencies))
   morpho_shortcut = os.path.join(install_directory, "morphologist")
   if hasMorphologistUI:
     root_shortcuts.append([morpho_shortcut, "morphologist", True])
@@ -450,12 +452,12 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
     for shortcut, exe_name, is_script in root_shortcuts:
       if not is_script:
         shortcut += ".app"
-        if os.path.exists( shortcut ):
+        if os.path.exists(shortcut) or os.path.islink(shortcut):
           os.unlink( shortcut )
         os.symlink( os.path.join('bin', '%s.app' % exe_name), shortcut )
       else:
         shortcut += '.app'
-        if os.path.exists( shortcut ):
+        if os.path.exists(shortcut) or os.path.islink(shortcut):
           shutil.rmtree( shortcut, 1 )
         os.makedirs( os.path.join( shortcut, 'Contents', 'MacOS' ) )
         os.makedirs( os.path.join( shortcut, 'Contents', 'Resources' ) )
@@ -489,19 +491,50 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
         f.close()
 
     if hasBrainvisa:
-      bv_shortcut=os.path.join( bv_shortcut, 'Contents', 'MacOS', 'brainvisa' )
+      bv_shortcut = os.path.join( bv_shortcut, 'Contents', 'MacOS',
+                                 'brainvisa' )
 
   else:
     # Linux
     for shortcut, exe_name, is_script in root_shortcuts:
-      if os.path.exists( shortcut ):
+      if os.path.exists(shortcut) or os.path.islink(shortcut):
         os.unlink( shortcut )
       os.symlink( os.path.join( 'bin', exe_name ), shortcut )
 
   # Update brainvisa shared database
-  if hasBrainvisa and ("brainvisa-share" in selected_packages):
+  hasBVShare = "brainvisa-share" in selected_packages \
+    or (options.dependencies and "brainvisa-share" in dependencies)
+  if hasBVShare:
     print "Updating BrainVISA shared database"
-    os.system( system_path( bv_shortcut, 'auto2unix' ) + " -b --setup" )
+    try:
+      cmd = [os.path.join(brainvisacmake_directory, 'bin', 'bv_env'),
+             'brainvisa', '-b', '--setup']
+      print 'running:', ' '.join(cmd)
+      subprocess.check_call(cmd)
+      print 'update done.'
+      share_conf = os.path.join(brainvisacmake_directory, 'python',
+                                'brainvisa_share', 'config.py')
+      if os.path.exists(share_conf):
+        share_c = {}
+        execfile(share_conf, share_c)
+        share_path = os.path.join(brainvisacmake_directory, 'share',
+                                  share_c['share'])
+        files = glob.glob(os.path.join(share_path, 'database-*.sqlite'))
+        if files:
+          files = [files[-1], files[-1] + '.minf']
+        files += [os.path.join(share_path, 'database_fso.html'),
+                  os.path.join(share_path, 'database_fso.html.minf')]
+        share_inst_dir = os.path.join(install_directory, 'share',
+                                      share_c['share'])
+        for f in files:
+          if os.path.exists(f):
+            outf = os.path.join(share_inst_dir, os.path.basename(f))
+            shutil.copyfile(f, outf)
+            os.chmod(outf, 0666)
+    except Exception, e:
+      print 'database update / copy failed:'
+      print e
+      print '(ignored)'
 
   # create a .README file with install / run instrutctions
   create_readme_file( install_directory )

@@ -57,7 +57,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       set( _exe_path "python_${_exe}_path" )
       find_program( ${_exe_path} ${_exe}
         HINTS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts)
-      if( _exe_path )
+      if( ${_exe_path} )
         list( APPEND _instfiles "${${_exe_path}}" )
       endif()
     endforeach()

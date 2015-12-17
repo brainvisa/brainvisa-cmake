@@ -58,11 +58,13 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       find_program( ${_exe_path} ${_exe}
         HINTS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts)
       if( ${_exe_path} )
-        list( APPEND _instfiles "${${_exe_path}}" )
+        get_filename_component( _real_exe_path "${_exe_path}" REALPATH )
+        list( APPEND _instfiles "${${_real_exe_path}}" )
       endif()
     endforeach()
 
     if( _python_app )
+      # Mac case
       if( _instfiles )
         BRAINVISA_INSTALL( FILES ${_instfiles}
         DESTINATION "bin"
@@ -75,7 +77,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       USE_SOURCE_PERMISSIONS )
       add_custom_command( TARGET install-${component} POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "Python.app/Contents/MacOS/Python" "$(BRAINVISA_INSTALL_PREFIX)/bin/python")
+
     else()
+
+      # Non-Mac case
 
       # copy or create a link named python that starts the real python executable (ex. python -> python2.6)
       get_filename_component( name "${REAL_PYTHON_EXECUTABLE}" NAME )

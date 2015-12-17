@@ -321,7 +321,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
           bappsrc = os.path.join( bindir, bapp )
           bappdst = os.path.join( realbindir, command[:-4] )
           if os.path.islink( bappsrc ):
-            if os.path.exists( bappdst ):
+            if os.path.exists(bappdst) or os.path.islink(bappdst):
               os.unlink( bappdst )
             os.symlink( os.readlink( bappsrc ), bappdst )
           # Generate the script
@@ -413,7 +413,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
         # copy the symlink into real-bin
         dest = os.readlink(source)
         real_dest = os.path.join(realbindir, os.path.basename(source))
-        if os.path.exists(real_dest):
+        if os.path.exists(real_dest) or os.path.islink(real_dest):
           os.unlink(real_dest)
         os.symlink(dest, real_dest)
 

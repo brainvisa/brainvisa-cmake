@@ -479,14 +479,17 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
   <dict>
           <key>CFBundleExecutable</key>
           <string>%s</string>
-          <key>CFBundleIconFile</key>
+''' % exe_name
+        if icns:
+          print >> f, '''          <key>CFBundleIconFile</key>
           <string>%s.icns</string>
-          <key>CFBundleIdentifier</key>
+''' % exe_name
+        print >> f, '''          <key>CFBundleIdentifier</key>
           <string>%s</string>
           <key>CFBundlePackageType</key>
           <string>APPL</string>
   </dict>
-  </plist>''' % (exe_name, exe_name, exe_name)
+  </plist>''' % exe_name
         f.close()
 
     if hasBrainvisa:

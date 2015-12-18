@@ -21,7 +21,19 @@ endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   if(PNG12_FOUND)
-    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${PNG12_LIBRARIES} )
+    if( APPLE )
+      # on Mac, remove the libpng.dylib file (symlink) because it conflicts
+      # with the system libpng at
+      # /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Versions/A/Resources/libPng.dylib
+      set( _libs )
+      foreach( _file ${PNG12_LIBRARIES} )
+        get_filename_component( _real ${_file} REALPATH )
+        list( APPEND _libs ${_real} )
+      endforeach()
+      BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${_libs} )
+    else()
+      BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${PNG12_LIBRARIES} )
+    endif()
     set(${component}_PACKAGED TRUE PARENT_SCOPE)
   else()
     set(${component}_PACKAGED FALSE PARENT_SCOPE)

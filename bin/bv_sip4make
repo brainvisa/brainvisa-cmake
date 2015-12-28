@@ -135,6 +135,8 @@ if res == 0:
         open(  os.path.join( tdir, fname ), 'w' )
         tlist.append( fname )
 
+  line_re = re.compile('^#line ([0-9]+) ".*"$')
+
   for x in tlist:
     if x not in olist:
       print x, 'is a new file'
@@ -149,8 +151,16 @@ if res == 0:
       for l in tf.xreadlines():
         ol = of.readline()
         if l != ol:
-          diff = 1
-          break
+          is_line_macro = line_re.match(l)
+          if is_line_macro:
+            is_other_line_macro = line_re.match(ol)
+            if not is_other_line_macro \
+                or is_line_macro.group(1) != is_other_line_macro.group(1):
+              diff = 1
+              break
+          else:
+            diff = 1
+            break
       if not diff:
         ol = of.readline()
         if ol != '':

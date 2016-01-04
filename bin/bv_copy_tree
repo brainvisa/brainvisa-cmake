@@ -55,9 +55,9 @@ def symlink(reldpath, destpath, simulation):
             and os.readlink(destpath) == reldpath:
         # link already exists and points the correct location
         return
-    elif os.path.exists(destpath):
-        raise OSError('mismatching file exists: %s' % destpath)
     if not simulation:
+        if os.path.lexists(destpath):
+            os.remove(destpath)
         os.symlink(reldpath, destpath)
 
 
@@ -180,4 +180,6 @@ while sources:
             if options.verbose:
                 print 'regular file:', spath
             if not options.simulation:
+                if os.path.lexists(destpath):
+                    os.remove(destpath)
                 shutil.copy2(spath, destpath)

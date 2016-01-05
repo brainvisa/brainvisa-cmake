@@ -56,13 +56,14 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           activate.csh activate.fish activate_this.py )
     set( _instfiles )
     foreach( _exe ${_find_exe} )
-      set( _exe_path "python_${_exe}_path" )
-      find_program( ${_exe_path} ${_exe}
+      unset( _exe_path CACHE )
+      find_program( _exe_path ${_exe}
         HINTS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts)
-      if( ${_exe_path} )
+      if( _exe_path )
         get_filename_component( _real_exe_path "${_exe_path}" REALPATH )
-        list( APPEND _instfiles "${${_real_exe_path}}" )
+        list( APPEND _instfiles "${_real_exe_path}" )
       endif()
+      unset( _exe_path CACHE )
     endforeach()
 
     if( _python_app )
@@ -106,7 +107,6 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           DESTINATION "bin"
           COMPONENT "${component}"
           PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
-
         foreach(_instfile ${_instfiles})
           get_filename_component( _instname "${_instfile}" NAME )
           add_custom_command( TARGET install-${component} POST_BUILD

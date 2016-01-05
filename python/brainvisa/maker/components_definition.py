@@ -568,6 +568,17 @@ components_definition = [
             }],
         ],
     }),
+    ('disco', {
+        'components': [
+            ['disco', {
+                'groups': ['all'],
+                'branches': {
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/disco/trunk', 'disco/trunk'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/disco/trunk', 'disco/bug_fix'),
+                },
+            }],
+        ],
+    }),
 ]
 
 customize_components_definition = [os.path.expanduser('~/.brainvisa/components_definition.py')]

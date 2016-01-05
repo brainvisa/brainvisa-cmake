@@ -131,7 +131,7 @@ cmd = [sys.executable, os.path.join(os.path.dirname(sys.argv[0]),
 if options.i2bm:
     i2bm_options = ['--no-thirdparty', '--i2bm']
     cmd += i2bm_options
-    projects += ['nuclear_imaging', 'data_storage_client']
+    projects += ['nuclear_imaging', 'data_storage_client', 'disco']
     components += ['constellation-private', 'constellation-gpl',
         'bioprocessing']
 if options.data:

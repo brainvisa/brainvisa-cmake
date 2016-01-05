@@ -691,7 +691,8 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
             # get stderr in a separate stream since git finds it funny to print
             # normal operation messages in stderr.
             stderr_str = tempfile.NamedTemporaryFile(delete=False)
-            retcode = subprocess.call(['git', 'fetch', '--quiet', remote],
+            retcode = subprocess.call(['git', 'fetch', '--quiet', '--tags',
+                                       remote],
                                       cwd=dest, stderr=stderr_str)
             stderr_str.close()
             stderr_content = open(stderr_str.name).read()
@@ -719,12 +720,14 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
         detached_head = False if retcode == 0 else True
 
         if (not old_head) or (detached_head and old_head == old_bv_head):
-            # HEAD is detached, and is the same as left by the previous bv_maker
-            # run: this is "follower mode", the remote ref can be checked out. This
-            # is safe to do even if there are local uncommitted changes, in which
-            # case "git checkout" will error out appropriately.
+            # HEAD is detached, and is the same as left by the previous
+            # bv_maker run: this is "follower mode", the remote ref can be
+            # checked out. This is safe to do even if there are local
+            # uncommitted changes, in which case "git checkout" will error out
+            # appropriately.
             retcode = subprocess.call(['git', 'checkout', '--quiet',
-                                       '--detach', 'refs/bv_head', '--'], cwd=dest)
+                                       '--detach', 'refs/bv_head', '--'],
+                                      cwd=dest)
             if retcode != 0:
                 print("""\
 The git repository at {0} could not be updated,
@@ -738,12 +741,13 @@ If you have made local changes, you should keep track of them in a branch:
 Or, discard your changes and go back to following the upstream version:
   git checkout bv_head""".format(dest))
         elif not detached_head:
-            # We are following a branch. Advance the branch if it has not diverged
-            # from upstream. If local commits exist, that would require creating a
-            # merge commit, and we do not want to do that behind the back of the
-            # developer. The (fetch + merge) command sequence is equivalent to "git
-            # pull --ff-only src remote_ref". The merge aborts safely if there are
-            # local uncommitted changes, and prints an appropriate message.
+            # We are following a branch. Advance the branch if it has not
+            # diverged from upstream. If local commits exist, that would
+            # require creating a merge commit, and we do not want to do that
+            # behind the back of the developer. The (fetch + merge) command
+            # sequence is equivalent to "git pull --ff-only src remote_ref".
+            # The merge aborts safely if there are local uncommitted changes,
+            # and prints an appropriate message.
             retcode = subprocess.call(
                 ['git', 'merge', '--ff-only', 'refs/bv_head'],
                 cwd=dest)
@@ -756,9 +760,9 @@ If you do not want to develop in this repository anymore, you should
 leave the branch and go back to tracking the upstream version:
   git checkout bv_head""".format(dest))
         else:
-            # HEAD is detached but has been moved since last bv_maker run. The user
-            # has likely checked out a tag manually, do not mess with their
-            # repository.
+            # HEAD is detached but has been moved since last bv_maker run. The
+            # user has likely checked out a tag manually, do not mess with
+            # their repository.
             print("""\
 The git repository at {0} will not be updated by bv_maker,
 because it is detached at a commit that does not correspond to bv_head.

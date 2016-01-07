@@ -108,7 +108,7 @@ else()
     HINTS
       "${_prefix}/lib"
       ${PYTHON_FRAMEWORK_LIBRARIES}
-      [HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${_version}\\InstallPath]/libs
+  #    [HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${_version}\\InstallPath]/libs
   #  PATH_SUFFIXES
   #    python${_version}/config
   #  # Avoid finding the .dll in the PATH.  We want the .lib.

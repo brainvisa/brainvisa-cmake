@@ -2438,8 +2438,8 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
     if( APPLE )
       get_filename_component( olib "${lib}" EXT )
       if( "${olib}" STREQUAL ".framework" )
-        get_filename_component( olib "${lib}" NAME_WE )
-        set( lib "${lib}/${olib}" )
+        # get_filename_component( olib "${lib}" NAME_WE )
+        # set( lib "${lib}/${olib}" )
         set( macFramework "1" )
       endif()
     endif()
@@ -2522,10 +2522,17 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
   endforeach()
   # install libraries
   #message("libraries to install : ${librariesToInstall}")
-  BRAINVISA_INSTALL( FILES ${librariesToInstall}
-      DESTINATION "${destination}"
-      COMPONENT "${component}"
-      PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
+  if( macFramework )
+    BRAINVISA_INSTALL( DIRECTORY ${librariesToInstall}
+        DESTINATION "${destination}"
+        COMPONENT "${component}"
+        USE_SOURCE_PERMISSIONS )
+  else()
+    BRAINVISA_INSTALL( FILES ${librariesToInstall}
+        DESTINATION "${destination}"
+        COMPONENT "${component}"
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
+  endif()
 endfunction( BRAINVISA_INSTALL_RUNTIME_LIBRARIES )
 
 # BRAINVISA_ADD_TRANSLATION

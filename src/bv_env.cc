@@ -392,7 +392,14 @@ int main( int argc, char *argv[] )
      pit->second.insert( pit->second.begin(), libpath.begin(), libpath.end() );
   else
     path_prepend[ LD_LIBRARY_PATH ] = libpath;
-    
+
+#ifdef __APPLE__
+  // Apple also uses a DYLD_FRAMEWORK_PATH (for Qt...)
+  vector<string> frameworks;
+  frameworks.push_back( install_directory + PATH_SEP + "lib" );
+  path_prepend[ "DYLD_FRAMEWORK_PATH" ] = frameworks;
+#endif
+
 #ifdef WIN32
   if( !find_python_osmodule( install_directory ).empty() )
     set_variables[ "PYTHONHOME" ] = install_directory + PATH_SEP + "lib" + PATH_SEP + "python";

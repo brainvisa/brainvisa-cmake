@@ -27,13 +27,24 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
       endif()
     endforeach()
   endif()
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS zlib RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libssl RUN )
 endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   if(DCMTK_FOUND)
+    # filter out non-dcmtk libs in ${DCMTK_LIBRARIES}
+    set( _dcmtk_libs )
+    set( _forbidden ${ZLIB_LIBRARIES} ${OPENSSL_LIBRARIES} )
+    foreach( _lib ${DCMTK_LIBRARIES} )
+      list( FIND _forbidden ${_lib} _i )
+      if( _i EQUAL -1 )
+        list( APPEND _dcmtk_libs ${_lib} )
+      endif()
+    endforeach()
     # install DCMTK libs if they are not static
-    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${DCMTK_LIBRARIES} )
+    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${_dcmtk_libs} )
     if( EXISTS "${DCMTK_dict}" )
       get_filename_component( dict "${DCMTK_dict}" REALPATH )
       BRAINVISA_INSTALL( FILES "${dict}"

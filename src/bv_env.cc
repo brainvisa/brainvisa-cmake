@@ -2,6 +2,7 @@
 #include <sstream>
 #include <vector>
 #include <map>
+#include <fstream>
 #include <cstdlib>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -308,6 +309,47 @@ string find_python_osmodule( const string &install_directory )
 }
 
 
+bool is_python_script( const string & arg )
+{
+  if( arg.length() >= 3
+      && arg.substr( arg.length() - 3, 3 ) == ".py" )
+    return true;
+
+  ifstream f( arg.c_str() );
+  if( !f )
+    return false;
+
+  string start, ref = "#!/usr/bin/env python";
+  int c = 0, i, n = ref.length();
+
+  for( i=0; i<n; )
+  {
+    c = f.get();
+    if( c == 0 || c == '\n' || c == '\r' || !f )
+    {
+      return false;
+    }
+    if( !( c == ' ' && ( start.empty()
+        || start[start.length() - 1] == ' ' ) ) )
+    {
+      start += c;
+      if( c != ref[i] )
+      {
+        if( i == 2 && c == ' ' )
+        {
+          // optional space: #! /usr/bin/env python
+          continue;
+        }
+        return false;
+      }
+      ++i;
+    }
+  }
+
+  return true;
+}
+
+
 int main( int argc, char *argv[] )
 {
   string install_directory;
@@ -451,12 +493,31 @@ int main( int argc, char *argv[] )
   }
 
   const string unenv_prefix( "BRAINVISA_UNENV_" );
-  if ( argc > 1 ) {
+  if ( argc > 1 )
+  {
+    vector<const char*> args;
+
+    // check if the command is a python script, to avoid running a useless
+    // shell, which would also cause problems on MacOS 10.11 and possibly
+    // on Windows
+    if( is_python_script( argv[1] ) )
+      args.push_back( strdup( "python" ) );
+
     for( map< string, string>::const_iterator it = backup_variables.begin(); it != backup_variables.end(); ++it ) {
       set_env(  unenv_prefix + it->first, it->second );
     }
 #ifndef _WIN32
-    execvp( argv[1], argv + 1 );
+    for(int i = 0; i < (argc - 1); i++) {
+      args.push_back( strdup( argv[i + 1] ) );
+    }
+    args.push_back( (const char *)NULL );
+
+    execvp( args[0], (char * const *)&args[0] );
+
+    // Free allocated memory
+    for(int i = 0; i < args.size(); i++) {
+      free((void*)args[i]);
+    }
 
     // execvp returns only when the command cannot be executed
     ostringstream error_string;
@@ -469,8 +530,7 @@ int main( int argc, char *argv[] )
 #else
     // Double-quoted arguments is required on windows before spawnvp call
     // otherwise contained spaces are used as argument separator
-    vector<const char*> args;
-    
+
     for(int i = 0; i < (argc - 1); i++) {
       string arg = std::string(argv[i + 1]);
       // Fixes special " windows character
@@ -479,6 +539,7 @@ int main( int argc, char *argv[] )
         arg.replace(pos, 1, "\\\"");
         pos = arg.find( "\"", pos + 2  );
       }
+
       arg = "\"" + arg + "\"";
       char * carg = new char[ arg.size() + 1 ];
       strcpy(carg, arg.c_str());
@@ -493,7 +554,7 @@ int main( int argc, char *argv[] )
     // }
     
     // Command call
-    int res = spawnvp( P_WAIT, argv[1], (char * const *)&args[0] );
+    int res = spawnvp( P_WAIT, args[0], (char * const *)&args[0] );
     
     // Free allocated memory
     for(int i = 0; i < args.size(); i++) {

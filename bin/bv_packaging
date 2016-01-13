@@ -224,6 +224,18 @@ def create_graphviz_dependencies( options, selected_packages, dependencies ):
       print >> out, '  %s -> %s [ color=%s ]' % ( source_node, dest_node, color )
   print >> out, '}'
 
+def is_shell_script(filename):
+  try:
+    f = open(filename)
+    l = f.readline().strip()
+    shells = ('#!/bin/sh', '#! /bin/sh', '#!/bin/bash', '#! /bin/bash')
+    for shell in shells:
+      if l.startswith(shell):
+        return True
+  except:
+    return False
+  return False
+
 def create_directory_package( options, selected_packages, dependencies, list_installed_paths=False ):
 
   if not options.output:
@@ -368,6 +380,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
               source = os.path.splitext(source)[0] + '.bat'
               realcommand="%directory:~1,-1%real-bin\\%command:~1,-1%"
           out = open( source, 'w' )
+
           if sys.platform[:3] == 'win':
             out.write( '''@setlocal
 @set directory="%%~d0%%~p0"
@@ -381,8 +394,25 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
   ''' % { 'EXT' : ext,
           'LAUNCHER' : launcher, 
           'REALCOM' : realcommand } )
+
           elif sys.platform[:6] == 'darwin':
-            out.write( '''#!/bin/sh
+            if is_shell_script(dest):
+              # avoir running a sub-shell
+              out.write( '''#!/bin/sh
+  directory="$0"
+  [ -L "$directory" ] && directory="`dirname \\"$directory\\"`/`readlink \\"$directory\\"`"
+  command="`basename \\"$directory\\"`"
+  directory="`dirname \\"$directory\\"`"
+  directory="`cd \\"$directory\\";pwd`"
+  if [ -x "$directory/bv_env.sh" ]; then
+    . "$directory/bv_env.sh" "`dirname \\"$directory\\"`"
+    . "$directory/real-bin/$command" "$@"
+  else
+    . "$directory/real-bin/$command" "$@"
+  fi
+  ''')
+            else:
+              out.write( '''#!/bin/sh
   directory="$0"
   [ -L "$directory" ] && directory="`dirname \\"$directory\\"`/`readlink \\"$directory\\"`"
   command="`basename \\"$directory\\"`"
@@ -394,7 +424,8 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
     exec "$directory/real-bin/$command" "$@"
   fi
   ''' )
-          else:
+
+          else: # linux
             out.write( '''#!/bin/sh
   directory="$0"
   [ -L "$directory" ] && directory="`readlink -f \\"$directory\\"`"

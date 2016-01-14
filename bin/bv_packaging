@@ -411,7 +411,7 @@ def create_directory_package( options, selected_packages, dependencies, list_ins
     . "$directory/real-bin/$command" "$@"
   fi
   ''')
-            else:
+            else: # Mac / not a shell script
               out.write( '''#!/bin/sh
   directory="$0"
   [ -L "$directory" ] && directory="`dirname \\"$directory\\"`/`readlink \\"$directory\\"`"

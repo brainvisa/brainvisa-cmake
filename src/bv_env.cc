@@ -349,6 +349,39 @@ bool is_python_script( const string & arg )
   return true;
 }
 
+vector<const char *> win_escape_command_args(vector<const char *> args) {
+    string arg;
+    vector<const char *> escaped;
+    vector<const char *>::const_iterator it, ie = args.end();
+    for(it = args.begin(); it != ie; ++it) {
+      if (*it) {
+          string arg = string(*it);
+          // Fixes special " windows character
+          string::size_type pos = arg.find( "\"" );
+          while(pos != string::npos) {
+            arg.replace(pos, 1, "\\\"");
+            pos = arg.find( "\"", pos + 2  );
+          }
+
+          arg = "\"" + arg + "\"";
+          escaped.push_back(strdup(arg.c_str()));
+      }
+      else {
+         escaped.push_back( *it );
+      }
+    }
+    
+    return escaped;
+}
+
+template <typename T>
+void vector_free_ptr_values(vector<T*> & v) 
+{
+    typename vector<T*>::iterator it, ie = v.end();
+    for(it = v.begin(); it != ie; ++it)
+        if (*it)
+            free((void*)*it);
+}
 
 int main( int argc, char *argv[] )
 {
@@ -501,6 +534,7 @@ int main( int argc, char *argv[] )
     // check if the command is a python script, to avoid running a useless
     // shell, which would also cause problems on MacOS 10.11 and possibly
     // on Windows
+    //std::cout << argv[1] << " is python script:" << is_python_script( argv[1] ) << std::endl;
     if( is_python_script( argv[1] ) )
       args.push_back( strdup( "python" ) );
 
@@ -516,9 +550,7 @@ int main( int argc, char *argv[] )
     execvp( args[0], (char * const *)&args[0] );
 
     // Free allocated memory
-    for(int i = 0; i < args.size(); i++) {
-      free((void*)args[i]);
-    }
+    vector_free_ptr_values(args);
 
     // execvp returns only when the command cannot be executed
     ostringstream error_string;
@@ -529,38 +561,28 @@ int main( int argc, char *argv[] )
 
     return 1;
 #else
-    // Double-quoted arguments is required on windows before spawnvp call
-    // otherwise contained spaces are used as argument separator
-
     for(int i = 0; i < (argc - 1); i++) {
-      string arg = std::string(argv[i + 1]);
-      // Fixes special " windows character
-      string::size_type pos = arg.find( "\"" );
-      while(pos != string::npos) {
-        arg.replace(pos, 1, "\\\"");
-        pos = arg.find( "\"", pos + 2  );
-      }
-
-      arg = "\"" + arg + "\"";
-      char * carg = new char[ arg.size() + 1 ];
-      strcpy(carg, arg.c_str());
-      args.push_back((const char *)carg);
+      args.push_back( strdup( argv[i + 1] ) );
     }
     args.push_back( (const char *)NULL );
 
-    // cout << "Executing command : " << argv[1] << endl << flush;
+    // Double-quoted arguments is required on windows before spawnvp call
+    // otherwise contained spaces are used as argument separator
+    vector<const char *> escaped_args = win_escape_command_args(args);
+
+    // cout << "Executing command : " << args[0] << endl << flush;
     // cout << "Using arguments : " << endl << flush;
-    // for(int i = 0; i < (argc - 1); i++) {
-    //   cout << args[i] << endl << flush;
+    // vector<const char *>::const_iterator eait, eaie = escaped_args.end();
+    // for(eait = escaped_args.begin(); eait != eaie; ++eait) {
+      // cout << (*eait) << endl << flush;
     // }
     
-    // Command call
-    int res = spawnvp( P_WAIT, args[0], (char * const *)&args[0] );
+    // Command call: program name must not be enclosed by ""
+    int res = _spawnvp( P_WAIT, args[0], (char * const *)&escaped_args[0] );
     
     // Free allocated memory
-    for(int i = 0; i < args.size(); i++) {
-      free((void*)args[i]);
-    }
+    vector_free_ptr_values(args);
+    vector_free_ptr_values(escaped_args);
 
     if( res < 0 ) 
     {
@@ -571,7 +593,7 @@ int main( int argc, char *argv[] )
       // -13 DOS 4. 0 application 
       // -14 Unknown .exe type (may be DOS extended) 
       ostringstream error_string;
-      error_string << argv[0] << ": cannot execute " << argv[1];
+      error_string << argv[0] << ": cannot execute " << argv[1] << " (error: " << res << ")";
 
       cerr.flush(); // perror writes to standard error
       perror(error_string.str().c_str());

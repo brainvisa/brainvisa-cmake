@@ -53,6 +53,7 @@ unset_variables = [ 'SIGRAPH_PATH', 'ANATOMIST_PATH', 'AIMS_PATH' ]
 set_variables = {
  'LC_NUMERIC': 'C',
  'BRAINVISA_SHARE': install_directory + '/share',
+ 'BRAINVISA_HOME': install_directory,
 }
 path_prepend = {
   'DCMDICTPATH': [ install_directory + '/lib/dicom.dic' ],

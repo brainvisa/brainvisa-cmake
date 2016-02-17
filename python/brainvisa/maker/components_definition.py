@@ -16,7 +16,7 @@ components_definition = [
                 'groups': ['all', 'opensource', 'standard', 'catidb_server'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-svn/trunk','development/brainvisa-svn/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-svn/trunk','development/brainvisa-svn/bug_fix'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-svn/bug_fix','development/brainvisa-svn/bug_fix'),
                 },
             }],
         ],
@@ -60,7 +60,7 @@ components_definition = [
                 'groups': ['all'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-installer/trunk','brainvisa-installer/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-installer/trunk','brainvisa-installer/bug_fix'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-installer/bug_fix','brainvisa-installer/bug_fix'),
                 },
             }],
         ],
@@ -106,7 +106,7 @@ components_definition = [
                 'groups': ['all', 'opensource', 'standard', 'catidb_server'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io-gpl/trunk','soma/soma-io-gpl/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io-gpl/branches/1.0','soma/soma-io-gpl/branches/1.0'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io-gpl/branches/bug_fix','soma/soma-io-gpl/branches/bug_fix'),
                     'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io-gpl/tags/1.0.0','soma/soma-io-gpl/tags/1.0.0'),
                 },
             }],
@@ -318,7 +318,7 @@ components_definition = [
                 'groups': ['all'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/preclinical-imaging-iam/trunk','brainrat/preclinical-imaging-iam/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/preclinical-imaging-iam/trunk','brainrat/preclinical-imaging-iam/bug_fix'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/preclinical-imaging-iam/bug_fix','brainrat/preclinical-imaging-iam/bug_fix'),
                     #'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/preclinical-imaging-iam/tags/latest_release','brainrat/preclinical-imaging-iam/tags/latest_release'),
                 },
             }],

@@ -113,7 +113,8 @@ def copy_brainvisa_cmake(installDir):
     if samefile:
         return
     import brainvisa.maker
-    for f in open(os.path.join(os.path.dirname(brainvisa.maker.__file__), 'installed_files.txt')):
+    for f in open(os.path.join(os.path.dirname(brainvisa.maker.__file__),
+                               'installed_files.txt')):
         p, f = os.path.split(f.strip())
         d = os.path.join(installDir, p)
         if not os.path.exists(d):
@@ -282,16 +283,28 @@ class InfoCommand(object):
 
     Display information about configuration, sources directories and build directories.'''
         parser = OptionParser(usage=usage)
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, and '
+                          '"configure build" for build sections')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
+        self.options = options
+        self.args = args
 
     def __call__(self):
         print 'Configuration file:', configuration.configuration_file
         for d, o in configuration.sourcesDirectories.iteritems():
-            o.info()
+            if not self.options.in_config or 'info' in o.default_steps:
+                o.info()
         for d, o in configuration.buildDirectories.iteritems():
-            o.info()
+            if not self.options.in_config or 'info' in o.default_steps:
+                o.info()
 
 
 class SourcesCommand(object):
@@ -307,6 +320,14 @@ class SourcesCommand(object):
         parser.add_option('--no-git', dest='git', action='store_false',
                           default=True,
                           help='don\'t update git sources')
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, and '
+                          '"configure build" for build sections')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
@@ -315,7 +336,8 @@ class SourcesCommand(object):
 
     def __call__(self):
         for d, o in configuration.sourcesDirectories.iteritems():
-            o.process(self.options, self.args)
+            if not self.options.in_config or 'sources' in o.default_steps:
+                o.process(self.options, self.args)
 
 
 class ConfigureCommand(object):
@@ -327,8 +349,16 @@ class ConfigureCommand(object):
         parser = OptionParser(usage=usage)
         parser.add_option('-c', '--clean', dest='clean', action='store_true',
                           default=False,
-                          help='clean build tree (using bv_clean_build_tree -d) '
-                          'before configuring')
+                          help='clean build tree (using bv_clean_build_tree '
+                          '-d) before configuring')
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, and '
+                          '"configure build" for build sections')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
@@ -337,7 +367,8 @@ class ConfigureCommand(object):
 
     def __call__(self):
         for d, o in configuration.buildDirectories.iteritems():
-            o.configure(self.options, self.args)
+            if not self.options.in_config or 'configure' in o.default_steps:
+                o.configure(self.options, self.args)
 
 
 class CompileCommand(object):
@@ -359,6 +390,14 @@ class BuildCommand(object):
                           default=False,
                           help='clean build tree (using '
                           'bv_clean_build_tree -b) before building')
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, and '
+                          '"configure build" for build sections')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
@@ -367,7 +406,8 @@ class BuildCommand(object):
 
     def __call__(self):
         for d, o in configuration.buildDirectories.iteritems():
-            o.build(self.options, self.args)
+            if not self.options.in_config or 'build' in o.default_steps:
+                o.build(self.options, self.args)
 
 
 class DocCommand(object):
@@ -377,13 +417,24 @@ class DocCommand(object):
 
     Generate documentation (docbook, epydoc, doxygen).'''
         parser = OptionParser(usage=usage)
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, and '
+                          '"configure build" for build sections')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
+        self.options = options
+        self.args = args
 
     def __call__(self):
         for d, o in configuration.buildDirectories.iteritems():
-            o.doc()
+            if not self.options.in_config or 'doc' in o.default_steps:
+                o.doc()
 
 
 class TestCommand(object):
@@ -393,13 +444,24 @@ class TestCommand(object):
 
     Executes ctest.'''
         parser = OptionParser(usage=usage)
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, and '
+                          '"configure build" for build sections')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
+        self.options = options
+        self.args = args
 
     def __call__(self):
         for d, o in configuration.buildDirectories.iteritems():
-            o.test()
+            if not self.options.in_config or 'test' in o.default_steps:
+                o.test()
 
 
 class SourceDirectory(object):
@@ -410,11 +472,13 @@ class SourceDirectory(object):
         self.configurationLines = []
         self.svnComponents = []
         self.gitComponents = []
+        self.default_steps = ['sources']
         if self.configuration.verbose:
             print 'Processing source directory %s' % self.directory
 
     def addConfigurationLine(self, line, virtual=False, component_version=None):
         # Supported lines in bv_maker.cfg for [ source ... ]:
+        #    default_steps [info] [sources]
         #    git <url> <git_tag> [<dest_directory> [<bv_version>]]
         #    svn <url> [<dest_directory> [<bv_version>]]
         #    brainvisa <component_pattern> <version_pattern>
@@ -425,16 +489,34 @@ class SourceDirectory(object):
         #    - <component_pattern> [<version_pattern>]
         l = line.split()
         sign = l[0]
-        if sign == 'git':
+        if sign.startswith('default_steps'):
+            if '=' in l[0]:
+                i = l[0].index('=')
+                l0 = [l[0][:i].strip(), '=', l[0][i+1:].strip()]
+                l0 = [x for x in l0 if x != '']
+                l = l0 + l[1:]
+            elif '=' in l[1]:
+                i = l[1].index('=')
+                l1 = [l[1][:i].strip(), '=', l[1][i+1:].strip()]
+                l1 = [x for x in l1 if x != '']
+                l = [l[0]] + l1 + l[2:]
+            if l[0] != 'default_steps' or len(l) < 2 \
+                    or l[1] != '=':
+                raise SyntaxError(
+                    'default_steps option is not followed with =')
+            self.default_steps = l[2:]
+        elif sign == 'git':
             if len(l) < 3 or len(l) > 5:
                 raise SyntaxError()
             sign, url, git_tag, dest_directory, bv_version = (
                 l + [None, None])[:5]
             if self.configuration.verbose:
                 print '    adding repository: git', url, git_tag
-                print '                   in:', os.path.join(self.directory, dest_directory)
+                print '                   in:', \
+                    os.path.join(self.directory, dest_directory)
                 if component_version:
-                    print '                  for: %s version %s' % component_version
+                    print '                  for: %s version %s' \
+                        % component_version
             self.gitComponents.append(
                 (component_version, url, git_tag, dest_directory, bv_version))
         else:
@@ -457,9 +539,11 @@ class SourceDirectory(object):
                     raise SyntaxError()
                 if self.configuration.verbose:
                     print '    adding repository: svn', url, component_version
-                    print '                   in:', os.path.join(self.directory, dest_directory)
+                    print '                   in:', \
+                        os.path.join(self.directory, dest_directory)
                     if component_version:
-                        print '                  for: %s version %s' % component_version
+                        print '                  for: %s version %s' \
+                            % component_version
 
                 self.svnComponents.append(
                     (component_version, url, dest_directory, bv_version))
@@ -785,7 +869,7 @@ If you did not do this on purpose, you should go back to following upstream:
 
 class BuildDirectory(object):
     _validOptions = set(('build_type', 'make_options', 'cmake_options',
-                         'packaging_thirdparty'))
+                         'packaging_thirdparty', 'default_steps'))
 
     sitecustomize_content = '''import os
 
@@ -808,9 +892,11 @@ for i in os.listdir(os.path.dirname(__file__)):
         self.packaging_thirdparty = ''
         self._configuration_lines_processed = False
         self.clean_commands = True
+        self.default_steps = ['configure', 'build']
 
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ build ... ]:
+        #    default_steps [info] [configure] [build] [doc] [test]
         #    directory <directory>
         #    brainvisa <component_pattern> <version_pattern> <source_directory>
         #    brainvisa_exclude <component_pattern> [<version_pattern>]
@@ -823,6 +909,9 @@ for i in os.listdir(os.path.dirname(__file__)):
             value = line[i + 1:].strip()
             if option not in self._validOptions:
                 raise SyntaxError()
+            if hasattr(self, option) \
+                    and type(getattr(self, option)) in (list, tuple):
+                value = value.split()
             setattr(self, option, value)
         elif line[0] == '+':
             if '*' in line:
@@ -870,9 +959,13 @@ for i in os.listdir(os.path.dirname(__file__)):
                                 if self.configuration.verbose:
                                     print '    removing component %s version %s from %s' % (component, version, dir)
                                 del self.components[component]
-                elif first == 'brainvisa' or (first in brainvisa_projects.project_per_component) \
+                elif first == 'brainvisa' \
+                        or (first
+                            in brainvisa_projects.project_per_component) \
                         or (first in brainvisa_projects.components_per_group) \
-                        or (first in brainvisa_projects.components_per_project) or '*' in first:
+                        or (first
+                            in brainvisa_projects.components_per_project) \
+                        or '*' in first:
                     if first == 'brainvisa':
                         l = rest.split(None, 2)
                         componentPattern, versionPattern, sourceDirectory = l
@@ -886,7 +979,8 @@ for i in os.listdir(os.path.dirname(__file__)):
                     components_sources = json.load(
                         open(os.path.join(sourceDirectory,
                                           'components_sources.json')))
-                    for component in brainvisa_projects.find_components(componentPattern):
+                    for component in brainvisa_projects.find_components(
+                            componentPattern):
                         for version, directory \
                                 in components_sources.get(component,
                                                           {}).iteritems():
@@ -934,18 +1028,21 @@ for i in os.listdir(os.path.dirname(__file__)):
                     SyntaxError()
             projects = set(brainvisa_projects.project_per_component.get(i, i)
                            for i in self.components)
-            self.projects = [i for i in brainvisa_projects.ordered_projects if i in projects]
+            self.projects = [i for i in brainvisa_projects.ordered_projects
+                             if i in projects]
             self.projects.extend(projects - set(self.projects))
             self._configuration_lines_processed = True
 
     def configure(self, options, args):
         self._process_configuration_lines()
         # Order of projects and components is important for dependencies
-        sortedProjects = [p for p in brainvisa_projects.ordered_projects if p in self.projects]
+        sortedProjects = [p for p in brainvisa_projects.ordered_projects
+                          if p in self.projects]
         sortedComponents = []
         components = set(self.components)
         for project in sortedProjects:
-            for component in brainvisa_projects.components_per_project[project]:
+            for component \
+                    in brainvisa_projects.components_per_project[project]:
                 if component in components:
                     sortedComponents.append(component)
                     components.remove(component)
@@ -1001,21 +1098,28 @@ for i in os.listdir(os.path.dirname(__file__)):
             sortedProjects), 'CACHE STRING "BrainVISA Projects list" FORCE )'
         print >> out, 'set( _BRAINVISA_PROJECTS', ' '.join(
             sortedProjects), 'CACHE STRING "BrainVISA Projects list" FORCE )'
-        print >> out, 'set( BRAINVISA_COMPONENTS', ' '.join(
-            sortedComponents), 'CACHE STRING "BrainVISA components list" FORCE )'
-        print >> out, 'set( _BRAINVISA_COMPONENTS', ' '.join(
-            sortedComponents), 'CACHE STRING "BrainVISA components list" FORCE )'
+        print >> out, 'set( BRAINVISA_COMPONENTS', \
+            ' '.join(sortedComponents), \
+            'CACHE STRING "BrainVISA components list" FORCE )'
+        print >> out, 'set( _BRAINVISA_COMPONENTS', \
+            ' '.join(sortedComponents), \
+            'CACHE STRING "BrainVISA components list" FORCE )'
         print >> out
         for component, directory_version in self.components.iteritems():
             directory, selected_version, version = directory_version
             if component in self.buildModelPerComponent:
-                print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + cmake_path(self.directory ) + '/build_files/' + \
-                    component + '_src' + '" CACHE STRING "Sources directory for component ' + \
-                    component + '" FORCE )'
+                print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' \
+                    + cmake_path(self.directory ) + '/build_files/' \
+                    + component + '_src' \
+                    + '" CACHE STRING "Sources directory for component ' \
+                    + component + '" FORCE )'
             else:
-                print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' + cmake_path(
-                    directory) + '" CACHE STRING "Sources directory for component ' + component + '" FORCE )'
-            print >> out, 'set( ' + component + '_DIR "' + cmake_path(self.directory ) + '/share/' + component + \
+                print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' \
+                    + cmake_path(directory) \
+                    + '" CACHE STRING "Sources directory for component ' \
+                    + component + '" FORCE )'
+            print >> out, 'set( ' + component + '_DIR "' \
+                + cmake_path(self.directory ) + '/share/' + component + \
                 '-' + version + \
                 '/cmake" CACHE STRING "Directory used for find_package( ' + \
                 component + \
@@ -1059,14 +1163,16 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         if self.directory == os.path.dirname(os.path.dirname(this_script)):
             print '=== bootstraping brainvisa-cmake project ==='
             system(cwd=self.directory,
-                   *(command + ['-DBRAINVISA_CMAKE_BUILD_TYPE=brainvisa-cmake-only']))
+                   *(command
+                     + ['-DBRAINVISA_CMAKE_BUILD_TYPE=brainvisa-cmake-only']))
             system(
                 cwd=os.path.join(self.directory, 'build_files',
                                  'brainvisa-cmake'),
                 *['make', 'install'])
             print '=== now configuring all other projects ==='
             system(cwd=self.directory,
-                   *(command + ["-DBRAINVISA_CMAKE_BUILD_TYPE=no-brainvisa-cmake"]))
+                   *(command
+                     + ["-DBRAINVISA_CMAKE_BUILD_TYPE=no-brainvisa-cmake"]))
         else:
             # run cmake in a regular way
             system(cwd=self.directory, *command)
@@ -1091,11 +1197,22 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
     def doc(self):
         self._process_configuration_lines()
         system(cwd=self.directory, *
-               (['make'] + self.make_options.split() + ['-j1', 'doc']))
+               (['make'] + self.make_options.split() + ['doc']))
 
     def test(self):
         self._process_configuration_lines()
-        system(cwd=self.directory, *(['ctest', '--output-on-failure']))
+        # get parallel jobs option if specified
+        make_opts = self.make_options.split()
+        options = []
+        for op in make_opts:
+            if op == '-j':
+                options = ['-j', make_opts[make_opts.index('-j') + 1]]
+            elif op.startswith('-j'):
+                n = op[2:]
+                if len([x for x in n if x >= '0' and x <= '9']) == len(n):
+                    options = [op]
+        system(cwd=self.directory,
+               *(['ctest', '--output-on-failure'] + options))
 
     def info(self):
         self._process_configuration_lines()
@@ -1161,7 +1278,7 @@ commands = {
     'doc': DocCommand,
     'test': TestCommand,
 }
-default_commands = ['sources', 'configure', 'build']
+default_commands = ['info', 'sources', 'configure', 'build', 'doc', 'test']
 options_by_command = {None: []}
 command = None
 for i in sys.argv[1:]:
@@ -1181,9 +1298,9 @@ todo = []
 if len(options_by_command) == 1:
     # No command selected => do all default commands
     for i in default_commands:
-        options_by_command[i] = []
+        options_by_command[i] = ['--only-if-default']
 # Ordered command list
-for command in ['info', 'sources', 'configure', 'build', 'test', 'doc']:
+for command in ['info', 'sources', 'configure', 'build', 'doc', 'test']:
     if command in options_by_command:
         todo.append(
             commands[command](options_by_command[command], configuration))

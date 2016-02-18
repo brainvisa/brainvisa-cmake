@@ -224,10 +224,13 @@ if [ $os != "windows" ];then
   find `dirname $binary_dir` -name '*.pyc' -exec rm "{}" \; -or -name '*.pyo' -exec rm "{}" \;
 fi
 
-bv_configure
-bv_build
-bv_doc
-bv_test
+bv_configure && bv_build
+ok=$?
+# don't run doc and test if build has failed
+if [ $ok = "0" ]; then
+  bv_doc
+  bv_test
+fi
 
 echo "End compile and doc "
 

@@ -181,6 +181,64 @@ def read_project_info( directory,
   else:
     return None
 
+
+def update_project_info(project_info_path, version):
+    if not isinstance(version, VersionNumber):
+        version = VersionNumber(version)
+        
+    if project_info_path is None or not os.path.exists( project_info_path ):
+        return False
+        
+    project_info_content = open( project_info_path ).read()
+        
+    # Set version in project info file
+    # It needs to have a version with at least 3
+    # numbers
+    if len(version) < 3:
+        version.resize(3)
+            
+    if project_info_path.endswith( '.cmake' ):
+        pattern = re.compile(
+            'BRAINVISA_PACKAGE_VERSION_MAJOR.+'
+        + 'BRAINVISA_PACKAGE_VERSION_PATCH \d+',
+            re.DOTALL
+        )
+        
+        project_info_content_new = pattern.sub(
+            'BRAINVISA_PACKAGE_VERSION_MAJOR '
+        + str(version[0]) + ' )\n'
+        + 'set( BRAINVISA_PACKAGE_VERSION_MINOR '
+        + str(version[1]) + ' )\n'
+        + 'set( BRAINVISA_PACKAGE_VERSION_PATCH '
+        + str(version[2]),
+            project_info_content
+        )
+                 
+    elif project_info_path.endswith( '.py' ):
+        pattern = re.compile(
+            'version_major.+\nversion_micro\s*=\s*\d+',
+            re.DOTALL
+        )
+      
+        project_info_content_new = pattern.sub(
+            'version_major = ' + str(version[0]) + '\n'
+            + 'version_minor = ' + str(version[1]) + '\n'
+            + 'version_micro = ' + str(version[2]),
+            project_info_content
+        )
+    
+    if project_info_content != project_info_content_new:
+        #print project_info_content_new
+        # Write new project info content to file
+        # and commit local changes to the branch
+        f = open( project_info_path, "w" )
+        f.write( project_info_content_new )
+        f.close()
+        
+        return True
+    
+    return False
+
 def parse_versioning_client_info( client_info ):
   """Parses versioning client information for BrainVISA projects.
      The versioning client information is described using the format

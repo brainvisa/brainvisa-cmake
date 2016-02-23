@@ -1204,13 +1204,6 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         # get parallel jobs option if specified
         make_opts = self.make_options.split()
         options = []
-        for op in make_opts:
-            if op == '-j':
-                options = ['-j', make_opts[make_opts.index('-j') + 1]]
-            elif op.startswith('-j'):
-                n = op[2:]
-                if len([x for x in n if x >= '0' and x <= '9']) == len(n):
-                    options = [op]
         system(cwd=self.directory,
                *(['ctest', '--output-on-failure'] + options))
 

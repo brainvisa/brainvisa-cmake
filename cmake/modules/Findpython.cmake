@@ -20,13 +20,13 @@ else()
   # Search for the python framework on Apple.
   cmake_find_frameworks( Python )
  
-  execute_process( COMMAND "${PYTHON_EXECUTABLE}" "-c" "import sys, os; print os.path.normpath( sys.prefix )"
-    OUTPUT_VARIABLE _prefix OUTPUT_STRIP_TRAILING_WHITESPACE )
+  execute_process( COMMAND "${PYTHON_EXECUTABLE}" "-c" "import sys, os; sys.stdout.write(os.path.normpath( sys.prefix ))"
+    OUTPUT_VARIABLE _prefix )
   FILE( TO_CMAKE_PATH "${_prefix}" _prefix )
-  execute_process( COMMAND "${PYTHON_EXECUTABLE}" "-c" "import sys; print \".\".join( (str(i) for i in sys.version_info[ :2 ]) )"
-    OUTPUT_VARIABLE _version OUTPUT_STRIP_TRAILING_WHITESPACE )
-  execute_process( COMMAND "${PYTHON_EXECUTABLE}" "-c" "import sys; print \".\".join( (str(i) for i in sys.version_info[ :3 ]) )"
-    OUTPUT_VARIABLE _fullVersion OUTPUT_STRIP_TRAILING_WHITESPACE )
+  execute_process( COMMAND "${PYTHON_EXECUTABLE}" "-c" "import sys; sys.stdout.write(\".\".join( (str(i) for i in sys.version_info[ :2 ]) ))"
+    OUTPUT_VARIABLE _version )
+  execute_process( COMMAND "${PYTHON_EXECUTABLE}" "-c" "import sys; sys.stdout.write(\".\".join( (str(i) for i in sys.version_info[ :3 ]) ))"
+    OUTPUT_VARIABLE _fullVersion )
   string(REPLACE "." "" _versionNoDot ${_version} )
   message( STATUS "Using python ${_fullVersion}: ${PYTHON_EXECUTABLE}" )
   execute_process( COMMAND "${PYTHON_EXECUTABLE}" "-c" "import sys; print \";\".join(sys.path)"

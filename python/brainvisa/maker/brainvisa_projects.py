@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import glob, operator, os, re, string, urlparse
+import glob, operator, os, re, string
 from fnmatch import fnmatchcase
+import sys
 
 SVN_URL = 'https://bioproj.extra.cea.fr/neurosvn'
 BRAINVISA_SVN_URL = SVN_URL + '/brainvisa'
@@ -9,6 +10,19 @@ BRAINVISA_SVN_URL = SVN_URL + '/brainvisa'
 from brainvisa.maker.components_definition import components_definition
 from brainvisa.maker.version_number        import VersionNumber, \
                                                   version_format_unconstrained
+try:
+    # compatibility for python3
+    import six
+except ImportError:
+    # six module not here, assume python2
+    class six(object):
+       @staticmethod
+       def iteritems(obj, *args, **kwargs):
+          return obj.iteritems(*args, **kwargs)
+
+if sys.version_info[0] >= 3:
+    def execfile(filename, globals=None, locals=None):
+        exec(compile(open(filename).read(), filename, 'exec'), globals, locals)
 
 ordered_projects = [] # Keeping the order of project is important because this
                       # is the way configuration dependencies are handled
@@ -287,7 +301,8 @@ def find_components( componentsPattern ):
         else:
           projectPattern, componentPattern = l
         components = []
-        for project, projectComponents in components_per_project.iteritems():
+        for project, projectComponents \
+            in six.iteritems(components_per_project):
           if fnmatchcase( project, projectPattern ):
             for component in projectComponents:
               if fnmatchcase( component, componentPattern ):

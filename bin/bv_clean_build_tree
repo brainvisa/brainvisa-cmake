@@ -1,11 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import sys, os, re, shutil
 from optparse import OptionParser
 from datetime import datetime
 import dateutil.parser
 import subprocess
+
+try:
+    # compatibility for python3
+    import six
+except ImportError:
+    # six module not here, assume python2
+    class six(object):
+       @staticmethod
+       def iteritems(obj, *args, **kwargs):
+          return obj.iteritems(*args, **kwargs)
 
 def clean_lib_dir(directory):
     if sys.platform.startswith('linux'):
@@ -24,17 +35,17 @@ def clean_lib_dir(directory):
           if liblink:
               link_f = os.path.join(directory, liblink % m.group(1))
               if os.path.islink(link_f) and os.readlink(link_f) != f:
-                  print 'obsolete lib:', f
+                  print('obsolete lib:', f)
                   os.unlink(os.path.join(directory, f))
           else:
               libs.setdefault(m.group(1), []).append((f, m.group(2)))
     #if liblink is None: # windows: sort DLL versions
-        #for libname, libs_def in libs.iteritems():
+        #for libname, libs_def in six.iteritems(libs):
             #lib_vers = [l[1] for l in libs_def]
             #versions = sorted(lib_vers)
             #for ver in versions[:-1]:
                 #i = lib_vers.index(ver)
-                #print 'obsolete lib:', libs_def[i][0]
+                #print('obsolete lib:', libs_def[i][0])
                 #os.unlink(os.path.join(directory, libs_def[i][0]))
 
 
@@ -46,12 +57,12 @@ def clean_share_dir(directory):
         if m:
             comps.setdefault(m.group(1), []).append((f, m.group(2)))
 
-    for comp_name, comp_def in comps.iteritems():
+    for comp_name, comp_def in six.iteritems(comps):
         comp_vers = [l[1] for l in comp_def]
         versions = sorted(comp_vers)
         for ver in versions[:-1]:
             i = comp_vers.index(ver)
-            print 'obsolete directory:', comp_def[i][0]
+            print('obsolete directory:', comp_def[i][0])
             shutil.rmtree(os.path.join(directory, comp_def[i][0]))
 
 
@@ -117,24 +128,24 @@ while basedirs:
             basedirs.append((path, excluded))
         elif os.path.islink(path):
             if not os.path.exists(path):
-                print 'rm dead link', path
+                print('rm dead link', path)
                 if not options.list:
                     os.unlink(path)
         elif f.endswith('.pyc') or f.endswith('.pyo'):
             pyfile = path[:-1]
             if not excluded and not os.path.exists(pyfile):
-                print 'rm obsolete module', path
+                print('rm obsolete module', path)
                 if not options.list:
                     os.unlink(path)
         elif datetime.fromtimestamp(os.stat(path).st_atime) < accesstime:
-            print 'rm obsolete file', path
+            print('rm obsolete file', path)
             if not options.list:
                 os.unlink(path)
 
     dircontent = os.listdir(d)
     if len(dircontent) == 0:
         if options.directories:
-            print 'rmdir', d
+            print('rmdir', d)
             if not options.list :
                 os.rmdir(d)
 
@@ -147,7 +158,7 @@ while basermdirs:
         dircontent = os.listdir(d)
         if len(dircontent) == 0:
             if options.directories:
-                print 'rmdir', d
+                print('rmdir', d)
                 if not options.list :
                     os.rmdir(d)
                 if d != os.path.dirname(d):
@@ -190,18 +201,18 @@ if options.binaries:
                         if f.startswith('bv_'):
                             sk = skipped.setdefault(bindir, [])
                             sk.append(f)
-                            #print 'skipping', f, '(may be part of bv_cmake)'
+                            #print('skipping', f, '(may be part of bv_cmake)')
                         else:
                             if f not in all_cmds:
-                                print 'rm obsolete command', f
+                                print('rm obsolete command', f)
                                 if not options.list :
                                     os.unlink(os.path.join(bindir, f))
             except RuntimeError as e:
-                print e
-    for d, items in skipped.iteritems():
-        print '-- skipped from', d
+                print(e)
+    for d, items in six.iteritems(skipped):
+        print('-- skipped from', d)
         for f in items:
-            print 'skipped', f, '(may be part of bv_cmake)'
+            print('skipped', f, '(may be part of bv_cmake)')
     os.chdir(cwd)
 
 

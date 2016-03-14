@@ -31,10 +31,14 @@
 #
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
+from __future__ import print_function
 import sys
 import posixpath
 from subprocess                         import Popen, PIPE, STDOUT
-from urlparse                           import urlparse, urlunparse
+try:
+    from urlparse                           import urlparse, urlunparse
+except ImportError:
+    from urllib import parse as urlparse
 
 from brainvisa.maker.version_number     import VersionNumber, \
                                                VersionFormat, \
@@ -63,7 +67,7 @@ def system( command,
     """
   
     if verbose:
-        print ' '.join( ('"' + i + '"' for i in command) )
+        print(' '.join( ('"' + i + '"' for i in command) ))
       
     if simulate :
         return command
@@ -76,7 +80,7 @@ def system( command,
         cmd.wait()
         if cmd.returncode != 0:
             if verbose:
-                print output
+                print(output)
                 sys.stdout.flush()
             raise SystemError( 'System command exited with error code '
                                 + repr( cmd.returncode ) + ': ' 

@@ -31,6 +31,7 @@
 #
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
+from __future__ import print_function
 import glob, os, string, sys, traceback
 
 class PluginsRegistry( object ):
@@ -90,10 +91,9 @@ class PluginsRegistry( object ):
                         )
             
             except AttributeError, e:
-                print >> sys.stderr, 'WARNING: BrainVISA plugin', \
-                                     module, 'class', c, 'failed to register', \
-                                     'as plugin. It is necessary to add a', \
-                                     'decorator @plugin_info to the class.'
+                print('WARNING: BrainVISA plugin', module, 'class', c,
+                      'failed to register as plugin. It is necessary to add a '
+                      'decorator @plugin_info to the class.', file=sys.stderr)
     
     def plugins( self ):
         '''
@@ -200,9 +200,8 @@ _init_plugins()
                 
                 except Exception, e:
                     traceback.print_exc(file = sys.stdout)
-                    print >> sys.stderr, 'WARNING: BrainVISA plugin', \
-                                        plugin_module, \
-                                        'failed to import.'
+                    print('WARNING: BrainVISA plugin', plugin_module,
+                          'failed to import.', file=sys.stderr)
                     continue
                 
 def plugins_module_import( *plugin_modules ):

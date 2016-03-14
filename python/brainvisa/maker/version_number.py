@@ -31,7 +31,11 @@
 #
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
-import string, types
+import string
+import sys
+
+if sys.version_info[0] >= 3:
+    basestring = str
 
 version_separator = '.'
 
@@ -131,7 +135,7 @@ def version_to_list( version, separator = version_separator ):
 def list_to_version( version_list, separator = version_separator ):
     """ Converts a list of integers to a version string
     """
-    return string.join( [ str(v) for v in version_list ], separator )
+    return separator.join([str(v) for v in version_list])
     
 class VersionNumber( object ):
     ''' VersionNumber is a class that manages version numbers.
@@ -166,19 +170,19 @@ class VersionNumber( object ):
             else:
                 self._format = format
             
-            if isinstance( version, types.StringTypes ):
+            if isinstance( version, basestring ):
                 self._version_numbers = version_to_list(
                                             version,
                                             separator = self._format.separator()
                                         )
             
-            elif isinstance( version, (types.ListType, types.TupleType) ):
+            elif isinstance( version, (list, tuple) ):
                 self._version_numbers = list( version )
                 
-            elif isinstance( version, types.IntType ):
+            elif isinstance( version, int ):
                 self._version_numbers = [ version ]
                 
-            elif isinstance( version, types.NoneType ):
+            elif version is None:
                 self._version_numbers = [ 0 ]
                 
             else:
@@ -323,7 +327,7 @@ class VersionNumber( object ):
             @rtype: VersionNumber
             @return: The resulting VersionNumber.
         '''
-        if isinstance( other, types.IntType ):
+        if isinstance( other, int ):
             # Add the value to the right most version component
             r = VersionNumber(self)
             r._version_numbers[ -1 ] += int(other)
@@ -354,7 +358,7 @@ class VersionNumber( object ):
             @rtype: VersionNumber
             @return: The resulting VersionNumber.
         '''
-        if isinstance( other, types.IntType ):
+        if isinstance( other, int ):
             # Add the value to the right most version component
             r = VersionNumber( self )
             r._version_numbers[ -1 ] -= int(other)
@@ -421,10 +425,10 @@ class VersionNumber( object ):
             # Create unconstrained version number
             value = VersionNumber( value )
             
-        if isinstance( key, types.SliceType ):
+        if isinstance( key, slice ):
             self._version_numbers.__setitem__( key, value._version_numbers )
         
-        elif isinstance( key, types.IntType ) \
+        elif isinstance( key, int ) \
             and len( value ) == 1:
             self._version_numbers.__setitem__( key, value._version_numbers[0] )
 

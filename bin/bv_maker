@@ -33,6 +33,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
+from __future__ import print_function
 import sys
 import os
 import re
@@ -44,6 +45,15 @@ import json
 from optparse import OptionParser
 from fnmatch import fnmatchcase
 import tempfile
+try:
+    # compatibility for python3
+    import six
+except ImportError:
+    # six module not here, assume python2
+    class six(object):
+       @staticmethod
+       def iteritems(obj, *args, **kwargs):
+          return obj.iteritems(*args, **kwargs)
 
 # Ugly hack to backport subprocess.check_ouput method on python < 2.7
 # TODO: remove this once BrainVISA is only compatible with python >= 2.7
@@ -87,7 +97,7 @@ from brainvisa.maker.version_number import version_format_short
 
 
 def system(*args, **kwargs):
-    print ' '.join(args)
+    print(' '.join(args))
     popen = subprocess.Popen(args, **kwargs)
     popen.communicate()
     if popen.returncode != 0:
@@ -241,7 +251,7 @@ To get help for a specific command, use -h option of the command. Example: "%pro
                                 self.sourcesDirectories[
                                     currentDirectoryObject.directory] = currentDirectoryObject
                             elif self.verbose:
-                                print 'Passing ', currentDirectoryObject.directory, 'because it is not in the selected directories.'
+                                print('Passing ', currentDirectoryObject.directory, 'because it is not in the selected directories.')
                         elif l[0] == 'build':
                             pass
                             currentDirectoryObject = BuildDirectory(
@@ -250,7 +260,7 @@ To get help for a specific command, use -h option of the command. Example: "%pro
                                 self.buildDirectories[
                                     currentDirectoryObject.directory] = currentDirectoryObject
                             elif self.verbose:
-                                print 'Passing ', currentDirectoryObject.directory, 'because it is not in the selected directories.'
+                                print('Passing ', currentDirectoryObject.directory, 'because it is not in the selected directories.')
                         elif l[0] == 'virtualenv':
                             currentDirectoryObject = VirtualenvDirectory(
                                 environmentVariablesSubstitution(l[1].strip()), self)
@@ -258,14 +268,14 @@ To get help for a specific command, use -h option of the command. Example: "%pro
                                 self.buildDirectories[
                                     currentDirectoryObject.directory] = currentDirectoryObject
                             elif self.verbose:
-                                print 'Passing ', currentDirectoryObject.directory, 'because it is not in the selected directories.'
+                                print('Passing ', currentDirectoryObject.directory, 'because it is not in the selected directories.')
                         else:
                             raise SyntaxError()
                     else:
                         if currentDirectoryObject is None:
                             raise SyntaxError()
                         if self.verbose:
-                            print '  processing line:', repr(line)
+                            print('  processing line:', repr(line))
                         currentDirectoryObject.addConfigurationLine(line)
                 except SyntaxError:
                     raise SyntaxError('Syntax error in ' + repr(
@@ -298,11 +308,11 @@ class InfoCommand(object):
         self.args = args
 
     def __call__(self):
-        print 'Configuration file:', configuration.configuration_file
-        for d, o in configuration.sourcesDirectories.iteritems():
+        print('Configuration file:', configuration.configuration_file)
+        for d, o in six.iteritems(configuration.sourcesDirectories):
             if not self.options.in_config or 'info' in o.default_steps:
                 o.info()
-        for d, o in configuration.buildDirectories.iteritems():
+        for d, o in six.iteritems(configuration.buildDirectories):
             if not self.options.in_config or 'info' in o.default_steps:
                 o.info()
 
@@ -335,7 +345,7 @@ class SourcesCommand(object):
         self.args = args
 
     def __call__(self):
-        for d, o in configuration.sourcesDirectories.iteritems():
+        for d, o in six.iteritems(configuration.sourcesDirectories):
             if not self.options.in_config or 'sources' in o.default_steps:
                 o.process(self.options, self.args)
 
@@ -366,7 +376,7 @@ class ConfigureCommand(object):
         self.args = args
 
     def __call__(self):
-        for d, o in configuration.buildDirectories.iteritems():
+        for d, o in six.iteritems(configuration.buildDirectories):
             if not self.options.in_config or 'configure' in o.default_steps:
                 o.configure(self.options, self.args)
 
@@ -405,7 +415,7 @@ class BuildCommand(object):
         self.args = args
 
     def __call__(self):
-        for d, o in configuration.buildDirectories.iteritems():
+        for d, o in six.iteritems(configuration.buildDirectories):
             if not self.options.in_config or 'build' in o.default_steps:
                 o.build(self.options, self.args)
 
@@ -432,7 +442,7 @@ class DocCommand(object):
         self.args = args
 
     def __call__(self):
-        for d, o in configuration.buildDirectories.iteritems():
+        for d, o in six.iteritems(configuration.buildDirectories):
             if not self.options.in_config or 'doc' in o.default_steps:
                 o.doc()
 
@@ -459,7 +469,7 @@ class TestCommand(object):
         self.args = args
 
     def __call__(self):
-        for d, o in configuration.buildDirectories.iteritems():
+        for d, o in six.iteritems(configuration.buildDirectories):
             if not self.options.in_config or 'test' in o.default_steps:
                 o.test()
 
@@ -474,7 +484,7 @@ class SourceDirectory(object):
         self.gitComponents = []
         self.default_steps = ['sources']
         if self.configuration.verbose:
-            print 'Processing source directory %s' % self.directory
+            print('Processing source directory %s' % self.directory)
 
     def addConfigurationLine(self, line, virtual=False, component_version=None):
         # Supported lines in bv_maker.cfg for [ source ... ]:
@@ -511,12 +521,12 @@ class SourceDirectory(object):
             sign, url, git_tag, dest_directory, bv_version = (
                 l + [None, None])[:5]
             if self.configuration.verbose:
-                print '    adding repository: git', url, git_tag
-                print '                   in:', \
-                    os.path.join(self.directory, dest_directory)
+                print('    adding repository: git', url, git_tag)
+                print('                   in:', \
+                    os.path.join(self.directory, dest_directory))
                 if component_version:
-                    print '                  for: %s version %s' \
-                        % component_version
+                    print('                  for: %s version %s' \
+                        % component_version)
             self.gitComponents.append(
                 (component_version, url, git_tag, dest_directory, bv_version))
         else:
@@ -538,12 +548,12 @@ class SourceDirectory(object):
                 if dest_directory is None:
                     raise SyntaxError()
                 if self.configuration.verbose:
-                    print '    adding repository: svn', url, component_version
-                    print '                   in:', \
-                        os.path.join(self.directory, dest_directory)
+                    print('    adding repository: svn', url, component_version)
+                    print('                   in:', \
+                        os.path.join(self.directory, dest_directory))
                     if component_version:
-                        print '                  for: %s version %s' \
-                            % component_version
+                        print('                  for: %s version %s' \
+                            % component_version)
 
                 self.svnComponents.append(
                     (component_version, url, dest_directory, bv_version))
@@ -552,7 +562,7 @@ class SourceDirectory(object):
                     raise SyntaxError()
                 for component in brainvisa_projects.find_components(componentPattern):
                     project = brainvisa_projects.project_per_component[component]
-                    for version, repo_dir in brainvisa_projects.url_per_component[component].iteritems():
+                    for version, repo_dir in six.iteritems(brainvisa_projects.url_per_component[component]):
                         repo, dir = repo_dir
                         if fnmatchcase(version, versionPattern):
                             self.addConfigurationLine(
@@ -564,7 +574,7 @@ class SourceDirectory(object):
                     if versionPattern is None:
                         versionPattern = '*'
                     for component in brainvisa_projects.find_components(componentPattern):
-                        for version, repo_dir in brainvisa_projects.url_per_component[component].iteritems():
+                        for version, repo_dir in six.iteritems(brainvisa_projects.url_per_component[component]):
                             if fnmatchcase(version, versionPattern):
                                 # Remove unwanted svn components
                                 count = 0
@@ -575,9 +585,9 @@ class SourceDirectory(object):
                                             if self.configuration.verbose:
                                                 component_version, url, dest_directory, bv_version = self.svnComponents[
                                                     count]
-                                                print '    removing repository: svn', url
-                                                print '                     in:', os.path.join(self.directory, dest_directory)
-                                                print '                    for: %s version %s' % component_version
+                                                print('    removing repository: svn', url)
+                                                print('                     in:', os.path.join(self.directory, dest_directory))
+                                                print('                    for: %s version %s' % component_version)
                                             del self.svnComponents[count]
                                             count -= 1
                                     count += 1
@@ -590,9 +600,9 @@ class SourceDirectory(object):
                                             if self.configuration.verbose:
                                                 component_version, url, git_tag, dest_directory, bv_version = self.gitComponents[
                                                     count]
-                                                print '    removing repository: git', url, git_tag
-                                                print '                     in:', os.path.join(self.directory, dest_directory)
-                                                print '                    for: %s version %s' % component_version
+                                                print('    removing repository: git', url, git_tag)
+                                                print('                     in:', os.path.join(self.directory, dest_directory))
+                                                print('                    for: %s version %s' % component_version)
                                             del self.gitComponents[count]
                                             count -= 1
                                     count += 1
@@ -605,7 +615,7 @@ class SourceDirectory(object):
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
         clientFile = open(os.path.join(self.directory, 'bv_maker.cfg'), 'w')
-        print >> clientFile, '\n'.join(self.configurationLines)
+        print('\n'.join(self.configurationLines), file=clientFile)
 
         repositoryDirectory = os.path.join(self.directory, '.repository')
         checkout = False
@@ -638,7 +648,7 @@ class SourceDirectory(object):
         externalsFileName = os.path.join(self.directory, 'bv_maker.externals')
         externalsFile = open(externalsFileName, 'w')
         for component_version, url, dest_directory, bv_version in set(self.svnComponents):
-            print >> externalsFile, dest_directory, url
+            print(dest_directory, url, file=externalsFile)
             source_directories.append((dest_directory, bv_version))
         externalsFile.close()
         self.svncommand('propset', 'svn:externals',
@@ -672,7 +682,7 @@ class SourceDirectory(object):
                 components_sources.setdefault(component, {})[
                     bv_version or version] = dest_path
             else:
-                print 'WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % os.path.join(self.directory, dest_path)
+                print('WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % os.path.join(self.directory, dest_path))
         json.dump(components_sources, open(
             os.path.join(self.directory, 'components_sources.json'), 'w'), indent=2)
 
@@ -684,7 +694,8 @@ class SourceDirectory(object):
         system(*cmd)
 
     def get_git_remotes(self, dest):
-        cmd_output = subprocess.check_output(['git', 'remote', '-v'], cwd=dest)
+        cmd_output = str(subprocess.check_output(['git', 'remote', '-v'],
+                                                   cwd=dest))
         remotes = {}
         for line in cmd_output.split('\n'):
             remotere = re.compile('^([^ ]+)[\s|\t]+([^ ]+)\s+([^ ]+)\s*$')
@@ -722,7 +733,7 @@ class SourceDirectory(object):
         # Clone repository if it does not exist yet locally
         if not os.path.exists(os.path.join(dest, '.git')):
             if os.path.isdir(dest) and os.listdir(dest):
-                print ('''
+                print('''
 ERROR: directory "%s" is not empty, Git will not be able to clone into it.
 This error may be due to a repository change for a component (typically
 going from Subversion to Git). You must check yourself that you have nothing
@@ -756,16 +767,16 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
 
         # Get the SHA-1 identifiers of HEAD and refs/bv_head commits
         try:
-            old_head = subprocess.check_output(
+            old_head = str(subprocess.check_output(
                 ['git', 'rev-parse', '--quiet', '--verify', 'HEAD^{commit}'],
-                cwd=dest)
+                cwd=dest))
         except subprocess.CalledProcessError:
             old_head = None
         try:
-            old_bv_head = subprocess.check_output(
+            old_bv_head = str(subprocess.check_output(
                 ['git', 'rev-parse', '--quiet',
                  '--verify', 'refs/bv_head^{commit}'],
-                cwd=dest)
+                cwd=dest))
         except subprocess.CalledProcessError:
             old_bv_head = None
 
@@ -854,17 +865,17 @@ If you did not do this on purpose, you should go back to following upstream:
   git -C '{0}' checkout bv_head""".format(dest))
 
     def info(self):
-        print 'Source directory: "' + self.directory + '"'
+        print('Source directory: "' + self.directory + '"')
         for component_version, url, dest_directory, bv_version in self.svnComponents:
-            print '  %s <- svn %s' % (dest_directory, url)
+            print('  %s <- svn %s' % (dest_directory, url))
             if component_version:
                 component, version = component_version
-                print '    component %s (%s)' % (component, version)
+                print('    component %s (%s)' % (component, version))
         for component_version, url, git_tag, dest_directory, bv_version in self.gitComponents:
-            print '  %s <- git %s' % (dest_directory, url)
+            print('  %s <- git %s' % (dest_directory, url))
             if component_version:
                 component, version = component_version
-                print '    component %s (%s)' % (component, version)
+                print('    component %s (%s)' % (component, version))
 
 
 class BuildDirectory(object):
@@ -925,7 +936,7 @@ for i in os.listdir(os.path.dirname(__file__)):
     def _process_configuration_lines(self):
         if not self._configuration_lines_processed:
             if self.configuration.verbose:
-                print 'Processing build directory %s' % self.directory
+                print('Processing build directory %s' % self.directory)
             for line in self.configurationLines:
                 if '=' in line:
                     continue
@@ -942,11 +953,11 @@ for i in os.listdir(os.path.dirname(__file__)):
                         project, component, version = pinfo
                         version = str(version)
                         if self.configuration.verbose:
-                            print '    adding component %s version %s from %s' % (component, version, directory)
+                            print('    adding component %s version %s from %s' % (component, version, directory))
                         self.components[component] = (
                             directory, version, version)
                     else:
-                        print 'WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % directory
+                        print('WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % directory)
                 elif first in ('brainvisa_exclude', '-'):
                     componentPattern, versionPattern = (
                         rest.split(None, 1) + ['*'])[:2]
@@ -957,7 +968,7 @@ for i in os.listdir(os.path.dirname(__file__)):
                                 = dir_version
                             if fnmatchcase(selected_version, versionPattern):
                                 if self.configuration.verbose:
-                                    print '    removing component %s version %s from %s' % (component, version, dir)
+                                    print('    removing component %s version %s from %s' % (component, version, dir))
                                 del self.components[component]
                 elif first == 'brainvisa' \
                         or (first
@@ -982,8 +993,8 @@ for i in os.listdir(os.path.dirname(__file__)):
                     for component in brainvisa_projects.find_components(
                             componentPattern):
                         for version, directory \
-                                in components_sources.get(component,
-                                                          {}).iteritems():
+                                in six.iteritems(
+                                    components_sources.get(component, {})):
                             directory = os.path.join(
                                 sourceDirectory, directory)
                             if fnmatchcase(version, versionPattern):
@@ -996,12 +1007,12 @@ for i in os.listdir(os.path.dirname(__file__)):
                                         = pinfo
                                     component_version = str(component_version)
                                     if self.configuration.verbose:
-                                        print '    adding component %s version %s from %s' \
-                                            % (component, version, directory)
+                                        print('    adding component %s version %s from %s' \
+                                            % (component, version, directory))
                                     self.components[component] = (
                                         directory, version, component_version)
                                 else:
-                                    print 'WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % directory
+                                    print('WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % directory)
                 elif first == 'pip':
                     if '=' in rest:
                         module, version = rest.split(None, 1)
@@ -1020,7 +1031,7 @@ for i in os.listdir(os.path.dirname(__file__)):
                             self.directory, 'bin', 'pip'), 'install',
                             ('%s==%s' % (module, version) if version
                              else module)]
-                        print 'Running:', ' '.join(command)
+                        print('Running:', ' '.join(command))
                         subprocess.check_call(command)
                         pip_installed[module] = version
                         json.dump(installed, open(installed_json, 'w'))
@@ -1054,7 +1065,7 @@ for i in os.listdir(os.path.dirname(__file__)):
         if options.clean:
             my_path = os.path.dirname(__file__)
             bv_clean = os.path.join(my_path, 'bv_clean_build_tree')
-            print 'cleaning build tree', self.directory
+            print('cleaning build tree', self.directory)
             # clean and remove empty dirs. Don't use -b option here
             # because configuration has to be done first.
             subprocess.call([sys.executable, bv_clean, '-d', self.directory])
@@ -1094,47 +1105,55 @@ for i in os.listdir(os.path.dirname(__file__)):
 
         cmakeFile = os.path.join(self.directory, 'bv_maker.cmake')
         out = open(cmakeFile, 'w')
-        print >> out, 'set( BRAINVISA_PROJECTS', ' '.join(
-            sortedProjects), 'CACHE STRING "BrainVISA Projects list" FORCE )'
-        print >> out, 'set( _BRAINVISA_PROJECTS', ' '.join(
-            sortedProjects), 'CACHE STRING "BrainVISA Projects list" FORCE )'
-        print >> out, 'set( BRAINVISA_COMPONENTS', \
-            ' '.join(sortedComponents), \
-            'CACHE STRING "BrainVISA components list" FORCE )'
-        print >> out, 'set( _BRAINVISA_COMPONENTS', \
-            ' '.join(sortedComponents), \
-            'CACHE STRING "BrainVISA components list" FORCE )'
-        print >> out
-        for component, directory_version in self.components.iteritems():
+        print('set( BRAINVISA_PROJECTS', ' '.join(
+            sortedProjects), 'CACHE STRING "BrainVISA Projects list" FORCE )',
+            file=out)
+        print('set( _BRAINVISA_PROJECTS', ' '.join(
+            sortedProjects), 'CACHE STRING "BrainVISA Projects list" FORCE )',
+            file=out)
+        print('set( BRAINVISA_COMPONENTS',
+              ' '.join(sortedComponents),
+              'CACHE STRING "BrainVISA components list" FORCE )',
+              file=out)
+        print('set( _BRAINVISA_COMPONENTS',
+              ' '.join(sortedComponents),
+              'CACHE STRING "BrainVISA components list" FORCE )',
+              file=out)
+        print(file=out)
+        for component, directory_version in six.iteritems(self.components):
             directory, selected_version, version = directory_version
             if component in self.buildModelPerComponent:
-                print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' \
+                print('set( BRAINVISA_SOURCES_' + component + ' "' \
                     + cmake_path(self.directory ) + '/build_files/' \
                     + component + '_src' \
                     + '" CACHE STRING "Sources directory for component ' \
-                    + component + '" FORCE )'
+                    + component + '" FORCE )',
+                    file=out)
             else:
-                print >> out, 'set( BRAINVISA_SOURCES_' + component + ' "' \
+                print('set( BRAINVISA_SOURCES_' + component + ' "' \
                     + cmake_path(directory) \
                     + '" CACHE STRING "Sources directory for component ' \
-                    + component + '" FORCE )'
-            print >> out, 'set( ' + component + '_DIR "' \
+                    + component + '" FORCE )',
+                    file=out)
+            print('set( ' + component + '_DIR "' \
                 + cmake_path(self.directory ) + '/share/' + component + \
                 '-' + version + \
                 '/cmake" CACHE STRING "Directory used for find_package( ' + \
                 component + \
-                ' )" FORCE )'
-            print >> out, 'set( ' + component + '_VERSION "' + version + '" )'
+                ' )" FORCE )',
+                file=out)
+            print('set( ' + component + '_VERSION "' + version + '" )',
+                  file=out)
 
         cmakeLists = os.path.join(self.directory, 'CMakeLists.txt')
         out.close()
         out = open(cmakeLists, 'w')
-        print >> out, '''
+        print('''
 cmake_minimum_required( VERSION 2.6 )
 set( CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}" ${CMAKE_PREFIX_PATH} )
 find_package( brainvisa-cmake NO_POLICY_SCOPE )
 include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
-'''
+''', file=out)
         out.close()
         if sys.platform == 'win32':
             command = ['cmake', '-G', 'MSYS Makefiles']
@@ -1149,7 +1168,8 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         elif self.packaging_thirdparty.upper() == 'OFF':
             command += ['-DBRAINVISA_PACKAGING_THIRDPARTY:BOOL=OFF']
 
-        for component, build_model in self.buildModelPerComponent.iteritems():
+        for component, build_model \
+                in six.iteritems(self.buildModelPerComponent):
             build_model.configure()
 
         # set bv_maker path, so that cmake finds its modules
@@ -1161,7 +1181,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         # time to actually configure all projects using the newly installed
         # bv-cmake.
         if self.directory == os.path.dirname(os.path.dirname(this_script)):
-            print '=== bootstraping brainvisa-cmake project ==='
+            print('=== bootstraping brainvisa-cmake project ===')
             system(cwd=self.directory,
                    *(command
                      + ['-DBRAINVISA_CMAKE_BUILD_TYPE=brainvisa-cmake-only']))
@@ -1169,7 +1189,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                 cwd=os.path.join(self.directory, 'build_files',
                                  'brainvisa-cmake'),
                 *['make', 'install'])
-            print '=== now configuring all other projects ==='
+            print('=== now configuring all other projects ===')
             system(cwd=self.directory,
                    *(command
                      + ["-DBRAINVISA_CMAKE_BUILD_TYPE=no-brainvisa-cmake"]))
@@ -1186,7 +1206,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                 clean_opts = []
             my_path = os.path.dirname(__file__)
             bv_clean = os.path.join(my_path, 'bv_clean_build_tree')
-            print 'cleaning build tree', self.directory
+            print('cleaning build tree', self.directory)
             # don't remove empty dirs here since configure may have created
             # directories which will be used during build
             subprocess.call(
@@ -1209,10 +1229,10 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 
     def info(self):
         self._process_configuration_lines()
-        print 'Build directory: "' + self.directory + '"'
-        for component, directory_version in self.components.iteritems():
+        print('Build directory: "' + self.directory + '"')
+        for component, directory_version in six.iteritems(self.components):
             directory, selected_version, version = directory_version
-            print '  %s (%s) <- %s' % (component, version, directory)
+            print('  %s (%s) <- %s' % (component, version, directory))
 
 
 class VirtualenvDirectory(BuildDirectory):
@@ -1259,8 +1279,8 @@ class VirtualenvDirectory(BuildDirectory):
             cmd.append(env_path)
             system(*cmd)
         else:
-            print "No need to virtualenv init '%s' since it is already initialized." \
-                % env_path
+            print("No need to virtualenv init '%s' since it is already initialized." \
+                % env_path)
         pass
 
 commands = {

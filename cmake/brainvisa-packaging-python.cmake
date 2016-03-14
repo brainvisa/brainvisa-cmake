@@ -80,6 +80,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       USE_SOURCE_PERMISSIONS )
       add_custom_command( TARGET install-${component} POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "Python.app/Contents/MacOS/Python" "$(BRAINVISA_INSTALL_PREFIX)/bin/python")
+      # get "python2" or "python3" command or symlink
+      set( _pythonv "python${PYTHON_VERSION_MAJOR}" )
+      add_custom_command( TARGET install-${component} POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "Python.app/Contents/MacOS/Python" "$(BRAINVISA_INSTALL_PREFIX)/bin/${_pythonv}" )
 
     else()
 
@@ -94,6 +98,18 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         else()
           add_custom_command( TARGET install-${component} POST_BUILD
             COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "${name}" "$(BRAINVISA_INSTALL_PREFIX)/bin/python" )
+        endif()
+      endif()
+      # get "python2" or "python3" command or symlink
+      string( SUBSTRING ${PYTHON_SHORT_VERSION} 0 1 _python_major )
+      set( _pythonv "python${_python_major}" )
+      if( NOT name STREQUAL ${_pythonv} )
+        if(WIN32)
+          add_custom_command( TARGET install-${component} POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E "copy_if_different" "$(BRAINVISA_INSTALL_PREFIX)/bin/${name}" "$(BRAINVISA_INSTALL_PREFIX)/bin/${_pythonv}" )
+        else()
+          add_custom_command( TARGET install-${component} POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "${name}" "$(BRAINVISA_INSTALL_PREFIX)/bin/${_pythonv}" )
         endif()
       endif()
 

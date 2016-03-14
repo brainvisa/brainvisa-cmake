@@ -70,7 +70,7 @@ set( _minc_hdf5_version "1" )
 
 
 if( MINC_volumeio_LIBRARY AND NOT EXISTS ${MINC_volumeio_LIBRARY} )
-  set( MINC_volumeio_LIBRARY "" CACHE "Minc IO lib" )
+  set( MINC_volumeio_LIBRARY "" CACHE STRING "Minc IO lib" )
 endif()
 
 find_library( MINC_volumeio_LIBRARY volume_io2

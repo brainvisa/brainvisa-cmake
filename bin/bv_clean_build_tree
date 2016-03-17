@@ -124,7 +124,9 @@ while basedirs:
 
     for f in dircontent:
         path = os.path.join(d, f)
-        if os.path.isdir(path):
+        if os.path.isdir(path) and not os.path.islink(path):
+            # (if path is a symlink, don't recurse in it, it may be pointing to
+            # itself or somewhere already done, or in sources...)
             basedirs.append((path, excluded))
         elif os.path.islink(path):
             if not os.path.exists(path):

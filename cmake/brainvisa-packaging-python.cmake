@@ -153,7 +153,13 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       set(PYTHON_TOOLS "${PYTHON_BIN_DIR}/tools")
       set(PYTHON_XMLDOC "${PYTHON_BIN_DIR}/xmldoc")
       set(PYTHON_SUBDIRS ${PYTHON_MODULES_PATH} "${PYTHON_DLLS}" "${PYTHON_DOC}" "${PYTHON_SIP}" "${PYTHON_TCL}" "${PYTHON_TOOLS}" "${PYTHON_XMLDOC}")
-      
+
+      # copy python2 / python3 exe
+      BRAINVISA_INSTALL( FILES "${REAL_PYTHON_EXECUTABLE}"
+                         DESTINATION "bin"
+                         RENAME "${_pythonv}.exe"
+                         COMPONENT "${component}"
+                         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
       BRAINVISA_INSTALL( DIRECTORY ${PYTHON_SUBDIRS}
                          DESTINATION "lib/python" 
                          USE_SOURCE_PERMISSIONS
@@ -161,10 +167,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
 
       if( IPYTHON_SCRIPT )
         BRAINVISA_INSTALL( FILES "${IPYTHON_SCRIPT}"
-                          RENAME ipython.py
-                          DESTINATION "bin"
-                          COMPONENT "${component}"
-                          PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
+                           RENAME ipython.py
+                           DESTINATION "bin"
+                           COMPONENT "${component}"
+                           PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
       endif()
 
       if( PYCOLOR_SCRIPT )

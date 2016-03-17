@@ -9,7 +9,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/trunk','development/brainvisa-cmake/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/branches/bug_fix','development/brainvisa-cmake/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/tags/1.2.1','development/brainvisa-cmake/tag'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/tags/latest_release','development/brainvisa-cmake/latest_release'),
                 },
             }],
             ['brainvisa-svn', {
@@ -17,6 +17,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-svn/trunk','development/brainvisa-svn/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-svn/branches/bug_fix','development/brainvisa-svn/bug_fix'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-svn/tags/latest_release','development/brainvisa-svn/latest_release'),
                 },
             }],
         ],
@@ -28,7 +29,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/documentation/trunk','communication/documentation/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/documentation/branches/bug_fix','communication/documentation/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/documentation/tags/4.4.0','communication/documentation/tags/4.4.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/documentation/tags/latest_release','communication/documentation/latest_release'),
                 },
             }],
             ['bibliography', {
@@ -36,6 +37,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/bibliography/trunk','communication/bibliography/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/bibliography/trunk','communication/bibliography/bug_fix'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/bibliography/trunk','communication/bibliography/latest_release'),
                 },
             }],
             ['latex', {
@@ -50,6 +52,9 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/web/trunk','communication/web/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/web/branches/bug_fix','communication/web/bug_fix'),
+                    # WARNING tag points to bug_fix (to allow site evolve with
+                    # fixed versions of projects)
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/web/branches/bug_fix','communication/web/latest_release'),
                 },
             }],
         ],
@@ -61,6 +66,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-installer/trunk','brainvisa-installer/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-installer/branches/bug_fix','brainvisa-installer/bug_fix'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-installer/tags/latest_release','brainvisa-installer/latest_release'),
                 },
             }],
         ],
@@ -72,7 +78,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-share/trunk','brainvisa-share/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-share/branches/bug_fix','brainvisa-share/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-share/tags/4.4.0','brainvisa-share/tags/4.4.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-share/tags/latest_release','brainvisa-share/latest_release'),
                 },
             }],
         ],
@@ -85,7 +91,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/trunk','soma/soma-base/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/branches/bug_fix','soma/soma-base/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/tags/4.4.0','soma/soma-base/tags/4.4.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/tags/latest_release','soma/soma-base/latest_release'),
                 },
             }],
             ['soma-io', {
@@ -93,7 +99,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io/trunk','soma/soma-io/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io/branches/bug_fix','soma/soma-io/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io/tags/4.4.0','soma/soma-io/tags/4.4.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io/tags/latest_release','soma/soma-io/latest_release'),
                 },
             }],
             ['soma-database', {
@@ -107,7 +113,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io-gpl/trunk','soma/soma-io-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io-gpl/branches/bug_fix','soma/soma-io-gpl/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io-gpl/tags/1.0.0','soma/soma-io-gpl/tags/1.0.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io-gpl/tags/latest_release','soma/soma-io-gpl/latest_release'),
                 },
             }],
             ['soma-workflow', {
@@ -125,8 +131,9 @@ components_definition = [
             ['capsul', {
                 'groups': ['all', 'opensource', 'standard', 'catidb_server'],
                 'branches': {
-                    'bug_fix': ('git https://github.com/neurospin/capsul.git v1','capsul/bug_fix'),
                     'trunk': ('git https://github.com/neurospin/capsul.git master','capsul/trunk'),
+                    'bug_fix': ('git https://github.com/neurospin/capsul.git v1','capsul/bug_fix'),
+                    'tag': ('git https://github.com/neurospin/capsul.git latest_release','capsul/latest_release'),
                 },
                 'build_model': 'pure_python',
             }],
@@ -140,7 +147,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-free/trunk','aims/aims-free/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-free/branches/bug_fix','aims/aims-free/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-free/tags/4.4.0','aims/aims-free/tags/4.4.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-free/tags/latest_release','aims/aims-free/latest_release'),
                 },
             }],
             ['aims-gpl', {
@@ -148,7 +155,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-gpl/trunk','aims/aims-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-gpl/branches/bug_fix','aims/aims-gpl/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-gpl/tags/4.4.0','aims/aims-gpl/tags/4.4.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-gpl/tags/latest_release','aims/aims-gpl/latest_release'),
                 },
             }],
             ['aims-til', {
@@ -156,7 +163,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-til/trunk','aims/aims-til/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-til/branches/bug_fix','aims/aims-til/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-til/tags/1.2.0','aims/aims-til/tags/1.2.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-til/tags/latest_release','aims/aims-til/latest_release'),
                 },
             }],
         ],
@@ -169,7 +176,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-free/trunk','anatomist/anatomist-free/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-free/branches/bug_fix','anatomist/anatomist-free/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-free/tags/4.4.0','anatomist/anatomist-free/tags/4.4.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-free/tags/latest_release','anatomist/anatomist-free/latest_release'),
                 },
             }],
             ['anatomist-gpl', {
@@ -177,7 +184,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-gpl/trunk','anatomist/anatomist-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-gpl/branches/bug_fix','anatomist/anatomist-gpl/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-gpl/tags/4.4.0','anatomist/anatomist-gpl/tags/4.4.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-gpl/tags/latest_release','anatomist/anatomist-gpl/latest_release'),
                 },
             }],
         ],
@@ -190,7 +197,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon/trunk','axon/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon/branches/bug_fix','axon/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon/tags/4.4.0','axon/tags/4.4.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon/tags/latest_release','axon/latest_release'),
                 },
             }],
         ],
@@ -215,7 +222,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/datamind/trunk','datamind/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/datamind/branches/bug_fix','datamind/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/datamind/tags/4.3.0','datamind/tags/4.3.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/datamind/tags/latest_release','datamind/latest_release'),
                 },
             }],
         ],
@@ -228,7 +235,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/morphologist-private/trunk','morphologist/morphologist-private/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/morphologist-private/branches/bug_fix','morphologist/morphologist-private/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/morphologist-private/tags/4.4.0','morphologist/morphologist-private/tags/4.4.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/morphologist-private/tags/latest_release','morphologist/morphologist-private/latest_release'),
                 },
             }],
             ['morphologist-gpl', {
@@ -236,7 +243,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/morphologist-gpl/trunk','morphologist/morphologist-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/morphologist-gpl/branches/bug_fix','morphologist/morphologist-gpl/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/morphologist-gpl/tags/4.4.0','morphologist/morphologist-gpl/tags/4.4.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/morphologist-gpl/tags/latest_release','morphologist/morphologist-gpl/latest_release'),
                 },
             }],
             ['baby', {
@@ -244,7 +251,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/baby/trunk','morphologist/baby/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/baby/branches/bug_fix','morphologist/baby/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/baby/tags/1.1.0','morphologist/baby/tags/1.1.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/baby/tags/latest_release','morphologist/baby/latest_release'),
                 },
             }],
             ['tms', {
@@ -268,7 +275,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-private/trunk','morphologist/sulci-private/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-private/branches/bug_fix','morphologist/sulci-private/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-private/tags/4.4.0','morphologist/sulci-private/tags/4.4.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-private/tags/latest_release','morphologist/sulci-private/latest_release'),
                 },
             }],
             ['sulci-models', {
@@ -276,6 +283,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-models/trunk','morphologist/sulci-models/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-models/branches/bug_fix','morphologist/sulci-models/bug_fix'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-models/branches/bug_fix','morphologist/sulci-models/latest_release'),
                 },
             }],
             ['morphologist-ui', {
@@ -283,6 +291,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('git https://github.com/neurospin/morphologist.git master', 'morphologist/morphologist-ui/trunk'),
                     'bug_fix': ('git https://github.com/neurospin/morphologist.git master', 'morphologist/morphologist-ui/bug_fix'),
+                    'tag': ('git https://github.com/neurospin/morphologist.git latest_release', 'morphologist/morphologist-ui/latest_release'),
                 },
             }],
         ],
@@ -295,7 +304,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/brainrat-gpl/trunk','brainrat/brainrat-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/brainrat-gpl/branches/bug_fix','brainrat/brainrat-gpl/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/brainrat-gpl/tags/4.4.0','brainrat/brainrat-gpl/tags/4.4.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/brainrat-gpl/tags/latest_release','brainrat/brainrat-gpl/latest_release'),
                 },
             }],
             ['brainrat-private', {
@@ -303,7 +312,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/brainrat-private/trunk','brainrat/brainrat-private/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/brainrat-private/branches/bug_fix','brainrat/brainrat-private/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/brainrat-private/tags/4.4.0','brainrat/brainrat-private/tags/4.4.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/brainrat-private/tags/latest_release','brainrat/brainrat-private/latest_release'),
                 },
             }],
             ['bioprocessing', {
@@ -311,7 +320,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/bioprocessing/trunk','brainrat/bioprocessing/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/bioprocessing/branches/bug_fix','brainrat/bioprocessing/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/bioprocessing/tags/4.4.0','brainrat/bioprocessing/tags/4.4.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/bioprocessing/tags/latest_release','brainrat/bioprocessing/latest_release'),
                 },
             }],
             ['preclinical-imaging-iam', {
@@ -319,7 +328,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/preclinical-imaging-iam/trunk','brainrat/preclinical-imaging-iam/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/preclinical-imaging-iam/branches/bug_fix','brainrat/preclinical-imaging-iam/bug_fix'),
-                    #'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/preclinical-imaging-iam/tags/latest_release','brainrat/preclinical-imaging-iam/tags/latest_release'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/preclinical-imaging-iam/tags/latest_release','brainrat/preclinical-imaging-iam/latest_release'),
                 },
             }],
         ],
@@ -339,7 +348,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/old_connectomist-gpl/trunk','connectomist/old_connectomist-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/old_connectomist-gpl/branches/bug_fix','connectomist/old_connectomist-gpl/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/old_connectomist-gpl/tags/4.4.0','connectomist/old_connectomist-gpl/tags/4.4.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/old_connectomist-gpl/tags/latest_release','connectomist/old_connectomist-gpl/latest_release'),
                 },
             }],
             ['old_connectomist-private', {
@@ -347,7 +356,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/old_connectomist-private/trunk','connectomist/old_connectomist-private/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/old_connectomist-private/branches/bug_fix','connectomist/old_connectomist-private/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/old_connectomist-private/tags/4.4.0','connectomist/old_connectomist-private/tags/4.4.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/old_connectomist-private/tags/latest_release','connectomist/old_connectomist-private/latest_release'),
                 },
             }],
             ['constellation-gpl', {
@@ -355,6 +364,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/constellation-gpl/trunk','connectomist/constellation-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/constellation-gpl/branches/bug_fix','connectomist/constellation-gpl/bug_fix'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/constellation-gpl/tags/latest_release','connectomist/constellation-gpl/latest_release'),
                 },
             }],
             ['constellation-private', {
@@ -362,6 +372,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/constellation-private/trunk','connectomist/constellation-private/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/constellation-private/branches/bug_fix','connectomist/constellation-private/bug_fix'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/constellation-private/tags/latest_release','connectomist/constellation-private/latest_release'),
                 },
             }],
         ],
@@ -374,7 +385,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/cortical_surface-private/trunk','cortical_surface/cortical_surface-private/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/cortical_surface-private/branches/bug_fix','cortical_surface/cortical_surface-private/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/cortical_surface-private/tags/4.4.0','cortical_surface/cortical_surface-private/tags/4.4.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/cortical_surface-private/tags/latest_release','cortical_surface/cortical_surface-private/latest_release'),
                 },
             }],
             ['cortical_surface-gpl', {
@@ -382,7 +393,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/cortical_surface-gpl/trunk','cortical_surface/cortical_surface-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/cortical_surface-gpl/branches/bug_fix','cortical_surface/cortical_surface-gpl/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/cortical_surface-gpl/tags/4.4.0','cortical_surface/cortical_surface-gpl/tags/4.4.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/cortical_surface-gpl/tags/latest_release','cortical_surface/cortical_surface-gpl/latest_release'),
                 },
             }],
             ['freesurfer_plugin', {
@@ -390,7 +401,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/freesurfer_plugin/trunk','cortical_surface/freesurfer_plugin/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/freesurfer_plugin/branches/bug_fix','cortical_surface/freesurfer_plugin/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/freesurfer_plugin/tags/4.4.0','cortical_surface/freesurfer_plugin/tags/4.4.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/freesurfer_plugin/tags/latest_release','cortical_surface/freesurfer_plugin/latest_release'),
                 },
             }],
         ],
@@ -402,7 +413,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/data_storage_client/trunk','data_storage_client/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/data_storage_client/branches/bug_fix','data_storage_client/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/data_storage_client/tags/4.3.0','data_storage_client/tags/4.3.0'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/data_storage_client/tags/latest_release','data_storage_client/latest_release'),
                 },
             }],
         ],
@@ -424,7 +435,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_imaging/nuclear_imaging-gpl/trunk','nuclear_imaging/nuclear_imaging-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_imaging/nuclear_imaging-gpl/branches/bug_fix','nuclear_imaging/nuclear_imaging-gpl/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_imaging/nuclear_imaging-gpl/tags/4.2.1','nuclear_imaging/nuclear_imaging-gpl/tags/4.2.1'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_imaging/nuclear_imaging-gpl/tags/latest_release','nuclear_imaging/nuclear_imaging-gpl/latest_release'),
                 },
             }],
             ['nuclear_imaging-private', {
@@ -432,7 +443,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_imaging/nuclear_imaging-private/trunk','nuclear_imaging/nuclear_imaging-private/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_imaging/nuclear_imaging-private/branches/bug_fix','nuclear_imaging/nuclear_imaging-private/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_imaging/nuclear_imaging-private/tags/4.2.1','nuclear_imaging/nuclear_imaging-private/tags/4.2.1'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_imaging/nuclear_imaging-private/tags/latest_release','nuclear_imaging/nuclear_imaging-private/latest_release'),
                 },
             }],
         ],
@@ -522,6 +533,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/snapbase/trunk','snapbase/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/snapbase/branches/bug_fix','snapbase/bug_fix'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/snapbase/tags/latest_release','snapbase/latest_release'),
                 },
             }],
         ],
@@ -552,7 +564,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/trunk','development/brainvisa-release/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/branches/bug_fix','development/brainvisa-release/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/tags/1.2.1','development/brainvisa-release/tags/1.2.1'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/tags/latest_release','development/brainvisa-release/latest_release'),
                 },
             }],
         ],
@@ -564,6 +576,10 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/longitudinal_pipelines/trunk',
                               'longitudinal_pipelines/trunk'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/longitudinal_pipelines/branches/bug_fix',
+                              'longitudinal_pipelines/bug_fix'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/longitudinal_pipelines/tags/latest_release',
+                              'longitudinal_pipelines/latest_release'),
                 },
             }],
         ],
@@ -575,6 +591,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/disco/trunk', 'disco/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/disco/branches/bug_fix', 'disco/bug_fix'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/disco/tags/latest_release', 'disco/latest_release'),
                 },
             }],
         ],

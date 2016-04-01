@@ -61,7 +61,8 @@ def parse_project_info_cmake(
                 '1.0.0',
                 format = version_format
             )
-
+  build_model = None
+  
   p = re.compile( r'\s*set\(\s*([^ \t]*)\s*(.*[^ \t])\s*\)' )
   for line in open( path ):
     match = p.match( line )
@@ -77,8 +78,10 @@ def parse_project_info_cmake(
         version[ 1 ] = value
       elif variable == 'BRAINVISA_PACKAGE_VERSION_PATCH' and len(version) > 2:
         version[ 2 ] = value
+      elif variable == 'BRAINVISA_BUILD_MODEL':
+        build_model = value
         
-  return ( project, component, version )
+  return ( project, component, version, build_model )
 
 def parse_project_info_python(
     path,
@@ -112,8 +115,10 @@ def parse_project_info_python(
     
       if len(version) > 2:
         version[2] = d['version_micro']
+        
+  build_model = d.get('brainvisa_build_model')
   
-  return ( project, component, version )
+  return ( project, component, version, build_model )
 
 def find_project_info( directory ):
   """Find the project_info.cmake or the info.py file

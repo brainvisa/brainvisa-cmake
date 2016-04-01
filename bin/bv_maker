@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2
 # -*- coding: utf-8 -*-
 
 #  This software and supporting documentation are distributed by
@@ -677,10 +677,10 @@ class SourceDirectory(object):
                 version_format=version_format_short
             )
             if pinfo:
-                project, component, version = pinfo
+                project, component, version, build_model = pinfo
                 version = str(version)
                 components_sources.setdefault(component, {})[
-                    bv_version or version] = dest_path
+                    bv_version or version] = (dest_path, build_model)
             else:
                 print('WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % os.path.join(self.directory, dest_path))
         json.dump(components_sources, open(
@@ -950,12 +950,12 @@ for i in os.listdir(os.path.dirname(__file__)):
                         version_format=version_format_short
                     )
                     if pinfo:
-                        project, component, version = pinfo
+                        project, component, version, build_model = pinfo
                         version = str(version)
                         if self.configuration.verbose:
                             print('    adding component %s version %s from %s' % (component, version, directory))
                         self.components[component] = (
-                            directory, version, version)
+                            directory, version, version, build_model)
                     else:
                         print('WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % directory)
                 elif first in ('brainvisa_exclude', '-'):
@@ -964,8 +964,8 @@ for i in os.listdir(os.path.dirname(__file__)):
                     for component in brainvisa_projects.find_components(componentPattern):
                         dir_version = self.components.get(component)
                         if dir_version:
-                            dir, selected_version, component_version \
-                                = dir_version
+                            dir, selected_version, component_version, \
+                               build_model = dir_version
                             if fnmatchcase(selected_version, versionPattern):
                                 if self.configuration.verbose:
                                     print('    removing component %s version %s from %s' % (component, version, dir))
@@ -990,11 +990,18 @@ for i in os.listdir(os.path.dirname(__file__)):
                     components_sources = json.load(
                         open(os.path.join(sourceDirectory,
                                           'components_sources.json')))
-                    for component in brainvisa_projects.find_components(
-                            componentPattern):
-                        for version, directory \
+                    possible_components = set(
+                        brainvisa_projects.find_components(componentPattern))
+                    possible_components.update(components_sources)
+                    for component in possible_components:
+                        for version, directory_model \
                                 in six.iteritems(
                                     components_sources.get(component, {})):
+                            if isinstance(directory_model, list):
+                                directory, build_model = directory_model
+                            else:
+                                directory = directory_model
+                                build_model = None
                             directory = os.path.join(
                                 sourceDirectory, directory)
                             if fnmatchcase(version, versionPattern):
@@ -1003,14 +1010,14 @@ for i in os.listdir(os.path.dirname(__file__)):
                                     version_format=version_format_short
                                 )
                                 if pinfo:
-                                    project, component, component_version \
-                                        = pinfo
+                                    project, component, component_version, \
+                                        build_model = pinfo
                                     component_version = str(component_version)
                                     if self.configuration.verbose:
                                         print('    adding component %s version %s from %s' \
                                             % (component, version, directory))
                                     self.components[component] = (
-                                        directory, version, component_version)
+                                        directory, version, component_version, build_model)
                                 else:
                                     print('WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % directory)
                 elif first == 'pip':
@@ -1091,8 +1098,11 @@ for i in os.listdir(os.path.dirname(__file__)):
 
         self.buildModelPerComponent = {}
         for component in sortedComponents:
-            build_model = brainvisa_projects.info_per_component.get(
-                component, {}).get('build_model')
+            # find build model
+            build_model = self.components[component][3]
+            if build_model is None:
+                build_model = brainvisa_projects.info_per_component.get(
+                    component, {}).get('build_model')
             if build_model is not None:
                 build_model_class = getattr(__import__(
                     'brainvisa.maker.build_models',
@@ -1120,8 +1130,8 @@ for i in os.listdir(os.path.dirname(__file__)):
               'CACHE STRING "BrainVISA components list" FORCE )',
               file=out)
         print(file=out)
-        for component, directory_version in six.iteritems(self.components):
-            directory, selected_version, version = directory_version
+        for component, directory_version_model in six.iteritems(self.components):
+            directory, selected_version, version, build_model = directory_version_model
             if component in self.buildModelPerComponent:
                 print('set( BRAINVISA_SOURCES_' + component + ' "' \
                     + cmake_path(self.directory ) + '/build_files/' \
@@ -1230,8 +1240,8 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
     def info(self):
         self._process_configuration_lines()
         print('Build directory: "' + self.directory + '"')
-        for component, directory_version in six.iteritems(self.components):
-            directory, selected_version, version = directory_version
+        for component, directory_version_model in six.iteritems(self.components):
+            directory, selected_version, version, build_model = directory_version_model
             print('  %s (%s) <- %s' % (component, version, directory))
 
 

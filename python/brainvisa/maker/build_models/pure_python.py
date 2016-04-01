@@ -186,7 +186,7 @@ class PurePythonComponentBuild(object):
         if write_cmakelists:
             open(cmakelists_path,'w').write(cmakelists_content)
 
-        name, component, version = read_project_info(self.source_directory)
+        name, component, version = read_project_info(self.source_directory)[:3]
         cmake_dir = osp.join(self.build_directory.directory,
                              'share', 
                              '%s-%s.%s' % (self.component_name, version[0], version[1]),

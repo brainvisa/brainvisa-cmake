@@ -24,6 +24,112 @@ if sys.version_info[0] >= 3:
     def execfile(filename, globals=None, locals=None):
         exec(compile(open(filename).read(), filename, 'exec'), globals, locals)
 
+
+class ProjectsSet(object):
+    def __init__(self, components_definition=components_definition,
+                 ordered_projects=[],
+                 components_per_group={},
+                 components_per_project={},
+                 project_per_component={},
+                 url_per_component={},
+                 info_per_component={},
+                 attributes_per_component={}):
+        self.components_definition = components_definition
+        self.ordered_projects = ordered_projects
+        self.components_per_group = components_per_group
+        self.components_per_project = components_per_project
+        self.project_per_component = project_per_component
+        self.url_per_component = url_per_component
+        self.info_per_component = info_per_component
+        self.attributes_per_component = attributes_per_component
+        self.build_lists()
+
+
+    def build_lists(self):
+        for project, components in self.components_definition:
+            self.ordered_projects.append(project)
+            for component, component_info in components['components']:
+                for group in component_info['groups']:
+                    self.components_per_group.setdefault(group,set()).add(
+                        component)
+                    self.url_per_component[component] \
+                        = component_info['branches']
+                    self.info_per_component[component] = component_info
+                self.components_per_project.setdefault(
+                    project, []).append(component)
+                self.project_per_component[component] = project
+
+
+    def add_sources_list(self, components_sources):
+        for component, versions in six.iteritems(components_sources):
+            project = self.project_per_component.get(component)
+            if not project:
+                project = component
+                project_exists = self.components_per_project.has_key(project)
+                self.project_per_component[component] = project
+                self.components_per_project.setdefault(
+                    project, []).append(component)
+                if not project_exists:
+                    self.ordered_projects.append(project)
+                # the new component doesn't belong to any group.
+            component_info = self.info_per_component.setdefault(component, {})
+            component_url = self.url_per_component.setdefault(component, {})
+            for version, version_info in six.iteritems(versions):
+                component_url[version] = (None, version_info[0])
+            component_info['branches'] = component_url
+            component_info.setdefault('groups', list())
+
+
+    def find_components(self, componentsPattern):
+      """Gets all the Brainvisa components that match the given pattern.
+
+      Parameters
+      ----------
+      componentsPattern: string
+          The pattern can be:
+          * the name of a group of projects (standard, opensource...)
+          * the name of a project (soma, axon, anatomist...)
+          * the name of a component (soma-base, anatomist-gpl...)
+          * a fnmatch pattern matching a Brainvisa component in any project
+            (soma-*, old-connectomist-*, ...)
+          * fnmatch patterns matching a project and a component
+            <project_pattern>:<component_pattern> (anatomist:*, connectomist:old-connectomist-*,...)
+
+      Returns
+      -------
+      components: list
+          the list of components that match the pattern
+      """
+      components = self.components_per_group.get(componentsPattern)
+      if components is None:
+          components = self.components_per_project.get(componentsPattern)
+          if components is None:
+              if componentsPattern in self.project_per_component:
+                  components = [componentsPattern]
+              else:
+                  l = componentsPattern.split(':')
+                  if len(l) > 2:
+                      raise SyntaxError('%s is not a valid component pattern'
+                                        % repr(componentsPattern))
+                  if len(l) == 1:
+                      projectPattern = '*'
+                      componentPattern = l[0]
+                  else:
+                      projectPattern, componentPattern = l
+                  components = []
+                  for project, projectComponents \
+                          in six.iteritems(self.components_per_project):
+                      if fnmatchcase(project, projectPattern):
+                          for component in projectComponents:
+                              if fnmatchcase(component, componentPattern):
+                                  components.append(component)
+      return components
+
+
+# these global variables are regrouped in the project_set instance.
+# they are still here for backward compatibility. Please use the
+# project_set variable instead.
+
 ordered_projects = [] # Keeping the order of project is important because this
                       # is the way configuration dependencies are handled
 components_per_group = {}
@@ -32,16 +138,12 @@ project_per_component = {}
 url_per_component = {}
 info_per_component = {}
 attributes_per_component = {}
-for project, components in components_definition:
-  ordered_projects.append(project)
-  for component, component_info in components['components']:
-    for group in component_info['groups']:
-      components_per_group.setdefault(group,set()).add(component)
-      url_per_component[component] = component_info['branches']
-      info_per_component[component] = component_info
-    components_per_project.setdefault(project,[]).append(component)
-    project_per_component[component] = project
-del project, component, components, component_info, group
+
+projects_set = ProjectsSet(
+    components_definition, ordered_projects, components_per_group,
+    components_per_project, project_per_component, url_per_component,
+    info_per_component, attributes_per_component)
+
 
 def parse_project_info_cmake(
     path,
@@ -83,6 +185,7 @@ def parse_project_info_cmake(
         
   return ( project, component, version, build_model )
 
+
 def parse_project_info_python(
     path,
     version_format = version_format_unconstrained
@@ -120,6 +223,7 @@ def parse_project_info_python(
   
   return ( project, component, version, build_model )
 
+
 def find_project_info( directory ):
   """Find the project_info.cmake or the info.py file
      contained in a directory.
@@ -155,6 +259,7 @@ def find_project_info( directory ):
       return project_info_python_path[0]
   
   return None
+
 
 def read_project_info( directory,
                        version_format = version_format_unconstrained ):
@@ -258,6 +363,7 @@ def update_project_info(project_info_path, version):
     
     return False
 
+
 def parse_versioning_client_info( client_info ):
   """Parses versioning client information for BrainVISA projects.
      The versioning client information is described using the format
@@ -273,46 +379,33 @@ def parse_versioning_client_info( client_info ):
   client_type, url = splitted_client_info[ 0:2 ]
   client_params = splitted_client_info[ 2: ]
   return (client_type, url, client_params)
-  
-def find_components( componentsPattern ):
-  """Gets all the Brainvisa components that match the given pattern. 
-  
-  @type componentsPattern: string
-  @param componentsPattern: The pattern can be:
-  - the name of a group of projects (standard, opensource...)
-  - the name of a project (soma, axon, anatomist...)
-  - the name of a component (soma-base, anatomist-gpl...)
-  - a fnmatch pattern matching a Brainvisa component in any project
-    (soma-*, old-connectomist-*, ...)
-  - fnmatch patterns matching a project and a component
-    <project_pattern>:<component_pattern> (anatomist:*, connectomist:old-connectomist-*,...)
-  
-  @rtype: list
-  @return: the list of components that match the pattern
-  """
-  components = components_per_group.get( componentsPattern )
-  if components is None:
-    components = components_per_project.get( componentsPattern )
-    if components is None:
-      if componentsPattern in project_per_component:
-        components = [ componentsPattern ]
-      else:
-        l = componentsPattern.split( ':' )
-        if len( l ) > 2:
-          raise SyntaxError( '%s is not a valid component pattern' % repr(componentsPattern) )
-        if len( l ) == 1:
-          projectPattern = '*'
-          componentPattern = l[ 0 ]
-        else:
-          projectPattern, componentPattern = l
-        components = []
-        for project, projectComponents \
-            in six.iteritems(components_per_project):
-          if fnmatchcase( project, projectPattern ):
-            for component in projectComponents:
-              if fnmatchcase( component, componentPattern ):
-                components.append( component )
-  return components
+
+
+def find_components(componentsPattern):
+    """Gets all the Brainvisa components that match the given pattern.
+
+    This global function works on the global projects_set projects. See the
+    ProjectsSet class and its find_components method.
+
+    Parameters
+    ----------
+    componentsPattern: string
+        The pattern can be:
+        * the name of a group of projects (standard, opensource...)
+        * the name of a project (soma, axon, anatomist...)
+        * the name of a component (soma-base, anatomist-gpl...)
+        * a fnmatch pattern matching a Brainvisa component in any project
+          (soma-*, old-connectomist-*, ...)
+        * fnmatch patterns matching a project and a component
+          <project_pattern>:<component_pattern> (anatomist:*, connectomist:old-connectomist-*,...)
+
+    Returns
+    -------
+    components: list
+        the list of components that match the pattern
+    """
+    return projects_set.find_components(componentsPattern)
+
 
 #if __name__ == '__main__':
     

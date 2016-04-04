@@ -990,9 +990,10 @@ for i in os.listdir(os.path.dirname(__file__)):
                     components_sources = json.load(
                         open(os.path.join(sourceDirectory,
                                           'components_sources.json')))
+                    projects_set = brainvisa_projects.ProjectsSet()
+                    projects_set.add_sources_list(components_sources)
                     possible_components = set(
-                        brainvisa_projects.find_components(componentPattern))
-                    possible_components.update(components_sources)
+                        projects_set.find_components(componentPattern))
                     for component in possible_components:
                         for version, directory_model \
                                 in six.iteritems(
@@ -1050,6 +1051,8 @@ for i in os.listdir(os.path.dirname(__file__)):
                              if i in projects]
             self.projects.extend(projects - set(self.projects))
             self._configuration_lines_processed = True
+            if self.configuration.verbose:
+                print('Build directory %s parsing done.' % self.directory)
 
     def configure(self, options, args):
         self._process_configuration_lines()

@@ -82,6 +82,13 @@ then
     done
     unset bv_env_arg
     : >| "$bv_env_tempfile"  # truncate tempfile after use
+
+    # If needed (e.g. path begins with ~), submit the path read from the
+    # history to shell expansions using eval. Doing so in a sub-shell should
+    # provide some isolation from potential side-effects of eval.
+    if [ ! -x "$bv_env" ]; then
+        bv_env=$(eval printf '%s' "$bv_env")
+    fi
 fi
 
 # Method 4: see if bv_env can be found in $PATH, which is the case if this

@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# Regression testing for the bv_env.sh script: check that it functions properly
+# in a number of common shells.
+#
+# Usage: test_bvenv.sh /path/to/brainvisa
+
 tmpdir=
 cleanup() {
     rm -rf "$tmpdir"

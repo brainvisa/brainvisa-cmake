@@ -44,22 +44,23 @@ case ${os} in
     # setup "interactive" functions
     . /i2bm/local/etc/bashrc
 
-    # choose the qt version used for compilation
-    export I2BM_QT=4
-
     bv_setup_devel
 
     # remove distcc on linux
     bv_pathvar_remove PATH /usr/lib64/distcc/bin
     bv_pathvar_remove PATH /usr/lib/distcc/bin
 
+    export BRAINVISA_TESTS_DIR=/neurospin/brainvisa/tests/${I2BM_OSID}
+
     case ${os} in
       macos)
         . ${HOME}/.bashrc
+        export BRAINVISA_TESTS_DIR=/neurospin/brainvisa/tests/`bv_system_info`
         ;;
     esac
     ;;
   windows)
+    export BRAINVISA_TESTS_DIR=/c/bv_tests
     ;;
   *)
     exit 1
@@ -136,6 +137,11 @@ bv_test() {
   rm -f "$stderr"
   # build target, redirecting all output
   echo "Test "
+
+  if [ ! -d "${BRAINVISA_TESTS_DIR}" ]; then
+    mkdir -p "${BRAINVISA_TESTS_DIR}"
+  fi
+
   $binary_dir/bv_maker "test" >"$stderr" 2>&1
 
   status=$?

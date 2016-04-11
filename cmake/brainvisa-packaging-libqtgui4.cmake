@@ -1,4 +1,5 @@
 find_package( Qt4 COMPONENTS QtGui )
+find_package( LibAudio )
 
 function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )
   set( ${package_name} ${component} PARENT_SCOPE )
@@ -9,6 +10,9 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libpng12 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libgcc1 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libstdc++6 RUN )
+  if( LIBAUDIO_FOUND )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libaudio RUN )
+  endif()
   # ship libfontconfig only on Mandriva 2008 packages
   execute_process( COMMAND "${CMAKE_BINARY_DIR}/bin/bv_system_info" RESULT_VARIABLE result OUTPUT_VARIABLE output OUTPUT_STRIP_TRAILING_WHITESPACE )
   if( result EQUAL 0 )

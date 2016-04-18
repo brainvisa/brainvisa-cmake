@@ -50,12 +50,11 @@ case ${os} in
     bv_pathvar_remove PATH /usr/lib64/distcc/bin
     bv_pathvar_remove PATH /usr/lib/distcc/bin
 
-    export BRAINVISA_TESTS_DIR=/neurospin/brainvisa/tests/${I2BM_OSID}
+    export BRAINVISA_TESTS_DIR="/neurospin/brainvisa/tests/$($binary_dir/bv_system_info)"
 
     case ${os} in
       macos)
         . ${HOME}/.bashrc
-        export BRAINVISA_TESTS_DIR=/neurospin/brainvisa/tests/`bv_system_info`
         ;;
     esac
     ;;

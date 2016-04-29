@@ -13,7 +13,7 @@ endif (NUMPY_INCLUDE_DIR)
 
 find_package(python REQUIRED)
 EXEC_PROGRAM ("${PYTHON_EXECUTABLE}"
-  ARGS "-c" "\"import numpy; print '>>BEGIN NPY CONFIG<<'; print numpy.get_include(); print '>>END NPY CONFIG<<'\""
+  ARGS "-c" "\"from __future__ import print_function; import numpy; print('>>BEGIN NPY CONFIG<<'); print(numpy.get_include()); print('>>END NPY CONFIG<<')\""
   OUTPUT_VARIABLE NUMPY_INCLUDE_DIR_WRAPPED
   ERROR_QUIET
   RETURN_VALUE NUMPY_NOT_FOUND)
@@ -28,7 +28,7 @@ if (NUMPY_NOT_FOUND EQUAL 0)
   set (NUMPY_FOUND TRUE)
   set (NUMPY_INCLUDE_DIR ${NUMPY_INCLUDE_DIR} CACHE STRING "Numpy include path")
   EXEC_PROGRAM ("${PYTHON_EXECUTABLE}"
-    ARGS "-c" "\"import numpy; print '>>BEGIN NPY CONFIG<<'; print numpy.version.version; print '>>END NPY CONFIG<<'\""
+    ARGS "-c" "\"from __future__ import print_function; import numpy; print('>>BEGIN NPY CONFIG<<'); print(numpy.version.version); print('>>END NPY CONFIG<<')\""
     OUTPUT_VARIABLE NUMPY_VERSION_WRAPPED)
   string( REGEX MATCH ">>BEGIN NPY CONFIG<<.(.*).>>END NPY CONFIG<<"
     _dummy "${NUMPY_VERSION_WRAPPED}"

@@ -29,7 +29,7 @@ else()
     OUTPUT_VARIABLE _fullVersion )
   string(REPLACE "." "" _versionNoDot ${_version} )
   message( STATUS "Using python ${_fullVersion}: ${PYTHON_EXECUTABLE}" )
-  execute_process( COMMAND "${PYTHON_EXECUTABLE}" "-c" "import sys; print \";\".join(sys.path)"
+  execute_process( COMMAND "${PYTHON_EXECUTABLE}" "-c" "from __future__ import print_function; import sys; print(\";\".join(sys.path))"
     OUTPUT_VARIABLE _pythonpath OUTPUT_STRIP_TRAILING_WHITESPACE )
 
   set( PYTHON_VERSION "${_fullVersion}" CACHE STRING "Python full version (e.g. \"2.6.2\")" )

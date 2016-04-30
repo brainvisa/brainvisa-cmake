@@ -103,8 +103,20 @@ else()
   unset( PYTHON_MODULES_PATH2 CACHE )
   unset( PYTHON_MODULES_PATH3 CACHE )
 
+  # try to find the "python3-config" or "python2-config" program
+  get_filename_component( _py_exe_dir ${PYTHON_EXECUTABLE} PATH )
+  set( _py_config_exe "${_py_exe_dir}/python${PYTHON_SHORT_VERSION}-config" )
+  if( WIN32 )
+    set( _py_config_exe "${_py_config_exe}.exe" )
+  endif()
+  if( EXISTS ${_py_config_exe} )
+    execute_process( COMMAND "${_py_config_exe}" "--libs"
+                     OUTPUT_VARIABLE _py_libs )
+    string( REGEX MATCH "(python[^ ]*)" _py_main_lib "${_py_libs}" )
+  endif()
+
   find_library( PYTHON_LIBRARY
-    NAMES python${_versionNoDot} python${_version} python
+    NAMES ${_py_main_lib} python${_versionNoDot} python${_version} python
     HINTS
       "${_prefix}/lib"
       ${PYTHON_FRAMEWORK_LIBRARIES}

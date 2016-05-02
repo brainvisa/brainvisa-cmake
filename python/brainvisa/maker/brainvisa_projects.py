@@ -65,7 +65,7 @@ class ProjectsSet(object):
             project = self.project_per_component.get(component)
             if not project:
                 project = component
-                project_exists = self.components_per_project.has_key(project)
+                project_exists = (project in self.components_per_project)
                 self.project_per_component[component] = project
                 self.components_per_project.setdefault(
                     project, []).append(component)

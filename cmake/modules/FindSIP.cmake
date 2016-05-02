@@ -27,7 +27,7 @@ else( SIP_VERSION )
     execute_process( COMMAND ${SIP_EXECUTABLE} -V OUTPUT_VARIABLE SIP_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE )
     set( SIP_VERSION "${SIP_VERSION}" CACHE STRING "Version of sip executable" )
     mark_as_advanced( SIP_VERSION )
-    execute_process( COMMAND ${PYTHON_EXECUTABLE} -c "import sipconfig; print sipconfig.Configuration().sip_inc_dir"
+    execute_process( COMMAND ${PYTHON_EXECUTABLE} -c "import sipconfig, sys; sys.stdout.write(sipconfig.Configuration().sip_inc_dir + '\n')"
       OUTPUT_VARIABLE SIP_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE )
     set( SIP_INCLUDE_DIR "${SIP_INCLUDE_DIR}" CACHE PATH "Path to sip include files" )
     mark_as_advanced( SIP_INCLUDE_DIR )

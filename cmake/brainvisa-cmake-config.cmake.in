@@ -2159,8 +2159,10 @@ macro( BRAINVISA_ADD_MOC_FILES _sources )
           ARGS ${_tmp_FILE} -o ${_moc}
           DEPENDS ${_tmp_FILE}
         )
-      else()
+      elseif( DESIRED_QT_VERSION EQUAL 4 )
         QT4_GENERATE_MOC( "${_tmp_FILE}" "${_moc}" )
+      else()
+        qt5_generate_moc( "${_tmp_FILE}" "${_moc}" )
       endif()
       set(${_sources} ${${_sources}} "${_moc}" )
     endif()

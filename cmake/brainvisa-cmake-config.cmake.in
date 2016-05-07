@@ -2805,7 +2805,8 @@ MACRO ( BRAINVISA_QT_WRAP_UI outfiles inputfiles input_outdir )
   set(CMAKE_CURRENT_BINARY_DIR ${_old_dir})
 ENDMACRO()
 
+# compatibility function. Obsolete. Use BRAINVISA_QT_WRAP_UI instead.
 MACRO ( BRAINVISA_QT4_WRAP_UI outfiles inputfiles input_outdir )
-  BRAINVISA_QT_WRAP_UI( outfiles inputfiles input_outdir )
+  BRAINVISA_QT_WRAP_UI( ${outfiles} ${inputfiles} ${input_outdir} )
 ENDMACRO()
 

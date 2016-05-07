@@ -22,6 +22,14 @@ if( NOT DEFINED QT_VERSION )
       get_target_property( QT_LUPDATE_EXECUTABLE Qt5::lupdate
         IMPORTED_LOCATION )
       get_target_property( QT_QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION )
+      set( QT_LUPDATE_EXECUTABLE ${QT_LUPDATE_EXECUTABLE} CACHE FILEPATH
+        "lupdate executable path" )
+      set( QT_LRELEASE_EXECUTABLE ${QT_LRELEASE_EXECUTABLE} CACHE FILEPATH
+        "lrelease executable path" )
+      set( QT_MOC_EXECUTABLE ${QT_MOC_EXECUTABLE} CACHE FILEPATH
+        "moc executable path" )
+      set( QT_QMAKE_EXECUTABLE ${QT_QMAKE_EXECUTABLE} CACHE FILEPATH
+        "qmake executable path" )
     endif()
   endif()
   if(QT_VERSION_MAJOR)

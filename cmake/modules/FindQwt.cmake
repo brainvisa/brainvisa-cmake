@@ -37,7 +37,7 @@ if( NOT QWT_FOUND )
   find_library( QWT_LIBRARY 
                 NAMES qwt5-qt${DESIRED_QT_VERSION} qwt-qt${DESIRED_QT_VERSION} qwt5 qwt
                 PATH_SUFFIXES ${lib_paths} )
-  
+
   SET(QWT_FOUND FALSE)
   IF(QWT_INCLUDE_DIR AND QWT_LIBRARY)
     SET(QWT_FOUND TRUE)

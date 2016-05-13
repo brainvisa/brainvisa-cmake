@@ -26,7 +26,7 @@ if( NOT QWT_FOUND )
              PATH_SUFFIXES ${include_paths}
              NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH )
   find_library( QWT_LIBRARY 
-                NAMES qwt5-qt${DESIRED_QT_VERSION} qwt-qt${DESIRED_QT_VERSION} qwt5 qwt
+                NAMES qwt-qt${DESIRED_QT_VERSION} qwt5-qt${DESIRED_QT_VERSION} qwt5 qwt
                 PATHS ${CMAKE_PREFIX_PATH} ENV QWTDIR
                 PATH_SUFFIXES ${lib_paths}
                 NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH )
@@ -35,14 +35,34 @@ if( NOT QWT_FOUND )
   find_path( QWT_INCLUDE_DIR qwt.h 
              PATH_SUFFIXES ${include_paths} )
   find_library( QWT_LIBRARY 
-                NAMES qwt5-qt${DESIRED_QT_VERSION} qwt-qt${DESIRED_QT_VERSION} qwt5 qwt
+                NAMES qwt-qt${DESIRED_QT_VERSION} qwt5-qt${DESIRED_QT_VERSION} qwt5 qwt
                 PATH_SUFFIXES ${lib_paths} )
+
+  # check that it is linked against the correct version of Qt
+  if( QWT_LIBRARY AND (UNIX AND NOT APPLE) )
+    execute_process( COMMAND ldd ${QWT_LIBRARY} OUTPUT_VARIABLE _qwt_libs )
+    if( DESIRED_QT_VERSION EQUAL 4 )
+      string( REGEX MATCH ".*(libQt5[^$]*)$" _match ${_qwt_libs} )
+      if( _match )
+        message( "Qwt is found but is linked against a different version of Qt" )
+        unset( QWT_LIBRARY CACHE )
+        unset( QWT_LIBRARY )
+      endif()
+    elseif( DESIRED_QT_VERSION EQUAL 5 )
+      string( REGEX MATCH ".*(libQt[^$]*\\.so\\.4[^$]*)$" _match ${_qwt_libs} )
+      if( _match )
+        message( "Qwt is found but is linked against a different version of Qt" )
+        unset( QWT_LIBRARY CACHE )
+        unset( QWT_LIBRARY )
+      endif()
+    endif()
+  endif()
 
   SET(QWT_FOUND FALSE)
   IF(QWT_INCLUDE_DIR AND QWT_LIBRARY)
     SET(QWT_FOUND TRUE)
   ENDIF(QWT_INCLUDE_DIR AND QWT_LIBRARY)
-  
+
   IF(NOT QWT_FOUND)
     IF(NOT QWT_FIND_QUIETLY)
       MESSAGE(STATUS "Qwt was not found.")

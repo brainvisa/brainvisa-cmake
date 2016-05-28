@@ -101,8 +101,10 @@ def system(*args, **kwargs):
     popen = subprocess.Popen(args, **kwargs)
     popen.communicate()
     if popen.returncode != 0:
-        raise OSError('Command failed: %s' %
-                      ' '.join((repr(i) for i in args)))
+        txt = 'Command failed: %s' % ' '.join((repr(i) for i in args))
+        if 'cwd' in kwargs:
+            txt = '%s\nFrom directory: %s' % (txt, kwargs['cwd'])
+        raise OSError(txt)
 
 
 def cmake_path(path):
@@ -1225,10 +1227,12 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
             subprocess.call(
                 [sys.executable, bv_clean] + clean_opts + [self.directory])
 
+        print('Building directory:', self.directory)
         system(cwd=self.directory, *(['make'] + self.make_options.split()))
 
     def doc(self):
         self._process_configuration_lines()
+        print('Building docs in directory:', self.directory)
         system(cwd=self.directory, *
                (['make'] + self.make_options.split() + ['doc']))
 
@@ -1237,6 +1241,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         # get parallel jobs option if specified
         make_opts = self.make_options.split()
         options = []
+        print('testing directory:', self.directory)
         system(cwd=self.directory,
                *(['ctest', '--output-on-failure'] + options))
 

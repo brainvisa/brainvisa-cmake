@@ -37,9 +37,16 @@ else()
                                      ${PROJECT_NAME} python/%(component_name)s
                                      INSTALL_ONLY )
 endif()
+
 if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/bin" )
     BRAINVISA_COPY_DIRECTORY( "${BRAINVISA_REAL_SOURCE_DIR}/bin"
                               bin
+                              ${PROJECT_NAME} )
+endif()
+
+if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/share" )
+    BRAINVISA_COPY_DIRECTORY( "${BRAINVISA_REAL_SOURCE_DIR}/share"
+                              share/${PROJECT_NAME}-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}
                               ${PROJECT_NAME} )
 endif()
 

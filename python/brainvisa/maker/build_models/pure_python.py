@@ -50,6 +50,12 @@ if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/share" )
                               ${PROJECT_NAME} )
 endif()
 
+if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/brainvisa" )
+    BRAINVISA_COPY_DIRECTORY( "${BRAINVISA_REAL_SOURCE_DIR}/brainvisa"
+                              brainvisa
+                              ${PROJECT_NAME} )
+endif()
+
 if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/doc/source" )
     BRAINVISA_GENERATE_SPHINX_DOC( "${BRAINVISA_REAL_SOURCE_DIR}/doc/source"
         "share/doc/%(component_name)s-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}" )

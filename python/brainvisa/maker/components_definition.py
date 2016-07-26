@@ -556,6 +556,23 @@ components_definition = [
                 },
                 'build_model': 'pure_python',
             }],
+            ['catidb3_server', { # Experimental branch to propose a new organization
+                'groups': ['catidb3_all'],
+                'branches': {
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb3_server/trunk','catidb3_server/trunk'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb3_server/branches/bug_fix',' catidb3_server/bug_fix'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb3_server/tags/latest_release',' catidb3_server/latest_release'),
+                },
+            }],
+            ['catidb3_client', { # Experimental branch to propose a new organization
+                'groups': ['catidb3_all'],
+                'branches': {
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb3_client/trunk','catidb3_client/trunk'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb3_client/branches/bug_fix',' catidb3_client/bug_fix'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb3_client/tags/latest_release',' catidb3_client/latest_release'),
+                },
+                'build_model': 'pure_python',
+            }],
         ],
     }),
     ('release', {

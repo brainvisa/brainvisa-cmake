@@ -336,8 +336,8 @@ components_definition = [
                 'groups': ['all'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/primatologist-gpl/trunk','brainrat/primatologist-gpl/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/primatologist-gpl/branches/bug_fix','brainrat/primatologist-gpl/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/primatologist-gpl/tags/latest_release','brainrat/primatologist-gpl/latest_release'),
+#                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/primatologist-gpl/branches/bug_fix','brainrat/primatologist-gpl/bug_fix'),
+#                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/primatologist-gpl/tags/latest_release','brainrat/primatologist-gpl/latest_release'),
                 },
             }],
         ],

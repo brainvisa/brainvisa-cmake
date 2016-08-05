@@ -309,13 +309,47 @@ string find_python_osmodule( const string &install_directory )
 }
 
 
+bool is_full_path( const string & exe_name )
+{
+  if( exe_name.empty() )
+    return false;
+  if( exe_name[0] == PATH_SEP[0] )
+    return true;
+  if( exe_name.find( PATH_SEP ) != string::npos )
+    return true;
+  return false;
+}
+
+
+string find_in_path( const string & exe_name )
+{
+  if( is_full_path( exe_name ) )
+    return exe_name;
+
+  vector< string > path = split_env( getenv( "PATH" ) );
+  vector< string >::const_iterator i, e = path.end();
+  for( i=path.begin(); i!=e; ++i )
+  {
+    string full_path = *i + PATH_SEP + exe_name;
+    if( file_exists( full_path ) )
+      return full_path;
+  }
+
+  return "";
+}
+
+
 bool is_python_script( const string & arg )
 {
   if( arg.length() >= 3
       && arg.substr( arg.length() - 3, 3 ) == ".py" )
     return true;
 
-  ifstream f( arg.c_str() );
+  string full_path = find_in_path( arg );
+  if( full_path.empty() )
+    return false;
+
+  ifstream f( full_path.c_str() );
   if( !f )
     return false;
 
@@ -535,8 +569,12 @@ int main( int argc, char *argv[] )
     // shell, which would also cause problems on MacOS 10.11 and possibly
     // on Windows
     //std::cout << argv[1] << " is python script:" << is_python_script( argv[1] ) << std::endl;
+    bool add_full_path = false;
     if( is_python_script( argv[1] ) )
+    {
       args.push_back( strdup( "python" ) );
+      add_full_path = true;
+    }
 
     for( map< string, string>::const_iterator it = backup_variables.begin(); it != backup_variables.end(); ++it ) {
       set_env(  unenv_prefix + it->first, it->second );
@@ -546,6 +584,9 @@ int main( int argc, char *argv[] )
       args.push_back( strdup( argv[i + 1] ) );
     }
     args.push_back( (const char *)NULL );
+
+    if( add_full_path )
+      args[1] = strdup( find_in_path( args[1] ).c_str() );
 
     execvp( args[0], (char * const *)&args[0] );
 
@@ -565,6 +606,9 @@ int main( int argc, char *argv[] )
       args.push_back( strdup( argv[i + 1] ) );
     }
     args.push_back( (const char *)NULL );
+
+    if( add_full_path )
+      args[1] = strdup( find_in_path( args[1] ).c_str() );
 
     // Double-quoted arguments is required on windows before spawnvp call
     // otherwise contained spaces are used as argument separator

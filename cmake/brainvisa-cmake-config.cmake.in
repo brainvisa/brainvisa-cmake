@@ -167,7 +167,7 @@ if not os.path.exists(cmake) or os.stat(cmake).st_mtime < os.stat(info).st_mtime
         raise
 sys.stdout.write(cmake)
 ")
-        execute_process(COMMAND python "${script}" OUTPUT_VARIABLE cmake ERROR_VARIABLE error)
+        execute_process(COMMAND "${PYTHON_EXECUTABLE}" "${script}" OUTPUT_VARIABLE cmake ERROR_VARIABLE error)
         if(error)
             message(FATAL_ERROR "${error}")
         endif()
@@ -1387,7 +1387,7 @@ function( BRAINVISA_ADD_COMMAND_HELP name)
 
     if (${name}-command-is-script)
       # Execute command using python interpreter
-      set( _command "python" ${_command})
+      set( _command "${PYTHON_EXECUTABLE}" ${_command})
     endif()
   endif()
 
@@ -1411,7 +1411,7 @@ function( BRAINVISA_ADD_COMMAND_HELP name)
     # Add help generation target
     add_custom_command( OUTPUT "${_component_help_directory}/${name}" 
                         COMMAND "${CMAKE_COMMAND}" -E make_directory "${_component_help_directory}"
-                        COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env" python -c "import sys, subprocess; subprocess.call( ['${_command}'], stdout = sys.stdout, stderr = sys.stdout )" > ${_component_help_directory}/${name}
+                        COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env" "${PYTHON_EXECUTABLE}" -c "import sys, subprocess; subprocess.call( ['${_command}'], stdout = sys.stdout, stderr = sys.stdout )" > ${_component_help_directory}/${name}
                         DEPENDS ${_depends}
                         COMMENT "Generating ${name} help file ..."
                         VERBATIM )

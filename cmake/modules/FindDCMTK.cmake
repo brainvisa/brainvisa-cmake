@@ -300,7 +300,8 @@ if( DCMTK_config_INCLUDE_DIR AND
     SET( DCMTK_INCLUDE_DIR
       ${DCMTK_dcmdata_INCLUDE_DIR}
       ${DCMTK_config_INCLUDE_DIR}
-      ${DCMTK_config_INCLUDE_DIR}/dcmtk/config
+      ${DCMTK_config_INCLUDE_DIR}/../
+      ${DCMTK_config_INCLUDE_DIR}/config
       ${DCMTK_dcmdata_INCLUDE_DIR}/dcmtk/dcmdata
       ${DCMTK_dcmimage_INCLUDE_DIR}/dcmtk/dcmdata
       ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtk/dcmnet
@@ -316,7 +317,8 @@ if( DCMTK_config_INCLUDE_DIR AND
    SET(DCMTK_INCLUDE_DIR
      ${DCMTK_dcmdata_INCLUDE_DIR}
      ${DCMTK_config_INCLUDE_DIR}
-     ${DCMTK_config_INCLUDE_DIR}/dcmtk/config
+     ${DCMTK_config_INCLUDE_DIR}/../
+     ${DCMTK_config_INCLUDE_DIR}/config
      ${DCMTK_dcmdata_INCLUDE_DIR}/dcmtk/dcmdata
      ${DCMTK_dcmimage_INCLUDE_DIR}/dcmtk/dcmimage
      ${DCMTK_dcmimgle_INCLUDE_DIR}/dcmtk/dcmimgle

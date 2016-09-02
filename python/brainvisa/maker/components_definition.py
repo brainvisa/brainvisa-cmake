@@ -8,7 +8,10 @@ components_definition = [
             ['brainvisa-cmake', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/trunk','development/brainvisa-cmake/trunk'),
+                    # trunk actually points to bug_fix branch, because both
+                    # have to be synchronized. trunk will be reserved for
+                    # future incompatible releases.
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/bug_fix','development/brainvisa-cmake/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/branches/bug_fix','development/brainvisa-cmake/bug_fix'),
                     'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/tags/latest_release','development/brainvisa-cmake/latest_release'),
                 },

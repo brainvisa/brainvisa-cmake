@@ -246,7 +246,6 @@ To get help for a specific command, use -h option of the command. Example: "%pro
                         if len(l) != 2:
                             raise SyntaxError()
                         if l[0] == 'source':
-                            pass
                             currentDirectoryObject = SourceDirectory(
                                 environmentVariablesSubstitution(l[1].strip()), self)
                             if (not directories or (currentDirectoryObject.directory in directories)):
@@ -255,10 +254,11 @@ To get help for a specific command, use -h option of the command. Example: "%pro
                             elif self.verbose:
                                 print('Passing ', currentDirectoryObject.directory, 'because it is not in the selected directories.')
                         elif l[0] == 'build':
-                            pass
                             currentDirectoryObject = BuildDirectory(
                                 environmentVariablesSubstitution(l[1].strip()), self)
-                            if (not directories or (currentDirectoryObject.directory in directories)):
+                            if (not directories
+                                or (currentDirectoryObject.directory
+                                    in directories)):
                                 self.buildDirectories[
                                     currentDirectoryObject.directory] = currentDirectoryObject
                             elif self.verbose:
@@ -266,7 +266,9 @@ To get help for a specific command, use -h option of the command. Example: "%pro
                         elif l[0] == 'virtualenv':
                             currentDirectoryObject = VirtualenvDirectory(
                                 environmentVariablesSubstitution(l[1].strip()), self)
-                            if (not directories or (currentDirectoryObject.directory in directories)):
+                            if (not directories
+                                or (currentDirectoryObject.directory
+                                    in directories)):
                                 self.buildDirectories[
                                     currentDirectoryObject.directory] = currentDirectoryObject
                             elif self.verbose:
@@ -882,7 +884,8 @@ If you did not do this on purpose, you should go back to following upstream:
 
 class BuildDirectory(object):
     _validOptions = set(('build_type', 'make_options', 'cmake_options',
-                         'packaging_thirdparty', 'default_steps'))
+                         'packaging_thirdparty', 'default_steps',
+                         'build_condition'))
 
     sitecustomize_content = '''import os
 
@@ -906,6 +909,7 @@ for i in os.listdir(os.path.dirname(__file__)):
         self._configuration_lines_processed = False
         self.clean_commands = True
         self.default_steps = ['configure', 'build']
+        self.build_condition = None
 
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ build ... ]:
@@ -1056,8 +1060,27 @@ for i in os.listdir(os.path.dirname(__file__)):
             if self.configuration.verbose:
                 print('Build directory %s parsing done.' % self.directory)
 
+    def conditional_build(self):
+        '''Tells if the current build directory has actually to be built.
+        If a condition option is False, it will not.
+        '''
+        if not self.build_condition:
+            return True
+        cond = True
+        try:
+            cond = eval(self.build_condition)
+        except Exception, e:
+            print('Build directory', self.directory, ': error in parsing build_condition option:', file=sys.stderr)
+            print(self.build_condition, file=sys.stderr)
+            print('(Condition is evaluated as python expression). Error:', sys.stderr)
+            print(e, file=sys.stderr)
+            raise
+        return cond
+
     def configure(self, options, args):
         self._process_configuration_lines()
+        if not self.conditional_build():
+            return
         # Order of projects and components is important for dependencies
         sortedProjects = [p for p in brainvisa_projects.ordered_projects
                           if p in self.projects]
@@ -1214,6 +1237,8 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 
     def build(self, options, args):
         self._process_configuration_lines()
+        if not self.conditional_build():
+            return
         if options.clean:
             if self.clean_commands:
                 clean_opts = ['-b']
@@ -1232,12 +1257,16 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 
     def doc(self):
         self._process_configuration_lines()
+        if not self.conditional_build():
+            return
         print('Building docs in directory:', self.directory)
         system(cwd=self.directory, *
                (['make'] + self.make_options.split() + ['doc']))
 
     def test(self):
         self._process_configuration_lines()
+        if not self.conditional_build():
+            return
         # get parallel jobs option if specified
         make_opts = self.make_options.split()
         options = []
@@ -1247,6 +1276,8 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 
     def info(self):
         self._process_configuration_lines()
+        if not self.conditional_build():
+            return
         print('Build directory: "' + self.directory + '"')
         for component, directory_version_model in six.iteritems(self.components):
             directory, selected_version, version, build_model = directory_version_model

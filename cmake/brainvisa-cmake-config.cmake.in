@@ -142,6 +142,9 @@ function(BRAINVISA_READ_PROJECT_INFO directory)
         set(script "${script}.py")
         file(WRITE  "${script}"
     "import sys, os
+if sys.version_info[0] >= 3:
+    def execfile(filename, globals=globals(), locals=locals()):
+        exec(compile(open(filename).read(), filename, 'exec'), globals, locals)
 info=os.path.normpath('${info}')
 execfile(info)
 cmake = os.path.join(os.path.normpath('${CMAKE_BINARY_DIR}'),'build_files',NAME,'project_info.cmake')

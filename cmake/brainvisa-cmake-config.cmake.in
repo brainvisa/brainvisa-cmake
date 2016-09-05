@@ -141,7 +141,8 @@ function(BRAINVISA_READ_PROJECT_INFO directory)
         BRAINVISA_TEMPORARY_FILE_NAME(script)
         set(script "${script}.py")
         file(WRITE  "${script}"
-    "import sys, os
+    "from __future__ import print_function
+import sys, os
 if sys.version_info[0] >= 3:
     def execfile(filename, globals=globals(), locals=locals()):
         exec(compile(open(filename).read(), filename, 'exec'), globals, locals)
@@ -157,14 +158,14 @@ if not os.path.exists(cmake) or os.stat(cmake).st_mtime < os.stat(info).st_mtime
         for name in ('NAME', 'version_major', 'version_minor', 'version_micro', 'LICENSE'):
             if name not in locals():
                 raise RuntimeError('No value found for %s. This variable should be defined in %s' % (name, info))
-        print >> f, 'set(BRAINVISA_PACKAGE_NAME \"%s\" PARENT_SCOPE)' % NAME
-        print >> f, 'set(BRAINVISA_PACKAGE_MAIN_PROJECT \"%s\" PARENT_SCOPE)' % PROJECT
-        print >> f, 'set(BRAINVISA_PACKAGE_VERSION_MAJOR %d PARENT_SCOPE)' % version_major
-        print >> f, 'set(BRAINVISA_PACKAGE_VERSION_MINOR %d PARENT_SCOPE)' % version_minor
-        print >> f, 'set(BRAINVISA_PACKAGE_VERSION_PATCH %d PARENT_SCOPE)' % version_micro
+        print('set(BRAINVISA_PACKAGE_NAME \"%s\" PARENT_SCOPE)' % NAME, file=f)
+        print('set(BRAINVISA_PACKAGE_MAIN_PROJECT \"%s\" PARENT_SCOPE)' % PROJECT, file=f)
+        print('set(BRAINVISA_PACKAGE_VERSION_MAJOR %d PARENT_SCOPE)' % version_major, file=f)
+        print('set(BRAINVISA_PACKAGE_VERSION_MINOR %d PARENT_SCOPE)' % version_minor, file=f)
+        print('set(BRAINVISA_PACKAGE_VERSION_PATCH %d PARENT_SCOPE)' % version_micro, file=f)
         if 'MAINTAINTER' in locals():
-            print >> f, 'set(BRAINVISA_PACKAGE_MAINTAINER \"%s\" PARENT_SCOPE)'
-        print >> f, 'set(BRAINVISA_PACKAGE_LICENCES \"%s\" PARENT_SCOPE)' % LICENSE
+            print('set(BRAINVISA_PACKAGE_MAINTAINER \"%s\" PARENT_SCOPE)', file=f)
+        print('set(BRAINVISA_PACKAGE_LICENCES \"%s\" PARENT_SCOPE)' % LICENSE, file=f)
     except:
         os.remove(cmake)
         raise

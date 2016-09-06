@@ -10,8 +10,14 @@ if( SPHINX_VERSION )
   # Sphinx is already found, do nothing
   set(SPHINX_FOUND TRUE)
 else()
+  find_package( PythonInterp )
+  if( PYTHON_SHORT_VERSION VERSION_LESS "3.0" )
+    set(sphinxbuild_cmd sphinx-build)
+  else()
+    set(sphinxbuild_cmd sphinx-build3)
+  endif()
   find_program( SPHINXBUILD_EXECUTABLE
-    NAMES sphinx-build
+    NAMES ${sphinxbuild_cmd}
     DOC "Path to sphinx-build executable" )
 
   find_package( python REQUIRED )

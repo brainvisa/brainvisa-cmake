@@ -141,7 +141,7 @@ bv_test() {
     mkdir -p "${BRAINVISA_TESTS_DIR}"
   fi
 
-  $binary_dir/bv_maker "test" >"$stderr" 2>&1
+  $binary_dir/bv_maker "test" --only-if-default >"$stderr" 2>&1
 
   status=$?
   # if errors detected copy output file into log
@@ -170,7 +170,7 @@ bv_doc() {
   # rm -f "$stdout"
   # build documentation, redirecting all output
   echo "Doc "
-  $binary_dir/bv_maker doc 1>/dev/null 2>"$stderr"
+  $binary_dir/bv_maker doc --only-if-default 1>/dev/null 2>"$stderr"
   status=$?
   # if errors detected copy output file into log
   if [ $status -ne 0 ]

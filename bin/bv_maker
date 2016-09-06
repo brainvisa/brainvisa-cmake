@@ -1069,7 +1069,7 @@ for i in os.listdir(os.path.dirname(__file__)):
         cond = True
         try:
             cond = eval(self.build_condition)
-        except Exception, e:
+        except Exception as e:
             print('Build directory', self.directory, ': error in parsing build_condition option:', file=sys.stderr)
             print(self.build_condition, file=sys.stderr)
             print('(Condition is evaluated as python expression). Error:', sys.stderr)

@@ -58,6 +58,10 @@ IF(EXISTS PYQT4_VERSION)
 ELSE(EXISTS PYQT4_VERSION)
 
   FIND_FILE(_find_pyqt_py FindPyQt.py PATHS ${CMAKE_MODULE_PATH})
+  set(_tmp ${_find_pyqt_py})
+  unset(_find_pyqt_py CACHE)
+  set(_find_pyqt_py ${_tmp})
+  unset(_tmp)
 
   EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} ${_find_pyqt_py} OUTPUT_VARIABLE pyqt_config)
   IF(pyqt_config)

@@ -508,12 +508,6 @@ components_definition = [
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/ptk/pyptk/trunk','ptk/pyptk/trunk'),
                 },
             }],
-            ['qualicati', {
-                'groups': ['all'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/ptk/qualicati/trunk','ptk/qualicati/trunk'),
-                },
-            }],
             ['fiber-clustering', {
                 'groups': ['all'],
                 'branches': {
@@ -622,6 +616,20 @@ components_definition = [
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/disco/branches/bug_fix', 'disco/bug_fix'),
                     'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/disco/tags/latest_release', 'disco/latest_release'),
                 },
+            }],
+        ],
+    }),
+    ('qualicati', {
+        'description': 'CATI quality control software.',
+        'components': [
+            ['qualicati', {
+                'groups': ['all'],
+                'branches': {
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/qualicati/trunk','qualicati/trunk'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/qualicati/branches/bug_fix','qualicati/bug_fix'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/qualicati/tags/latest_release','qualicati/latest_release'),
+                },
+                'build_model': 'pure_python',
             }],
         ],
     }),

@@ -633,6 +633,20 @@ components_definition = [
             }],
         ],
     }),
+    ('fmri', {
+        'description': 'Functional MRI processing toolboxes.',
+        'components': [
+            ['rsfmri', {
+                'groups': ['all'],
+                'branches': {
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/fmri/rsfmri/trunk','rsfmri/trunk'),
+                    #'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/fmri/rsfmri/branches/bug_fix','rsfmri/bug_fix'),
+                    #'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/fmri/rsfmri/tags/latest_release','rsfmri/latest_release'),
+                },
+                'build_model': 'pure_python',
+            }],
+        ],
+    }),
 ]
 
 customize_components_definition = [os.path.expanduser('~/.brainvisa/components_definition.py')]

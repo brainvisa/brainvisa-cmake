@@ -6,7 +6,7 @@ components_definition = [
     ('development', {
         'components': [
             ['brainvisa-cmake', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     # trunk actually points to bug_fix branch, because both
                     # have to be synchronized. trunk will be reserved for
@@ -17,7 +17,7 @@ components_definition = [
                 },
             }],
             ['brainvisa-svn', {
-                'groups': ['all', 'opensource', 'standard', 'catidb_server', 'catidb3_all'],
+                'groups': ['all', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-svn/trunk','development/brainvisa-svn/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-svn/branches/bug_fix','development/brainvisa-svn/bug_fix'),
@@ -29,7 +29,7 @@ components_definition = [
     ('communication', {
         'components': [
             ['documentation', {
-                'groups': ['all', 'opensource', 'standard'],
+                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/documentation/trunk','communication/documentation/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/documentation/branches/bug_fix','communication/documentation/bug_fix'),
@@ -37,7 +37,7 @@ components_definition = [
                 },
             }],
             ['bibliography', {
-                'groups': ['all', 'opensource', 'standard'],
+                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/bibliography/trunk','communication/bibliography/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/bibliography/trunk','communication/bibliography/bug_fix'),
@@ -45,14 +45,14 @@ components_definition = [
                 },
             }],
             ['latex', {
-                'groups': ['all', 'opensource', 'standard'],
+                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/latex/trunk','communication/latex/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/latex/trunk','communication/latex/bug_fix'),
                 },
             }],
             ['web', {
-                'groups': ['all', 'opensource', 'standard'],
+                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/web/trunk','communication/web/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/web/branches/bug_fix','communication/web/bug_fix'),
@@ -66,7 +66,7 @@ components_definition = [
     ('brainvisa-installer', {
         'components': [
             ['brainvisa-installer', {
-                'groups': ['all'],
+                'groups': ['all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-installer/trunk','brainvisa-installer/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-installer/branches/bug_fix','brainvisa-installer/bug_fix'),
@@ -78,7 +78,7 @@ components_definition = [
     ('brainvisa-share', {
         'components': [
             ['brainvisa-share', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-share/trunk','brainvisa-share/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-share/branches/bug_fix','brainvisa-share/bug_fix'),
@@ -91,7 +91,7 @@ components_definition = [
         'description': 'Set of lower-level libraries for neuroimaging processing infrastructure',
         'components': [
             ['soma-base', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/trunk','soma/soma-base/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/branches/bug_fix','soma/soma-base/bug_fix'),
@@ -99,7 +99,7 @@ components_definition = [
                 },
             }],
             ['soma-io', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io/trunk','soma/soma-io/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io/branches/bug_fix','soma/soma-io/bug_fix'),
@@ -113,7 +113,7 @@ components_definition = [
                 },
             }],
             ['soma-io-gpl', {
-                'groups': ['all', 'opensource', 'standard', 'catidb_server', 'catidb3_all'],
+                'groups': ['all', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io-gpl/trunk','soma/soma-io-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io-gpl/branches/bug_fix','soma/soma-io-gpl/bug_fix'),
@@ -121,7 +121,7 @@ components_definition = [
                 },
             }],
             ['soma-workflow', {
-                'groups': ['all', 'opensource', 'standard', 'catidb_server', 'catidb3_all'],
+                'groups': ['all', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/neurospin/soma-workflow.git master','soma/soma-workflow/trunk'),
                     'bug_fix': ('git https://github.com/neurospin/soma-workflow.git bug_fix','soma/soma-workflow/bug_fix'),
@@ -133,7 +133,7 @@ components_definition = [
     ('capsul', {
         'components': [
             ['capsul', {
-                'groups': ['all', 'opensource', 'standard', 'catidb_server', 'catidb3_all'],
+                'groups': ['all', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/neurospin/capsul.git integration','capsul/trunk'),
                     'bug_fix': ('git https://github.com/neurospin/capsul.git v1','capsul/bug_fix'),
@@ -147,7 +147,7 @@ components_definition = [
         'description': '3D/4D neuroimaging data manipulation and processing library and commands. Includes C++ libraries, command lines, and a Python API.',
         'components': [
             ['aims-free', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-free/trunk','aims/aims-free/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-free/branches/bug_fix','aims/aims-free/bug_fix'),
@@ -155,7 +155,7 @@ components_definition = [
                 },
             }],
             ['aims-gpl', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-gpl/trunk','aims/aims-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-gpl/branches/bug_fix','aims/aims-gpl/bug_fix'),
@@ -163,7 +163,7 @@ components_definition = [
                 },
             }],
             ['aims-til', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-til/trunk','aims/aims-til/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-til/branches/bug_fix','aims/aims-til/bug_fix'),
@@ -176,7 +176,7 @@ components_definition = [
         'description': '3D/4D neuroimaging data viewer. Modular and versatile, Anatomist can display any kind of neuroimaging data (3D/4D images, meshes and textures, fiber tracts, and structured sets of objects such as cortical sulci), in an arbitrary number of views. Allows C++ and Python programming, both for plugins add-ons, as well as complete custom graphical applications design.',
         'components': [
             ['anatomist-free', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-free/trunk','anatomist/anatomist-free/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-free/branches/bug_fix','anatomist/anatomist-free/bug_fix'),
@@ -184,7 +184,7 @@ components_definition = [
                 },
             }],
             ['anatomist-gpl', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-gpl/trunk','anatomist/anatomist-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-gpl/branches/bug_fix','anatomist/anatomist-gpl/bug_fix'),
@@ -197,7 +197,7 @@ components_definition = [
         'description': 'Axon organizes processing, pipelining, and data management for neuroimaging. It works both as a graphical user interface or batch and programming interfaces, and allows transparent processing distribution on a computing resource.',
         'components': [
             ['axon', {
-                'groups': ['all', 'opensource', 'standard', 'catidb_server', 'catidb3_all'],
+                'groups': ['all', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon/trunk','axon/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon/branches/bug_fix','axon/bug_fix'),
@@ -222,7 +222,7 @@ components_definition = [
         'description': 'Statistics, data mining, machine learning.',
         'components': [
             ['datamind', {
-                'groups': ['all', 'standard'],
+                'groups': ['all', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/datamind/trunk','datamind/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/datamind/branches/bug_fix','datamind/bug_fix'),
@@ -235,7 +235,7 @@ components_definition = [
         'description': 'Anatomical MRI (T1) analysis toolbox, featuring cortex and sulci segmentation, and sulci analysis tools, by the <a href="http://lnao.fr">LNAO team</a>.',
         'components': [
             ['morphologist-private', {
-                'groups': ['all', 'standard'],
+                'groups': ['all', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/morphologist-private/trunk','morphologist/morphologist-private/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/morphologist-private/branches/bug_fix','morphologist/morphologist-private/bug_fix'),
@@ -243,7 +243,7 @@ components_definition = [
                 },
             }],
             ['morphologist-gpl', {
-                'groups': ['all', 'opensource', 'standard'],
+                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/morphologist-gpl/trunk','morphologist/morphologist-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/morphologist-gpl/branches/bug_fix','morphologist/morphologist-gpl/bug_fix'),
@@ -267,7 +267,7 @@ components_definition = [
                 },
             }],
             ['sulci-data', {
-                'groups': ['all', 'standard'],
+                'groups': ['all', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-data/trunk','morphologist/sulci-data/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-data/trunk','morphologist/sulci-data/bug_fix'),
@@ -275,7 +275,7 @@ components_definition = [
                 },
             }],
             ['sulci-private', {
-                'groups': ['all', 'standard'],
+                'groups': ['all', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-private/trunk','morphologist/sulci-private/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-private/branches/bug_fix','morphologist/sulci-private/bug_fix'),
@@ -283,7 +283,7 @@ components_definition = [
                 },
             }],
             ['sulci-models', {
-                'groups': ['all', 'standard'],
+                'groups': ['all', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-models/trunk','morphologist/sulci-models/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-models/branches/bug_fix','morphologist/sulci-models/bug_fix'),
@@ -291,7 +291,7 @@ components_definition = [
                 },
             }],
             ['morphologist-ui', {
-                'groups': ['all', 'opensource', 'standard'],
+                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/neurospin/morphologist.git integration', 'morphologist/morphologist-ui/trunk'),
                     'bug_fix': ('git https://github.com/neurospin/morphologist.git master', 'morphologist/morphologist-ui/bug_fix'),
@@ -393,7 +393,7 @@ components_definition = [
         'description': 'Cortex-based surfacic parameterization and analysis toolbox from the <a href="http://www.lsis.org">LSIS team</a>. Homepage: <a href="http://olivier.coulon.perso.esil.univmed.fr/brainvisa.html">http://olivier.coulon.perso.esil.univmed.fr/brainvisa.html</a>.<br/>Also contains the FreeSurfer toolbox for BrainVisa, by the LNAO team.',
         'components': [
             ['cortical_surface-private', {
-                'groups': ['all', 'standard'],
+                'groups': ['all', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/cortical_surface-private/trunk','cortical_surface/cortical_surface-private/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/cortical_surface-private/branches/bug_fix','cortical_surface/cortical_surface-private/bug_fix'),
@@ -401,7 +401,7 @@ components_definition = [
                 },
             }],
             ['cortical_surface-gpl', {
-                'groups': ['all', 'opensource', 'standard'],
+                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/cortical_surface-gpl/trunk','cortical_surface/cortical_surface-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/cortical_surface-gpl/branches/bug_fix','cortical_surface/cortical_surface-gpl/bug_fix'),
@@ -409,7 +409,7 @@ components_definition = [
                 },
             }],
             ['freesurfer_plugin', {
-                'groups': ['all', 'opensource', 'standard'],
+                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/freesurfer_plugin/trunk','cortical_surface/freesurfer_plugin/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/freesurfer_plugin/branches/bug_fix','cortical_surface/freesurfer_plugin/bug_fix'),
@@ -443,7 +443,7 @@ components_definition = [
     ('nuclear_imaging', {
         'components': [
             ['nuclear_imaging-gpl', {
-                'groups': ['all', 'opensource', 'standard'],
+                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_imaging/nuclear_imaging-gpl/trunk','nuclear_imaging/nuclear_imaging-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_imaging/nuclear_imaging-gpl/branches/bug_fix','nuclear_imaging/nuclear_imaging-gpl/bug_fix'),
@@ -451,7 +451,7 @@ components_definition = [
                 },
             }],
             ['nuclear_imaging-private', {
-                'groups': ['all', 'standard'],
+                'groups': ['all', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_imaging/nuclear_imaging-private/trunk','nuclear_imaging/nuclear_imaging-private/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_imaging/nuclear_imaging-private/branches/bug_fix','nuclear_imaging/nuclear_imaging-private/bug_fix'),
@@ -535,7 +535,7 @@ components_definition = [
     ('snapbase', {
         'components': [
             ['snapbase', {
-                'groups': ['all', 'opensource', 'standard', 'catidb_server', 'catidb3_all'],
+                'groups': ['all', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/snapbase/trunk','snapbase/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/snapbase/branches/bug_fix','snapbase/bug_fix'),
@@ -546,23 +546,8 @@ components_definition = [
     }),
     ('catidb', {
         'components': [
-            ['catidb3', {
-                'groups': ['catidb_server'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb3/trunk', 'catidb3/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb3/bug_fix', 'catidb3/bug_fix'),
-                },
-            }],
-            ['catidb_api', {
-                'groups': ['catidb_server'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb_api/trunk', 'catidb_api/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb_api/bug_fix', 'catidb_api/bug_fix'),
-                },
-                'build_model': 'pure_python',
-            }],
             ['catidb3_server', { # Experimental branch to propose a new organization
-                'groups': ['catidb3_all'],
+                'groups': ['catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb3_server/trunk', 'catidb3_server/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb3_server/branches/bug_fix', 'catidb3_server/bug_fix'),
@@ -570,7 +555,7 @@ components_definition = [
                 },
             }],
             ['catidb3_client', { # Experimental branch to propose a new organization
-                'groups': ['catidb3_all'],
+                'groups': ['catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb3_client/trunk','catidb3_client/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb3_client/branches/bug_fix', 'catidb3_client/bug_fix'),
@@ -583,7 +568,7 @@ components_definition = [
     ('release', {
         'components': [
             ['brainvisa-release', {
-                'groups': ['all', 'opensource', 'standard'],
+                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/trunk','development/brainvisa-release/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/branches/bug_fix','development/brainvisa-release/bug_fix'),
@@ -595,7 +580,7 @@ components_definition = [
     ('longitudinal_pipelines', {
         'components': [
             ['longitudinal_pipelines', {
-                'groups': ['all'],
+                'groups': ['all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/longitudinal_pipelines/trunk',
                               'longitudinal_pipelines/trunk'),
@@ -610,7 +595,7 @@ components_definition = [
     ('disco', {
         'components': [
             ['disco', {
-                'groups': ['all'],
+                'groups': ['all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/disco/trunk', 'disco/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/disco/branches/bug_fix', 'disco/bug_fix'),
@@ -623,7 +608,7 @@ components_definition = [
         'description': 'CATI quality control software.',
         'components': [
             ['qualicati', {
-                'groups': ['all'],
+                'groups': ['all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/qualicati/trunk','qualicati/trunk'),
                     #'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/qualicati/branches/bug_fix','qualicati/bug_fix'),
@@ -637,11 +622,11 @@ components_definition = [
         'description': 'Functional MRI processing toolboxes.',
         'components': [
             ['rsfmri', {
-                'groups': ['all'],
+                'groups': ['all', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/fmri/rsfmri/trunk','rsfmri/trunk'),
-                    #'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/fmri/rsfmri/branches/bug_fix','rsfmri/bug_fix'),
-                    #'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/fmri/rsfmri/tags/latest_release','rsfmri/latest_release'),
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/fmri/rsfmri/trunk','rsfmri/trunk'),
+                    #'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/fmri/rsfmri/branches/bug_fix','rsfmri/bug_fix'),
+                    #'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/fmri/rsfmri/tags/latest_release','rsfmri/latest_release'),
                 },
                 'build_model': 'pure_python',
             }],

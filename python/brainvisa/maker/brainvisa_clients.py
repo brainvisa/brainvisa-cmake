@@ -98,7 +98,7 @@ def normurl( url ):
     @return: A normalized URL, i.e. without '..' or '.' elements.
     """
 
-    parsed = urlparse(url.lower())
+    parsed = urlparse(url)
     return urlunparse(
                 ( parsed.scheme,
                   parsed.netloc,

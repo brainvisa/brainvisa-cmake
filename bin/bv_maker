@@ -541,7 +541,7 @@ class SourceDirectory(object):
             if sign == 'svn' or (sign == '+' and '/' in componentPattern):
                 if '*' in componentPattern:
                     raise SyntaxError()
-                if componentPattern.startswith('http'):
+                if componentPattern.startswith('http') or componentPattern.startswith('file'):
                     url = componentPattern
                     dest_directory = versionPattern
                 else:

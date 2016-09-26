@@ -6,7 +6,7 @@ components_definition = [
     ('development', {
         'components': [
             ['brainvisa-cmake', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     # trunk actually points to bug_fix branch, because both
                     # have to be synchronized. trunk will be reserved for
@@ -17,7 +17,7 @@ components_definition = [
                 },
             }],
             ['brainvisa-svn', {
-                'groups': ['all', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
+                'groups': ['all', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-svn/trunk','development/brainvisa-svn/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-svn/branches/bug_fix','development/brainvisa-svn/bug_fix'),
@@ -78,7 +78,7 @@ components_definition = [
     ('brainvisa-share', {
         'components': [
             ['brainvisa-share', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-share/trunk','brainvisa-share/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-share/branches/bug_fix','brainvisa-share/bug_fix'),
@@ -91,7 +91,7 @@ components_definition = [
         'description': 'Set of lower-level libraries for neuroimaging processing infrastructure',
         'components': [
             ['soma-base', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/trunk','soma/soma-base/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/branches/bug_fix','soma/soma-base/bug_fix'),
@@ -99,7 +99,7 @@ components_definition = [
                 },
             }],
             ['soma-io', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io/trunk','soma/soma-io/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io/branches/bug_fix','soma/soma-io/bug_fix'),
@@ -113,7 +113,7 @@ components_definition = [
                 },
             }],
             ['soma-io-gpl', {
-                'groups': ['all', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
+                'groups': ['all', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io-gpl/trunk','soma/soma-io-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io-gpl/branches/bug_fix','soma/soma-io-gpl/bug_fix'),
@@ -121,7 +121,7 @@ components_definition = [
                 },
             }],
             ['soma-workflow', {
-                'groups': ['all', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
+                'groups': ['all', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/neurospin/soma-workflow.git master','soma/soma-workflow/trunk'),
                     'bug_fix': ('git https://github.com/neurospin/soma-workflow.git bug_fix','soma/soma-workflow/bug_fix'),
@@ -133,7 +133,7 @@ components_definition = [
     ('capsul', {
         'components': [
             ['capsul', {
-                'groups': ['all', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
+                'groups': ['all', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/neurospin/capsul.git integration','capsul/trunk'),
                     'bug_fix': ('git https://github.com/neurospin/capsul.git v1','capsul/bug_fix'),
@@ -147,7 +147,7 @@ components_definition = [
         'description': '3D/4D neuroimaging data manipulation and processing library and commands. Includes C++ libraries, command lines, and a Python API.',
         'components': [
             ['aims-free', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-free/trunk','aims/aims-free/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-free/branches/bug_fix','aims/aims-free/bug_fix'),
@@ -155,7 +155,7 @@ components_definition = [
                 },
             }],
             ['aims-gpl', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-gpl/trunk','aims/aims-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-gpl/branches/bug_fix','aims/aims-gpl/bug_fix'),
@@ -176,7 +176,7 @@ components_definition = [
         'description': '3D/4D neuroimaging data viewer. Modular and versatile, Anatomist can display any kind of neuroimaging data (3D/4D images, meshes and textures, fiber tracts, and structured sets of objects such as cortical sulci), in an arbitrary number of views. Allows C++ and Python programming, both for plugins add-ons, as well as complete custom graphical applications design.',
         'components': [
             ['anatomist-free', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-free/trunk','anatomist/anatomist-free/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-free/branches/bug_fix','anatomist/anatomist-free/bug_fix'),
@@ -184,7 +184,7 @@ components_definition = [
                 },
             }],
             ['anatomist-gpl', {
-                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-gpl/trunk','anatomist/anatomist-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-gpl/branches/bug_fix','anatomist/anatomist-gpl/bug_fix'),
@@ -197,7 +197,7 @@ components_definition = [
         'description': 'Axon organizes processing, pipelining, and data management for neuroimaging. It works both as a graphical user interface or batch and programming interfaces, and allows transparent processing distribution on a computing resource.',
         'components': [
             ['axon', {
-                'groups': ['all', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
+                'groups': ['all', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon/trunk','axon/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon/branches/bug_fix','axon/bug_fix'),
@@ -535,7 +535,7 @@ components_definition = [
     ('snapbase', {
         'components': [
             ['snapbase', {
-                'groups': ['all', 'opensource', 'standard', 'catidb_server', 'catidb3_all', 'cati_platform'],
+                'groups': ['all', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/snapbase/trunk','snapbase/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/snapbase/branches/bug_fix','snapbase/bug_fix'),

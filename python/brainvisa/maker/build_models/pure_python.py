@@ -170,14 +170,15 @@ class PurePythonComponentBuild(object):
                         d['version'] = version
                         d['next_version'] = next_version
                     else:
-                        print('WARNING: component %s declares a dependency on %s in its info.py but build directory does not contains %s' % (self.component_name, dcomponent, dcomponent),
+                        print('WARNING: component %s declares a dependency on %s in its info.py but build directory does not contain %s' % (self.component_name, dcomponent, dcomponent),
                               file=sys.stderr)
                         d['version'] = 'unknown'
                         d['next_version'] = 'unknown'
                     brainvisa_dependencies.append('BRAINVISA_DEPENDENCY(RUN DEPENDS %(component)s RUN ">= %(version)s; << %(next_version)s")' % d)
                     brainvisa_dependencies.append('BRAINVISA_DEPENDENCY(DEV DEPENDS %(component)s DEV ">= %(version)s; << %(next_version)s")' % d)
                 else:
-                    brainvisa_dependencies.append('BRAINVISA_DEPENDENCY(%s)' % ' '.join('"%s"' % i for i in dcomponent))
+                    brainvisa_dependencies.append(
+                        self.dependency_string(dcomponent))
         brainvisa_dependencies = '\n'.join(brainvisa_dependencies)
 
         # Create <build directory>/build_files/<component>_src/CMakeLists.txt
@@ -241,4 +242,25 @@ class PurePythonComponentBuild(object):
             print('cleaning build tree', self.source_directory)
             subprocess.call([sys.executable, bv_clean, '-d',
                              self.source_directory])
+
+
+    @staticmethod
+    def dependency_string(dcomponent):
+        ''' This bidiuille replaces dependencies on python-qt4 with either
+        python-qt4 or python-qt5 depending on the cmake variable
+        DESIRED_QT_VERSION
+        '''
+        if 'python-qt4' not in dcomponent:
+            return 'BRAINVISA_DEPENDENCY(%s)' % ' '.join(
+                '"%s"' % i for i in dcomponent)
+        else:
+            qt5_dep = (i.replace('qt4', 'qt5') for i in dcomponent)
+            dep_string = '''if( DESIRED_QT_VERSION EQUAL 4 )
+    BRAINVISA_DEPENDENCY(%s)
+else()
+    BRAINVISA_DEPENDENCY(%s)
+endif()''' % (' '.join('"%s"' % i for i in dcomponent),
+              ' '.join('"%s"' % i for i in qt5_dep))
+            return dep_string
+
 

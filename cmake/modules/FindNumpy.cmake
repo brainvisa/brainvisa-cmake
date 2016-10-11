@@ -11,37 +11,45 @@ if (NUMPY_INCLUDE_DIR)
   set (NUMPY_FIND_QUIETLY TRUE)
 endif (NUMPY_INCLUDE_DIR)
 
-find_package(python REQUIRED)
-EXEC_PROGRAM ("${PYTHON_EXECUTABLE}"
-  ARGS "-c" "\"from __future__ import print_function; import numpy; print('>>BEGIN NPY CONFIG<<'); print(numpy.get_include()); print('>>END NPY CONFIG<<')\""
-  OUTPUT_VARIABLE NUMPY_INCLUDE_DIR_WRAPPED
-  ERROR_QUIET
-  RETURN_VALUE NUMPY_NOT_FOUND)
+if (NOT CMAKE_CROSSCOMPILING)
+    find_package(python REQUIRED)
+    EXEC_PROGRAM ("${PYTHON_EXECUTABLE}"
+    ARGS "-c" "\"from __future__ import print_function; import numpy; print('>>BEGIN NPY CONFIG<<'); print(numpy.get_include()); print('>>END NPY CONFIG<<')\""
+    OUTPUT_VARIABLE NUMPY_INCLUDE_DIR_WRAPPED
+    ERROR_QUIET
+    RETURN_VALUE NUMPY_NOT_FOUND)
 
-if (NUMPY_NOT_FOUND EQUAL 0)
+    if (NUMPY_NOT_FOUND EQUAL 0)
 
-  string( REGEX MATCH ">>BEGIN NPY CONFIG<<.(.*).>>END NPY CONFIG<<"
-    _dummy "${NUMPY_INCLUDE_DIR_WRAPPED}"
-  )
-  set( NUMPY_INCLUDE_DIR "${CMAKE_MATCH_1}")
+    string( REGEX MATCH ">>BEGIN NPY CONFIG<<.(.*).>>END NPY CONFIG<<"
+        _dummy "${NUMPY_INCLUDE_DIR_WRAPPED}"
+    )
+    set( NUMPY_INCLUDE_DIR "${CMAKE_MATCH_1}")
 
-  set (NUMPY_FOUND TRUE)
-  set (NUMPY_INCLUDE_DIR ${NUMPY_INCLUDE_DIR} CACHE STRING "Numpy include path")
-  EXEC_PROGRAM ("${PYTHON_EXECUTABLE}"
-    ARGS "-c" "\"from __future__ import print_function; import numpy; print('>>BEGIN NPY CONFIG<<'); print(numpy.version.version); print('>>END NPY CONFIG<<')\""
-    OUTPUT_VARIABLE NUMPY_VERSION_WRAPPED)
-  string( REGEX MATCH ">>BEGIN NPY CONFIG<<.(.*).>>END NPY CONFIG<<"
-    _dummy "${NUMPY_VERSION_WRAPPED}"
-  )
-  set( NUMPY_VERSION "${CMAKE_MATCH_1}")
+    set (NUMPY_FOUND TRUE)
+    set (NUMPY_INCLUDE_DIR ${NUMPY_INCLUDE_DIR} CACHE STRING "Numpy include path")
+    EXEC_PROGRAM ("${PYTHON_EXECUTABLE}"
+        ARGS "-c" "\"from __future__ import print_function; import numpy; print('>>BEGIN NPY CONFIG<<'); print(numpy.version.version); print('>>END NPY CONFIG<<')\""
+        OUTPUT_VARIABLE NUMPY_VERSION_WRAPPED)
+    string( REGEX MATCH ">>BEGIN NPY CONFIG<<.(.*).>>END NPY CONFIG<<"
+        _dummy "${NUMPY_VERSION_WRAPPED}"
+    )
+    set( NUMPY_VERSION "${CMAKE_MATCH_1}")
 
-else ()
-  if( NUMPY_INCLUDE_DIR )
-    message( "Numpy detection failed - output message: ${NUMPY_INCLUDE_DIR}" )
-  endif()
-  set(NUMPY_INCLUDE_DIR)
-  set(NUMPY_FOUND FALSE)
-endif ()
+    else ()
+        if( NUMPY_INCLUDE_DIR )
+            message( "Numpy detection failed - output message: ${NUMPY_INCLUDE_DIR}" )
+        endif()
+        set(NUMPY_INCLUDE_DIR)
+        set(NUMPY_FOUND FALSE)
+    endif ()
+else()
+    # When cross-compiling we need the target python interpreter to 
+    # get INCLUDE_DIR so we consider it has manually been set previously
+    if (NUMPY_FIND_QUIETLY)
+        set(NUMPY_FOUND TRUE)
+    endif()
+endif()
 
 if (NUMPY_FOUND)
   if (NOT NUMPY_FIND_QUIETLY)
@@ -54,6 +62,9 @@ else (NUMPY_FOUND)
 endif (NUMPY_FOUND)
 
 MARK_AS_ADVANCED (NUMPY_INCLUDE_DIR)
+
+#message("===== FindNumpy =====")
+#message("NUMPY_INCLUDE_DIR: ${NUMPY_INCLUDE_DIR}")
 
 
 ## find the numpy headers directory. Use python's distutils to do so.

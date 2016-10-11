@@ -18,6 +18,15 @@ endif()
 # Set default Qt desired version
 set( DESIRED_QT_VERSION 4 CACHE STRING "Pick a version of QT to use: 3 or 4" )
 
+# Set default C preprocessor command
+if(NOT CMAKE_C_PREPROCESSOR)
+    # Assume default to GCC toolchain
+    if (COMPILER_PREFIX)
+        set(_toolchain_prefix "${COMPILER_PREFIX}-")
+    endif()
+    set(CMAKE_C_PREPROCESSOR "${_toolchain_prefix}cpp -C" CACHE STRING "C preprocessor command to use" )
+endif()
+
 set( BRAINVISA_BVMAKER True )
 
 set( CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_BINARY_DIR}" )
@@ -30,20 +39,29 @@ endif()
 BRAINVISA_CREATE_MAIN_COMPONENTS()
 
 function( silent_execute_process working_directory )
-  execute_process( COMMAND ${ARGN}
+  unset( command )
+  unset( i )
+  unset( j )
+  unset( result )
+  unset( output )
+  unset( error )
+  foreach( i ${ARGN} )
+    foreach( j ${i} )
+      set( command ${command} "${j}" )
+    endforeach()
+  endforeach()
+  execute_process( COMMAND ${command}
     WORKING_DIRECTORY "${working_directory}"
     RESULT_VARIABLE result
     OUTPUT_QUIET 
-    ERROR_QUIET )
+    ERROR_QUIET
+  )
+
   if( NOT result EQUAL 0 )
-    set( command )
-    foreach( i ${ARGN} )
-      set( command "${command} \"${i}\"" )
-    endforeach()
     message( "ERROR: command failed:${command}" )
     message( "       working directory = \"${working_directory}\"" )
     message( "---------- command output ----------"  )
-    execute_process( COMMAND ${ARGN} WORKING_DIRECTORY "${working_directory}" )
+    execute_process( COMMAND ${command} WORKING_DIRECTORY "${working_directory}" )
     message( "---------- end of command output ----------"  )
     message( FATAL_ERROR )
   endif()
@@ -70,11 +88,26 @@ if( NOT BRAINVISA_CMAKE_BUILD_TYPE
       set( ${component}_IS_BEING_COMPILED TRUE CACHE BOOL INTERNAL )
       message( STATUS "Configuring component ${component} from source directory \"${BRAINVISA_SOURCES_${component}}\"" )
       file( MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/build_files/${component}" )
-      silent_execute_process( "${CMAKE_BINARY_DIR}/build_files/${component}" "${CMAKE_COMMAND}" "-G" "${CMAKE_GENERATOR}" "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}" "${BRAINVISA_SOURCES_${component}}" )
+      unset(opts)
+      set(opts "-D" "CMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}")
+      foreach(opt ${BRAINVISA_CMAKE_OPTIONS})
+        #message("Add ${opt}")
+        #message("${opt} value: ${${opt}}")
+
+        if ("${opt}" STREQUAL "CMAKE_INIT_CACHE")
+          set(opts ${opts} "-C" "${${opt}}")
+        else()
+          set(opts ${opts} "-D" "${opt}=${${opt}}")
+        endif()        
+      endforeach()
+      
+      silent_execute_process( "${CMAKE_BINARY_DIR}/build_files/${component}" "${CMAKE_COMMAND}" "-G" "${CMAKE_GENERATOR}" ${opts} "${BRAINVISA_SOURCES_${component}}" )
       silent_execute_process( "${CMAKE_BINARY_DIR}/build_files/${component}" "${CMAKE_BUILD_TOOL}" install )
       set_property( GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE )
       unset( brainvisa-cmake_DIR CACHE )
       unset( brainvisa-cmake_DIR )
+      unset( opts )
+      unset( opt )
       find_package( brainvisa-cmake )
     endif()
   endif()

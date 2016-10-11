@@ -52,18 +52,46 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-IF(EXISTS PYQT4_VERSION)
+IF(PYQT4_VERSION)
   # Already in cache, be silent
   SET(PYQT4_FOUND TRUE)
-ELSE(EXISTS PYQT4_VERSION)
-
-  FIND_FILE(_find_pyqt_py FindPyQt.py PATHS ${CMAKE_MODULE_PATH})
+ELSE(PYQT4_VERSION)
+  FIND_FILE(_find_pyqt_py FindPyQt.py
+                          HINTS ${CMAKE_MODULE_PATH}
+                          CMAKE_FIND_ROOT_PATH_BOTH)
   set(_tmp ${_find_pyqt_py})
   unset(_find_pyqt_py CACHE)
   set(_find_pyqt_py ${_tmp})
   unset(_tmp)
 
-  EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} ${_find_pyqt_py} OUTPUT_VARIABLE pyqt_config)
+  SET(_python_executable ${PYTHON_EXECUTABLE})
+  IF(CMAKE_CROSSCOMPILING)
+    IF(CROSSCOMPILING_PYTHON_EXECUTABLE)
+      # Some cross compilation platforms authorize to run target executables
+      # as, for example, linux using wine. That's why we use python target 
+      # executable to get PyQt infos
+      INCLUDE("${CMAKE_CURRENT_LIST_DIR}/UseEnvProcessExecute.cmake")
+      SET(_python_executable "${CROSSCOMPILING_PYTHON_EXECUTABLE}")
+      IF (NOT CROSSCOMPILING_PYTHON_HOME)
+        GET_FILENAME_COMPONENT(_python_home_dir 
+                               "${_python_executable}"
+                               DIRECTORY)
+      ELSE()
+        SET(_python_home_dir "${CROSSCOMPILING_PYTHON_HOME}")
+      ENDIF()
+      
+      # Execute process setting PYTHONHOME variable
+      ENV_EXECUTE_PROCESS(COMMAND ${_python_executable} ${_find_pyqt_py} 
+                          ENV "PYTHONHOME=${_python_home_dir}"
+                          OUTPUT_VARIABLE pyqt_config)
+    ELSE()
+      MESSAGE(STATUS "PyQt4: needs runnable target python interpreter to find version of package (set CROSSCOMPILING_PYTHON_EXECUTABLE to a usable target python interpreter). If it is not possible to run target python interpreter on the build platform, it is necessary to manually set PYQT4_VERSION, PYQT4_VERSION_STR, PYQT4_VERSION_TAG, PYQT4_SIP_DIR and PYQT4_SIP_FLAGS to valid values")
+    ENDIF()
+  ELSE()
+    EXECUTE_PROCESS(COMMAND ${_python_executable} ${_find_pyqt_py} 
+                    OUTPUT_VARIABLE pyqt_config)
+  ENDIF()
+  
   IF(pyqt_config)
     STRING(REGEX MATCH "^pyqt_version:([^\n]+).*$" _dummy ${pyqt_config})
     SET(PYQT4_VERSION "${CMAKE_MATCH_1}" CACHE STRING "PyQt4's version as a 6-digit hexadecimal number")
@@ -97,8 +125,7 @@ ELSE(EXISTS PYQT4_VERSION)
       MESSAGE(FATAL_ERROR "Could not find Python")
     ENDIF(PYQT4_FIND_REQUIRED)
   ENDIF(PYQT4_FOUND)
-
-ENDIF(EXISTS PYQT4_VERSION)
+ENDIF(PYQT4_VERSION)
 
 # -----------------------------------------------------------------------------
 # end of FindPyQt4.cmake from kdelib.

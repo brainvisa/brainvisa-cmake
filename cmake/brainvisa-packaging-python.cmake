@@ -32,7 +32,8 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
       BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libpgm RUN )
     endif()
   endif()
-  if( WIN32 OR APPLE )
+  if((WIN32 OR APPLE) AND (NOT CMAKE_CROSSCOMPILING))
+    find_package( Freetype )
     # dependency due to matplotlib: some backends are linked to freetype
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libfreetype6 RUN )
   endif()
@@ -141,7 +142,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     # all python modules are copied in install directory but in theory, we
     # should not copy site-packages subdirectory
     # the content of site-packages should be described in different packages.
-    if(WIN32)
+    if(WIN32 AND NOT CMAKE_CROSSCOMPILING)
       find_program(IPYTHON_SCRIPT ipython-script.py HINTS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts)
       find_program(PYCOLOR_SCRIPT pycolor-script.py HINTS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts)
 

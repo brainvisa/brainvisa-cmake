@@ -8,7 +8,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   if(PC_LIBXML_VERSION)
     set(${package_version} ${PC_LIBXML_VERSION} PARENT_SCOPE )
   endif()
-  if(WIN32)
+  if(WIN32 AND NOT CMAKE_CROSSCOMPILING)
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libiconv RUN )
   endif()
 endfunction()

@@ -455,8 +455,8 @@ if( DCMTK_config_INCLUDE_DIR AND
     endif()
   endif()
 
-  IF( WIN32 )
-    find_library(netapi32 netapi32.dll)
+  IF( WIN32)
+    find_library(netapi32 netapi32)
     SET( DCMTK_LIBRARIES ${DCMTK_LIBRARIES} ${netapi32} )
   ENDIF( WIN32 )
 

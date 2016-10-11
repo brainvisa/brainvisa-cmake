@@ -1,0 +1,17 @@
+#message("cross_compiling.cmake")
+if(CMAKE_CROSSCOMPILING AND WIN32)
+    set( _additional_standard_libraries "-lws2_32" "-lregex" )
+    foreach( _item ${_additional_standard_libraries} )
+        string( REGEX MATCH "(^|[ \t]+)${_item}([ \t]+|$)" _result "${CMAKE_CXX_STANDARD_LIBRARIES}" )
+        if( NOT _result )
+            set( CMAKE_CXX_STANDARD_LIBRARIES "${CMAKE_CXX_STANDARD_LIBRARIES} ${_item}" CACHE STRING "Libraries linked by default with all C++ applications." FORCE )
+        endif()
+        
+        string( REGEX MATCH "(^|[ \t]+)${_item}([ \t]+|$)" _result "${CMAKE_C_STANDARD_LIBRARIES}" )
+        if( NOT _result )
+            set( CMAKE_C_STANDARD_LIBRARIES "${CMAKE_C_STANDARD_LIBRARIES} ${_item}" CACHE STRING "Libraries linked by default with all C applications." FORCE )
+        endif()
+    endforeach()
+
+    #message("Used standard libraries ${CMAKE_C_STANDARD_LIBRARIES}")
+endif()

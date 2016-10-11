@@ -38,6 +38,22 @@ import os, sys, shutil, tempfile, string, re
 
 # print 'SIP options:', sys.argv
 sys.stdout.flush()
+  
+# find -S option for sip command specified
+try:
+  sipopt = sys.argv.index( '-S' )
+except:
+  sipopt = -1       
+if sipopt == len(sys.argv) - 1:
+  sipopt = -1
+if sipopt >= 0:
+  sipcmd = sys.argv[sipopt + 1]
+  del sys.argv[sipopt], sys.argv[sipopt+1]
+elif sys.platform.startswith( 'win' ):
+  sipcmd = 'sip.exe'
+else:
+  sipcmd = 'sip'
+  
 try:
   copt = sys.argv.index( '-c' )
 except:
@@ -59,17 +75,12 @@ if jopt == len(sys.argv)-1:
 if jopt >= 0:
   jopt = int( sys.argv[jopt+1] )
 
-
 # if --listingOnly, display only the generated source list
 try:
   listingOnly = sys.argv.index( '--listingOnly' )
   sys.argv.remove('--listingOnly')
 except:
   listingOnly = -1
-
-sipcmd = 'sip'
-if sys.platform.startswith( 'win' ):
-  sipcmd = 'sip.exe'
 
 if copt < 0:
   sys.exit( os.system( sipcmd + ' "' + string.join( sys.argv[1:], '" "' ) \
@@ -83,6 +94,7 @@ tdir = tempfile.mkdtemp()
 sys.argv[ copt+1 ] = tdir
 
 # call SIP
+#print sipcmd + ' "' + string.join( sys.argv[1:], '" "' ) + '"'
 res = os.system( sipcmd + ' "' + string.join( sys.argv[1:], '" "' ) + '"' )
 if not os.path.exists( outdir ):
   os.mkdir( outdir )

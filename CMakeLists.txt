@@ -1,7 +1,6 @@
 project( brainvisa-cmake CXX )
 cmake_minimum_required( VERSION 2.6 )
 
-
 function( BRAINVISA_GLOB_AND_FILTER glob variable )
   file( ${glob} allFiles ${ARGN} )
   set( result )
@@ -28,7 +27,7 @@ configure_file( cmake/brainvisa-cmake-config-version.cmake.in
 install( FILES "${CMAKE_BINARY_DIR}/${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config.cmake"
                "${CMAKE_BINARY_DIR}/${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config-version.cmake"
          DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake" )
-foreach( _dir cmake cmake/specific cmake/specific/linux_distribution cmake/specific/windows )
+foreach( _dir cmake cmake/specific cmake/specific/linux_distribution cmake/specific/windows cmake/specific/mingw32 )
   file( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/${_dir}/*.cmake" )
   install( FILES ${_files}
            DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/${_dir}" )
@@ -47,6 +46,14 @@ BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/cmake/module
 install( FILES ${_files} 
          DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake/modules" )
 
+BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/cmake-fixes/*[^~]" )
+install( FILES ${_files} 
+         DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake/modules/cmake-fixes" )
+
+BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/cmake-fixes/Platform/*[^~]" )
+install( FILES ${_files} 
+         DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake/modules/cmake-fixes/Platform" )
+
 BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/cmake/multiplatform/*[^~]" )
 install( FILES ${_files} 
          DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake/multiplatform" )
@@ -58,7 +65,7 @@ install( FILES ${_files}
 BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/scripts/windows/*[^~]" )
 install( FILES ${_files}
          DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/scripts/windows" )
-
+         
 # Packaging
 set( PACKAGE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE PATH "Installation path for debian package" )
 configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/debian-control.in"

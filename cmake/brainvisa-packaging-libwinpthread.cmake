@@ -1,5 +1,5 @@
 if( WIN32 )
-  find_package( LIBWINPTHREAD REQUIRED) 
+  find_package( LibWinPthread REQUIRED) 
 endif()
 
 function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )

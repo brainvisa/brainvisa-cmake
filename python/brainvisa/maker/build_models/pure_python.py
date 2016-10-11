@@ -70,7 +70,7 @@ endif()
 # tests
 if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/test/test_%(component_name)s.py")
     enable_testing()
-    add_test( %(component_name)s-tests "${CMAKE_BINARY_DIR}/bin/bv_env" "${PYTHON_EXECUTABLE}" "${BRAINVISA_REAL_SOURCE_DIR}/test/test_%(component_name)s.py" )
+    add_test( %(component_name)s-tests "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX} "${PYTHON_EXECUTABLE}" "${BRAINVISA_REAL_SOURCE_DIR}/test/test_%(component_name)s.py" )
 endif()
 UNSET( BRAINVISA_REAL_SOURCE_DIR )
 '''

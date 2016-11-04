@@ -1,0 +1,13 @@
+#!/bin/sh -f
+
+# this scripts runs bv_env either from the normal binary directory (same as
+# this script), of from a package install directory specified in the
+# BRAINVISA_PACKAGE_INSTALL_PREFIX variable if it is defined.
+# this is used to run tests from a build directory (with correctly setup
+# Makefiles/ctest) for testing installed packages.
+
+if [ -z ${BRAINVISA_PACKAGE_INSTALL_PREFIX} ]; then
+  exec `dirname $0`/bv_env${CMAKE_EXECUTABLE_SUFFIX} "$@"
+else
+  exec "${BRAINVISA_PACKAGE_INSTALL_PREFIX}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}" "$@"
+fi

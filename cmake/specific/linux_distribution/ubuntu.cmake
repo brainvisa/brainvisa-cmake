@@ -1,5 +1,11 @@
 message( STATUS "Add specific paths for Ubuntu distribution" )
 
+# something has changed somewhere, the ELF format is not recognized by default
+# any longer and makes install fail because of a rpath/relink step missing.
+# The solution is to force ELF format
+# see https://cmake.org/Bug/view.php?id=13934#c37157
+set(CMAKE_EXECUTABLE_FORMAT "ELF")
+
 file( READ /etc/lsb-release _x )
 string( REGEX MATCH "DISTRIB_RELEASE=([0-9.]+)" _x "${_x}" )
 if( CMAKE_MATCH_1 STREQUAL "16.04" )

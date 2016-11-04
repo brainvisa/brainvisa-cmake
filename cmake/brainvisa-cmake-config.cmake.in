@@ -248,6 +248,7 @@ macro( BRAINVISA_PROJECT )
   set( _usrdoc_install "False" )
   set( _devdoc_install "False" )
   set( _doc_install "False" )
+  set( _test_install "False" )
   foreach( _inst ${BRAINVISA_PACKAGE_DEFAULT_INSTALL} )
     if( "${_inst}" STREQUAL "run" )
       set( _run_install "True" )
@@ -259,6 +260,8 @@ macro( BRAINVISA_PROJECT )
       set( _devdoc_install "True" )
     elseif( "${_inst}" STREQUAL "doc" )
       set( _doc_install "True" )
+    elseif( "${_inst}" STREQUAL "test" )
+      set( _test_install "True" )
     endif()
   endforeach()
 
@@ -267,6 +270,7 @@ macro( BRAINVISA_PROJECT )
   file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${PROJECT_NAME}-doc' ] = {\n  'name': '${PROJECT_NAME}-doc',\n  'component' : '${PROJECT_NAME}-doc',\n 'type': 'doc',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n  'licences': [${_licences}],\n  'default_install': ${_doc_install},\n}\n" )
   file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${PROJECT_NAME}-usrdoc' ] = {\n  'name': '${PROJECT_NAME}-usrdoc',\n  'component' : '${PROJECT_NAME}-usrdoc',\n 'type': 'usrdoc',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n  'licences': [${_licences}],\n  'default_install': ${_usrdoc_install},\n}\n" )
   file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${PROJECT_NAME}-devdoc' ] = {\n  'name': '${PROJECT_NAME}-devdoc',\n  'component' : '${PROJECT_NAME}-devdoc',\n 'type': 'devdoc',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n  'licences': [${_licences}],\n  'default_install': ${_devdoc_install},\n}\n" )
+  file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${PROJECT_NAME}-test' ] = {\n  'name': '${PROJECT_NAME}-test',\n  'component' : '${PROJECT_NAME}-test',\n 'type': 'test',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n  'licences': [${_licences}],\n  'default_install': ${_test_install},\n}\n" )
 
   if(NOT CPack_CMake_INCLUDED)
     include( CPack )
@@ -313,6 +317,9 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
     BRAINVISA_ADD_COMPONENT_GROUP( devdoc
                                    DISPLAY_NAME "Development Documentation"
                                    DESCRIPTION "Development documentations: doxygen, epydoc, sphinx." )
+    BRAINVISA_ADD_COMPONENT_GROUP( test
+                                   DISPLAY_NAME "Test files"
+                                   DESCRIPTION "Test programs, scripts, and data files" )
     BRAINVISA_ADD_COMPONENT_GROUP( thirdparty
                                    DISPLAY_NAME "Thirdparty"
                                    DESCRIPTION "External dependencies : qt, sigc++, libxml..." )
@@ -326,6 +333,7 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
     add_dependencies( install-doc install-usrdoc install-devdoc )
     add_dependencies( install-usrdoc usrdoc )
     add_dependencies( install-devdoc devdoc )
+    add_dependencies( install-test install-runtime )
      
     add_custom_target( install-nodoc )
     add_dependencies( install-nodoc install-runtime install-dev )
@@ -349,6 +357,9 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
   BRAINVISA_ADD_COMPONENT( ${PROJECT_NAME}-devdoc
                            GROUP devdoc
                            DESCRIPTION "Development Documentation of ${PROJECT_NAME}" )
+  BRAINVISA_ADD_COMPONENT( ${PROJECT_NAME}-test
+                           GROUP test
+                           DESCRIPTION "Test files for ${PROJECT_NAME}" )
 
   # targets to generate the documentation of the project
   add_custom_target( ${PROJECT_NAME}-doc )
@@ -371,6 +382,9 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
     add_custom_target( install-${PROJECT_NAME}-devdoc )
   endif()
   add_dependencies( install-${PROJECT_NAME}-doc install-${PROJECT_NAME}-usrdoc install-${PROJECT_NAME}-devdoc )
+  if( NOT TARGET install-${PROJECT_NAME}-test )
+    add_custom_target( install-${PROJECT_NAME}-test )
+  endif()
 #  add_dependencies( install-${PROJECT_NAME}-usrdoc ${PROJECT_NAME}-usrdoc )
 #  add_dependencies( install-${PROJECT_NAME}-devdoc ${PROJECT_NAME}-devdoc )
 
@@ -434,6 +448,8 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
       set( dest_package "${BRAINVISA_PACKAGE_NAME_${component}}-usrdoc" )
     elseif( "${component_pack_type}" STREQUAL "DEVDOC" )
       set( dest_package "${BRAINVISA_PACKAGE_NAME_${component}}-devdoc" )
+    elseif( "${component_pack_type}" STREQUAL "TST" )
+      set( dest_package "${BRAINVISA_PACKAGE_NAME_${component}}-test" )
     else()
       set( dest_package "${BRAINVISA_PACKAGE_NAME_${component}}" )
     endif()
@@ -442,6 +458,8 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
       set( dest_package "${component}-dev" )
     elseif( "${component_pack_type}" STREQUAL "DOC" )
       set( dest_package "${component}-doc" )
+    elseif( "${component_pack_type}" STREQUAL "TST" )
+      set( dest_package "${component}-test" )
     else()
       set( dest_package "${component}" )
     endif()
@@ -455,6 +473,8 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
       set( source_package "${PROJECT_NAME}-usrdoc" )
     elseif( "${pack_type}" STREQUAL "DEVDOC" )
       set( source_package "${PROJECT_NAME}-devdoc" )
+    elseif( "${pack_type}" STREQUAL "TST" )
+      set( source_package "${PROJECT_NAME}-test" )
     else()
       set( source_package "${PROJECT_NAME}" )
     endif()

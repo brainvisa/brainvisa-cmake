@@ -903,6 +903,7 @@ if __name__ == '__main__':
     doc: Documentation package
     usrdoc: User documentation package
     devdoc: Developper documentation package
+    test: Test files package
     thirdparty: Package corresponding to a thirdparty project not compiled in the build directory
 
   Default selection rule:

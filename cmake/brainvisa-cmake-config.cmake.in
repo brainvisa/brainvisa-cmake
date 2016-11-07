@@ -2326,6 +2326,7 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
   endif()
 
   # Create library with sip generated files
+  include_directories( BEFORE ${SIP_INCLUDE_DIR} )
   add_library( ${_moduleName} MODULE ${_sipOutputFiles} )
   set_target_properties( ${_moduleName} PROPERTIES
                 LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python/${_modulePath}"

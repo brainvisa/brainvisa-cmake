@@ -45,6 +45,7 @@ import json
 from optparse import OptionParser
 from fnmatch import fnmatchcase
 import tempfile
+import distutils.spawn
 try:
     # compatibility for python3
     import six
@@ -164,6 +165,9 @@ Commands:
   build: compile all selected build directories.
   doc: Generate documentation (docbook, epydoc, doxygen)
   test: Execute tests using ctest.
+  pack: Generate binary packages
+  install_pack: install binary packages
+  test_pack: run tests in installed binary packages
 
 To get help for a specific command, use -h option of the command. Example: "%prog build -h".
 '''
@@ -198,6 +202,7 @@ To get help for a specific command, use -h option of the command. Example: "%pro
         currentDirectoryObject = None
         self.sourcesDirectories = {}
         self.buildDirectories = {}
+        self.packageDirectories = {}
 
         directories = [os.path.normpath(os.path.realpath(os.path.abspath(d)))
                        for d in options.directories]
@@ -252,7 +257,7 @@ To get help for a specific command, use -h option of the command. Example: "%pro
                                 self.sourcesDirectories[
                                     currentDirectoryObject.directory] = currentDirectoryObject
                             elif self.verbose:
-                                print('Passing ', currentDirectoryObject.directory, 'because it is not in the selected directories.')
+                                print('Skipping ', currentDirectoryObject.directory, 'because it is not in the selected directories.')
                         elif l[0] == 'build':
                             currentDirectoryObject = BuildDirectory(
                                 environmentVariablesSubstitution(l[1].strip()), self)
@@ -262,7 +267,7 @@ To get help for a specific command, use -h option of the command. Example: "%pro
                                 self.buildDirectories[
                                     currentDirectoryObject.directory] = currentDirectoryObject
                             elif self.verbose:
-                                print('Passing ', currentDirectoryObject.directory, 'because it is not in the selected directories.')
+                                print('Skipping ', currentDirectoryObject.directory, 'because it is not in the selected directories.')
                         elif l[0] == 'virtualenv':
                             currentDirectoryObject = VirtualenvDirectory(
                                 environmentVariablesSubstitution(l[1].strip()), self)
@@ -272,7 +277,17 @@ To get help for a specific command, use -h option of the command. Example: "%pro
                                 self.buildDirectories[
                                     currentDirectoryObject.directory] = currentDirectoryObject
                             elif self.verbose:
-                                print('Passing ', currentDirectoryObject.directory, 'because it is not in the selected directories.')
+                                print('Skipping ', currentDirectoryObject.directory, 'because it is not in the selected directories.')
+                        elif l[0] == 'package':
+                            currentDirectoryObject = PackageDirectory(
+                                environmentVariablesSubstitution(l[1].strip()), self)
+                            if (not directories
+                                or (currentDirectoryObject.directory
+                                    in directories)):
+                                self.packageDirectories[
+                                    currentDirectoryObject.directory] = currentDirectoryObject
+                            elif self.verbose:
+                                print('Skipping ', currentDirectoryObject.directory, 'because it is not in the selected directories.')
                         else:
                             raise SyntaxError()
                     else:
@@ -476,6 +491,87 @@ class TestCommand(object):
         for d, o in six.iteritems(configuration.buildDirectories):
             if not self.options.in_config or 'test' in o.default_steps:
                 o.test()
+
+
+class PackCommand(object):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] pack [options]
+
+    Make installer package for the selected build directory.'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, '
+                          '"configure build" for build sections.')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        for d, o in six.iteritems(configuration.packageDirectories):
+            if not self.options.in_config or 'pack' in o.default_steps:
+                o.package(self.options, self.args)
+
+
+class InstallPackCommand(object):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] install_pack [options]
+
+    Install a binary package for the selected build directory.'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, '
+                          '"configure build" for build sections.')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        for d, o in six.iteritems(configuration.packageDirectories):
+            if not self.options.in_config or 'install_pack' in o.default_steps:
+                o.install_package(self.options, self.args)
+
+
+class TestPackCommand(object):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] test_pack [options]
+
+    Test in installed package for the selected build directory.'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, '
+                          '"configure build" for build sections.')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        for d, o in six.iteritems(configuration.packageDirectories):
+            if not self.options.in_config or 'test_pack' in o.default_steps:
+                o.test_package(self.options, self.args)
 
 
 class SourceDirectory(object):
@@ -1332,6 +1428,237 @@ class VirtualenvDirectory(BuildDirectory):
                 % env_path)
         pass
 
+
+class PackageDirectory(object):
+    _validOptions = set(('build_directory', 'packaging_options',
+                         'packaging_thirdparty', 'build_condition',
+                         'installer_filename', 'data_repos_dir',
+                         'test_install_dir'))
+
+    def __init__(self, directory, configuration):
+        self.configuration = configuration
+        self.directory = os.path.normpath(os.path.abspath(directory))
+        self.build_directory = ''
+        self.configurationLines = []
+        self.packaging_options = ''
+        self.packaging_thirdparty = ''
+        self._configuration_lines_processed = False
+        self.build_condition = None
+        self.installer_filename = None
+        self.data_repos_dir = ''
+
+    def addConfigurationLine(self, line):
+        # Supported lines in bv_maker.cfg for [ pack ... ]:
+        i = line.find('=')
+        if i > 0:
+            option = line[:i].strip()
+            value = line[i + 1:].strip()
+            if option not in self._validOptions:
+                raise SyntaxError()
+            if hasattr(self, option) \
+                    and type(getattr(self, option)) in (list, tuple):
+                value = value.split()
+            setattr(self, option, value)
+        #elif line[0] == '+':
+            #if '*' in line:
+                #raise SyntaxError()
+        #elif line[0] == '-':
+            #pass
+        else:
+            l = line.split(None, 2)
+        self.configurationLines.append(line)
+
+    def _process_configuration_lines(self):
+        if not self._configuration_lines_processed:
+            if self.configuration.verbose:
+                print('Processing package directory %s' % self.directory)
+            for line in self.configurationLines:
+                if '=' in line:
+                    continue
+                first, rest = line.split(None, 1)
+                if first == 'build_directory':
+                    directory = os.path.normpath(
+                        os.path.abspath(environmentVariablesSubstitution(
+                            rest.strip())))
+                    print('build dir:', directory)
+                elif first == 'packaging_options':
+                    options = rest.strip()
+                else:
+                    SyntaxError()
+            self._configuration_lines_processed = True
+            if self.configuration.verbose:
+                print('Package directory %s parsing done.' % self.directory)
+
+    def conditional_build(self):
+        '''Tells if the current package has actually to be built.
+        If a condition option is False, it will not.
+        '''
+        if not self.build_condition:
+            return True
+        cond = True
+        try:
+            cond = eval(self.build_condition)
+        except Exception as e:
+            print('Package directory', self.directory, ': error in parsing build_condition option:', file=sys.stderr)
+            print(self.build_condition, file=sys.stderr)
+            print('(Condition is evaluated as python expression). Error:', sys.stderr)
+            print(e, file=sys.stderr)
+            raise
+        return cond
+
+    def test_config(self, options, args):
+        self._process_configuration_lines()
+        if not self.conditional_build():
+            return
+        build_dir = configuration.buildDirectories.get(self.build_directory)
+        if build_dir is None:
+            print('Package directory: referenced build directory: "%s" does '
+                  'not exist' % self.build_directory)
+        self.build_dir = build_dir
+
+    def installer_cmdline(self):
+        pack_options = self.packaging_options.split()
+        installer_filename = self.installer_filename
+        if not installer_filename:
+            installer_filename = os.path.join(
+                os.path.dirname(self.directory),
+                'brainvisa-installer/brainvisa_installer-'
+                '%(version)s-%(os)s-%(online)s%(public)s')
+        cmd = [sys.executable,
+               distutils.spawn.find_executable('bv_build_installer_i2bm'),
+               '-m', self.directory, '-o', installer_filename] \
+            + pack_options
+        return cmd
+
+    def make_install_script(self, install_dir, repos_dir, data_repos_dir):
+        fd, script_fname = tmpfile.mkstemp(prefix='install_script')
+        os.close(fd)
+        f = open(script_fname, 'w')
+        f.write('''var install_dir = "%s";
+var repositories = ["file://%s", "file://%s"];
+
+function Controller()
+{
+}
+
+Controller.prototype.IntroductionPageCallback = function()
+{
+    var widget = gui.currentPageWidget(); // get the current wizard page
+//     gui.clickButton(buttons.CustomButton1); // parameters
+    installer.setTemporaryRepositories(repositories, true);
+    gui.clickButton(buttons.NextButton)
+}
+
+Controller.prototype.TargetDirectoryPageCallback = function()
+{
+    var widget = gui.currentPageWidget();
+    widget.TargetDirectoryLineEdit.setText(install_dir);
+    gui.clickButton(buttons.NextButton);
+}
+
+Controller.prototype.ComponentSelectionPageCallback = function()
+{
+    var widget = gui.currentPageWidget();
+    widget.selectAll();
+    gui.clickButton(buttons.NextButton);
+}
+
+Controller.prototype.LicenseAgreementPageCallback = function()
+{
+    var widget = gui.currentPageWidget();
+    widget.AcceptLicenseRadioButton.setChecked(true);
+    gui.clickButton(buttons.NextButton);
+}
+
+Controller.prototype.ReadyForInstallationPageCallback = function()
+{
+    gui.clickButton(buttons.CommitButton);
+}
+
+Controller.prototype.PerformInstallationPageCallback = function()
+{
+    gui.clickButton(buttons.CommitButton);
+}
+''' % (install_dir, repos_dir, data_repos_dir, data_repos_dir)
+        f.close()
+        return script_fname
+
+    def package(self, options, args):
+        self.test_config(options, args)
+        print('Building package:', self.directory)
+        print('    from build dir:', self.build_dir.directory)
+        cmd = self.installer_cmdline()
+        print('running:', "'" + "' '".join(cmd) + "'")
+        cmd_out = subprocess.check_output(cmd, cwd=self.build_dir.directory)
+        m = re.match('.*^mirror: ([^\n]+)$\n^installer: ([^\n]+)$', cmd_out,
+                     re.M | re.S)
+        if m:
+            self.mirror_dir = m.group(1)
+            self.installer_realname = m.group(2)
+            print('mirror:', self.mirror_dir)
+            print('installer_realname:', self.installer_realname)
+        else:
+            raise RuntimeError('could not determine actual package dir '
+                               'and installer filename')
+
+    def install_package(self, options, args):
+        self.test_config(options, args)
+        if not self.test_install_dir:
+            raise RuntimeError(
+                'install_pack command needs test_install_dir option')
+        print('Installing package:', self.directory)
+        print('    from build dir:', self.build_dir.directory)
+        print('    to:', self.test_install_dir)
+        if not hasattr(self, 'mirror_dir') \
+                or not hasattr(self, 'installer_realname'):
+            cmd = self.installer_cmdline() + ['-s']
+            cmd_out = subprocess.check_output(
+                cmd, cwd=self.build_dir.directory)
+            m = re.match('.*^mirror: ([^$])$^installer: ([^$])$', cmd_out,
+                         re.M | re.S)
+            if m:
+                self.mirror_dir = m.match(1)
+                self.installer_realname = m.match(2)
+            else:
+                raise RuntimeError('could not determine actual package dir '
+                    'and installer filename')
+        mirror_dir = self.mirror_dir
+        # remove suffix _tmp
+        repos_dir = mirror_dir[:-4]
+        if self.data_repos_dir:
+            data_repos_dir = self.data_repos_dir
+        else:
+            data_repos_dir = repos_dir
+        install_dir = self.test_install_dir
+        insaller_filename = self.installer_realname
+        install_script = self.make_install_script(install_dir, repos_dir,
+                                                  data_repos_dir)
+        try:
+            cmd = [insteller_filename, '--script', self.install_script]
+            subprocess.check_call(cmd)
+        finally:
+            os.unlink(install_script)
+
+
+    def test_package(self, options, args):
+        self.test_config(options, args)
+        if not self.test_install_dir:
+            raise RuntimeError(
+                'install_pack command needs test_install_dir option')
+        print('Testing package:', self.directory)
+        print('    from build dir:', self.build_dir.directory)
+        install_dir = self.test_install_dir
+        # get parallel jobs option if specified
+        make_opts = self.build_dir.make_options.split()
+        # set environment to point to install dir
+        new_env = dict(os.environ)
+        new_env['BRAINVISA_PACKAGE_INSTALL_PREFIX'] = install_dir
+        system(cwd=self.build_dir.directory, env=new_env,
+               *(['ctest', '--output-on-failure']))
+
+
+# ---
+
 commands = {
     'info': InfoCommand,
     'sources': SourcesCommand,
@@ -1339,7 +1666,11 @@ commands = {
     'build': BuildCommand,
     'doc': DocCommand,
     'test': TestCommand,
+    'pack' : PackCommand,
+    'install_pack': InstallPackCommand,
+    'test_pack': TestPackCommand,
 }
+
 default_commands = ['info', 'sources', 'configure', 'build', 'doc', 'test']
 options_by_command = {None: []}
 command = None
@@ -1362,7 +1693,8 @@ if len(options_by_command) == 1:
     for i in default_commands:
         options_by_command[i] = ['--only-if-default']
 # Ordered command list
-for command in ['info', 'sources', 'configure', 'build', 'doc', 'test']:
+for command in ['info', 'sources', 'configure', 'build', 'doc', 'test',
+                'pack', 'install_pack', 'test_pack']:
     if command in options_by_command:
         todo.append(
             commands[command](options_by_command[command], configuration))

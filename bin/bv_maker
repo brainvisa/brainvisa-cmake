@@ -1579,7 +1579,7 @@ Controller.prototype.PerformInstallationPageCallback = function()
 {
     gui.clickButton(buttons.CommitButton);
 }
-''' % (install_dir, repos_dir, data_repos_dir, data_repos_dir)
+''' % (install_dir, repos_dir, data_repos_dir, data_repos_dir))
         f.close()
         return script_fname
 

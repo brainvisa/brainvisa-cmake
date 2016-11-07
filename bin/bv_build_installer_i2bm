@@ -91,6 +91,9 @@ parser.add_option('--data', dest='data', action='store_true',
     help='package OS-independent data repository (brainvisa-share and '
     'sulci-models) instead of the software repository')
 
+parser.add_option('-s', '--dry-run', dest='dry_run', action='store_true',
+                  help='simulation: don\'t actually perform actions.')
+
 options, args = parser.parse_args()
 if len( args ) > 0:
   parser.error('Invalid arguments. Try %s --help" to get some help.'
@@ -126,7 +129,7 @@ else:
     components = []
 cmd = [sys.executable, os.path.join(os.path.dirname(sys.argv[0]),
                                     'bv_build_installer.py'),
-    '-t', 'run', 'dev', 'usrdoc', 'devdoc', '-r', mirror_repos_dir,
+    '-t', 'run', 'dev', 'usrdoc', 'devdoc', 'test', '-r', mirror_repos_dir,
     '--platform_name', osname]
 if options.i2bm:
     i2bm_options = ['--no-thirdparty', '--i2bm']
@@ -155,6 +158,7 @@ print 'mirror:', mirror_repos_dir
 if not options.data:
     print 'installer:', output
 print 'command:', cmd
-subprocess.check_call(cmd)
+if not options.dry_run:
+    subprocess.check_call(cmd)
 
 

@@ -1607,6 +1607,11 @@ Controller.prototype.PerformInstallationPageCallback = function()
 {
     gui.clickButton(buttons.CommitButton);
 }
+
+Controller.prototype.FinishedPageCallback = function()
+{
+    gui.clickButton(buttons.FinishButton);
+}
 ''' % (install_dir, repos_dir, data_repos_dir))
         f.close()
         return script_fname
@@ -1663,11 +1668,16 @@ Controller.prototype.PerformInstallationPageCallback = function()
             data_repos_dir = repos_dir
         install_dir = self.test_install_dir
         insaller_filename = self.installer_realname
+        if os.path.isdir(install_dir):
+            print('removing previous test installation...')
+            shutil.rmtree(install_dir)
         install_script = self.make_install_script(install_dir, repos_dir,
                                                   data_repos_dir)
         try:
             cmd = [self.installer_realname, '--script', install_script]
+            print('installing...')
             subprocess.check_call(cmd)
+            print('done.')
         finally:
             os.unlink(install_script)
 

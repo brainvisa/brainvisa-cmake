@@ -222,6 +222,7 @@ password: Soma2009
 
         directories = [os.path.normpath(os.path.realpath(os.path.abspath(d)))
                        for d in options.directories]
+        self.directories = directories
 
         for i in ('configuration_file', 'username', 'verbose'):
             setattr(self, i, getattr(options, i))
@@ -236,7 +237,7 @@ password: Soma2009
             os.environ['BV_MAKER_BUILD'] = options.build_directory
             reload(brainvisa.maker.components_definition)
             reload(brainvisa_projects)
-            
+
             bd = BuildDirectory(
                 environmentVariablesSubstitution(options.build_directory),
                 self)
@@ -269,41 +270,23 @@ password: Soma2009
                         if l[0] == 'source':
                             currentDirectoryObject = SourceDirectory(
                                 environmentVariablesSubstitution(l[1].strip()), self)
-                            if (not directories or (currentDirectoryObject.directory in directories)):
-                                self.sourcesDirectories[
-                                    currentDirectoryObject.directory] = currentDirectoryObject
-                            elif self.verbose:
-                                print('Skipping ', currentDirectoryObject.directory, 'because it is not in the selected directories.')
+                            self.sourcesDirectories[
+                                currentDirectoryObject.directory] = currentDirectoryObject
                         elif l[0] == 'build':
                             currentDirectoryObject = BuildDirectory(
                                 environmentVariablesSubstitution(l[1].strip()), self)
-                            if (not directories
-                                or (currentDirectoryObject.directory
-                                    in directories)):
-                                self.buildDirectories[
-                                    currentDirectoryObject.directory] = currentDirectoryObject
-                            elif self.verbose:
-                                print('Skipping ', currentDirectoryObject.directory, 'because it is not in the selected directories.')
+                            self.buildDirectories[
+                                currentDirectoryObject.directory] = currentDirectoryObject
                         elif l[0] == 'virtualenv':
                             currentDirectoryObject = VirtualenvDirectory(
                                 environmentVariablesSubstitution(l[1].strip()), self)
-                            if (not directories
-                                or (currentDirectoryObject.directory
-                                    in directories)):
-                                self.buildDirectories[
-                                    currentDirectoryObject.directory] = currentDirectoryObject
-                            elif self.verbose:
-                                print('Skipping ', currentDirectoryObject.directory, 'because it is not in the selected directories.')
+                            self.buildDirectories[
+                                currentDirectoryObject.directory] = currentDirectoryObject
                         elif l[0] == 'package':
                             currentDirectoryObject = PackageDirectory(
                                 environmentVariablesSubstitution(l[1].strip()), self)
-                            if (not directories
-                                or (currentDirectoryObject.directory
-                                    in directories)):
-                                self.packageDirectories[
-                                    currentDirectoryObject.directory] = currentDirectoryObject
-                            elif self.verbose:
-                                print('Skipping ', currentDirectoryObject.directory, 'because it is not in the selected directories.')
+                            self.packageDirectories[
+                                currentDirectoryObject.directory] = currentDirectoryObject
                         else:
                             raise SyntaxError()
                     else:
@@ -381,8 +364,12 @@ class SourcesCommand(object):
 
     def __call__(self):
         for d, o in six.iteritems(configuration.sourcesDirectories):
-            if not self.options.in_config or 'sources' in o.default_steps:
-                o.process(self.options, self.args)
+            if not configuration.directories or d in configuration.directories:
+                if not self.options.in_config or 'sources' in o.default_steps:
+                    o.process(self.options, self.args)
+            elif configuration.verbose:
+                print('Skipping ', d,
+                      'because it is not in the selected directories.')
 
 
 class ConfigureCommand(object):
@@ -412,16 +399,13 @@ class ConfigureCommand(object):
 
     def __call__(self):
         for d, o in six.iteritems(configuration.buildDirectories):
-            if not self.options.in_config or 'configure' in o.default_steps:
-                o.configure(self.options, self.args)
-
-
-class CompileCommand(object):
-
-    def __init__(self, argv, configuration):
-        command = [('build' if i == 'compile' else i) for i in sys.argv]
-        raise ValueError('Command "compile" have been renamed to "build". Please use the following command-line: %s' %
-                         ' '.join((repr(i) for i in command)))
+            if not configuration.directories or d in configuration.directories:
+                if not self.options.in_config \
+                        or 'configure' in o.default_steps:
+                    o.configure(self.options, self.args)
+            elif configuration.verbose:
+                print('Skipping ', d,
+                      'because it is not in the selected directories.')
 
 
 class BuildCommand(object):
@@ -451,8 +435,12 @@ class BuildCommand(object):
 
     def __call__(self):
         for d, o in six.iteritems(configuration.buildDirectories):
-            if not self.options.in_config or 'build' in o.default_steps:
-                o.build(self.options, self.args)
+            if not configuration.directories or d in configuration.directories:
+                if not self.options.in_config or 'build' in o.default_steps:
+                    o.build(self.options, self.args)
+            elif configuration.verbose:
+                print('Skipping ', d,
+                      'because it is not in the selected directories.')
 
 
 class DocCommand(object):
@@ -478,8 +466,12 @@ class DocCommand(object):
 
     def __call__(self):
         for d, o in six.iteritems(configuration.buildDirectories):
-            if not self.options.in_config or 'doc' in o.default_steps:
-                o.doc()
+            if not configuration.directories or d in configuration.directories:
+                if not self.options.in_config or 'doc' in o.default_steps:
+                    o.doc()
+            elif configuration.verbose:
+                print('Skipping ', d,
+                      'because it is not in the selected directories.')
 
 
 class TestCommand(object):
@@ -505,8 +497,12 @@ class TestCommand(object):
 
     def __call__(self):
         for d, o in six.iteritems(configuration.buildDirectories):
-            if not self.options.in_config or 'test' in o.default_steps:
-                o.test()
+            if not configuration.directories or d in configuration.directories:
+                if not self.options.in_config or 'test' in o.default_steps:
+                    o.test()
+            elif configuration.verbose:
+                print('Skipping ', d,
+                      'because it is not in the selected directories.')
 
 
 class PackCommand(object):
@@ -532,8 +528,12 @@ class PackCommand(object):
 
     def __call__(self):
         for d, o in six.iteritems(configuration.packageDirectories):
-            if not self.options.in_config or 'pack' in o.default_steps:
-                o.package(self.options, self.args)
+            if not configuration.directories or d in configuration.directories:
+                if not self.options.in_config or 'pack' in o.default_steps:
+                    o.package(self.options, self.args)
+            elif configuration.verbose:
+                print('Skipping ', d,
+                      'because it is not in the selected directories.')
 
 
 class InstallPackCommand(object):
@@ -559,8 +559,13 @@ class InstallPackCommand(object):
 
     def __call__(self):
         for d, o in six.iteritems(configuration.packageDirectories):
-            if not self.options.in_config or 'install_pack' in o.default_steps:
-                o.install_package(self.options, self.args)
+            if not configuration.directories or d in configuration.directories:
+                if not self.options.in_config \
+                        or 'install_pack' in o.default_steps:
+                    o.install_package(self.options, self.args)
+            elif configuration.verbose:
+                print('Skipping ', d,
+                      'because it is not in the selected directories.')
 
 
 class TestPackCommand(object):
@@ -586,8 +591,13 @@ class TestPackCommand(object):
 
     def __call__(self):
         for d, o in six.iteritems(configuration.packageDirectories):
-            if not self.options.in_config or 'test_pack' in o.default_steps:
-                o.test_package(self.options, self.args)
+            if not configuration.directories or d in configuration.directories:
+                if not self.options.in_config \
+                        or 'test_pack' in o.default_steps:
+                    o.test_package(self.options, self.args)
+            elif configuration.verbose:
+                print('Skipping ', d,
+                      'because it is not in the selected directories.')
 
 
 class SourceDirectory(object):
@@ -1462,6 +1472,7 @@ class PackageDirectory(object):
         self.build_condition = None
         self.installer_filename = None
         self.data_repos_dir = ''
+        self.test_install_dir = ''
 
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ pack ... ]:
@@ -1528,8 +1539,9 @@ class PackageDirectory(object):
             return
         build_dir = configuration.buildDirectories.get(self.build_directory)
         if build_dir is None:
-            print('Package directory: referenced build directory: "%s" does '
-                  'not exist' % self.build_directory)
+            raise RuntimeError(
+                'Package directory: referenced build directory: "%s" does '
+                'not exist' % self.build_directory)
         self.build_dir = build_dir
 
     def installer_cmdline(self):
@@ -1547,7 +1559,7 @@ class PackageDirectory(object):
         return cmd
 
     def make_install_script(self, install_dir, repos_dir, data_repos_dir):
-        fd, script_fname = tmpfile.mkstemp(prefix='install_script')
+        fd, script_fname = tempfile.mkstemp(prefix='install_script')
         os.close(fd)
         f = open(script_fname, 'w')
         f.write('''var install_dir = "%s";
@@ -1595,7 +1607,7 @@ Controller.prototype.PerformInstallationPageCallback = function()
 {
     gui.clickButton(buttons.CommitButton);
 }
-''' % (install_dir, repos_dir, data_repos_dir, data_repos_dir))
+''' % (install_dir, repos_dir, data_repos_dir))
         f.close()
         return script_fname
 
@@ -1614,8 +1626,11 @@ Controller.prototype.PerformInstallationPageCallback = function()
             print('mirror:', self.mirror_dir)
             print('installer_realname:', self.installer_realname)
         else:
-            raise RuntimeError('could not determine actual package dir '
-                               'and installer filename')
+            # data case ? only mirror, no installer
+            m = re.match('.*^mirror: ([^\n]+)$', cmd_out, re.M | re.S)
+            if m:
+                self.mirror_dir = m.group(1)
+                print('mirror:', self.mirror_dir)
 
     def install_package(self, options, args):
         self.test_config(options, args)
@@ -1630,17 +1645,18 @@ Controller.prototype.PerformInstallationPageCallback = function()
             cmd = self.installer_cmdline() + ['-s']
             cmd_out = subprocess.check_output(
                 cmd, cwd=self.build_dir.directory)
-            m = re.match('.*^mirror: ([^$])$^installer: ([^$])$', cmd_out,
-                         re.M | re.S)
+            m = re.match('.*^mirror: ([^\n]+)$\n^installer: ([^\n]+)$',
+                         cmd_out, re.M | re.S)
             if m:
-                self.mirror_dir = m.match(1)
-                self.installer_realname = m.match(2)
+                self.mirror_dir = m.group(1)
+                self.installer_realname = m.group(2)
             else:
                 raise RuntimeError('could not determine actual package dir '
-                    'and installer filename')
+                                  'and installer filename')
         mirror_dir = self.mirror_dir
         # remove suffix _tmp
-        repos_dir = mirror_dir[:-4]
+        #repos_dir = mirror_dir[:-4]
+        repos_dir = mirror_dir
         if self.data_repos_dir:
             data_repos_dir = self.data_repos_dir
         else:
@@ -1650,7 +1666,7 @@ Controller.prototype.PerformInstallationPageCallback = function()
         install_script = self.make_install_script(install_dir, repos_dir,
                                                   data_repos_dir)
         try:
-            cmd = [insteller_filename, '--script', self.install_script]
+            cmd = [self.installer_realname, '--script', install_script]
             subprocess.check_call(cmd)
         finally:
             os.unlink(install_script)

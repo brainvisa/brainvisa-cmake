@@ -170,6 +170,22 @@ Commands:
   test_pack: run tests in installed binary packages
 
 To get help for a specific command, use -h option of the command. Example: "%prog build -h".
+
+To get help on how to configure and write a bv_maker configuration file, see:
+
+https://bioproj.extra.cea.fr/redmine/projects/brainvisa-devel/wiki/How_to_compile_BrainVISA_projects
+
+config file syntax:
+
+https://bioproj.extra.cea.fr/redmine/projects/brainvisa-devel/wiki/Bv_maker_configuration_syntax
+
+and more generally:
+
+https://bioproj.extra.cea.fr/redmine/projects/brainvisa-devel/wiki
+
+These web pages need login/password access, you may use:
+login: brainvisa
+password: Soma2009
 '''
         defaultConfigurationFile = os.path.join(
             os.environ['HOME'], '.brainvisa', 'bv_maker.cfg')

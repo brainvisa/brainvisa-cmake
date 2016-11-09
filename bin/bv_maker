@@ -1703,6 +1703,9 @@ Controller.prototype.FinishedPageCallback = function()
         # set environment to point to install dir
         new_env = dict(os.environ)
         new_env['BRAINVISA_PACKAGE_INSTALL_PREFIX'] = install_dir
+        if self.remote_test_host_cmd:
+            new_env['BRAINVISA_TEST_REMOTE_COMMAND'] \
+                = self.remote_test_host_cmd
         system(cwd=self.build_dir.directory, env=new_env,
                *(['ctest', '--output-on-failure']))
 

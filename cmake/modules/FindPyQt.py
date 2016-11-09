@@ -37,15 +37,13 @@ pyqt_ver = 4
 
 
 def get_default_sip_dir():
-    # This is based on QScintilla's configure.py, and only works for the
-    # default case where installation paths have not been changed in PyQt's
-    # configuration process.
-    if sys.platform == 'win32':
-        pyqt_sip_dir = os.path.join(sys.prefix, 'sip', 'PyQt%d' % pyqt_ver)
-    else:
-        pyqt_sip_dir = os.path.join(sys.prefix, 'share', 'sip',
-                                    'PyQt%d' % pyqt_ver)
-    return pyqt_sip_dir
+    import sipconfig
+
+    c = sipconfig.Configuration()
+    pyqt_sip_dir = os.path.join(c.default_sip_dir, 'PyQt%d' % pyqt_ver)
+    if os.path.isdir(pyqt_sip_dir):
+        return pyqt_sip_dir
+    return c.default_sip_dir
 
 def get_qt_tag(sip_flags):
     in_t = False

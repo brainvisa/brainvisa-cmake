@@ -1004,62 +1004,15 @@ If you did not do this on purpose, you should go back to following upstream:
                 print('    component %s (%s)' % (component, version))
 
 
-class BuildDirectory(object):
-    _validOptions = set(('build_type', 'make_options', 'cmake_options',
-                         'packaging_thirdparty', 'default_steps',
-                         'build_condition'))
-
-    sitecustomize_content = '''import os
-
-for i in os.listdir(os.path.dirname(__file__)):
-    if i.endswith('.py') and i != '__init__.py':
-        module = i[:-3]
-        __import__('sitecustomize.%s' % module)
-'''
+class ComponentsConfigParser(object):
 
     def __init__(self, directory, configuration):
         self.configuration = configuration
         self.directory = os.path.normpath(os.path.abspath(directory))
         self.configurationLines = []
-        # self.configurationDirectories = []
         self.projects = set()
         self.components = {}
-        self.build_type = ''
-        self.make_options = ''
-        self.cmake_options = ''
-        self.packaging_thirdparty = ''
         self._configuration_lines_processed = False
-        self.clean_commands = True
-        self.default_steps = ['configure', 'build']
-        self.build_condition = None
-
-    def addConfigurationLine(self, line):
-        # Supported lines in bv_maker.cfg for [ build ... ]:
-        #    default_steps [info] [configure] [build] [doc] [test]
-        #    directory <directory>
-        #    brainvisa <component_pattern> <version_pattern> <source_directory>
-        #    brainvisa_exclude <component_pattern> [<version_pattern>]
-        #    + <directory>
-        #    - <component_pattern> [<version_pattern>]
-        #    <component_pattern> <version_pattern> <source_directory>
-        i = line.find('=')
-        if i > 0:
-            option = line[:i].strip()
-            value = line[i + 1:].strip()
-            if option not in self._validOptions:
-                raise SyntaxError()
-            if hasattr(self, option) \
-                    and type(getattr(self, option)) in (list, tuple):
-                value = value.split()
-            setattr(self, option, value)
-        elif line[0] == '+':
-            if '*' in line:
-                raise SyntaxError()
-        elif line[0] == '-':
-            pass
-        else:
-            l = line.split(None, 2)
-        self.configurationLines.append(line)
 
     def _process_configuration_lines(self):
         if not self._configuration_lines_processed:
@@ -1087,16 +1040,22 @@ for i in os.listdir(os.path.dirname(__file__)):
                     else:
                         print('WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % directory)
                 elif first in ('brainvisa_exclude', '-'):
+                    component_def = rest.split(None, 1)
                     componentPattern, versionPattern = (
-                        rest.split(None, 1) + ['*'])[:2]
-                    for component in brainvisa_projects.find_components(componentPattern):
+                        component_def + ['*'])[:2]
+                    components \
+                        = brainvisa_projects.find_components(componentPattern)
+                    if len(components) == 0 \
+                            and component_def[0] in self.components:
+                        components = [component_def[0]]
+                    for component in components:
                         dir_version = self.components.get(component)
                         if dir_version:
                             dir, selected_version, component_version, \
                                build_model = dir_version
                             if fnmatchcase(selected_version, versionPattern):
                                 if self.configuration.verbose:
-                                    print('    removing component %s version %s from %s' % (component, version, dir))
+                                    print('    removing component %s from %s' % (component, dir))
                                 del self.components[component]
                 elif first == 'brainvisa' \
                         or (first
@@ -1181,6 +1140,60 @@ for i in os.listdir(os.path.dirname(__file__)):
             self._configuration_lines_processed = True
             if self.configuration.verbose:
                 print('Build directory %s parsing done.' % self.directory)
+
+
+class BuildDirectory(ComponentsConfigParser):
+
+    _validOptions = set(('build_type', 'make_options', 'cmake_options',
+                         'packaging_thirdparty', 'default_steps',
+                         'build_condition'))
+
+    sitecustomize_content = '''import os
+
+for i in os.listdir(os.path.dirname(__file__)):
+    if i.endswith('.py') and i != '__init__.py':
+        module = i[:-3]
+        __import__('sitecustomize.%s' % module)
+'''
+
+    def __init__(self, directory, configuration):
+        super(BuildDirectory, self).__init__(directory, configuration)
+        # self.configurationDirectories = []
+        self.build_type = ''
+        self.make_options = ''
+        self.cmake_options = ''
+        self.packaging_thirdparty = ''
+        self.clean_commands = True
+        self.default_steps = ['configure', 'build']
+        self.build_condition = None
+
+    def addConfigurationLine(self, line):
+        # Supported lines in bv_maker.cfg for [ build ... ]:
+        #    default_steps [info] [configure] [build] [doc] [test]
+        #    directory <directory>
+        #    brainvisa <component_pattern> <version_pattern> <source_directory>
+        #    brainvisa_exclude <component_pattern> [<version_pattern>]
+        #    + <directory>
+        #    - <component_pattern> [<version_pattern>]
+        #    <component_pattern> <version_pattern> <source_directory>
+        i = line.find('=')
+        if i > 0:
+            option = line[:i].strip()
+            value = line[i + 1:].strip()
+            if option not in self._validOptions:
+                raise SyntaxError()
+            if hasattr(self, option) \
+                    and type(getattr(self, option)) in (list, tuple):
+                value = value.split()
+            setattr(self, option, value)
+        elif line[0] == '+':
+            if '*' in line:
+                raise SyntaxError()
+        elif line[0] == '-':
+            pass
+        else:
+            l = line.split(None, 2)
+        self.configurationLines.append(line)
 
     def conditional_build(self):
         '''Tells if the current build directory has actually to be built.
@@ -1455,20 +1468,18 @@ class VirtualenvDirectory(BuildDirectory):
         pass
 
 
-class PackageDirectory(object):
+class PackageDirectory(ComponentsConfigParser):
+
     _validOptions = set(('build_directory', 'packaging_options',
                          'packaging_thirdparty', 'build_condition',
                          'installer_filename', 'data_repos_dir',
                          'test_install_dir'))
 
     def __init__(self, directory, configuration):
-        self.configuration = configuration
-        self.directory = os.path.normpath(os.path.abspath(directory))
+        super(PackageDirectory, self).__init__(directory, configuration)
         self.build_directory = ''
-        self.configurationLines = []
         self.packaging_options = ''
-        self.packaging_thirdparty = ''
-        self._configuration_lines_processed = False
+        #self.packaging_thirdparty = ''
         self.build_condition = None
         self.installer_filename = None
         self.data_repos_dir = ''
@@ -1485,36 +1496,14 @@ class PackageDirectory(object):
             if hasattr(self, option) \
                     and type(getattr(self, option)) in (list, tuple):
                 value = value.split()
+            if option == 'build_directory':
+                value = os.path.normpath(
+                    os.path.abspath(environmentVariablesSubstitution(
+                        value)))
             setattr(self, option, value)
-        #elif line[0] == '+':
-            #if '*' in line:
-                #raise SyntaxError()
-        #elif line[0] == '-':
-            #pass
         else:
             l = line.split(None, 2)
         self.configurationLines.append(line)
-
-    def _process_configuration_lines(self):
-        if not self._configuration_lines_processed:
-            if self.configuration.verbose:
-                print('Processing package directory %s' % self.directory)
-            for line in self.configurationLines:
-                if '=' in line:
-                    continue
-                first, rest = line.split(None, 1)
-                if first == 'build_directory':
-                    directory = os.path.normpath(
-                        os.path.abspath(environmentVariablesSubstitution(
-                            rest.strip())))
-                    print('build dir:', directory)
-                elif first == 'packaging_options':
-                    options = rest.strip()
-                else:
-                    SyntaxError()
-            self._configuration_lines_processed = True
-            if self.configuration.verbose:
-                print('Package directory %s parsing done.' % self.directory)
 
     def conditional_build(self):
         '''Tells if the current package has actually to be built.
@@ -1534,7 +1523,6 @@ class PackageDirectory(object):
         return cond
 
     def test_config(self, options, args):
-        self._process_configuration_lines()
         if not self.conditional_build():
             return
         build_dir = configuration.buildDirectories.get(self.build_directory)
@@ -1543,6 +1531,10 @@ class PackageDirectory(object):
                 'Package directory: referenced build directory: "%s" does '
                 'not exist' % self.build_directory)
         self.build_dir = build_dir
+        build_dir._process_configuration_lines()
+        self.projects = build_dir.projects
+        self.components = build_dir.components
+        self._process_configuration_lines()
 
     def installer_cmdline(self):
         pack_options = self.packaging_options.split()
@@ -1620,6 +1612,8 @@ Controller.prototype.FinishedPageCallback = function()
         self.test_config(options, args)
         print('Building package:', self.directory)
         print('    from build dir:', self.build_dir.directory)
+        #components = list(self.components.keys())
+        #print('components:', components)
         cmd = self.installer_cmdline()
         print('running:', "'" + "' '".join(cmd) + "'")
         cmd_out = subprocess.check_output(cmd, cwd=self.build_dir.directory)

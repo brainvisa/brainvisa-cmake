@@ -5,9 +5,18 @@
 # BRAINVISA_PACKAGE_INSTALL_PREFIX variable if it is defined.
 # this is used to run tests from a build directory (with correctly setup
 # Makefiles/ctest) for testing installed packages.
+#
+# Remote mode:
+# IF an additional env variable BRAINVISA_TEST_REMOTE_COMMAND is set,
+# it is prepended to the test command, and can be used to connect
+# to a remote test host. For instance if:
+# BRAINVISA_TEST_REMOTE_COMMAND=ssh -t -X testmachine
+# BRAINVISA_PACKAGE_INSTALL_PREFIX=/home/test/brainvisa_testing
+# then the command will be:
+# ssh -t -X testmachine /home/test/brainvisa_testing/bin/bv_env <commandline>
 
 if [ -z ${BRAINVISA_PACKAGE_INSTALL_PREFIX} ]; then
-  exec `dirname $0`/bv_env${CMAKE_EXECUTABLE_SUFFIX} "$@"
+  exec ${BRAINVISA_TEST_REMOTE_COMMAND} `dirname $0`/bv_env${CMAKE_EXECUTABLE_SUFFIX} "$@"
 else
-  exec "${BRAINVISA_PACKAGE_INSTALL_PREFIX}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}" "$@"
+  exec ${BRAINVISA_TEST_REMOTE_COMMAND} "${BRAINVISA_PACKAGE_INSTALL_PREFIX}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}" "$@"
 fi

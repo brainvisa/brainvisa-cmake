@@ -5,7 +5,11 @@ import os
 import sys
 import platform
 from optparse import OptionParser
-from brainvisa.config import fullVersion
+try:
+    from brainvisa.config import fullVersion
+except ImportError:
+    # axon is not installed
+    fullVersion = '1.0.0'
 
 #default_build_repos_dir \
     #= '/neurospin/brainvisa/repositories/build-repos/%(i2bm)s/%(version)s/%(os)s'

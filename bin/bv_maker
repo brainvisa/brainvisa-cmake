@@ -46,6 +46,7 @@ from optparse import OptionParser
 from fnmatch import fnmatchcase
 import tempfile
 import distutils.spawn
+import platform
 try:
     # compatibility for python3
     import six
@@ -1473,7 +1474,8 @@ class PackageDirectory(ComponentsConfigParser):
     _validOptions = set(('build_directory', 'packaging_options',
                          'packaging_thirdparty', 'build_condition',
                          'installer_filename', 'data_repos_dir',
-                         'test_install_dir', 'remote_test_host_cmd'))
+                         'test_install_dir', 'remote_test_host_cmd',
+                         'init_components_from_build_dir', 'pack_version'))
 
     def __init__(self, directory, configuration):
         super(PackageDirectory, self).__init__(directory, configuration)
@@ -1485,6 +1487,9 @@ class PackageDirectory(ComponentsConfigParser):
         self.data_repos_dir = ''
         self.test_install_dir = ''
         self.remote_test_host_cmd = None
+        self.init_components_from_build_dir = 'ON'
+        self.pack_version = None
+        self.pathvars = None
 
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ pack ... ]:
@@ -1532,23 +1537,103 @@ class PackageDirectory(ComponentsConfigParser):
                 'Package directory: referenced build directory: "%s" does '
                 'not exist' % self.build_directory)
         self.build_dir = build_dir
-        build_dir._process_configuration_lines()
-        self.projects = build_dir.projects
-        self.components = build_dir.components
+        if self.init_components_from_build_dir.upper() == 'ON':
+            build_dir._process_configuration_lines()
+            self.projects = build_dir.projects
+            self.components = build_dir.components
         self._process_configuration_lines()
 
+    #def installer_cmdline_i2bm(self):
+        #pack_options = self.packaging_options.split()
+        #installer_filename = self.installer_filename
+        #if not installer_filename:
+            #installer_filename = os.path.join(
+                #os.path.dirname(self.directory),
+                #'brainvisa-installer/brainvisa_installer-'
+                #'%(version)s-%(os)s-%(online)s%(public)s')
+        #cmd = [sys.executable,
+               #distutils.spawn.find_executable('bv_build_installer_i2bm'),
+               #'-m', self.directory, '-o', installer_filename] \
+            #+ pack_options
+        #return cmd
+
+    def installer_variables(self):
+        if self.pathvars is not None:
+            return self.pathvars
+        systems = {'darwin' : 'osx'}
+        i2bm_str = 'public'
+        osname = platform.system().lower()
+        osname = systems.get(osname, osname)
+        public = ''
+        online = 'online'
+        if osname == 'linux':
+            if platform.architecture()[0] == '64bit':
+                osname += '64'
+            else:
+                osname += '32'
+            # determine libc version - using ctypes and calling C
+            # gnu_get_libc_version() function
+            # Note: plaform.libc_ver() is completely bogus.
+            import ctypes
+            libc = ctypes.cdll.LoadLibrary("libc.so.6")
+            gnu_get_libc_version = libc.gnu_get_libc_version
+            gnu_get_libc_version.restype = ctypes.c_char_p
+            osname += '-glibc-' \
+                + '.'.join(gnu_get_libc_version().split('.')[:2])
+        elif osname == 'windows':
+            osname = 'win32'
+            # how is is for win64 ?
+
+        if '--i2bm' in self.packaging_options.split():
+            i2bm_str = 'i2bm'
+            public = '-i2bm'
+
+        if self.pack_version:
+            fullVersion = self.pack_version
+        else:
+            fullVersion = '1.0.0'
+            bvconf = os.path.join(self.build_directory, 'python', 'brainvisa',
+                                  'config.py')
+            if os.path.exists(bvconf):
+                ver = {}
+                try:
+                    with open(bvconf) as f:
+                        code = compile(f.read(), bvconf, 'exec')
+                        exec(code, ver, ver)
+                    fullVersion = ver.get('fullVersion', fullVersion)
+                except ImportError:
+                    pass
+
+        self.pathvars = {'i2bm': i2bm_str, 'os': osname,
+                         'version': fullVersion, 'public': public,
+                         'online': online}
+        return self.pathvars
+
+    def replace_vars(self, path_string):
+        vars = self.installer_variables()
+        return os.path.abspath(
+            environmentVariablesSubstitution(path_string)) % vars
+
     def installer_cmdline(self):
+        components = self.components.keys()
+        projects = list(self.projects)
         pack_options = self.packaging_options.split()
         installer_filename = self.installer_filename
-        if not installer_filename:
-            installer_filename = os.path.join(
-                os.path.dirname(self.directory),
-                'brainvisa-installer/brainvisa_installer-'
-                '%(version)s-%(os)s-%(online)s%(public)s')
+        #if not installer_filename:
+            #installer_filename = os.path.join(
+                #os.path.dirname(self.directory),
+                #'brainvisa-installer/brainvisa_installer-'
+                #'%(version)s-%(os)s-%(online)s%(public)s')
+        if installer_filename:
+            installer_filename = self.replace_vars(installer_filename)
+        directory = self.directory
+        directory = self.replace_vars(directory)
         cmd = [sys.executable,
-               distutils.spawn.find_executable('bv_build_installer_i2bm'),
-               '-m', self.directory, '-o', installer_filename] \
-            + pack_options
+               distutils.spawn.find_executable('bv_build_installer.py'),
+               '-r', directory]
+        if installer_filename:
+            cmd += ['-i', installer_filename]
+        cmd += pack_options + ['-p'] + projects + ['-n'] + components
         return cmd
 
     def make_install_script(self, install_dir, repos_dir, data_repos_dir,
@@ -1614,65 +1699,64 @@ Controller.prototype.FinishedPageCallback = function()
 
     def package(self, options, args):
         self.test_config(options, args)
-        print('Building package:', self.directory)
+        directory = self.replace_vars(self.directory)
+        print('Building package:', directory)
         print('    from build dir:', self.build_dir.directory)
         #components = list(self.components.keys())
         #print('components:', components)
         cmd = self.installer_cmdline()
         print('running:', "'" + "' '".join(cmd) + "'")
-        cmd_out = subprocess.check_output(cmd, cwd=self.build_dir.directory)
-        m = re.match('.*^mirror: ([^\n]+)$\n^installer: ([^\n]+)$', cmd_out,
-                     re.M | re.S)
-        if m:
-            self.mirror_dir = m.group(1)
-            self.installer_realname = m.group(2)
-            print('mirror:', self.mirror_dir)
-            print('installer_realname:', self.installer_realname)
-        else:
-            # data case ? only mirror, no installer
-            m = re.match('.*^mirror: ([^\n]+)$', cmd_out, re.M | re.S)
-            if m:
-                self.mirror_dir = m.group(1)
-                print('mirror:', self.mirror_dir)
+        subprocess.check_call(cmd, cwd=self.build_dir.directory)
+        #m = re.match('.*^mirror: ([^\n]+)$\n^installer: ([^\n]+)$', cmd_out,
+                     #re.M | re.S)
+        #if m:
+            #self.mirror_dir = m.group(1)
+            #self.installer_realname = m.group(2)
+            #print('mirror:', self.mirror_dir)
+            #print('installer_realname:', self.installer_realname)
+        #else:
+            ## data case ? only mirror, no installer
+            #m = re.match('.*^mirror: ([^\n]+)$', cmd_out, re.M | re.S)
+            #if m:
+                #self.mirror_dir = m.group(1)
+                #print('mirror:', self.mirror_dir)
 
     def install_package(self, options, args):
         self.test_config(options, args)
+        directory = self.replace_vars(self.directory)
         if not self.test_install_dir:
             raise RuntimeError(
                 'install_pack command needs test_install_dir option')
-        print('Installing package:', self.directory)
+        print('Installing package:', directory)
         print('    from build dir:', self.build_dir.directory)
-        print('    to:', self.test_install_dir)
+        test_install_dir = self.replace_vars(self.test_install_dir)
+        print('    to:', test_install_dir)
         tmp_dir = None
         if self.remote_test_host_cmd:
             print('    remote:', self.remote_test_host_cmd)
-            tmp_dir = os.path.join(os.path.dirname(self.test_install_dir),
-                                   'tmp')
+            tmp_dir = os.path.join(os.path.dirname(test_install_dir), 'tmp')
             if not os.path.exists(tmp_dir):
                 os.mkdir(tmp_dir)
-        if not hasattr(self, 'mirror_dir') \
-                or not hasattr(self, 'installer_realname'):
-            cmd = self.installer_cmdline() + ['-s']
-            cmd_out = subprocess.check_output(
-                cmd, cwd=self.build_dir.directory)
-            m = re.match('.*^mirror: ([^\n]+)$\n^installer: ([^\n]+)$',
-                         cmd_out, re.M | re.S)
-            if m:
-                self.mirror_dir = m.group(1)
-                self.installer_realname = m.group(2)
-            else:
-                raise RuntimeError('could not determine actual package dir '
-                                   'and installer filename')
-        mirror_dir = self.mirror_dir
-        # remove suffix _tmp
-        #repos_dir = mirror_dir[:-4]
-        repos_dir = mirror_dir
+        #if not hasattr(self, 'mirror_dir') \
+                #or not hasattr(self, 'installer_realname'):
+            #cmd = self.installer_cmdline() + ['-s']
+            #cmd_out = subprocess.check_output(
+                #cmd, cwd=self.build_dir.directory)
+            #m = re.match('.*^mirror: ([^\n]+)$\n^installer: ([^\n]+)$',
+                         #cmd_out, re.M | re.S)
+            #if m:
+                #self.mirror_dir = m.group(1)
+                #self.installer_realname = m.group(2)
+            #else:
+                #raise RuntimeError('could not determine actual package dir '
+                                   #'and installer filename')
+        repos_dir = directory
         if self.data_repos_dir:
             data_repos_dir = self.data_repos_dir
         else:
             data_repos_dir = repos_dir
-        install_dir = self.test_install_dir
-        insaller_filename = self.installer_realname
+        install_dir = test_install_dir
+        insaller_filename = self.replace_vars(self.installer_filename)
         if os.path.isdir(install_dir):
             print('removing previous test installation...')
             shutil.rmtree(install_dir)

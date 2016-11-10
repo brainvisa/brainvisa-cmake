@@ -1329,8 +1329,10 @@ find_package( brainvisa-cmake NO_POLICY_SCOPE )
 include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 ''', file=out)
         out.close()
+        exe_suffix = ''
         if sys.platform == 'win32':
             command = ['cmake', '-G', 'MSYS Makefiles']
+            exe_suffix = '.exe'
         else:
             command = ['cmake']
 
@@ -1350,11 +1352,11 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         os.environ['PATH'] = os.path.dirname(this_script) + os.pathsep \
             + os.getenv('PATH')
 
-        # special case: if bv-cmake is run from the build directory, run cmake
+        # special case: if bv-cmake is part of the build directory, run cmake
         # in 2 passes: once to reinstall bv-cmake from sources, and a second
         # time to actually configure all projects using the newly installed
         # bv-cmake.
-        if self.directory == os.path.dirname(os.path.dirname(this_script)):
+        if 'brainvisa-cmake' in self.components:
             print('=== bootstraping brainvisa-cmake project ===')
             system(cwd=self.directory,
                    *(command
@@ -1364,6 +1366,9 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                                  'brainvisa-cmake'),
                 *['make', 'install'])
             print('=== now configuring all other projects ===')
+            # run with this local bv-cmake environment
+            command.insert(0, os.path.join(self.directory, 'bin',
+                                           'bv_env%s' % exe_suffix))
             system(cwd=self.directory,
                    *(command
                      + ["-DBRAINVISA_CMAKE_BUILD_TYPE=no-brainvisa-cmake"]))

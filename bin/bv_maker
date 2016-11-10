@@ -1757,11 +1757,11 @@ Controller.prototype.FinishedPageCallback = function()
                                    #'and installer filename')
         repos_dir = directory
         if self.data_repos_dir:
-            data_repos_dir = self.data_repos_dir
+            data_repos_dir = self.replace_vars(self.data_repos_dir)
         else:
             data_repos_dir = repos_dir
         install_dir = test_install_dir
-        insaller_filename = self.replace_vars(self.installer_filename)
+        installer_filename = self.replace_vars(self.installer_filename)
         if os.path.isdir(install_dir):
             print('removing previous test installation...')
             shutil.rmtree(install_dir)
@@ -1770,9 +1770,10 @@ Controller.prototype.FinishedPageCallback = function()
         cmd = []
         if self.remote_test_host_cmd:
             cmd = self.remote_test_host_cmd.split()
-        cmd += [self.installer_realname, '--script', install_script]
+        cmd += [installer_filename, '--script', install_script]
         try:
             print('installing...')
+            print(cmd)
             subprocess.check_call(cmd)
             print('done.')
         finally:
@@ -1786,7 +1787,7 @@ Controller.prototype.FinishedPageCallback = function()
                 'install_pack command needs test_install_dir option')
         print('Testing package:', self.directory)
         print('    from build dir:', self.build_dir.directory)
-        install_dir = self.test_install_dir
+        install_dir = self.replace_vars(self.test_install_dir)
         # get parallel jobs option if specified
         make_opts = self.build_dir.make_options.split()
         # set environment to point to install dir

@@ -161,32 +161,30 @@ This program is for the management of source retrieval, configuration and compil
 In order to work, the commands svn and svnadmin must be installed on your system. On some Linux systems they are in two separate packages (e.g. subversion and subversion-tools).
 
 Commands:
-  sources: Create or updated selected sources directories from Subversion repository.
-  configure: Create and configure selected build directories with CMake.
-  build: compile all selected build directories.
-  doc: Generate documentation (docbook, epydoc, doxygen)
-  test: Execute tests using ctest.
-  pack: Generate binary packages
-  install_pack: install binary packages
-  test_pack: run tests in installed binary packages
+
+* info: Just output info about configured components
+* sources: Create or updated selected sources directories from Subversion repository.
+* configure: Create and configure selected build directories with CMake.
+* build: compile all selected build directories.
+* doc: Generate documentation (sphinx, doxygen, docbook, epydoc)
+* test: Execute tests using ctest.
+* pack: Generate binary packages
+* install_pack: install binary packages
+* test_pack: run tests in installed binary packages
 
 To get help for a specific command, use -h option of the command. Example: "%prog build -h".
 
 To get help on how to configure and write a bv_maker configuration file, see:
 
-https://bioproj.extra.cea.fr/redmine/projects/brainvisa-devel/wiki/How_to_compile_BrainVISA_projects
+http://brainvisa.info/brainvisa-cmake/compile_existing.html
 
 config file syntax:
 
-https://bioproj.extra.cea.fr/redmine/projects/brainvisa-devel/wiki/Bv_maker_configuration_syntax
+http://brainvisa.info/brainvisa-cmake/configuration.html
 
 and more generally:
 
-https://bioproj.extra.cea.fr/redmine/projects/brainvisa-devel/wiki
-
-These web pages need login/password access, you may use:
-login: brainvisa
-password: Soma2009
+http://brainvisa.info/brainvisa-cmake/
 '''
         defaultConfigurationFile = os.path.join(
             os.environ['HOME'], '.brainvisa', 'bv_maker.cfg')

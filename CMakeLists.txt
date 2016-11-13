@@ -1,3 +1,11 @@
+
+if( BRAINVISA_BVMAKER )
+
+  # in BV mode, force CMAKE_INSTALL_PREFIX to point to build directory
+  set( CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR} )
+
+endif()
+
 project( brainvisa-cmake CXX )
 cmake_minimum_required( VERSION 2.6 )
 
@@ -19,57 +27,57 @@ include( "${CMAKE_CURRENT_SOURCE_DIR}/project_info.cmake" )
 set( brainvisa-cmake_INSTALL_PREFIX "share/brainvisa-cmake-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}" )
 
 configure_file( cmake/brainvisa-cmake-config.cmake.in
-                "${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config.cmake" 
+                "${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config.cmake"
                 @ONLY )
 configure_file( cmake/brainvisa-cmake-config-version.cmake.in
-                "${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config-version.cmake" 
+                "${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config-version.cmake"
                 @ONLY )
 install( FILES "${CMAKE_BINARY_DIR}/${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config.cmake"
-               "${CMAKE_BINARY_DIR}/${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config-version.cmake"
-         DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake" )
+              "${CMAKE_BINARY_DIR}/${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config-version.cmake"
+        DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake" )
 foreach( _dir cmake cmake/specific cmake/specific/linux_distribution cmake/specific/windows cmake/specific/mingw32 )
   file( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/${_dir}/*.cmake" )
   install( FILES ${_files}
-           DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/${_dir}" )
+          DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/${_dir}" )
 endforeach()
 file( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/cmake/*.in" )
 install( FILES ${_files}
-         DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake" )
+        DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake" )
 install( FILES cmake/CMakeLists.txt
-         DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake" )
+        DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake" )
 file( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/cmake/*.py" )
 install( FILES ${_files}
-         DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake"
-         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
+        DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake"
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
 
 BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/*[^~]" )
-install( FILES ${_files} 
-         DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake/modules" )
+install( FILES ${_files}
+        DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake/modules" )
 
 BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/cmake-fixes/*[^~]" )
-install( FILES ${_files} 
-         DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake/modules/cmake-fixes" )
+install( FILES ${_files}
+        DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake/modules/cmake-fixes" )
 
 BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/cmake-fixes/Platform/*[^~]" )
-install( FILES ${_files} 
-         DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake/modules/cmake-fixes/Platform" )
+install( FILES ${_files}
+        DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake/modules/cmake-fixes/Platform" )
 
 BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/cmake/multiplatform/*[^~]" )
-install( FILES ${_files} 
-         DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake/multiplatform" )
+install( FILES ${_files}
+        DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake/multiplatform" )
 
 BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/scripts/*[^~]" )
 install( FILES ${_files}
-         DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/scripts" )
+        DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/scripts" )
 
 BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/scripts/windows/*[^~]" )
 install( FILES ${_files}
-         DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/scripts/windows" )
-         
+        DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/scripts/windows" )
+
 # Packaging
 set( PACKAGE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE PATH "Installation path for debian package" )
 configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/debian-control.in"
-                "${CMAKE_BINARY_DIR}/debian-control" 
+                "${CMAKE_BINARY_DIR}/debian-control"
                 @ONLY )
 set( packageName "${CMAKE_BINARY_DIR}/brainvisa-cmake-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}.${BRAINVISA_PACKAGE_VERSION_PATCH}.deb" )
 set( tmpDir "/tmp/brainvisa-cmake_create_deb" )
@@ -99,24 +107,24 @@ endif()
 
 set_target_properties( bv_env PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
 install( TARGETS bv_env
-         DESTINATION bin )
+        DESTINATION bin )
 
 install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/python"
-         DESTINATION "${CMAKE_INSTALL_PREFIX}"
-         USE_SOURCE_PERMISSIONS
-         PATTERN ".svn" EXCLUDE
-         PATTERN "*~" EXCLUDE )
+        DESTINATION "."
+        USE_SOURCE_PERMISSIONS
+        PATTERN ".svn" EXCLUDE
+        PATTERN "*~" EXCLUDE )
 
 install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
-         DESTINATION "${CMAKE_INSTALL_PREFIX}"
-         USE_SOURCE_PERMISSIONS
-         PATTERN ".svn" EXCLUDE
-         PATTERN "*~" EXCLUDE )
+        DESTINATION "."
+        USE_SOURCE_PERMISSIONS
+        PATTERN ".svn" EXCLUDE
+        PATTERN "*~" EXCLUDE )
 
 # Generate a list of all brainvisa-cmake installed files
 # so that bv_maker can copy and already installed brainvisa-cmake
 if( NOT DISABLE_FILE_INSTALLATION_LIST )
-  # Must remove the CMakeCache before configuring again brainvisa-cmake into a new tmp build directory, 
+  # Must remove the CMakeCache before configuring again brainvisa-cmake into a new tmp build directory,
   # else the source directory is considered as a build directory and the build files are not copied into tmp directory
   if( EXISTS "${CMAKE_BINARY_DIR}/CMakeCache.txt" )
     execute_process( COMMAND "${CMAKE_COMMAND}" -E remove "${CMAKE_BINARY_DIR}/CMakeCache.txt" )
@@ -125,12 +133,12 @@ if( NOT DISABLE_FILE_INSTALLATION_LIST )
   execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${tmp}" )
   execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${tmp}/install" )
   execute_process( COMMAND "${CMAKE_COMMAND}"  "-G" "${CMAKE_GENERATOR}" -DDISABLE_FILE_INSTALLATION_LIST=YES "-DCMAKE_INSTALL_PREFIX:STRING=${tmp}/install" "${CMAKE_CURRENT_SOURCE_DIR}"
-                   WORKING_DIRECTORY "${tmp}")
-#                    OUTPUT_QUIET 
+                  WORKING_DIRECTORY "${tmp}")
+#                    OUTPUT_QUIET
 #                    ERROR_QUIET )
   execute_process( COMMAND "${CMAKE_MAKE_PROGRAM}" install
-                   WORKING_DIRECTORY "${tmp}")
-#                    OUTPUT_QUIET 
+                  WORKING_DIRECTORY "${tmp}")
+#                    OUTPUT_QUIET
 #                    ERROR_QUIET )
   file( GLOB_RECURSE installed_files RELATIVE "${tmp}/install" "${tmp}/install/*" )
   execute_process( COMMAND "${CMAKE_COMMAND}" -E remove_directory "${tmp}" )
@@ -139,5 +147,38 @@ if( NOT DISABLE_FILE_INSTALLATION_LIST )
     file( APPEND "${CMAKE_BINARY_DIR}/installed_files.txt" "${i}\n" )
   endforeach()
   install( FILES "${CMAKE_BINARY_DIR}/installed_files.txt"
-           DESTINATION "${CMAKE_INSTALL_PREFIX}/python/brainvisa/maker" )
+          DESTINATION "python/brainvisa/maker" )
 endif()
+
+if( NOT TARGET install-runtime )
+  if(NOT CPack_CMake_INCLUDED)
+    include( CPack )
+  endif()
+  cpack_add_component_group( runtime
+                            DISPLAY_NAME "Runtime"
+                            DESCRIPTION "All elements necessary to use ${PROJECT_NAME} at runtime without developpement files such as C++ headers." )
+  add_custom_target( install-runtime )
+endif()
+
+if( NOT TARGET install-${PROJECT_NAME} )
+  cpack_add_component( ${PROJECT_NAME} )
+  add_custom_target( install-${PROJECT_NAME}
+                    COMMAND if [ -n "$(BRAINVISA_INSTALL_PREFIX)" ] \; then "${CMAKE_COMMAND}" -DCMAKE_INSTALL_PREFIX="$(BRAINVISA_INSTALL_PREFIX)" -P "${CMAKE_BINARY_DIR}/build_files/${PROJECT_NAME}/cmake_install.cmake" \; else "${CMAKE_COMMAND}" -P "${CMAKE_BINARY_DIR}/build_files/${PROJECT_NAME}/cmake_install.cmake" \; fi )
+  add_dependencies( install-runtime install-${PROJECT_NAME} )
+endif()
+
+
+# in the following we do more or less what brainvisa_project() does.
+
+if( BRAINVISA_BVMAKER )
+
+  BRAINVISA_PROJECT()
+
+  find_package( Sphinx )
+  find_package( python )
+
+  BRAINVISA_GENERATE_SPHINX_DOC( "doc/sphinx"
+    "share/doc/${PROJECT_NAME}-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}" USER )
+
+endif()
+

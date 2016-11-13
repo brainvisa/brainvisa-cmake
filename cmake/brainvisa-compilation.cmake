@@ -27,7 +27,7 @@ if(NOT CMAKE_C_PREPROCESSOR)
     set(CMAKE_C_PREPROCESSOR "${_toolchain_prefix}cpp -C" CACHE STRING "C preprocessor command to use" )
 endif()
 
-set( BRAINVISA_BVMAKER True )
+set( BRAINVISA_BVMAKER TRUE )
 
 set( CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_BINARY_DIR}" )
 include_directories( "${CMAKE_BINARY_DIR}/include" )
@@ -120,7 +120,7 @@ if( NOT BRAINVISA_CMAKE_BUILD_TYPE
 
   # Second pass to configure all other components
   foreach( component ${BRAINVISA_COMPONENTS} )
-    if( NOT component STREQUAL brainvisa-cmake )
+#     if( NOT component STREQUAL brainvisa-cmake )
       if( BRAINVISA_SOURCES_${component} )
         set( ${component}_IS_BEING_COMPILED TRUE CACHE BOOL INTERNAL )
         if( EXISTS "${BRAINVISA_SOURCES_${component}}/broken_component.log" )
@@ -130,7 +130,7 @@ if( NOT BRAINVISA_CMAKE_BUILD_TYPE
           add_subdirectory( "${BRAINVISA_SOURCES_${component}}" "build_files/${component}" )
         endif()
       endif()
-    endif()
+#     endif()
   endforeach()
 
   # Third pass to do post configuration

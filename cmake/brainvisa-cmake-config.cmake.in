@@ -2143,11 +2143,11 @@ function( BRAINVISA_ADD_COMPONENT _component )
     endforeach()
 
     #message( "Create component ${_component} in group ${_group}" )
-    cpack_add_component( ${_component}
     if(NOT CPack_CMake_INCLUDED)
       include( CPack )
     endif()
-                        ${ARGN} )
+    cpack_add_component( ${_component}
+                         ${ARGN} )
     add_custom_target( install-${_component}
                       COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ] \; then "${CMAKE_COMMAND}" -DCMAKE_INSTALL_PREFIX=\"$(BRAINVISA_INSTALL_PREFIX)\" -DCOMPONENT=${_component} -P "${CMAKE_BINARY_DIR}/cmake_install.cmake" \; else "${CMAKE_COMMAND}" -DCOMPONENT=${_component} -P "${CMAKE_BINARY_DIR}/cmake_install.cmake" \; fi )
     add_dependencies( install-${_group} install-${_component} )

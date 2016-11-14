@@ -137,7 +137,7 @@ install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
 
 # Generate a list of all brainvisa-cmake installed files
 # so that bv_maker can copy and already installed brainvisa-cmake
-if( NOT DISABLE_FILE_INSTALLATION_LIST )
+if( NOT DISABLE_FILE_INSTALLATION_LIST AND NOT BRAINVISA_BVMAKER )
   # Must remove the CMakeCache before configuring again brainvisa-cmake into a new tmp build directory,
   # else the source directory is considered as a build directory and the build files are not copied into tmp directory
   if( EXISTS "${CMAKE_BINARY_DIR}/CMakeCache.txt" )
@@ -164,10 +164,11 @@ if( NOT DISABLE_FILE_INSTALLATION_LIST )
           DESTINATION "python/brainvisa/maker" )
 endif()
 
+if(NOT CPack_CMake_INCLUDED)
+  include( CPack )
+endif()
+
 if( NOT TARGET install-runtime )
-  if(NOT CPack_CMake_INCLUDED)
-    include( CPack )
-  endif()
   cpack_add_component_group( runtime
                              DISPLAY_NAME "Runtime"
                              DESCRIPTION "All elements necessary to use ${PROJECT_NAME} at runtime without developpement files such as C++ headers." )

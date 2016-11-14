@@ -65,6 +65,10 @@ where ``<directory>`` is the name of the directory that will be created and whos
 
 The content of the source directory section is composed of a set of rules to select and unselect Subversion directories to copy in the source directory. Each source directory is first associated with an empty list of subdirectories. Then, the configuration file is parsed in order to modify this list. Each line in the source directory section correspond to an action that can modify the list. These actions are executed in the order they are given. It means that you can unselect directories previously selected or the contrary. For instance if one wants to select all components but one, he will make a first action to select all components and a second one to remove the component to ignore. There are three kind of actions that can be done to modify this list of subdirectories. The syntax of the configuration rules corresponding to these actions are described in the following paragraphs.
 
+In the source section, it is also possible to define some options, delcared in the syntax ``option = value``. The following options are supported:
+
+* ``revision_control``: ``ON`` (default) or ``OFF``. If enabled, revision control systems (*svn*, *git*) will be used to update the sources. If OFF, the sources directory will be left as is as a fixed sources tree.
+* ``default_steps``: steps performed for this build directory when bv_maker is invoked without specifying steps (typically just ``bv_maker``). Defaults to: ``sources``.
 
 Add components to the list
 --------------------------

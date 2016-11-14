@@ -294,8 +294,11 @@ http://brainvisa.info/brainvisa-cmake/
                         if self.verbose:
                             print('  processing line:', repr(line))
                         currentDirectoryObject.addConfigurationLine(line)
-                except SyntaxError:
-                    raise SyntaxError('Syntax error in ' + repr(
+                except SyntaxError as e:
+                    msg = e.message
+                    if msg == '':
+                        msg = 'Syntax error'
+                    raise SyntaxError('%s in ' % msg + repr(
                         options.configuration_file) + ' on line ' + str(lineCount))
 
         # store options and args
@@ -601,6 +604,8 @@ class TestPackCommand(object):
 
 class SourceDirectory(object):
 
+    _validOptions = set(('default_steps', 'revision_control'))
+
     def __init__(self, directory, configuration):
         self.configuration = configuration
         self.directory = os.path.normpath(os.path.abspath(directory))
@@ -608,6 +613,7 @@ class SourceDirectory(object):
         self.svnComponents = []
         self.gitComponents = []
         self.default_steps = ['sources']
+        self.revision_control = 'ON'
         if self.configuration.verbose:
             print('Processing source directory %s' % self.directory)
 
@@ -622,117 +628,112 @@ class SourceDirectory(object):
         #    + https://svn.url [<dest_directory>] [<bv_version>]]
         #    + <component_pattern> <version_pattern>
         #    - <component_pattern> [<version_pattern>]
-        l = line.split()
-        sign = l[0]
-        if sign.startswith('default_steps'):
-            if '=' in l[0]:
-                i = l[0].index('=')
-                l0 = [l[0][:i].strip(), '=', l[0][i+1:].strip()]
-                l0 = [x for x in l0 if x != '']
-                l = l0 + l[1:]
-            elif '=' in l[1]:
-                i = l[1].index('=')
-                l1 = [l[1][:i].strip(), '=', l[1][i+1:].strip()]
-                l1 = [x for x in l1 if x != '']
-                l = [l[0]] + l1 + l[2:]
-            if l[0] != 'default_steps' or len(l) < 2 \
-                    or l[1] != '=':
-                raise SyntaxError(
-                    'default_steps option is not followed with =')
-            self.default_steps = l[2:]
-        elif sign == 'git':
-            if len(l) < 3 or len(l) > 5:
-                raise SyntaxError()
-            sign, url, git_tag, dest_directory, bv_version = (
-                l + [None, None])[:5]
-            if self.configuration.verbose:
-                print('    adding repository: git', url, git_tag)
-                print('                   in:', \
-                    os.path.join(self.directory, dest_directory))
-                if component_version:
-                    print('                  for: %s version %s' \
-                        % component_version)
-            self.gitComponents.append(
-                (component_version, url, git_tag, dest_directory, bv_version))
+        i = line.find('=')
+        if i > 0:
+            option = line[:i].strip()
+            value = line[i + 1:].strip()
+            if option not in self._validOptions:
+                raise SyntaxError('Invalid option: %s' % option)
+            if hasattr(self, option) \
+                    and type(getattr(self, option)) in (list, tuple):
+                value = value.split()
+            setattr(self, option, value)
         else:
-            if len(l) < 2 or len(l) > 4:
-                raise SyntaxError()
-            sign, componentPattern, versionPattern, bv_version = (
-                l + [None, None])[:4]
-            if sign == 'svn' or (sign == '+' and '/' in componentPattern):
-                if '*' in componentPattern:
+            l = line.split()
+            sign = l[0]
+            if sign == 'git':
+                if len(l) < 3 or len(l) > 5:
                     raise SyntaxError()
-                if componentPattern.startswith('http') or componentPattern.startswith('file'):
-                    url = componentPattern
-                    dest_directory = versionPattern
-                else:
-                    url = brainvisa_projects.SVN_URL + '/' + componentPattern
-                    dest_directory = versionPattern
-                    if dest_directory is None:
-                        dest_directory = componentPattern
-                if dest_directory is None:
-                    raise SyntaxError()
+                sign, url, git_tag, dest_directory, bv_version = (
+                    l + [None, None])[:5]
                 if self.configuration.verbose:
-                    print('    adding repository: svn', url, component_version)
+                    print('    adding repository: git', url, git_tag)
                     print('                   in:', \
                         os.path.join(self.directory, dest_directory))
                     if component_version:
                         print('                  for: %s version %s' \
                             % component_version)
-
-                self.svnComponents.append(
-                    (component_version, url, dest_directory, bv_version))
-            elif sign in ('brainvisa', '+'):
-                if versionPattern is None:
-                    raise SyntaxError()
-                for component in brainvisa_projects.find_components(componentPattern):
-                    project = brainvisa_projects.project_per_component[component]
-                    for version, repo_dir in six.iteritems(brainvisa_projects.url_per_component[component]):
-                        repo, dir = repo_dir
-                        if fnmatchcase(version, versionPattern):
-                            self.addConfigurationLine(
-                                '%s %s %s' % (repo, dir, version), virtual=True, component_version=(component, version))
-            elif sign in ('-', 'brainvisa_exclude'):
-                if '/' in componentPattern:
-                    raise SyntaxError()
-                else:
-                    if versionPattern is None:
-                        versionPattern = '*'
-                    for component in brainvisa_projects.find_components(componentPattern):
-                        for version, repo_dir in six.iteritems(brainvisa_projects.url_per_component[component]):
-                            if fnmatchcase(version, versionPattern):
-                                # Remove unwanted svn components
-                                count = 0
-                                for component_version in [i[0] for i in self.svnComponents]:
-                                    if component_version:
-                                        c, v = component_version
-                                        if c == component and v == version:
-                                            if self.configuration.verbose:
-                                                component_version, url, dest_directory, bv_version = self.svnComponents[
-                                                    count]
-                                                print('    removing repository: svn', url)
-                                                print('                     in:', os.path.join(self.directory, dest_directory))
-                                                print('                    for: %s version %s' % component_version)
-                                            del self.svnComponents[count]
-                                            count -= 1
-                                    count += 1
-                                # Remove unwanted git components
-                                count = 0
-                                for component_version in [i[0] for i in self.gitComponents]:
-                                    if component_version:
-                                        c, v = component_version
-                                        if c == component and v == version:
-                                            if self.configuration.verbose:
-                                                component_version, url, git_tag, dest_directory, bv_version = self.gitComponents[
-                                                    count]
-                                                print('    removing repository: git', url, git_tag)
-                                                print('                     in:', os.path.join(self.directory, dest_directory))
-                                                print('                    for: %s version %s' % component_version)
-                                            del self.gitComponents[count]
-                                            count -= 1
-                                    count += 1
+                self.gitComponents.append(
+                    (component_version, url, git_tag, dest_directory, bv_version))
             else:
-                raise SyntaxError('Line cannot begin with "%s"' % sign)
+                if len(l) < 2 or len(l) > 4:
+                    raise SyntaxError()
+                sign, componentPattern, versionPattern, bv_version = (
+                    l + [None, None])[:4]
+                if sign == 'svn' or (sign == '+' and '/' in componentPattern):
+                    if '*' in componentPattern:
+                        raise SyntaxError()
+                    if componentPattern.startswith('http') or componentPattern.startswith('file'):
+                        url = componentPattern
+                        dest_directory = versionPattern
+                    else:
+                        url = brainvisa_projects.SVN_URL + '/' + componentPattern
+                        dest_directory = versionPattern
+                        if dest_directory is None:
+                            dest_directory = componentPattern
+                    if dest_directory is None:
+                        raise SyntaxError()
+                    if self.configuration.verbose:
+                        print('    adding repository: svn', url, component_version)
+                        print('                   in:', \
+                            os.path.join(self.directory, dest_directory))
+                        if component_version:
+                            print('                  for: %s version %s' \
+                                % component_version)
+
+                    self.svnComponents.append(
+                        (component_version, url, dest_directory, bv_version))
+                elif sign in ('brainvisa', '+'):
+                    if versionPattern is None:
+                        raise SyntaxError()
+                    for component in brainvisa_projects.find_components(componentPattern):
+                        project = brainvisa_projects.project_per_component[component]
+                        for version, repo_dir in six.iteritems(brainvisa_projects.url_per_component[component]):
+                            repo, dir = repo_dir
+                            if fnmatchcase(version, versionPattern):
+                                self.addConfigurationLine(
+                                    '%s %s %s' % (repo, dir, version), virtual=True, component_version=(component, version))
+                elif sign in ('-', 'brainvisa_exclude'):
+                    if '/' in componentPattern:
+                        raise SyntaxError()
+                    else:
+                        if versionPattern is None:
+                            versionPattern = '*'
+                        for component in brainvisa_projects.find_components(componentPattern):
+                            for version, repo_dir in six.iteritems(brainvisa_projects.url_per_component[component]):
+                                if fnmatchcase(version, versionPattern):
+                                    # Remove unwanted svn components
+                                    count = 0
+                                    for component_version in [i[0] for i in self.svnComponents]:
+                                        if component_version:
+                                            c, v = component_version
+                                            if c == component and v == version:
+                                                if self.configuration.verbose:
+                                                    component_version, url, dest_directory, bv_version = self.svnComponents[
+                                                        count]
+                                                    print('    removing repository: svn', url)
+                                                    print('                     in:', os.path.join(self.directory, dest_directory))
+                                                    print('                    for: %s version %s' % component_version)
+                                                del self.svnComponents[count]
+                                                count -= 1
+                                        count += 1
+                                    # Remove unwanted git components
+                                    count = 0
+                                    for component_version in [i[0] for i in self.gitComponents]:
+                                        if component_version:
+                                            c, v = component_version
+                                            if c == component and v == version:
+                                                if self.configuration.verbose:
+                                                    component_version, url, git_tag, dest_directory, bv_version = self.gitComponents[
+                                                        count]
+                                                    print('    removing repository: git', url, git_tag)
+                                                    print('                     in:', os.path.join(self.directory, dest_directory))
+                                                    print('                    for: %s version %s' % component_version)
+                                                del self.gitComponents[count]
+                                                count -= 1
+                                        count += 1
+                else:
+                    raise SyntaxError('Line cannot begin with "%s"' % sign)
         if not virtual:
             self.configurationLines.append(line)
 
@@ -744,7 +745,8 @@ class SourceDirectory(object):
 
         repositoryDirectory = os.path.join(self.directory, '.repository')
         checkout = False
-        if not os.path.exists(repositoryDirectory):
+        use_rcs = self.revision_control.upper() in ('', 'ON')
+        if use_rcs and options.svn and not os.path.exists(repositoryDirectory):
             os.makedirs(repositoryDirectory)
             # Because of a bug in svnadmin on MacOS, I cannot use an absolute name for the directory to create.
             # When I try "svnadmin create /neurospin/brainvisa/cmake_mac/", I have the following error:
@@ -776,24 +778,25 @@ class SourceDirectory(object):
             print(dest_directory, url, file=externalsFile)
             source_directories.append((dest_directory, bv_version))
         externalsFile.close()
-        self.svncommand('propset', 'svn:externals',
-                        '--file', externalsFileName, self.directory)
-        self.svncommand('commit', '-m', '', self.directory)
-        if options.svn:
+        if use_rcs and options.svn:
+            self.svncommand('propset', 'svn:externals',
+                            '--file', externalsFileName, self.directory)
+            self.svncommand('commit', '-m', '', self.directory)
             self.svncommand('update', self.directory)
         os.chdir(current_dir)
 
         # update Git Repositories
 
-        if options.git:
-            for component_version, url, git_tag, dest_directory, bv_version in self.gitComponents:
-                if dest_directory is None:
-                    dest_directory = url.rsplit('/', 1)[-1]
-                    if dest_directory.endswith('.git'):
-                        dest_directory = dest_directory[:-4]
-                dest_path = os.path.join(self.directory, dest_directory)
+        for component_version, url, git_tag, dest_directory, bv_version \
+                in self.gitComponents:
+            if dest_directory is None:
+                dest_directory = url.rsplit('/', 1)[-1]
+                if dest_directory.endswith('.git'):
+                    dest_directory = dest_directory[:-4]
+            dest_path = os.path.join(self.directory, dest_directory)
+            if use_rcs and options.git:
                 self.gitupdate(url, dest_path, git_tag)
-                source_directories.append((dest_path, bv_version))
+            source_directories.append((dest_path, bv_version))
 
         components_sources = {}
         for dest_path, bv_version in source_directories:
@@ -1180,7 +1183,7 @@ for i in os.listdir(os.path.dirname(__file__)):
             option = line[:i].strip()
             value = line[i + 1:].strip()
             if option not in self._validOptions:
-                raise SyntaxError()
+                raise SyntaxError('Invalid option: %s' % option)
             if hasattr(self, option) \
                     and type(getattr(self, option)) in (list, tuple):
                 value = value.split()

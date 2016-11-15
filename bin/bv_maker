@@ -1332,14 +1332,14 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         out.close()
         exe_suffix = ''
         if sys.platform == 'win32':
-            command = ['cmake', '-G', 'MSYS Makefiles']
+            command_base = ['cmake', '-G', 'MSYS Makefiles']
             exe_suffix = '.exe'
         else:
-            command = ['cmake']
+            command_base = ['cmake']
 
-        command += self.cmake_options.split()
-        command += ['-DCMAKE_BUILD_TYPE:STRING=' + self.build_type, cmake_path(
-                    self.directory)]
+        command_base += self.cmake_options.split()
+        command_base += ['-DCMAKE_BUILD_TYPE:STRING=' + self.build_type]
+        command = command_base + [cmake_path(self.directory)]
         if self.packaging_thirdparty.upper() == 'ON':
             command += ['-DBRAINVISA_PACKAGING_THIRDPARTY:BOOL=ON']
         elif self.packaging_thirdparty.upper() == 'OFF':
@@ -1359,17 +1359,19 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         # bv-cmake.
         if 'brainvisa-cmake' in self.components:
             print('=== bootstraping brainvisa-cmake project ===')
-            system(cwd=self.directory,
-                   *(command
-                     + ['-DBRAINVISA_CMAKE_BUILD_TYPE=brainvisa-cmake-only']))
-            system(
-                cwd=os.path.join(self.directory, 'build_files',
-                                 'brainvisa-cmake'),
-                *['make', 'install'])
+            bvcmake_dir = os.path.join(self.directory, 'brainvisa-cmake')
+            if not os.path.exists(bvcmake_dir):
+                os.makedirs(bvcmake_dir)
+            system(cwd=bvcmake_dir,
+                   *(command_base
+                     + [self.components['brainvisa-cmake'][0],
+                        '-DBRAINVISA_CMAKE_BUILD_TYPE=brainvisa-cmake-only',
+                        '-DCMAKE_INSTALL_PREFIX=%s' % self.directory]))
+            system(cwd=bvcmake_dir, *['make', 'install'])
             print('=== now configuring all other projects ===')
             # run with this local bv-cmake environment
             command.insert(0, os.path.join(self.directory, 'bin',
-                                           'bv_env%s' % exe_suffix))
+                                           'bv_env_host%s' % exe_suffix))
             system(cwd=self.directory,
                    *(command
                      + ["-DBRAINVISA_CMAKE_BUILD_TYPE=no-brainvisa-cmake"]))

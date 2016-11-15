@@ -105,7 +105,17 @@ add_custom_command( OUTPUT "${packageName}"
 )
 add_custom_target( "package" DEPENDS "${packageName}" )
 
-add_executable( bv_env src/bv_env.cc )
+if( BRAINVISA_BVMAKER )
+  set( bv_env_exe "bv_env" )
+else()
+  # in "standalone" mode, we build a "bv_env_host" command, using the native
+  # host toolchain, and which will be run by the build system.
+  # In cross-compilation situation, the other bv_env command will be built
+  # using the target system toolchain so that it can be run by the target
+  # system after install.
+  set( bv_env_exe "bv_env_host" )
+endif()
+add_executable( ${bv_env_exe} src/bv_env.cc )
 
 # Enable static linking if available. We cannot use CheckCXXAcceptsFlag since
 # the linking step is not checked with that function.
@@ -113,11 +123,11 @@ include( CheckCXXSourceCompiles )
 set(CMAKE_REQUIRED_FLAGS "-static")
 CHECK_CXX_SOURCE_COMPILES( "int main() { return 0; }" static_link )
 if( static_link )
-  set_target_properties( bv_env PROPERTIES LINK_FLAGS -static )
+  set_target_properties( ${bv_env_exe} PROPERTIES LINK_FLAGS -static )
 endif()
 
-set_target_properties( bv_env PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
-install( TARGETS bv_env
+set_target_properties( ${bv_env_exe} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
+install( TARGETS ${bv_env_exe}
          DESTINATION bin
          COMPONENT brainvisa-cmake )
 

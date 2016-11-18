@@ -181,11 +181,43 @@ The package section allows 3 additional steps :doc:`bv_maker`: ``pack``, ``insta
 The package section must define some variables which specify which build directory will be packaged and how.
 
 * ``build_directory``: references a build directory, which must exist in the configuration file. It is mandatory.
+* ``data_repos_dir``: Data repository directory. Mandatory when installing a non-data package (dependencies on data packages must be satisfied to install runtime packages)
+* ``default_steps``: steps performed for this package directory when bv_maker is invoked without specifying steps (typically just ``bv_maker``). Defaults to none, may include ``pack``, ``install_pack`` and ``test_pack``.
+*  ``init_components_from_build_dir``: if ``ON`` (default), the build directory will provide the initial list of projects and components to be packaged. If ``OFF``, the initial list of projects and components to be packages is empty.
 * ``installer_filename``: output installer program file name. Mandatory unless packaging_options specify --data (data package, no installer output).
+* ``pack_version``: package version string. Optional. If not specified, it will be guessed from the python module ``brainvisa.config`` (from the *axon* project) if it is present.
 * ``packaging_options``: options passed to the *bv_packaging* program (in *brainvisa-installer* project). Typically: --i2bm
-*`` build_condition``: As in build sections, condition when the package section steps are performed.
-* ``test_install_dir``: Package installation directory. Mandatory if ``install_pack`` or `ètest_pack`` steps are performed.
-* ``data_repos_dir``: Data repository directory. Mandatory when installing a package.
+* ``build_condition``: As in build sections, condition when the package section steps are performed.
+* ``remote_test_host_cmd``: The contents of this variable is actually prepended to package install and package test commands. It it typically used to perform remote connections to a test machine, using ssh and/or docker for instance:
+
+  .. code-block:: bash
+
+      remote_test_host_cmd = ssh -t -X testmachine
+
+  or:
+
+  .. code-block:: bash
+
+      remote_test_host_cmd = docker run -v /tests:/tests -u "$(id _u):$(id -g)" -e USER=$USER custom_test_image xvfb-run
+
+* ``test_install_dir``: Package installation directory. Mandatory if ``install_pack`` or ``test_pack`` steps are performed.
+
+In addition to variables definition, the *package* section may contain components selection definitions, in the same format as in the build section.
+
+In the package section, the package directory definition, and other path variables (``installer_filename``, ``test_install_dir``, ``data_repos_dir``) will undergo environment variables substitution, and an additional variables substiuttion in "python-style":
+
+.. code-block:: bash
+
+    installer_filename = $HOME/build-cmake/tests/repository/brainvisa-installer-%(version)s-%(os)s
+
+Variables substitution in the form ``$(variable)s`` can replace the following variables:
+
+* ``i2bm``: ``public`` or ``i2bm`` if ``packaging_options`` contain the option ``--i2bm``
+* ``os``: ``linux64-glibc-2.15``, ``osx``, ``win32`` for instance
+* ``version``: package version
+* ``public``: empty for public packages, ``-i2bm`` if ``packaging_options`` contain the option ``--i2bm``
+* ``online``: ``online`` or ``offline``
+
 
 **Example**
 
@@ -194,6 +226,9 @@ The package section must define some variables which specify which build directo
     [ package /home/local/brainvisa_packages/test_data_repository ]
       build_directory = $HOME/brainvisa/build/bug_fix
       build_condition = sys.platform == "linux2"
+      packaging_options = --repository-only --no-thirdparty --no-dependencies --data
+      init_components_from_build_dir = OFF
+      brainvisa-share bug_fix $HOME/brainvisa/sources
 
     [ package /home/local/brainvisa_packages/test_repository ]
       build_directory = $HOME/brainvisa/build/bug_fix
@@ -201,6 +236,8 @@ The package section must define some variables which specify which build directo
       build_condition = sys.platform == "linux2"
       test_install_dir = /home/local/brainvisa_packages/test_install
       data_repos_dir = /home/local/brainvisa_packages/test_data_repository
+      - communication
+      - web
 
 
 Syntax for components selection

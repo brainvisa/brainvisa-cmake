@@ -1483,7 +1483,8 @@ class PackageDirectory(ComponentsConfigParser):
                          'packaging_thirdparty', 'build_condition',
                          'installer_filename', 'data_repos_dir',
                          'test_install_dir', 'remote_test_host_cmd',
-                         'init_components_from_build_dir', 'pack_version'))
+                         'init_components_from_build_dir', 'pack_version',
+                         'default_steps'))
 
     def __init__(self, directory, configuration):
         super(PackageDirectory, self).__init__(directory, configuration)
@@ -1498,6 +1499,7 @@ class PackageDirectory(ComponentsConfigParser):
         self.init_components_from_build_dir = 'ON'
         self.pack_version = None
         self.pathvars = None
+        self.default_steps = []
 
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ pack ... ]:
@@ -1710,24 +1712,9 @@ Controller.prototype.FinishedPageCallback = function()
         directory = self.replace_vars(self.directory)
         print('Building package:', directory)
         print('    from build dir:', self.build_dir.directory)
-        #components = list(self.components.keys())
-        #print('components:', components)
         cmd = self.installer_cmdline()
         print('running:', "'" + "' '".join(cmd) + "'")
         subprocess.check_call(cmd, cwd=self.build_dir.directory)
-        #m = re.match('.*^mirror: ([^\n]+)$\n^installer: ([^\n]+)$', cmd_out,
-                     #re.M | re.S)
-        #if m:
-            #self.mirror_dir = m.group(1)
-            #self.installer_realname = m.group(2)
-            #print('mirror:', self.mirror_dir)
-            #print('installer_realname:', self.installer_realname)
-        #else:
-            ## data case ? only mirror, no installer
-            #m = re.match('.*^mirror: ([^\n]+)$', cmd_out, re.M | re.S)
-            #if m:
-                #self.mirror_dir = m.group(1)
-                #print('mirror:', self.mirror_dir)
 
     def install_package(self, options, args):
         self.test_config(options, args)
@@ -1745,19 +1732,6 @@ Controller.prototype.FinishedPageCallback = function()
             tmp_dir = os.path.join(os.path.dirname(test_install_dir), 'tmp')
             if not os.path.exists(tmp_dir):
                 os.mkdir(tmp_dir)
-        #if not hasattr(self, 'mirror_dir') \
-                #or not hasattr(self, 'installer_realname'):
-            #cmd = self.installer_cmdline() + ['-s']
-            #cmd_out = subprocess.check_output(
-                #cmd, cwd=self.build_dir.directory)
-            #m = re.match('.*^mirror: ([^\n]+)$\n^installer: ([^\n]+)$',
-                         #cmd_out, re.M | re.S)
-            #if m:
-                #self.mirror_dir = m.group(1)
-                #self.installer_realname = m.group(2)
-            #else:
-                #raise RuntimeError('could not determine actual package dir '
-                                   #'and installer filename')
         repos_dir = directory
         if self.data_repos_dir:
             data_repos_dir = self.replace_vars(self.data_repos_dir)

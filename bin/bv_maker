@@ -47,6 +47,7 @@ from fnmatch import fnmatchcase
 import tempfile
 import distutils.spawn
 import platform
+import shlex
 try:
     # compatibility for python3
     import six
@@ -1651,10 +1652,14 @@ class PackageDirectory(ComponentsConfigParser):
 
         fd, script_fname = tempfile.mkstemp(prefix='install_script',
                                             dir=temp_dir)
+        if data_repos_dir:
+            data_repos_dir_url = ', "file://%s"' % data_repos_dir
+        else:
+            data_repos_dir_url = ""
         os.close(fd)
         f = open(script_fname, 'w')
         f.write('''var install_dir = "%s";
-var repositories = ["file://%s", "file://%s"];
+var repositories = ["file://%s"%s];
 
 function Controller()
 {
@@ -1703,7 +1708,7 @@ Controller.prototype.FinishedPageCallback = function()
 {
     gui.clickButton(buttons.FinishButton);
 }
-''' % (install_dir, repos_dir, data_repos_dir))
+''' % (install_dir, repos_dir, data_repos_dir_url))
         f.close()
         return script_fname
 
@@ -1720,8 +1725,7 @@ Controller.prototype.FinishedPageCallback = function()
         self.test_config(options, args)
         directory = self.replace_vars(self.directory)
         if not self.test_install_dir:
-            raise RuntimeError(
-                'install_pack command needs test_install_dir option')
+            return
         print('Installing package:', directory)
         print('    from build dir:', self.build_dir.directory)
         test_install_dir = self.replace_vars(self.test_install_dir)
@@ -1736,7 +1740,7 @@ Controller.prototype.FinishedPageCallback = function()
         if self.data_repos_dir:
             data_repos_dir = self.replace_vars(self.data_repos_dir)
         else:
-            data_repos_dir = repos_dir
+            data_repos_dir = None
         install_dir = test_install_dir
         installer_filename = self.replace_vars(self.installer_filename)
         if os.path.isdir(install_dir):
@@ -1746,12 +1750,13 @@ Controller.prototype.FinishedPageCallback = function()
             install_dir, repos_dir, data_repos_dir, temp_dir=tmp_dir)
         cmd = []
         if self.remote_test_host_cmd:
-            cmd = self.remote_test_host_cmd.split()
+            cmd = shlex.split(self.remote_test_host_cmd)
         cmd += [installer_filename, '--script', install_script]
         try:
             print('installing...')
+            cmd = '"' + '" "'.join(cmd) + '"'
             print(cmd)
-            subprocess.check_call(cmd)
+            subprocess.check_call(cmd, shell=True)
             print('done.')
         finally:
             os.unlink(install_script)

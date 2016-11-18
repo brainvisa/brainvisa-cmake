@@ -198,7 +198,7 @@ The package section must define some variables which specify which build directo
 
   .. code-block:: bash
 
-      remote_test_host_cmd = docker run -v /tests:/tests -u "$(id _u):$(id -g)" -e USER=$USER custom_test_image xvfb-run
+      remote_test_host_cmd = docker run --rm -v /tests:/tests -u "$(id -u):$(id -g)" -e USER=$USER custom_test_image xvfb-run
 
 * ``test_install_dir``: Package installation directory. Mandatory if ``install_pack`` or ``test_pack`` steps are performed.
 

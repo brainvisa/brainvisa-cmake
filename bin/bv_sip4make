@@ -33,10 +33,10 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
-
+from __future__ import print_function
 import os, sys, shutil, tempfile, string, re
 
-# print 'SIP options:', sys.argv
+# print('SIP options:', sys.argv)
 sys.stdout.flush()
   
 # find -S option for sip command specified
@@ -59,10 +59,10 @@ try:
 except:
   copt = -1
 if copt < 0:
-  # print '-c option not found. Running sip normally'
+  # print('-c option not found. Running sip normally')
   pass
 elif copt == len(sys.argv)-1:
-  # print 'no argument to -c option. Running sip normally'
+  # print('no argument to -c option. Running sip normally')
   pass
   copt = -1
 # find -j option
@@ -89,12 +89,12 @@ if copt < 0:
 outdir = sys.argv[ copt+1 ]
 
 tdir = tempfile.mkdtemp()
-# print 'temp dir:', tdir
-# print 'output dir:', outdir
+# print('temp dir:', tdir)
+# print('output dir:', outdir)
 sys.argv[ copt+1 ] = tdir
 
 # call SIP
-#print sipcmd + ' "' + string.join( sys.argv[1:], '" "' ) + '"'
+#print(sipcmd + ' "' + string.join( sys.argv[1:], '" "' ) + '"')
 res = os.system( sipcmd + ' "' + string.join( sys.argv[1:], '" "' ) + '"' )
 if not os.path.exists( outdir ):
   os.mkdir( outdir )
@@ -113,7 +113,7 @@ else:
   tlist = []
 
 if listingOnly != -1:
-    print ";".join(tlist)
+    print(";".join(tlist))
     res = 1
 
 if res == 0:
@@ -143,7 +143,7 @@ if res == 0:
       if i not in indices:
         # write an empty file
         fname = base + str(i) + '.' + ext
-        print 'adding empty file', fname
+        print('adding empty file', fname)
         open(  os.path.join( tdir, fname ), 'w' )
         tlist.append( fname )
 
@@ -151,7 +151,7 @@ if res == 0:
 
   for x in tlist:
     if x not in olist:
-      print x, 'is a new file'
+      print(x, 'is a new file')
       shutil.copyfile( os.path.join( tdir, x ), os.path.join( outdir, x ) )
     else:
       tf = open( os.path.join( tdir, x ) )
@@ -180,7 +180,7 @@ if res == 0:
       tf.close()
       of.close()
       if diff:
-        print x, 'differs'
+        print(x, 'differs')
         shutil.copyfile( os.path.join( tdir, x ), os.path.join( outdir, x ) )
 
   # cleanup obsolete files
@@ -188,7 +188,7 @@ if res == 0:
     if x not in tlist and ( x.endswith( '.h' ) or x.endswith( '.cc' ) \
       or x.endswith( '.cpp' ) or x.endswith( '.hpp' ) ):
       # keep files of size 0 since they may be here intentionnally.
-      print x, 'is obsolete'
+      print(x, 'is obsolete')
       os.unlink( os.path.join( outdir, x ) )
 
   # create empty files if -j option is used and not enough files were generated
@@ -216,10 +216,10 @@ for x in tlist:
 if os.path.isdir( tdir ):
   os.rmdir( tdir )
 
-# print 'SIP exit code:', res
+# print('SIP exit code:', res)
 if res & 0xff == 0:
   res = res >> 8
 else:
-  print >> sys.stderr, 'Error: sip exited with signal', res
+  print('Error: sip exited with signal', res, file=sys.stderr)
 sys.exit( res )
 

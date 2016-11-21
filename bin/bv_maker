@@ -1777,9 +1777,23 @@ Controller.prototype.FinishedPageCallback = function()
         new_env['BRAINVISA_PACKAGE_INSTALL_PREFIX'] = install_dir
         if self.remote_test_host_cmd:
             new_env['BRAINVISA_TEST_REMOTE_COMMAND'] \
-                = self.remote_test_host_cmd
+                = self.expand_shell(self.remote_test_host_cmd)
         system(cwd=self.build_dir.directory, env=new_env,
                *(['ctest', '--output-on-failure']))
+
+
+    def expand_shell(self, line):
+        ''' Allow shell commands expressions $(command arg) in string
+        '''
+        patt = re.compile('\$\(([^\)]+)\)')
+        expressions = patt.split(line)
+        new_line = expressions.pop(0)
+        while expressions:
+            expr = expressions.pop(0)
+            text = subprocess.check_output(expr, shell=True).strip()
+            new_line += text
+            new_line += expressions.pop(0)
+        return ' '.join(shlex.split(new_line))
 
 
 # ---

@@ -14,6 +14,13 @@
 # BRAINVISA_PACKAGE_INSTALL_PREFIX=/home/test/brainvisa_testing
 # then the command will be:
 # ssh -t -X testmachine /home/test/brainvisa_testing/bin/bv_env <commandline>
+#
+# Other example using docker:
+# BRAINVISA_TEST_REMOTE_COMMAND=docker run --rm -v /home/test:/home/test -u "$(id -u):$(id -g)" -e TMPDIR=/home/test/tmp -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$DISPLAY cati/brainvisa-test:ubuntu-16.04 xvfb-run
+
+# use only basename of main executable
+# (to avoid hard-coded /usr/bin/python for instance)
+set `basename $1`
 
 if [ -z ${BRAINVISA_PACKAGE_INSTALL_PREFIX} ]; then
   exec ${BRAINVISA_TEST_REMOTE_COMMAND} `dirname $0`/bv_env${CMAKE_EXECUTABLE_SUFFIX} "$@"

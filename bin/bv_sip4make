@@ -9,9 +9,9 @@
 #
 # This software is governed by the CeCILL-B license under
 # French law and abiding by the rules of distribution of free software.
-# You can  use, modify and/or redistribute the software under the 
+# You can  use, modify and/or redistribute the software under the
 # terms of the CeCILL-B license as circulated by CEA, CNRS
-# and INRIA at the following URL "http://www.cecill.info". 
+# and INRIA at the following URL "http://www.cecill.info".
 #
 # As a counterpart to the access to the source code and  rights to copy,
 # modify and redistribute granted by the license, users are provided only
@@ -26,91 +26,97 @@
 # therefore means  that it is reserved for developers  and  experienced
 # professionals having in-depth computer knowledge. Users are therefore
 # encouraged to load and test the software's suitability as regards their
-# requirements in conditions enabling the security of their systems and/or 
-# data to be ensured and,  more generally, to use and operate it in the 
+# requirements in conditions enabling the security of their systems and/or
+# data to be ensured and,  more generally, to use and operate it in the
 # same conditions as regards security.
 #
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
 from __future__ import print_function
-import os, sys, shutil, tempfile, string, re
+import os
+import sys
+import shutil
+import tempfile
+import string
+import re
 
 # print('SIP options:', sys.argv)
 sys.stdout.flush()
-  
+
 # find -S option for sip command specified
 try:
-  sipopt = sys.argv.index( '-S' )
+    sipopt = sys.argv.index('-S')
 except:
-  sipopt = -1       
+    sipopt = -1
 if sipopt == len(sys.argv) - 1:
-  sipopt = -1
+    sipopt = -1
 if sipopt >= 0:
-  sipcmd = sys.argv[sipopt + 1]
-  del sys.argv[sipopt], sys.argv[sipopt+1]
-elif sys.platform.startswith( 'win' ):
-  sipcmd = 'sip.exe'
+    sipcmd = sys.argv[sipopt + 1]
+    del sys.argv[sipopt], sys.argv[sipopt + 1]
+elif sys.platform.startswith('win'):
+    sipcmd = 'sip.exe'
 else:
-  sipcmd = 'sip'
-  
+    sipcmd = 'sip'
+
 try:
-  copt = sys.argv.index( '-c' )
+    copt = sys.argv.index('-c')
 except:
-  copt = -1
+    copt = -1
 if copt < 0:
-  # print('-c option not found. Running sip normally')
-  pass
-elif copt == len(sys.argv)-1:
-  # print('no argument to -c option. Running sip normally')
-  pass
-  copt = -1
+    # print('-c option not found. Running sip normally')
+    pass
+elif copt == len(sys.argv) - 1:
+    # print('no argument to -c option. Running sip normally')
+    pass
+    copt = -1
 # find -j option
 try:
-  jopt = sys.argv.index( '-j' )
+    jopt = sys.argv.index('-j')
 except:
-  jopt = -1
-if jopt == len(sys.argv)-1:
-  jopt = -1
+    jopt = -1
+if jopt == len(sys.argv) - 1:
+    jopt = -1
 if jopt >= 0:
-  jopt = int( sys.argv[jopt+1] )
+    jopt = int(sys.argv[jopt + 1])
 
 # if --listingOnly, display only the generated source list
 try:
-  listingOnly = sys.argv.index( '--listingOnly' )
-  sys.argv.remove('--listingOnly')
+    listingOnly = sys.argv.index('--listingOnly')
+    sys.argv.remove('--listingOnly')
 except:
-  listingOnly = -1
+    listingOnly = -1
 
 if copt < 0:
-  sys.exit( os.system( sipcmd + ' "' + string.join( sys.argv[1:], '" "' ) \
-                       + '"' ) >> 8 )
+    sys.exit(os.system(sipcmd + ' "' + string.join(sys.argv[1:], '" "')
+                       + '"') >> 8)
 
-outdir = sys.argv[ copt+1 ]
+outdir = sys.argv[copt + 1]
 
 tdir = tempfile.mkdtemp()
 # print('temp dir:', tdir)
 # print('output dir:', outdir)
-sys.argv[ copt+1 ] = tdir
+sys.argv[copt + 1] = tdir
 
 # call SIP
-#print(sipcmd + ' "' + string.join( sys.argv[1:], '" "' ) + '"')
-res = os.system( sipcmd + ' "' + string.join( sys.argv[1:], '" "' ) + '"' )
-if not os.path.exists( outdir ):
-  os.mkdir( outdir )
+# print(sipcmd + ' "' + string.join( sys.argv[1:], '" "' ) + '"')
+res = os.system(sipcmd + ' "' + string.join(sys.argv[1:], '" "') + '"')
+if not os.path.exists(outdir):
+    os.mkdir(outdir)
 
-def skipcomment( f ):
-  try:
-    for i in xrange(5):
-      l = f.readline() # for now I know it's 5 lines...
-  except:
-    # if fewer than 5 lines
-    pass
 
-if os.path.isdir( tdir ):
-  tlist = os.listdir( tdir )
+def skipcomment(f):
+    try:
+        for i in xrange(5):
+            l = f.readline()  # for now I know it's 5 lines...
+    except:
+        # if fewer than 5 lines
+        pass
+
+if os.path.isdir(tdir):
+    tlist = os.listdir(tdir)
 else:
-  tlist = []
+    tlist = []
 
 if listingOnly != -1:
     print(";".join(tlist))
@@ -118,108 +124,111 @@ if listingOnly != -1:
 
 if res == 0:
 
-  # compare files
-  olist = os.listdir( outdir )
-  ccfiles = []
+    # compare files
+    olist = os.listdir(outdir)
+    ccfiles = []
 
-  # create empty files if -j option is used and not enough files were generated
-  if jopt > 0:
+    # create empty files if -j option is used and not enough files were
+    # generated
+    if jopt > 0:
+        for x in tlist:
+            if x.endswith('.cc') or x.endswith('.cpp'):
+                ccfiles.append(x)
+        r = re.compile('^(.*part)([0-9]+)\.(cpp|cc)$')
+        indices = set()
+        base = ''
+        ext = ''
+        for x in ccfiles:
+            m = r.match(x)
+            if m:
+                i = int(m.group(2))
+                indices.add(i)
+                if base == '':
+                    base = m.group(1)
+                    ext = m.group(3)
+        for i in range(jopt):
+            if i not in indices:
+                # write an empty file
+                fname = base + str(i) + '.' + ext
+                print('adding empty file', fname)
+                open(os.path.join(tdir, fname), 'w')
+                tlist.append(fname)
+
+    line_re = re.compile('^#line ([0-9]+) ".*"$')
+
     for x in tlist:
-      if x.endswith( '.cc' ) or x.endswith( '.cpp' ):
-        ccfiles.append( x )
-    r = re.compile( '^(.*part)([0-9]+)\.(cpp|cc)$' )
-    indices = set()
-    base = ''
-    ext = ''
-    for x in ccfiles:
-      m = r.match( x )
-      if m:
-        i = int( m.group(2) )
-        indices.add( i )
-        if base == '':
-          base = m.group(1)
-          ext = m.group(3)
-    for i in range( jopt ):
-      if i not in indices:
-        # write an empty file
-        fname = base + str(i) + '.' + ext
-        print('adding empty file', fname)
-        open(  os.path.join( tdir, fname ), 'w' )
-        tlist.append( fname )
+        if x not in olist:
+            print(x, 'is a new file')
+            shutil.copyfile(os.path.join(tdir, x), os.path.join(outdir, x))
+        else:
+            tf = open(os.path.join(tdir, x))
+            of = open(os.path.join(outdir, x))
+            # skip initial comments
+            skipcomment(tf)
+            skipcomment(of)
+            diff = 0
+            for l in tf.xreadlines():
+                ol = of.readline()
+                if l != ol:
+                    is_line_macro = line_re.match(l)
+                    if is_line_macro:
+                        is_other_line_macro = line_re.match(ol)
+                        if not is_other_line_macro \
+                                or is_line_macro.group(1) \
+                                    != is_other_line_macro.group(1):
+                            diff = 1
+                            break
+                    else:
+                        diff = 1
+                        break
+            if not diff:
+                ol = of.readline()
+                if ol != '':
+                    diff = 1
+            tf.close()
+            of.close()
+            if diff:
+                print(x, 'differs')
+                shutil.copyfile(
+                    os.path.join(tdir, x), os.path.join(outdir, x))
 
-  line_re = re.compile('^#line ([0-9]+) ".*"$')
+    # cleanup obsolete files
+    for x in olist:
+        if x not in tlist and (x.endswith('.h') or x.endswith('.cc')
+                               or x.endswith('.cpp') or x.endswith('.hpp')):
+            # keep files of size 0 since they may be here intentionnally.
+            print(x, 'is obsolete')
+            os.unlink(os.path.join(outdir, x))
 
-  for x in tlist:
-    if x not in olist:
-      print(x, 'is a new file')
-      shutil.copyfile( os.path.join( tdir, x ), os.path.join( outdir, x ) )
-    else:
-      tf = open( os.path.join( tdir, x ) )
-      of = open( os.path.join( outdir, x ) )
-      # skip initial comments
-      skipcomment( tf )
-      skipcomment( of )
-      diff = 0
-      for l in tf.xreadlines():
-        ol = of.readline()
-        if l != ol:
-          is_line_macro = line_re.match(l)
-          if is_line_macro:
-            is_other_line_macro = line_re.match(ol)
-            if not is_other_line_macro \
-                or is_line_macro.group(1) != is_other_line_macro.group(1):
-              diff = 1
-              break
-          else:
-            diff = 1
-            break
-      if not diff:
-        ol = of.readline()
-        if ol != '':
-          diff = 1
-      tf.close()
-      of.close()
-      if diff:
-        print(x, 'differs')
-        shutil.copyfile( os.path.join( tdir, x ), os.path.join( outdir, x ) )
-
-  # cleanup obsolete files
-  for x in olist:
-    if x not in tlist and ( x.endswith( '.h' ) or x.endswith( '.cc' ) \
-      or x.endswith( '.cpp' ) or x.endswith( '.hpp' ) ):
-      # keep files of size 0 since they may be here intentionnally.
-      print(x, 'is obsolete')
-      os.unlink( os.path.join( outdir, x ) )
-
-  # create empty files if -j option is used and not enough files were generated
-  if jopt > 0:
-    r = re.compile( '^(.*part)([0-9]+)\.(cpp|cc)$' )
-    indices = set()
-    base = ''
-    ext = ''
-    for x in ccfiles:
-      m = r.match( x )
-      if m:
-        i = int( m.group(2) )
-        indices.add( i )
-        if base == '':
-          base = m.group(1)
-          ext = m.group(3)
-    for i in range( jopt ):
-      if i not in indices:
-        # write an empty file
-        open( os.path.join( outdir, base + str(i) + '.' + ext ), 'w' )
+    # create empty files if -j option is used and not enough files were
+    # generated
+    if jopt > 0:
+        r = re.compile('^(.*part)([0-9]+)\.(cpp|cc)$')
+        indices = set()
+        base = ''
+        ext = ''
+        for x in ccfiles:
+            m = r.match(x)
+            if m:
+                i = int(m.group(2))
+                indices.add(i)
+                if base == '':
+                    base = m.group(1)
+                    ext = m.group(3)
+        for i in range(jopt):
+            if i not in indices:
+                # write an empty file
+                open(os.path.join(outdir, base + str(i) + '.' + ext), 'w')
 
 # delete temp directory
 for x in tlist:
-  os.unlink( os.path.join( tdir, x ) )
-if os.path.isdir( tdir ):
-  os.rmdir( tdir )
+    os.unlink(os.path.join(tdir, x))
+if os.path.isdir(tdir):
+    os.rmdir(tdir)
 
 # print('SIP exit code:', res)
 if res & 0xff == 0:
-  res = res >> 8
+    res = res >> 8
 else:
-  print('Error: sip exited with signal', res, file=sys.stderr)
-sys.exit( res )
-
+    print('Error: sip exited with signal', res, file=sys.stderr)
+sys.exit(res)

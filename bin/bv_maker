@@ -1786,7 +1786,7 @@ Controller.prototype.FinishedPageCallback = function()
         ''' Allow shell commands expressions $(command arg) in string
         '''
         patt = re.compile('\$\(([^\)]+)\)')
-        expressions = patt.split(line)
+        expressions = patt.split(os.path.expandvars(line))
         new_line = expressions.pop(0)
         while expressions:
             expr = expressions.pop(0)

@@ -20,10 +20,11 @@
 
 # use only basename of main executable
 # (to avoid hard-coded /usr/bin/python for instance)
-set `basename $1`
+CMD=`basename $1`
+shift
 
 if [ -z ${BRAINVISA_PACKAGE_INSTALL_PREFIX} ]; then
-  exec ${BRAINVISA_TEST_REMOTE_COMMAND} `dirname $0`/bv_env${CMAKE_EXECUTABLE_SUFFIX} "$@"
+  exec ${BRAINVISA_TEST_REMOTE_COMMAND} `dirname $0`/bv_env${CMAKE_EXECUTABLE_SUFFIX} "$CMD" "$@"
 else
-  exec ${BRAINVISA_TEST_REMOTE_COMMAND} "${BRAINVISA_PACKAGE_INSTALL_PREFIX}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}" "$@"
+  exec ${BRAINVISA_TEST_REMOTE_COMMAND} "${BRAINVISA_PACKAGE_INSTALL_PREFIX}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}" "$CMD" "$@"
 fi

@@ -321,7 +321,8 @@ def create_directory_package(options, selected_packages, dependencies,
             exe_ext = ''
             specific_env_commands = list()
         env_commands = ['bv_env' + exe_ext, 'bv_env.py',
-                        'bv_env.sh', 'bv_unenv', 'bv_unenv.sh']
+                        'bv_env.sh', 'bv_env_test', 'bv_env.bat', 'bv_unenv',
+                        'bv_unenv.sh']
         if options.bv_env:  # --bv_env case: also install bv_env* commands
             specific_env_commands += env_commands
         for command in specific_env_commands:
@@ -331,10 +332,12 @@ def create_directory_package(options, selected_packages, dependencies,
                 os.remove(dest)
             shutil.copy(source, dest)
             os.chmod(dest, os.stat(source).st_mode)
-        realbindir = os.path.join(bindir, 'real-bin')
-        if not os.path.exists(realbindir):
-            os.mkdir(realbindir)
-        for command in os.listdir(bindir):
+        commands = [c for c in os.listdir(bindir) if c not in env_commands]
+        if len(commands) != 0:
+            realbindir = os.path.join(bindir, 'real-bin')
+            if not os.path.exists(realbindir):
+                os.mkdir(realbindir)
+        for command in commands:
             if command in specific_env_commands:
                 continue
             source = os.path.join(bindir, command)
@@ -351,16 +354,20 @@ def create_directory_package(options, selected_packages, dependencies,
                     os.mkdir(source)
                     os.mkdir(os.path.join(source, 'Contents'))
                     os.mkdir(os.path.join(source, 'Contents', 'MacOS'))
-                    if os.path.exists(os.path.join(dest, 'Contents', 'Info.plist')):
+                    if os.path.exists(os.path.join(dest, 'Contents',
+                                                   'Info.plist')):
                         os.symlink(
                             os.path.join('../../real-bin', command, 'Contents',
                                          'Info.plist'),
-                                    os.path.join(source, 'Contents', 'Info.plist'))
-                    if os.path.exists(os.path.join(dest, 'Contents', 'PkgInfo')):
+                                    os.path.join(source, 'Contents',
+                                                 'Info.plist'))
+                    if os.path.exists(os.path.join(dest, 'Contents',
+                                                   'PkgInfo')):
                         os.symlink(
                             os.path.join('../../real-bin', command, 'Contents',
                                          'PkgInfo'),
-                                    os.path.join(source, 'Contents', 'PkgInfo'))
+                                    os.path.join(source, 'Contents',
+                                                 'PkgInfo'))
                     icns = os.path.join(
                         'Contents', 'Resources', command[:-4] + '.icns')
                     if os.path.exists(os.path.join(dest, icns)):

@@ -261,11 +261,15 @@ class PurePythonComponentBuild(object):
         tests_code = []
         if len(tests) != 0:
             tests_code = ['enable_testing()']
-            for test in tests:
+            if len(tests) >= 2:
+              nnum = '%(num)d'
+            else:
+              nnum = ''
+            for i, test in enumerate(tests):
                 test_str = '"' + '" "'.join(shlex.split(test)) + '"'
-                tests_code.append('''add_test( %s-tests
+                tests_code.append('''add_test( %s-tests%s
           "${CMAKE_BINARY_DIR}/bin/bv_env_test" %s )'''
-                    % (self.component_name, test_str))
+                    % (nnum % {'num': i}, self.component_name, test_str))
         tests_str = '\n'.join(tests_code)
         if len(tests_str) != 0:
             tests_str += '\n'

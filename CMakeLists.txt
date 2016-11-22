@@ -103,7 +103,7 @@ add_custom_command( OUTPUT "${packageName}"
   COMMAND dpkg --build "${tmpDir}" "${packageName}"
   COMMAND ${CMAKE_COMMAND} -E remove_directory "${tmpDir}"
 )
-add_custom_target( "package" DEPENDS "${packageName}" )
+add_custom_target( "deb-package" DEPENDS "${packageName}" )
 
 if( BRAINVISA_BVMAKER )
   set( bv_env_exe "bv_env" )

@@ -5,6 +5,7 @@ import sys
 import os.path as osp
 import distutils.spawn
 import subprocess
+import shlex
 
 from brainvisa.maker.brainvisa_projects import read_project_info, find_project_info
 
@@ -68,7 +69,10 @@ if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/doc/source" )
 endif()
 
 # tests
-if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/test/test_%(component_name)s.py")
+
+%(test_commands)s
+
+if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/${test}/test_%(component_name)s.py" )
     enable_testing()
     add_test( %(component_name)s-tests "${CMAKE_BINARY_DIR}/bin/bv_env_test" "${PYTHON_EXECUTABLE}" "${BRAINVISA_REAL_SOURCE_DIR}/test/test_%(component_name)s.py" )
     BRAINVISA_COPY_DIRECTORY( "${BRAINVISA_REAL_SOURCE_DIR}/test"
@@ -156,10 +160,11 @@ class PurePythonComponentBuild(object):
         # Check for dependencies in info.py
         info = find_project_info(self.source_directory)
         brainvisa_dependencies = []
+        tests = []
         if info:
-            d = {}
-            execfile(info, d, d)
-            dependencies = d.get('brainvisa_dependencies', [])
+            dinfo = {}
+            execfile(info, dinfo, dinfo)
+            dependencies = dinfo.get('brainvisa_dependencies', [])
             for dcomponent in dependencies:
                 if isinstance(dcomponent, basestring):
                     d = {
@@ -182,6 +187,7 @@ class PurePythonComponentBuild(object):
                 else:
                     brainvisa_dependencies.append(
                         self.dependency_string(dcomponent))
+            tests = dinfo.get('test_commands', [])
         brainvisa_dependencies = '\n'.join(brainvisa_dependencies)
 
         # Create <build directory>/build_files/<component>_src/CMakeLists.txt
@@ -191,14 +197,16 @@ class PurePythonComponentBuild(object):
             os.makedirs(src_directory)
         # It is necessary to escape backslash ('\') characters because
         # cmake interpretes it in CMakeLists.txt files.
-        source_file  = os.path.normpath(__file__).replace( '\\', '\\\\' )
+        source_file  = os.path.normpath(__file__).replace('\\', '\\\\')
+        tests_str = self.build_tests_cmake_code(tests)
         cmakelists_content = cmake_template % dict(
             file=source_file,
             component_name=self.component_name,
             source_directory= os.path.normpath(
                                   self.source_directory
-                              ).replace( '\\', '\\\\' ),
-            brainvisa_dependencies=brainvisa_dependencies)
+                              ).replace('\\', '\\\\'),
+            brainvisa_dependencies=brainvisa_dependencies,
+            test_commands=tests_str)
         cmakelists_path = osp.join(src_directory, 'CMakeLists.txt')
         write_cmakelists = False
         if osp.exists(cmakelists_path):
@@ -212,11 +220,13 @@ class PurePythonComponentBuild(object):
         name, component, version = read_project_info(self.source_directory)[:3]
         cmake_dir = osp.join(self.build_directory.directory,
                              'share', 
-                             '%s-%s.%s' % (self.component_name, version[0], version[1]),
+                             '%s-%s.%s' % (self.component_name, version[0],
+                                           version[1]),
                              'cmake')
         if not os.path.exists(cmake_dir):
             os.makedirs(cmake_dir)
-        cmake_config_path = osp.join(cmake_dir, '%s-config.cmake' % self.component_name)
+        cmake_config_path = osp.join(cmake_dir,
+                                     '%s-config.cmake' % self.component_name)
         cmake_config_content = cmake_config_template % dict(
             file = source_file,
             component = self.component_name,
@@ -246,6 +256,20 @@ class PurePythonComponentBuild(object):
             subprocess.call([sys.executable, bv_clean, '-d',
                              self.source_directory])
 
+
+    def build_tests_cmake_code(self, tests):
+        tests_code = []
+        if len(tests) != 0:
+            tests_code = ['enable_testing()']
+            for test in tests:
+                test_str = '"' + '" "'.join(shlex.split(test)) + '"'
+                tests_code.append('''add_test( %s-tests
+          "${CMAKE_BINARY_DIR}/bin/bv_env_test" %s )'''
+                    % (self.component_name, test_str))
+        tests_str = '\n'.join(tests_code)
+        if len(tests_str) != 0:
+            tests_str += '\n'
+        return tests_str
 
     @staticmethod
     def dependency_string(dcomponent):

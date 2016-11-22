@@ -13,6 +13,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
       BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN
         RECOMMENDS libicui18n RUN )
     endif()
+    find_package( Glib QUIET )
+    if( GLIB_FOUND )
+      BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS glib RUN )
+    endif()
   endif()
 endfunction()
 

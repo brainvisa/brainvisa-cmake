@@ -21,6 +21,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
       BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libfontconfig1 RUN )
     endif()
   endif()
+  find_package( GObject QUIET )
+  if( GOBJECT_FOUND )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS gobject RUN )
+  endif()
 endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )

@@ -49,6 +49,7 @@ import distutils.spawn
 import platform
 import shlex
 import time
+import traceback
 try:
     # compatibility for python3
     import six
@@ -308,6 +309,34 @@ http://brainvisa.info/brainvisa-cmake/
         self.args = args
 
 
+class StepCommand(object):
+
+    def process(self, step, directories_dict, method, *meth_args,
+                **meth_kwargs):
+        for d, o in six.iteritems(directories_dict):
+            if not configuration.directories or d in configuration.directories:
+                if not self.options.in_config or step in o.default_steps:
+                    if o.has_satisfied_dependencies(step):
+                        try:
+                            getattr(o, method)(*meth_args, **meth_kwargs)
+                            o.status[step] = 'succeeded' # mark as done
+                        except KeyboardInterrupt:
+                            # record failure
+                            o.status[step] = 'interrupted'
+                            # user interruptions should stop all.
+                            raise
+                        except:
+                            traceback.print_exc()
+                            # record failure
+                            o.status[step] = 'failed'
+                    else:
+                        print('Skipping', step, 'of', d,
+                              'because it depends on a step that failed.')
+            elif configuration.verbose:
+                print('Skipping', step, 'of', d,
+                      'because it is not in the selected directories.')
+
+
 class InfoCommand(object):
 
     def __init__(self, argv, configuration):
@@ -339,7 +368,7 @@ class InfoCommand(object):
                 o.info()
 
 
-class SourcesCommand(object):
+class SourcesCommand(StepCommand):
 
     def __init__(self, argv, configuration):
         usage = '''%prog [global options] sources [options]
@@ -367,26 +396,11 @@ class SourcesCommand(object):
         self.args = args
 
     def __call__(self):
-        step = 'sources'
-        for d, o in six.iteritems(configuration.sourcesDirectories):
-            if not configuration.directories or d in configuration.directories:
-                if not self.options.in_config or step in o.default_steps:
-                    if o.has_satisfied_dependencies(step):
-                        try:
-                            o.process(self.options, self.args)
-                            o.failed[step] = False # mark as done
-                        except:
-                            # record failure
-                            o.failed[step] = True
-                    else:
-                        print('Skipping', step, 'of', d,
-                              'because it depends on a step that failed.')
-            elif configuration.verbose:
-                print('Skipping', step, 'of', d,
-                      'because it is not in the selected directories.')
+        self.process('sources', configuration.sourcesDirectories,
+                     'process', self.options, self.args)
 
 
-class ConfigureCommand(object):
+class ConfigureCommand(StepCommand):
 
     def __init__(self, argv, configuration):
         usage = '''%prog [global options] configure [options]
@@ -412,26 +426,11 @@ class ConfigureCommand(object):
         self.args = args
 
     def __call__(self):
-        step = 'configure'
-        for d, o in six.iteritems(configuration.buildDirectories):
-            if not configuration.directories or d in configuration.directories:
-                if not self.options.in_config or step in o.default_steps:
-                    if o.has_satisfied_dependencies(step):
-                        try:
-                            o.configure(self.options, self.args)
-                            o.failed[step] = False # mark as done
-                        except:
-                            # record failure
-                            o.failed[step] = True
-                    else:
-                        print('Skipping', step, 'of', d,
-                              'because it depends on a step that failed.')
-            elif configuration.verbose:
-                print('Skipping', step, 'of', d,
-                      'because it is not in the selected directories.')
+        self.process('configure', configuration.buildDirectories,
+                     'configure', self.options, self.args)
 
 
-class BuildCommand(object):
+class BuildCommand(StepCommand):
 
     def __init__(self, argv, configuration):
         usage = '''%prog [global options] configure [options]
@@ -457,26 +456,11 @@ class BuildCommand(object):
         self.args = args
 
     def __call__(self):
-        step = 'build'
-        for d, o in six.iteritems(configuration.buildDirectories):
-            if not configuration.directories or d in configuration.directories:
-                if not self.options.in_config or step in o.default_steps:
-                    if o.has_satisfied_dependencies(step):
-                        try:
-                            o.build(self.options, self.args)
-                            o.failed[step] = False # mark as done
-                        except:
-                            # record failure
-                            o.failed[step] = True
-                    else:
-                        print('Skipping', step, 'of', d,
-                              'because it depends on a step that failed.')
-            elif configuration.verbose:
-                print('Skipping', step, 'of', d,
-                      'because it is not in the selected directories.')
+        self.process('build', configuration.buildDirectories,
+                     'build', self.options, self.args)
 
 
-class DocCommand(object):
+class DocCommand(StepCommand):
 
     def __init__(self, argv, configuration):
         usage = '''%prog [global options] doc [options]
@@ -498,26 +482,10 @@ class DocCommand(object):
         self.args = args
 
     def __call__(self):
-        step = 'doc'
-        for d, o in six.iteritems(configuration.buildDirectories):
-            if not configuration.directories or d in configuration.directories:
-                if not self.options.in_config or step in o.default_steps:
-                    if o.has_satisfied_dependencies(step):
-                        try:
-                            o.doc()
-                            o.failed[step] = False # mark as done
-                        except:
-                            # record failure
-                            o.failed[step] = True
-                    else:
-                        print('Skipping', step, 'of', d,
-                              'because it depends on a step that failed.')
-            elif configuration.verbose:
-                print('Skipping', step, 'of', d,
-                      'because it is not in the selected directories.')
+        self.process('doc', configuration.buildDirectories, 'doc')
 
 
-class TestCommand(object):
+class TestCommand(StepCommand):
 
     def __init__(self, argv, configuration):
         usage = '''%prog [global options] test
@@ -539,26 +507,10 @@ class TestCommand(object):
         self.args = args
 
     def __call__(self):
-        step = 'test'
-        for d, o in six.iteritems(configuration.buildDirectories):
-            if not configuration.directories or d in configuration.directories:
-                if not self.options.in_config or step in o.default_steps:
-                    if o.has_satisfied_dependencies(step):
-                        try:
-                            o.test()
-                            o.failed[step] = False # mark as done
-                        except:
-                            # record failure
-                            o.failed[step] = True
-                    else:
-                        print('Skipping', step, 'of', d,
-                              'because it depends on a step that failed.')
-            elif configuration.verbose:
-                print('Skipping', step, 'of', d,
-                      'because it is not in the selected directories.')
+        self.process('test', configuration.buildDirectories, 'test')
 
 
-class PackCommand(object):
+class PackCommand(StepCommand):
 
     def __init__(self, argv, configuration):
         usage = '''%prog [global options] pack [options]
@@ -580,26 +532,11 @@ class PackCommand(object):
         self.args = args
 
     def __call__(self):
-        step = 'pack'
-        for d, o in six.iteritems(configuration.packageDirectories):
-            if not configuration.directories or d in configuration.directories:
-                if not self.options.in_config or step in o.default_steps:
-                    if o.has_satisfied_dependencies(step):
-                        try:
-                            o.package(self.options, self.args)
-                            o.failed[step] = False # mark as done
-                        except:
-                            # record failure
-                            o.failed[step] = True
-                    else:
-                        print('Skipping', step, 'of', d,
-                              'because it depends on a step that failed.')
-            elif configuration.verbose:
-                print('Skipping', step, 'of', d,
-                      'because it is not in the selected directories.')
+        self.process('pack', configuration.packageDirectories,
+                     'package', self.options, self.args)
 
 
-class InstallPackCommand(object):
+class InstallPackCommand(StepCommand):
 
     def __init__(self, argv, configuration):
         usage = '''%prog [global options] install_pack [options]
@@ -621,26 +558,11 @@ class InstallPackCommand(object):
         self.args = args
 
     def __call__(self):
-        step = 'install_pack'
-        for d, o in six.iteritems(configuration.packageDirectories):
-            if not configuration.directories or d in configuration.directories:
-                if not self.options.in_config or step in o.default_steps:
-                    if o.has_satisfied_dependencies(step):
-                        try:
-                            o.install_package(self.options, self.args)
-                            o.failed[step] = False # mark as done
-                        except:
-                            # record failure
-                            o.failed[step] = True
-                    else:
-                        print('Skipping', step, 'of', d,
-                              'because it depends on a step that failed.')
-            elif configuration.verbose:
-                print('Skipping', step, 'of', d,
-                      'because it is not in the selected directories.')
+        self.process('install_pack', configuration.packageDirectories,
+                     'install_package', self.options, self.args)
 
 
-class TestPackCommand(object):
+class TestPackCommand(StepCommand):
 
     def __init__(self, argv, configuration):
         usage = '''%prog [global options] test_pack [options]
@@ -662,37 +584,26 @@ class TestPackCommand(object):
         self.args = args
 
     def __call__(self):
-        step = 'test_pack'
-        for d, o in six.iteritems(configuration.packageDirectories):
-            if not configuration.directories or d in configuration.directories:
-                if not self.options.in_config or step in o.default_steps:
-                    if o.has_satisfied_dependencies(step):
-                        try:
-                            o.test_package(self.options, self.args)
-                            o.failed[step] = False # mark as done
-                        except:
-                            # record failure
-                            o.failed[step] = True
-                    else:
-                        print('Skipping', step, 'of', d,
-                              'because it depends on a step that failed.')
-            elif configuration.verbose:
-                print('Skipping', step, 'of', d,
-                      'because it is not in the selected directories.')
+        self.process('test_pack', configuration.packageDirectories,
+                     'test_package', self.options, self.args)
 
 
 class DirectorySection(object):
 
     def __init__(self):
-        self.failed = {}
+        self.status = {}
         self.depend_on_sections = {}
         self.deps_set = False
 
     def has_failed(self, step):
-        return self.failed.get(step, False)
+        return self.status.get(step, 'not run') \
+            in ('failed', 'interrupted', 'unmet dependency')
 
     def has_succeeded(self, step):
-        return not self.failed.get(step, True)
+        return not self.status.get(step, 'not run') == 'succeeded'
+
+    def get_status(self, step):
+        return self.status.get(step, 'not run')
 
     def has_satisfied_dependencies(self, step):
         if not self.deps_set:
@@ -701,6 +612,7 @@ class DirectorySection(object):
 
         for dep, dep_step in self.depend_on_sections.get(step, []):
             if dep.has_failed(dep_step):
+                self.status[step] = 'unmet dependency'
                 return False
         return True
 
@@ -1763,7 +1675,7 @@ class PackageDirectory(ComponentsConfigParser):
     def installer_cmdline(self):
         components = self.components.keys()
         projects = list(self.projects)
-        pack_options = self.packaging_options.split()
+        pack_options = shlex.split(self.packaging_options)
         installer_filename = self.installer_filename
         #if not installer_filename:
             #installer_filename = os.path.join(
@@ -1852,9 +1764,26 @@ Controller.prototype.FinishedPageCallback = function()
         directory = self.replace_vars(self.directory)
         print('Building package:', directory)
         print('    from build dir:', self.build_dir.directory)
+        self.cleanup_package_dir()
         cmd = self.installer_cmdline()
         print('running:', "'" + "' '".join(cmd) + "'")
         subprocess.check_call(cmd, cwd=self.build_dir.directory)
+
+    def cleanup_package_dir(self):
+        directory = self.replace_vars(self.directory)
+        if os.path.isdir(directory):
+            pack_options = shlex.split(self.packaging_options)
+            if '--skip-repos' not in pack_options \
+                    and '--skip-existing' not in pack_options:
+                shutil.rmtree(directory)
+        # erase older repositories
+        if '%(date)' in self.directory:
+            vars = dict(self.installer_variables()) # copy vars
+            vars['date'] = '*'
+            dir_pattern = os.path.abspath(
+                environmentVariablesSubstitution(self.directory)) % vars
+            older_dirs = glob.glob(dir_pattern)
+            print('older repositories:', older_dirs)
 
     def install_package(self, options, args):
         self.test_config(options, args)
@@ -1937,16 +1866,21 @@ def display_failure_summary(configuration):
                 ('packageDirectories', ['pack', 'install_pack', 'test_pack']),
                 ]
     global_failed = False
+    status_map = {'not run': '',
+                  'succeeded': 'OK         ',
+                  'failed': 'FAILED     ',
+                  'unmet dependency': 'UNMET DEP  ',
+                  'interrupted': 'INTERRUPTED'}
     print('\nbv_maker summary:')
     for section_name, steps in sections:
         for directory, section \
                 in six.iteritems(getattr(configuration, section_name)):
             for step in steps:
-                if section.has_failed(step):
-                    print('FAILED:', directory, ', step', step)
-                    global_failed = True
-                elif configuration.verbose and section.has_succeeded(step):
-                    print('OK    :', directory, ', step', step)
+                status = status_map[section.get_status(step)]
+                if status != '':
+                    print('%s step %s:' % (status, step), directory)
+                    if section.has_failed(step):
+                        global_failed = True
     if global_failed:
         print('There were errors.')
     else:
@@ -1995,11 +1929,16 @@ for command in ['info', 'sources', 'configure', 'build', 'doc', 'test',
         todo.append(
             commands[command](options_by_command[command], configuration))
 
+failed = False
 # Execute selected commands
-for f in todo:
-    f()
+try:
+    for f in todo:
+        f()
+except KeyboardInterrupt:
+    traceback.print_exc()
+    failed = True
 
-failed = display_failure_summary(configuration)
+failed |= display_failure_summary(configuration)
 if failed:
     sys.exit(1)
 

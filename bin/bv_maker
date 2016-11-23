@@ -1771,19 +1771,34 @@ Controller.prototype.FinishedPageCallback = function()
 
     def cleanup_package_dir(self):
         directory = self.replace_vars(self.directory)
-        if os.path.isdir(directory):
-            pack_options = shlex.split(self.packaging_options)
-            if '--skip-repos' not in pack_options \
-                    and '--skip-existing' not in pack_options:
-                shutil.rmtree(directory)
+        dirs = [directory, directory + '_tmp']
+        pack_options = shlex.split(self.packaging_options)
+        if '--skip-repos' not in pack_options \
+                and '--skip-existing' not in pack_options:
+            for d in dirs:
+                if os.path.isdir(d):
+                        shutil.rmtree(directory)
         # erase older repositories
-        if '%(date)' in self.directory:
-            vars = dict(self.installer_variables()) # copy vars
+        if '%(date)s' in self.directory:
+            real_vars = self.installer_variables()
+            vars = dict(real_vars) # copy vars
             vars['date'] = '*'
+            my_dir = os.path.abspath(
+                environmentVariablesSubstitution(self.directory)) % real_vars
             dir_pattern = os.path.abspath(
                 environmentVariablesSubstitution(self.directory)) % vars
-            older_dirs = glob.glob(dir_pattern)
-            print('older repositories:', older_dirs)
+            older_dirs = [d for f in glob.glob(dir_pattern) if d != my_dir]
+            older_tmp_dirs = [d for d in glob.glob(dir_pattern + '_tmp')
+                              if d != my_dir + '_tmp']
+            print('older repositories:', older_dirs + older_tmp_dirs)
+            #vars['date'] = '(.+)'
+            #dir_re = re.compile(os.path.abspath(
+                #environmentVariablesSubstitution(self.directory)) % vars)
+            #for d in older_dirs:
+                #m = dir_re.match(d)
+                #print(m)
+                #if m and m.gr
+
 
     def install_package(self, options, args):
         self.test_config(options, args)

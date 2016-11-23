@@ -48,6 +48,7 @@ import tempfile
 import distutils.spawn
 import platform
 import shlex
+import time
 try:
     # compatibility for python3
     import six
@@ -1614,10 +1615,13 @@ class PackageDirectory(ComponentsConfigParser):
                     fullVersion = ver.get('fullVersion', fullVersion)
                 except ImportError:
                     pass
+        plt = time.localtime()
+        p_date = '%04d_%02d_%02d' % plt[:3]
+        p_time = '%02d:%02d:%02d' % plt[3:6]
 
         self.pathvars = {'i2bm': i2bm_str, 'os': osname,
                          'version': fullVersion, 'public': public,
-                         'online': online}
+                         'online': online, 'date': p_date, 'time': p_time}
         return self.pathvars
 
     def replace_vars(self, path_string):

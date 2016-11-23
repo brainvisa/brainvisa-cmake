@@ -269,7 +269,7 @@ class PurePythonComponentBuild(object):
                 test_str = '"' + '" "'.join(shlex.split(test)) + '"'
                 tests_code.append('''add_test( %s-tests%s
           "${CMAKE_BINARY_DIR}/bin/bv_env_test" %s )'''
-                    % (nnum % {'num': i}, self.component_name, test_str))
+                    % (self.component_name, nnum % {'num': i}, test_str))
         tests_str = '\n'.join(tests_code)
         if len(tests_str) != 0:
             tests_str += '\n'

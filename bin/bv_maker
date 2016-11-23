@@ -367,12 +367,22 @@ class SourcesCommand(object):
         self.args = args
 
     def __call__(self):
+        step = 'sources'
         for d, o in six.iteritems(configuration.sourcesDirectories):
             if not configuration.directories or d in configuration.directories:
-                if not self.options.in_config or 'sources' in o.default_steps:
-                    o.process(self.options, self.args)
+                if not self.options.in_config or step in o.default_steps:
+                    if o.has_satisfied_dependencies(step):
+                        try:
+                            o.process(self.options, self.args)
+                            o.failed[step] = False # mark as done
+                        except:
+                            # record failure
+                            o.failed[step] = True
+                    else:
+                        print('Skipping', step, 'of', d,
+                              'because it depends on a step that failed.')
             elif configuration.verbose:
-                print('Skipping ', d,
+                print('Skipping', step, 'of', d,
                       'because it is not in the selected directories.')
 
 
@@ -402,13 +412,22 @@ class ConfigureCommand(object):
         self.args = args
 
     def __call__(self):
+        step = 'configure'
         for d, o in six.iteritems(configuration.buildDirectories):
             if not configuration.directories or d in configuration.directories:
-                if not self.options.in_config \
-                        or 'configure' in o.default_steps:
-                    o.configure(self.options, self.args)
+                if not self.options.in_config or step in o.default_steps:
+                    if o.has_satisfied_dependencies(step):
+                        try:
+                            o.configure(self.options, self.args)
+                            o.failed[step] = False # mark as done
+                        except:
+                            # record failure
+                            o.failed[step] = True
+                    else:
+                        print('Skipping', step, 'of', d,
+                              'because it depends on a step that failed.')
             elif configuration.verbose:
-                print('Skipping ', d,
+                print('Skipping', step, 'of', d,
                       'because it is not in the selected directories.')
 
 
@@ -438,12 +457,22 @@ class BuildCommand(object):
         self.args = args
 
     def __call__(self):
+        step = 'build'
         for d, o in six.iteritems(configuration.buildDirectories):
             if not configuration.directories or d in configuration.directories:
-                if not self.options.in_config or 'build' in o.default_steps:
-                    o.build(self.options, self.args)
+                if not self.options.in_config or step in o.default_steps:
+                    if o.has_satisfied_dependencies(step):
+                        try:
+                            o.build(self.options, self.args)
+                            o.failed[step] = False # mark as done
+                        except:
+                            # record failure
+                            o.failed[step] = True
+                    else:
+                        print('Skipping', step, 'of', d,
+                              'because it depends on a step that failed.')
             elif configuration.verbose:
-                print('Skipping ', d,
+                print('Skipping', step, 'of', d,
                       'because it is not in the selected directories.')
 
 
@@ -469,12 +498,22 @@ class DocCommand(object):
         self.args = args
 
     def __call__(self):
+        step = 'doc'
         for d, o in six.iteritems(configuration.buildDirectories):
             if not configuration.directories or d in configuration.directories:
-                if not self.options.in_config or 'doc' in o.default_steps:
-                    o.doc()
+                if not self.options.in_config or step in o.default_steps:
+                    if o.has_satisfied_dependencies(step):
+                        try:
+                            o.doc()
+                            o.failed[step] = False # mark as done
+                        except:
+                            # record failure
+                            o.failed[step] = True
+                    else:
+                        print('Skipping', step, 'of', d,
+                              'because it depends on a step that failed.')
             elif configuration.verbose:
-                print('Skipping ', d,
+                print('Skipping', step, 'of', d,
                       'because it is not in the selected directories.')
 
 
@@ -500,12 +539,22 @@ class TestCommand(object):
         self.args = args
 
     def __call__(self):
+        step = 'test'
         for d, o in six.iteritems(configuration.buildDirectories):
             if not configuration.directories or d in configuration.directories:
-                if not self.options.in_config or 'test' in o.default_steps:
-                    o.test()
+                if not self.options.in_config or step in o.default_steps:
+                    if o.has_satisfied_dependencies(step):
+                        try:
+                            o.test()
+                            o.failed[step] = False # mark as done
+                        except:
+                            # record failure
+                            o.failed[step] = True
+                    else:
+                        print('Skipping', step, 'of', d,
+                              'because it depends on a step that failed.')
             elif configuration.verbose:
-                print('Skipping ', d,
+                print('Skipping', step, 'of', d,
                       'because it is not in the selected directories.')
 
 
@@ -531,12 +580,22 @@ class PackCommand(object):
         self.args = args
 
     def __call__(self):
+        step = 'pack'
         for d, o in six.iteritems(configuration.packageDirectories):
             if not configuration.directories or d in configuration.directories:
-                if not self.options.in_config or 'pack' in o.default_steps:
-                    o.package(self.options, self.args)
+                if not self.options.in_config or step in o.default_steps:
+                    if o.has_satisfied_dependencies(step):
+                        try:
+                            o.package(self.options, self.args)
+                            o.failed[step] = False # mark as done
+                        except:
+                            # record failure
+                            o.failed[step] = True
+                    else:
+                        print('Skipping', step, 'of', d,
+                              'because it depends on a step that failed.')
             elif configuration.verbose:
-                print('Skipping ', d,
+                print('Skipping', step, 'of', d,
                       'because it is not in the selected directories.')
 
 
@@ -562,13 +621,22 @@ class InstallPackCommand(object):
         self.args = args
 
     def __call__(self):
+        step = 'install_pack'
         for d, o in six.iteritems(configuration.packageDirectories):
             if not configuration.directories or d in configuration.directories:
-                if not self.options.in_config \
-                        or 'install_pack' in o.default_steps:
-                    o.install_package(self.options, self.args)
+                if not self.options.in_config or step in o.default_steps:
+                    if o.has_satisfied_dependencies(step):
+                        try:
+                            o.install_package(self.options, self.args)
+                            o.failed[step] = False # mark as done
+                        except:
+                            # record failure
+                            o.failed[step] = True
+                    else:
+                        print('Skipping', step, 'of', d,
+                              'because it depends on a step that failed.')
             elif configuration.verbose:
-                print('Skipping ', d,
+                print('Skipping', step, 'of', d,
                       'because it is not in the selected directories.')
 
 
@@ -594,21 +662,58 @@ class TestPackCommand(object):
         self.args = args
 
     def __call__(self):
+        step = 'test_pack'
         for d, o in six.iteritems(configuration.packageDirectories):
             if not configuration.directories or d in configuration.directories:
-                if not self.options.in_config \
-                        or 'test_pack' in o.default_steps:
-                    o.test_package(self.options, self.args)
+                if not self.options.in_config or step in o.default_steps:
+                    if o.has_satisfied_dependencies(step):
+                        try:
+                            o.test_package(self.options, self.args)
+                            o.failed[step] = False # mark as done
+                        except:
+                            # record failure
+                            o.failed[step] = True
+                    else:
+                        print('Skipping', step, 'of', d,
+                              'because it depends on a step that failed.')
             elif configuration.verbose:
-                print('Skipping ', d,
+                print('Skipping', step, 'of', d,
                       'because it is not in the selected directories.')
 
 
-class SourceDirectory(object):
+class DirectorySection(object):
+
+    def __init__(self):
+        self.failed = {}
+        self.depend_on_sections = {}
+        self.deps_set = False
+
+    def has_failed(self, step):
+        return self.failed.get(step, False)
+
+    def has_succeeded(self, step):
+        return not self.failed.get(step, True)
+
+    def has_satisfied_dependencies(self, step):
+        if not self.deps_set:
+            self.set_dependencies()
+            self.deps_set = True
+
+        for dep, dep_step in self.depend_on_sections.get(step, []):
+            if dep.has_failed(dep_step):
+                return False
+        return True
+
+    def set_dependencies(self):
+        pass
+
+
+class SourceDirectory(DirectorySection):
 
     _validOptions = set(('default_steps', 'revision_control'))
 
     def __init__(self, directory, configuration):
+        super(SourceDirectory, self).__init__()
         self.configuration = configuration
         self.directory = os.path.normpath(os.path.abspath(directory))
         self.configurationLines = []
@@ -1008,9 +1113,10 @@ If you did not do this on purpose, you should go back to following upstream:
                 print('    component %s (%s)' % (component, version))
 
 
-class ComponentsConfigParser(object):
+class ComponentsConfigParser(DirectorySection):
 
     def __init__(self, directory, configuration):
+        super(ComponentsConfigParser, self).__init__()
         self.configuration = configuration
         self.directory = os.path.normpath(os.path.abspath(directory))
         self.configurationLines = []
@@ -1198,6 +1304,16 @@ for i in os.listdir(os.path.dirname(__file__)):
         else:
             l = line.split(None, 2)
         self.configurationLines.append(line)
+
+    def set_dependencies(self):
+        self.depend_on_sections = {
+            'configure': [(d, 'sources')
+                          for d in
+                          self.configuration.sourcesDirectories.values()],
+            'build': [(self, 'configure')],
+            'doc': [(self, 'build')],
+            'test': [(self, 'build')],
+        }
 
     def conditional_build(self):
         '''Tells if the current build directory has actually to be built.
@@ -1523,6 +1639,21 @@ class PackageDirectory(ComponentsConfigParser):
             l = line.split(None, 2)
         self.configurationLines.append(line)
 
+    def set_dependencies(self):
+        build_section \
+              = self.configuration.buildDirectories.get(self.build_directory)
+        if build_section is not None:
+            build_section = [(build_section, 'build'),
+                             (build_section, 'doc'),
+                             (build_section, 'test')]
+        else:
+            build_section = []
+        self.depend_on_sections = {
+            'pack': build_section,
+            'install_pack': [(self, 'pack')],
+            'test_pack': [(self, 'install_pack')],
+        }
+
     def conditional_build(self):
         '''Tells if the current package has actually to be built.
         If a condition option is False, it will not.
@@ -1800,6 +1931,28 @@ Controller.prototype.FinishedPageCallback = function()
         return ' '.join(shlex.split(new_line))
 
 
+def display_failure_summary(configuration):
+    sections = [('sourcesDirectories', ['sources']),
+                ('buildDirectories', ['configure', 'build', 'doc', 'test']),
+                ('packageDirectories', ['pack', 'install_pack', 'test_pack']),
+                ]
+    global_failed = False
+    print('\nbv_maker summary:')
+    for section_name, steps in sections:
+        for directory, section \
+                in six.iteritems(getattr(configuration, section_name)):
+            for step in steps:
+                if section.has_failed(step):
+                    print('FAILED:', directory, ', step', step)
+                    global_failed = True
+                elif configuration.verbose and section.has_succeeded(step):
+                    print('OK    :', directory, ', step', step)
+    if global_failed:
+        print('There were errors.')
+    else:
+        print('All went good.')
+    return global_failed
+
 # ---
 
 commands = {
@@ -1845,3 +1998,8 @@ for command in ['info', 'sources', 'configure', 'build', 'doc', 'test',
 # Execute selected commands
 for f in todo:
     f()
+
+failed = display_failure_summary(configuration)
+if failed:
+    sys.exit(1)
+

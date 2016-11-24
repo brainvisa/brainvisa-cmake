@@ -1510,11 +1510,11 @@ class VirtualenvDirectory(BuildDirectory):
 class PackageDirectory(ComponentsConfigParser):
 
     _validOptions = set(('build_directory', 'packaging_options',
-                         'packaging_thirdparty', 'build_condition',
+                         'build_condition',
                          'installer_filename', 'data_repos_dir',
                          'test_install_dir', 'remote_test_host_cmd',
                          'init_components_from_build_dir', 'pack_version',
-                         'default_steps'))
+                         'default_steps', 'keep_n_older_repos'))
 
     def __init__(self, directory, configuration):
         super(PackageDirectory, self).__init__(directory, configuration)
@@ -1530,6 +1530,7 @@ class PackageDirectory(ComponentsConfigParser):
         self.pack_version = None
         self.pathvars = None
         self.default_steps = []
+        self.keep_n_older_repos = 1
 
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ pack ... ]:
@@ -1769,6 +1770,20 @@ Controller.prototype.FinishedPageCallback = function()
         print('running:', "'" + "' '".join(cmd) + "'")
         subprocess.check_call(cmd, cwd=self.build_dir.directory)
 
+    @staticmethod
+    def rm_with_empty_dirs(path):
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            os.unlink(path)
+        d = os.path.dirname(path)
+        while d and len(os.listdir(d)) == 0:
+            try:
+                os.rmdir(d)
+            except:
+                break
+            d = os.path.dirname(d)
+
     def cleanup_package_dir(self):
         directory = self.replace_vars(self.directory)
         dirs = [directory, directory + '_tmp']
@@ -1778,6 +1793,10 @@ Controller.prototype.FinishedPageCallback = function()
             for d in dirs:
                 if os.path.isdir(d):
                         shutil.rmtree(directory)
+        if os.path.isdir(directory):
+            report_file = os.path.join(directory, 'tests_report.txt')
+            if os.path.exists(report_file):
+                os.unlink(report_file)
         # erase older repositories
         if '%(date)s' in self.directory:
             real_vars = self.installer_variables()
@@ -1787,17 +1806,63 @@ Controller.prototype.FinishedPageCallback = function()
                 environmentVariablesSubstitution(self.directory)) % real_vars
             dir_pattern = os.path.abspath(
                 environmentVariablesSubstitution(self.directory)) % vars
-            older_dirs = [d for f in glob.glob(dir_pattern) if d != my_dir]
+            older_dirs = [d for d in glob.glob(dir_pattern) if d != my_dir]
             older_tmp_dirs = [d for d in glob.glob(dir_pattern + '_tmp')
                               if d != my_dir + '_tmp']
-            print('older repositories:', older_dirs + older_tmp_dirs)
-            #vars['date'] = '(.+)'
-            #dir_re = re.compile(os.path.abspath(
-                #environmentVariablesSubstitution(self.directory)) % vars)
-            #for d in older_dirs:
-                #m = dir_re.match(d)
-                #print(m)
-                #if m and m.gr
+            # check in older repos if they were OK
+            repos_to_remove = set()
+            for d in older_dirs:
+                report_file = os.path.join(directory, 'tests_report.txt')
+                if os.path.exists(report_file):
+                    report = open(report_file).readlines()
+                    if report[-1].strip() != 'Tests_result: OK':
+                        repos_to_remove.add(d)
+                        print('removing older failed repos:', d)
+            older_dirs = [d for d in older_dirs if d not in repos_to_remove]
+            to_remove = set()
+            for d in older_tmp_dirs:
+                if not d[:-4] in older_dirs:
+                    print('temp reps', d, 'has not real repos')
+                    self.rm_with_empty_dirs(d)
+                    to_remove.add(d)
+            older_tmp_dirs = sorted([d for d in older_tmp_dirs
+                                     if d not in to_remove])
+            older_dirs = sorted(older_dirs)
+            keep_n_older_repos = int(self.keep_n_older_repos)
+            if len(older_dirs) > keep_n_older_repos:
+                repos_to_remove.update(
+                    older_dirs[:len(older_dirs) - keep_n_older_repos])
+            # remove older repos and installs
+            vars['date'] = '%(date)s' # keep date pattern as is
+            pattern = os.path.abspath(
+                environmentVariablesSubstitution(self.directory)) % vars
+            pattern = pattern.replace('\\', '\\\\').replace('.', '\.')
+            pattern = re.compile(pattern % {'date': '(.+)'})
+            for d in repos_to_remove:
+                print('removing:', d)
+                self.rm_with_empty_dirs(d)
+                if d + '_tmp' in older_tmp_dirs:
+                    print('removing:', d + '_tmp')
+                    self.rm_with_empty_dirs(d + '_tmp')
+                m = pattern.match(d)
+                r_date = m.group(1)
+                vars['date'] = r_date
+                # find associated installer
+                if self.installer_filename:
+                    installer = os.path.abspath(
+                        environmentVariablesSubstitution(
+                            self.installer_filename)) % vars
+                    if os.path.exists(installer):
+                        print('removing:', installer)
+                        self.rm_with_empty_dirs(installer)
+                # find associated install
+                if self.test_install_dir:
+                    install_dir = os.path.abspath(
+                        environmentVariablesSubstitution(
+                            self.test_install_dir)) % vars
+                    if os.path.exists(install_dir):
+                        print('removing', install_dir)
+                        self.rm_with_empty_dirs(install_dir)
 
 
     def install_package(self, options, args):
@@ -1857,8 +1922,17 @@ Controller.prototype.FinishedPageCallback = function()
         if self.remote_test_host_cmd:
             new_env['BRAINVISA_TEST_REMOTE_COMMAND'] \
                 = self.expand_shell(self.remote_test_host_cmd)
-        system(cwd=self.build_dir.directory, env=new_env,
-               *(['ctest', '--output-on-failure']))
+        repos_dir = self.replace_vars(self.directory)
+        report_file = os.path.join(repos_dir, 'tests_report.txt')
+        try:
+            system(cwd=self.build_dir.directory, env=new_env,
+                  *(['ctest', '--output-on-failure']))
+        except:
+            if os.path.isdir(repos_dir):
+                open(report_file, 'w').write('Tests_result: FAILED\n')
+            raise
+        if os.path.isdir(repos_dir):
+            open(report_file, 'w').write('Tests_result: OK\n')
 
 
     def expand_shell(self, line):
@@ -1886,6 +1960,8 @@ def display_failure_summary(configuration):
                   'failed': 'FAILED     ',
                   'unmet dependency': 'UNMET DEP  ',
                   'interrupted': 'INTERRUPTED'}
+    sys.stdout.flush()
+    sys.stderr.flush()
     print('\nbv_maker summary:')
     for section_name, steps in sections:
         for directory, section \

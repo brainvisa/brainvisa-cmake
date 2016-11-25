@@ -72,133 +72,11 @@ startime=`date '+%Y/%m/%d %H:%M'`
 log="/tmp/buildlog-$date.tmp"
 rm -f "$log"
 
-bv_configure()
-{
-  stderr="/tmp/buildout-configure-$date.tmp"
-  # delete log if it already exists
-  rm -f "$stderr"
-  echo "Configure "
-  $binary_dir/bv_maker configure -c >"$stderr" 2>&1
-
-  # if errors detected copy output file into log
-  status=$?
-  if [ $status -ne 0 ]
-  then
-    echo "====================" >>"$log"
-    echo " bv_maker configure" >>"$log"
-    echo "====================" >>"$log"
-    echo >>"$log"
-    echo "PATH: "$PATH >>"$log"
-    echo "${LIBRARY_PATHVAR}: "${!LIBRARY_PATHVAR} >>"$log"
-    echo >>"$log"
-    cat "$stderr" >>"$log"
-    echo >>"$log"
-    echo >>"$log"
-  fi
-  [ $dellogs = 0 ] || (
-    # delete output file
-    rm -f "$stderr"
-  )
-}
-
-bv_build() {
-  stderr="/tmp/buildout-build-$date.tmp"
-  # delete log if it already exists
-  rm -f "$stderr"
-  # build target, redirecting all output
-  echo "Build "
-  $binary_dir/bv_maker build -c >"$stderr" 2>&1
-
-  status=$?
-  # if errors detected copy output file into log
-  if [ $status -ne 0 ]
-  then
-    echo "=============================" >>"$log"
-    echo "     command: bv_maker build" >>"$log"
-    echo "=============================" >>"$log"
-    echo >>"$log"
-    echo "PATH: "$PATH >>"$log"
-    echo "${LIBRARY_PATHVAR}: "${!LIBRARY_PATHVAR} >>"$log"
-    echo >>"$log"
-    cat "$stderr" >>"$log"
-    echo >>"$log"
-    echo >>"$log"
-  fi
-  [ $dellogs = 0 ] || (
-    # delete output file
-    rm -f "$stderr"
-  )
-}
-
-bv_test() {
-  stderr="/tmp/buildout-test-$date.tmp"
-  # delete log if it already exists
-  rm -f "$stderr"
-  # build target, redirecting all output
-  echo "Test "
-
-  if [ ! -d "${BRAINVISA_TESTS_DIR}" ]; then
-    mkdir -p "${BRAINVISA_TESTS_DIR}"
-  fi
-
-  $binary_dir/bv_maker "test" --only-if-default >"$stderr" 2>&1
-
-  status=$?
-  # if errors detected copy output file into log
-  if [ $status -ne 0 ]
-  then
-    echo "============================" >>"$log"
-    echo "     command: bv_maker test" >>"$log"
-    echo "============================" >>"$log"
-    echo >>"$log"
-    echo "PATH: "$PATH >>"$log"
-    echo "${LIBRARY_PATHVAR}: "${!LIBRARY_PATHVAR} >>"$log"
-    echo >>"$log"
-    cat "$stderr" >>"$log"
-    echo >>"$log"
-    echo >>"$log"
-  fi
-  [ $dellogs = 0 ] || (
-    # delete output file
-    rm -f "$stderr"
-  )
-}
-
-bv_doc() {
-  stderr="/tmp/buildout-doc-$date.tmp"
-  rm -f "$stderr"
-  # rm -f "$stdout"
-  # build documentation, redirecting all output
-  echo "Doc "
-  $binary_dir/bv_maker doc --only-if-default 1>/dev/null 2>"$stderr"
-  status=$?
-  # if errors detected copy output file into log
-  if [ $status -ne 0 ]
-  then
-    echo "===============================" >>"$log"
-    echo "   documentation:" >>"$log"
-    echo "         command: bv_maker doc" >>"$log"
-    echo "===============================" >>"$log"
-    echo >>"$log"
-    echo "PATH: "$PATH >>"$log"
-    echo "${LIBRARY_PATHVAR}: "${!LIBRARY_PATHVAR} >>"$log"
-    echo >>"$log"
-    cat "$stderr" >>"$log"
-    echo >>"$log"
-    echo >>"$log"
-  fi
-
-  [ $dellogs = 0 ] || (
-    # delete output file
-    rm -f "$stderr"
-  )
-}
-
 run_bv_maker() {
-  stderr="/tmp/buildout-doc-$date.tmp"
+  stderr="/tmp/buildout-$date.tmp"
   rm -f "$stderr"
   # build all, redirecting all output
-  $binary_dir/bv_maker 1>/dev/null 2>"$stderr"
+  $binary_dir/bv_maker >"$stderr" 2>&1
   status=$?
   # if errors detected copy output file into log
   if [ $status -ne 0 ]
@@ -222,32 +100,6 @@ run_bv_maker() {
   )
 }
 
-if [ $svn_update -eq 1 ]; then
-  # add package name and date to output file
-  stderr="/tmp/buildout-update-$date.tmp"
-  echo "Sources "
-  $binary_dir/bv_maker sources 2>&1 >/dev/null | cat >>"$stderr"
-  
-  # if errors detected copy output file into log
-  if [ -s "$stderr" ]
-  then
-      echo "==================================================" >>"$log"
-      echo "          Updating svn repository" >>"$log"
-      echo "==================================================" >>"$log"
-      echo >> "$log"
-      echo "PATH: "$PATH >>"$log"
-      echo "${LIBRARY_PATHVAR}: "${!LIBRARY_PATHVAR} >>"$log"
-      echo >>"$log"
-      cat "$stderr" >> "$log"
-      echo >> "$log"
-      echo >> "$log"
-  fi
-  # delete output file
-  [ $dellogs = 0 ] || (
-    # delete output file
-    rm -f "$stderr"
-  )
-fi
 
 if [ $os != "windows" ];then
   # call bv_nobadlink to remove broken symlinks in the build dir
@@ -257,15 +109,10 @@ if [ $os != "windows" ];then
   find `dirname $binary_dir` -name '*.pyc' -exec rm "{}" \; -or -name '*.pyo' -exec rm "{}" \;
 fi
 
-bv_configure && bv_build
+run_bv_maker
 ok=$?
-# don't run doc and test if build has failed
-if [ $ok = "0" ]; then
-  bv_doc
-  bv_test
-fi
 
-echo "End compile and doc "
+echo "End bv_maker"
 
 buildlog="$HOME/builds.log"
 if [ ! -f "$buildlog" ]
@@ -286,7 +133,7 @@ from="${from}@intra.cea.fr"
 replyto="appli@saxifrage.saclay.cea.fr"
 buildmessage="/tmp/buildlog-$date.msg"
 
-if [ -s "$log" ]
+if [ $ok -ne 0 ]
 then
   echo "Error - build started $startime, stopped $stoptime on $machine ($os)" >>"$buildlog"
 

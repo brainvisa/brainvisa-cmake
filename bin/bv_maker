@@ -1241,7 +1241,7 @@ class BuildDirectory(ComponentsConfigParser):
 
     _validOptions = set(('build_type', 'make_options', 'cmake_options',
                          'packaging_thirdparty', 'default_steps',
-                         'build_condition', 'clean'))
+                         'build_condition', 'clean_config', 'clean_build'))
 
     sitecustomize_content = '''import os
 

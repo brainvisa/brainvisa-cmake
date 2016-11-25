@@ -106,7 +106,7 @@ if [ $os != "windows" ];then
   $binary_dir/bv_nobadlink `dirname $binary_dir`
   # clean *.pyc and *.pyo files in case the corresponding python source
   # has been removed
-  find `dirname $binary_dir` -name '*.pyc' -exec rm "{}" \; -or -name '*.pyo' -exec rm "{}" \;
+#   find `dirname $binary_dir` -name '*.pyc' -exec rm "{}" \; -or -name '*.pyo' -exec rm "{}" \;
 fi
 
 run_bv_maker

@@ -337,7 +337,6 @@ def check_filter_condition(filters):
     # replace %(var)s vars
     vars = global_installer_variables()
     expression = expression % vars
-    print('condition expression:', expression)
     try:
         res = bool(eval(expression))
     except:
@@ -1814,6 +1813,8 @@ Controller.prototype.FinishedPageCallback = function()
 
     def package(self, options, args):
         self.test_config(options, args)
+        if not self.conditional_build():
+            return
         directory = self.replace_vars(self.directory)
         print('Building package:', directory)
         print('    from build dir:', self.build_dir.directory)
@@ -1919,6 +1920,8 @@ Controller.prototype.FinishedPageCallback = function()
 
     def install_package(self, options, args):
         self.test_config(options, args)
+        if not self.conditional_build():
+            return
         directory = self.replace_vars(self.directory)
         if not self.test_install_dir:
             return
@@ -1960,6 +1963,8 @@ Controller.prototype.FinishedPageCallback = function()
 
     def test_package(self, options, args):
         self.test_config(options, args)
+        if not self.conditional_build():
+            return
         if not self.test_install_dir:
             raise RuntimeError(
                 'install_pack command needs test_install_dir option')

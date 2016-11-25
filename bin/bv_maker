@@ -1488,7 +1488,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         self._process_configuration_lines()
         if not self.conditional_build():
             return
-        if options.clean of self.clean_build.upper() == 'ON':
+        if options.clean or self.clean_build.upper() == 'ON':
             if self.clean_commands:
                 clean_opts = ['-b']
             else:
@@ -1715,11 +1715,9 @@ class PackageDirectory(ComponentsConfigParser):
                 except ImportError:
                     pass
 
-        vars.update({'i2bm': i2bm_str, 'version': fullVersion,
-                     'public': public, 'online': online})
         self.pathvars = dict(global_installer_variables())
-        self.update({'i2bm': i2bm_str, 'version': fullVersion,
-                     'public': public, 'online': online})
+        self.pathvars.update({'i2bm': i2bm_str, 'version': fullVersion,
+                              'public': public, 'online': online})
         return self.pathvars
 
     def replace_vars(self, path_string):

@@ -60,6 +60,10 @@ except ImportError:
        def iteritems(obj, *args, **kwargs):
           return obj.iteritems(*args, **kwargs)
 
+# the following imports are just to make functions available in tests
+# using eval() in filters/conditions
+from socket import gethostname
+
 # Ugly hack to backport subprocess.check_ouput method on python < 2.7
 # TODO: remove this once BrainVISA is only compatible with python >= 2.7
 if "check_output" not in dir(subprocess):  # duck punch it in!
@@ -221,6 +225,7 @@ http://brainvisa.info/brainvisa-cmake/
         self.sourcesDirectories = {}
         self.buildDirectories = {}
         self.packageDirectories = {}
+        currentFilterSection = False
 
         directories = [os.path.normpath(os.path.realpath(os.path.abspath(d)))
                        for d in options.directories]
@@ -267,31 +272,49 @@ http://brainvisa.info/brainvisa-cmake/
                         if line[-1] != ']':
                             raise SyntaxError()
                         l = line[1:-1].split(None, 1)
-                        if len(l) != 2:
+                        if len(l) != 2 and l[0] not in ('if', 'endif', 'else'):
                             raise SyntaxError()
+
                         if l[0] == 'source':
                             currentDirectoryObject = SourceDirectory(
                                 environmentVariablesSubstitution(l[1].strip()), self)
                             self.sourcesDirectories[
                                 currentDirectoryObject.directory] = currentDirectoryObject
+                            currentFilterSection = None
                         elif l[0] == 'build':
                             currentDirectoryObject = BuildDirectory(
                                 environmentVariablesSubstitution(l[1].strip()), self)
                             self.buildDirectories[
                                 currentDirectoryObject.directory] = currentDirectoryObject
+                            currentFilterSection = None
                         elif l[0] == 'virtualenv':
                             currentDirectoryObject = VirtualenvDirectory(
                                 environmentVariablesSubstitution(l[1].strip()), self)
                             self.buildDirectories[
                                 currentDirectoryObject.directory] = currentDirectoryObject
+                            currentFilterSection = None
                         elif l[0] == 'package':
                             currentDirectoryObject = PackageDirectory(
                                 environmentVariablesSubstitution(l[1].strip()), self)
                             self.packageDirectories[
                                 currentDirectoryObject.directory] = currentDirectoryObject
+                            currentFilterSection = None
+                        elif l[0] == 'if' \
+                                and currentDirectoryObject is not None \
+                                and len(l) >= 2:
+                            currentFilterSection \
+                                = check_filter_condition(l[1:])
+                        elif l[0] == 'endif' and len(l) == 1 \
+                                and currentFilterSection is not None:
+                            # ends the filtered section
+                            currentFilterSection = None
+                        elif l[0] == 'else' and len(l) == 1 \
+                                and currentFilterSection is not None:
+                            # inverts the filtered section
+                            currentFilterSection = not currentFilterSection
                         else:
                             raise SyntaxError()
-                    else:
+                    elif currentFilterSection in (None, True):
                         if currentDirectoryObject is None:
                             raise SyntaxError()
                         if self.verbose:
@@ -307,6 +330,56 @@ http://brainvisa.info/brainvisa-cmake/
         # store options and args
         self.options = options
         self.args = args
+
+def check_filter_condition(filters):
+    # for now, use python eval()
+    expression = ' '.join(filters)
+    # replace %(var)s vars
+    vars = global_installer_variables()
+    expression = expression % vars
+    print('condition expression:', expression)
+    try:
+        res = bool(eval(expression))
+    except:
+        traceback.print_exc()
+        raise
+    return res
+
+
+_installer_variables = None
+
+
+def global_installer_variables():
+    global _installer_variables
+    if _installer_variables is not None:
+        return _installer_variables
+    systems = {'darwin' : 'osx'}
+    osname = platform.system().lower()
+    osname = systems.get(osname, osname)
+    if osname == 'linux':
+        if platform.architecture()[0] == '64bit':
+            osname += '64'
+        else:
+            osname += '32'
+        # determine libc version - using ctypes and calling C
+        # gnu_get_libc_version() function
+        # Note: plaform.libc_ver() is completely bogus.
+        import ctypes
+        libc = ctypes.cdll.LoadLibrary("libc.so.6")
+        gnu_get_libc_version = libc.gnu_get_libc_version
+        gnu_get_libc_version.restype = ctypes.c_char_p
+        osname += '-glibc-' \
+            + '.'.join(gnu_get_libc_version().split('.')[:2])
+    elif osname == 'windows':
+        osname = 'win32'
+        # how is is for win64 ?
+
+    plt = time.localtime()
+    p_date = '%04d_%02d_%02d' % plt[:3]
+    p_time = '%02d:%02d:%02d' % plt[3:6]
+
+    _installer_variables = {'os': osname, 'date': p_date, 'time': p_time}
+    return _installer_variables
 
 
 class StepCommand(object):
@@ -1616,29 +1689,9 @@ class PackageDirectory(ComponentsConfigParser):
     def installer_variables(self):
         if self.pathvars is not None:
             return self.pathvars
-        systems = {'darwin' : 'osx'}
         i2bm_str = 'public'
-        osname = platform.system().lower()
-        osname = systems.get(osname, osname)
         public = ''
         online = 'online'
-        if osname == 'linux':
-            if platform.architecture()[0] == '64bit':
-                osname += '64'
-            else:
-                osname += '32'
-            # determine libc version - using ctypes and calling C
-            # gnu_get_libc_version() function
-            # Note: plaform.libc_ver() is completely bogus.
-            import ctypes
-            libc = ctypes.cdll.LoadLibrary("libc.so.6")
-            gnu_get_libc_version = libc.gnu_get_libc_version
-            gnu_get_libc_version.restype = ctypes.c_char_p
-            osname += '-glibc-' \
-                + '.'.join(gnu_get_libc_version().split('.')[:2])
-        elif osname == 'windows':
-            osname = 'win32'
-            # how is is for win64 ?
 
         if '--i2bm' in self.packaging_options.split():
             i2bm_str = 'i2bm'
@@ -1659,13 +1712,12 @@ class PackageDirectory(ComponentsConfigParser):
                     fullVersion = ver.get('fullVersion', fullVersion)
                 except ImportError:
                     pass
-        plt = time.localtime()
-        p_date = '%04d_%02d_%02d' % plt[:3]
-        p_time = '%02d:%02d:%02d' % plt[3:6]
 
-        self.pathvars = {'i2bm': i2bm_str, 'os': osname,
-                         'version': fullVersion, 'public': public,
-                         'online': online, 'date': p_date, 'time': p_time}
+        vars.update({'i2bm': i2bm_str, 'version': fullVersion,
+                     'public': public, 'online': online})
+        self.pathvars = dict(global_installer_variables())
+        self.update({'i2bm': i2bm_str, 'version': fullVersion,
+                     'public': public, 'online': online})
         return self.pathvars
 
     def replace_vars(self, path_string):

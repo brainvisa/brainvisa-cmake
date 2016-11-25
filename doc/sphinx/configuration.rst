@@ -12,6 +12,8 @@ In this file you can configure several types of directories:
 
 * **package directory**: A package directory is an installer repository directory. It is built from a build directory, and can be used to make a repository, to install the package, and to run tests on the installed packages.
 
+A section may also contain conditional parts. See the `Conditional subsections`_ section for details.
+
 
 General structure and syntax of bv_maker configuration file
 ===========================================================
@@ -322,6 +324,60 @@ Select latest bug fixing branch of all components in anatomist project:
 .. code-block:: bash
 
     anatomist:* bug_fix
+
+
+Conditional subsections
+=======================
+
+A section of the configuration file may contain conditional parts. This allows to specialize parts of the configuration according to host system, host name, or whatever.
+
+Condition blocks
+----------------
+
+A conditional subsection should be located inside an existing section (sources, build or package). It follows the syntax:
+
+.. code-block:: bash
+
+    [ if <expression> ]
+      <config lines>
+      ...
+    [ else ]
+      <other config lines>
+    [ endif ]
+
+The ``[ else ]`` block is of course optional, and a global section end also ends the conditional section, so the ``[ endif ]`` section may be omitted if it is at the end of the section.
+
+
+Condition expressions
+---------------------
+
+The condition expression may contain substitution variables as in the shape ``%(variable)s`` syntax, like in the package section, at the difference that only the following variables are recognized:
+
+* os
+* date
+* time
+
+Other variables depend on the configuration of the section itself, which is only done later, so they are not available yet when parsing conditions.
+
+The condition expression is then evaluated in python language (using the ``eval()`` function), thus allows all python language syntax and loaded libraries. The expression result is cast to a boolean value.
+
+Thus a configuration may look like the following:
+
+.. code-block:: bash
+
+    [ build $HOME/brainvisa/build/bug_fix ]
+      build_type = Release
+      [ if '%(os)'.startswith('linux') ]
+        packaging_thirdparty = ON
+      [ else ]
+        packaging_thirdparty = OFF
+      [ endif ]
+      [ if gethostname() == 'my_machine' ]
+        make_options = -j8
+      [ else ]
+        make_options = -j2
+      [ endif ]
+      standard bug_fix $HOME/brainvisa/source
 
 
 Examples

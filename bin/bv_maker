@@ -1241,7 +1241,7 @@ class BuildDirectory(ComponentsConfigParser):
 
     _validOptions = set(('build_type', 'make_options', 'cmake_options',
                          'packaging_thirdparty', 'default_steps',
-                         'build_condition'))
+                         'build_condition', 'clean'))
 
     sitecustomize_content = '''import os
 
@@ -1261,6 +1261,8 @@ for i in os.listdir(os.path.dirname(__file__)):
         self.clean_commands = True
         self.default_steps = ['configure', 'build']
         self.build_condition = None
+        self.clean_config = 'OFF'
+        self.clean_build = 'OFF'
 
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ build ... ]:
@@ -1337,7 +1339,7 @@ for i in os.listdir(os.path.dirname(__file__)):
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
 
-        if options.clean:
+        if options.clean or self.clean_config.upper == 'ON':
             my_path = os.path.dirname(__file__)
             bv_clean = os.path.join(my_path, 'bv_clean_build_tree')
             print('cleaning build tree', self.directory)
@@ -1486,7 +1488,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         self._process_configuration_lines()
         if not self.conditional_build():
             return
-        if options.clean:
+        if options.clean of self.clean_build.upper() == 'ON':
             if self.clean_commands:
                 clean_opts = ['-b']
             else:

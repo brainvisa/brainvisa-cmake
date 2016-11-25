@@ -194,6 +194,34 @@ bv_doc() {
   )
 }
 
+run_bv_maker() {
+  stderr="/tmp/buildout-doc-$date.tmp"
+  rm -f "$stderr"
+  # build all, redirecting all output
+  $binary_dir/bv_maker 1>/dev/null 2>"$stderr"
+  status=$?
+  # if errors detected copy output file into log
+  if [ $status -ne 0 ]
+  then
+    echo "===============================" >>"$log"
+    echo "   bv_maker:" >>"$log"
+    echo "         command: bv_maker" >>"$log"
+    echo "===============================" >>"$log"
+    echo >>"$log"
+    echo "PATH: "$PATH >>"$log"
+    echo "${LIBRARY_PATHVAR}: "${!LIBRARY_PATHVAR} >>"$log"
+    echo >>"$log"
+    cat "$stderr" >>"$log"
+    echo >>"$log"
+    echo >>"$log"
+  fi
+
+  [ $dellogs = 0 ] || (
+    # delete output file
+    rm -f "$stderr"
+  )
+}
+
 if [ $svn_update -eq 1 ]; then
   # add package name and date to output file
   stderr="/tmp/buildout-update-$date.tmp"

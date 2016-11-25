@@ -136,6 +136,8 @@ In the build section, it is also possible to define some build options:
 * ``build_type``: ``Debug``, ``Release`` or none (no optimization options)
 * ``packaging_thirdparty``: Set this option to ``ON`` if you need to create a BrainVISA package containing thirdparty libraries dependency.
 * ``build_condition``: a condition which must be True to allow configure and build steps, otherwise they will be skipped. The condition is evaluated in **python language**, and is otherwise free: it may typically be used to restrict build to cerain systems, some dates, etc.
+* ``clean_build``: ``ON`` or ``OFF`` (default), if set, the build tree will be cleaned of obsolete files before the build step (using the command ``bv_clean_build_tree``)
+* ``clean_config``: ``ON`` or ``OFF`` (default), if set, the build tree will be cleaned of obsolete files before the configuration step (using the command ``bv_clean_build_tree``)
 * ``default_steps``: steps performed for this build directory when bv_maker is invoked without specifying steps (typically just ``bv_maker``). Defaults to: ``configure build``, but may also include ``doc`` and ``test``.
 
 **Example**

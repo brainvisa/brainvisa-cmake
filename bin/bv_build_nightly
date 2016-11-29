@@ -8,6 +8,21 @@ fi
 dellogs=1
 sendmail=1
 
+# email settings
+replyto="appli@saxifrage.saclay.cea.fr"
+mail_failure="appli@saxifrage.saclay.cea.fr"
+# mail_success="nicolas.souedet@cea.fr"
+mail_success="appli@saxifrage.saclay.cea.fr"
+
+machine=$(uname -n | sed "s/\([^\.]\)\..*/\1/" | awk '{print tolower($1)}')
+# Get current user without its domain name on windows
+user=$(whoami | sed "s/[^\\]*\\\\\(.*\)/\1/")
+from="${user}-$machine"
+if [ -n "${I2BM_SERVICE}" ]; then
+  from="${from}-${I2BM_SERVICE}"
+fi
+from="${from}@intra.cea.fr"
+
 binary_dir=`dirname $0`
 os="$($binary_dir/bv_system_info -p)"
 
@@ -79,20 +94,20 @@ run_bv_maker() {
   $binary_dir/bv_maker >"$stderr" 2>&1
   status=$?
   # if errors detected copy output file into log
-  if [ $status -ne 0 ]
-  then
-    echo "===============================" >>"$log"
-    echo "   bv_maker:" >>"$log"
-    echo "         command: bv_maker" >>"$log"
-    echo "===============================" >>"$log"
-    echo >>"$log"
-    echo "PATH: "$PATH >>"$log"
-    echo "${LIBRARY_PATHVAR}: "${!LIBRARY_PATHVAR} >>"$log"
-    echo >>"$log"
-    cat "$stderr" >>"$log"
-    echo >>"$log"
-    echo >>"$log"
-  fi
+#   if [ $status -ne 0 ]
+#   then
+  echo "===============================" >>"$log"
+  echo "   bv_maker:" >>"$log"
+  echo "         command: bv_maker" >>"$log"
+  echo "===============================" >>"$log"
+  echo >>"$log"
+  echo "PATH: "$PATH >>"$log"
+  echo "${LIBRARY_PATHVAR}: "${!LIBRARY_PATHVAR} >>"$log"
+  echo >>"$log"
+  cat "$stderr" >>"$log"
+  echo >>"$log"
+  echo >>"$log"
+#   fi
 
   [ $dellogs = 0 ] || (
     # delete output file
@@ -123,15 +138,6 @@ fi
 
 stoptime=`date '+%Y/%m/%d %H:%M'`
 # Get current machine without its domain name
-machine=$(uname -n | sed "s/\([^\.]\)\..*/\1/" | awk '{print tolower($1)}')
-# Get current user without its domain name on windows
-user=$(whoami | sed "s/[^\\]*\\\\\(.*\)/\1/")
-from="${user}-$machine"
-if [ -n "${I2BM_SERVICE}" ]; then
-  from="${from}-${I2BM_SERVICE}"
-fi
-from="${from}@intra.cea.fr"
-replyto="appli@saxifrage.saclay.cea.fr"
 buildmessage="/tmp/buildlog-$date.msg"
 
 if [ $ok -ne 0 ]
@@ -145,9 +151,8 @@ then
   env >> "$log"
 
   # send error message
-  to="appli@saxifrage.saclay.cea.fr"
-  # to="nicolas.souedet@cea.fr"
-  
+  to=$mail_failure
+
   # create error message in temporary file
   (
     echo "MIME-Version: 1.0"
@@ -162,7 +167,7 @@ else
   echo "Success - build started $startime, stopped $stoptime on $machine ($os), log file = $log" >>"$buildlog"
 
   # send success message
-  to="nicolas.souedet@cea.fr"
+  to=$mail_success
 
   # create success message in temporary file
   (
@@ -173,10 +178,12 @@ else
     echo "Subject: Success - build `date '+%Y/%m/%d'` on $machine ($os)"
     echo
     echo "Success - build started $startime, stopped $stoptime on $machine ($os), log file = $log"
+    echo
+    cat "$log"
   ) > "${buildmessage}"
 fi
 
-if [ $sendmail -gt 0 ]; then
+if [ $sendmail -gt 0 ] && [ -n $to ]; then
   $binary_dir/bv_sendmail "${from}" "${to}" "${buildmessage}"
 fi
 

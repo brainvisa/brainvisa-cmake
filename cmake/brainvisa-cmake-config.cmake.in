@@ -2,9 +2,10 @@ cmake_policy( SET CMP0011 NEW )
 cmake_policy( SET CMP0009 NEW )
 
 get_property( config_done GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE )
-if ( COMPILER_PREFIX )
+
+if ( COMPILER_PREFIX AND CMAKE_CROSSCOMPILING)
   # Add toolchain specific module search path
-    set( CMAKE_MODULE_PATH "${brainvisa-cmake_DIR}/specific/${COMPILER_PREFIX}" ${CMAKE_MODULE_PATH} )
+  set( CMAKE_MODULE_PATH "${brainvisa-cmake_DIR}/specific/${COMPILER_PREFIX}" ${CMAKE_MODULE_PATH} )
 endif()
 
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${brainvisa-cmake_DIR}/modules" )
@@ -12,7 +13,7 @@ if( NOT config_done )
   set_property( GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE YES )
   
   option( CMAKE_OVERRIDE_COMPILER_MISMATCH "Avoid CMake to completely erase the cache if a compiler mismatch is detected (for instance with find_package( VTK ))" ON )
-  
+
   # Include code specific to a platform or site
   if( EXISTS /etc/mandriva-release )
     include( "${brainvisa-cmake_DIR}/specific/linux_distribution/mandriva.cmake" )
@@ -326,6 +327,7 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
 
     add_dependencies( install-dev install-runtime )
     # targets to generate documentation
+
     add_custom_target( doc )
     add_custom_target( usrdoc )
     add_custom_target( devdoc )
@@ -367,11 +369,17 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
   # targets to generate the documentation of the project
   add_custom_target( ${PROJECT_NAME}-doc )
   add_dependencies( doc ${PROJECT_NAME}-doc )
-  add_custom_target( ${PROJECT_NAME}-usrdoc )
+  add_custom_target( ${PROJECT_NAME}-usrdoc
+     COMMENT "Create \"share/doc/${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}\""
+     COMMAND ${CMAKE_COMMAND} -E make_directory "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
+  )
   add_dependencies( usrdoc ${PROJECT_NAME}-usrdoc )
 #   add_custom_target( ${PROJECT_NAME}-cmddoc )
 #   add_dependencies( cmddoc ${PROJECT_NAME}-cmddoc )
-  add_custom_target( ${PROJECT_NAME}-devdoc )
+  add_custom_target( ${PROJECT_NAME}-devdoc
+     COMMENT "Create \"share/doc/${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}\""
+     COMMAND ${CMAKE_COMMAND} -E make_directory "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
+  )
   add_dependencies( devdoc ${PROJECT_NAME}-devdoc )
 #  add_dependencies( ${PROJECT_NAME}-doc ${PROJECT_NAME}-usrdoc ${PROJECT_NAME}-cmddoc  ${PROJECT_NAME}-devdoc)
   add_dependencies( ${PROJECT_NAME}-doc ${PROJECT_NAME}-usrdoc ${PROJECT_NAME}-devdoc)

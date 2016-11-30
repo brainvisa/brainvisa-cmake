@@ -183,7 +183,7 @@ else
   ) > "${buildmessage}"
 fi
 
-if [ $sendmail -gt 0 ] && [ -n $to ]; then
+if [ $sendmail -gt 0 ] && [ -n "$to" ]; then
   $binary_dir/bv_sendmail "${from}" "${to}" "${buildmessage}"
 fi
 

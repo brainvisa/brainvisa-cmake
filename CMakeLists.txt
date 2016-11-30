@@ -1,9 +1,7 @@
 
 if( BRAINVISA_BVMAKER )
-
   # in BV mode, force CMAKE_INSTALL_PREFIX to point to build directory
   set( CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR} )
-
 endif()
 
 project( brainvisa-cmake CXX )
@@ -60,20 +58,15 @@ install( FILES ${_files}
          DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake/modules"
          COMPONENT brainvisa-cmake )
 
-BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/cmake-fixes/*[^~]" )
-install( FILES ${_files}
-         DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake/modules/cmake-fixes"
-         COMPONENT brainvisa-cmake )
-
-BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/cmake-fixes/Platform/*[^~]" )
-install( FILES ${_files}
-         DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake/modules/cmake-fixes/Platform"
-         COMPONENT brainvisa-cmake )
-
-BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/cmake/multiplatform/*[^~]" )
-install( FILES ${_files}
-         DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake/multiplatform"
-         COMPONENT brainvisa-cmake )
+BRAINVISA_GLOB_AND_FILTER( GLOB_RECURSE _files 
+                           RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+                           "${CMAKE_CURRENT_SOURCE_DIR}/cmake/toolchains/*[^~]" )
+foreach(_f ${_files})
+    get_filename_component(_d "${_f}" DIRECTORY)
+    install( FILES "${CMAKE_CURRENT_SOURCE_DIR}/${_f}"
+             DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/${_d}"
+             COMPONENT brainvisa-cmake )
+endforeach()
 
 BRAINVISA_GLOB_AND_FILTER( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/scripts/*[^~]" )
 install( FILES ${_files}
@@ -198,12 +191,11 @@ endif()
 if( BRAINVISA_BVMAKER )
 
   BRAINVISA_PROJECT()
-
+       
   find_package( Sphinx )
   find_package( python )
 
   BRAINVISA_GENERATE_SPHINX_DOC( "doc/sphinx"
     "share/doc/${PROJECT_NAME}-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}" USER )
-
 endif()
 

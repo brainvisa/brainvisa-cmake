@@ -1,4 +1,4 @@
-#message("===== MINGW cache initialization =====")
+#message("===== i686-w64-mingw32 cache initialization =====")
 if( NOT BRAINVISA_CROSSCOMPILATION_DIR )
   message( FATAL_ERROR "BRAINVISA_CROSSCOMPILATION_DIR is not set" )
 endif( NOT BRAINVISA_CROSSCOMPILATION_DIR )

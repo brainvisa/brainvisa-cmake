@@ -1,9 +1,8 @@
-#message("===== MINGW toolchain setup =====")
+#message("===== i686-w64-mingw32 toolchain setup =====")
 # the name of the target operating system
-SET(CMAKE_SYSTEM_NAME Windows)
+set(CMAKE_SYSTEM_NAME Windows)
 
 if (NOT COMPILER_PREFIX)
-    #set(COMPILER_PREFIX "i586-mingw32msvc")
     set(COMPILER_PREFIX "i686-w64-mingw32")
 endif()
 

@@ -101,9 +101,19 @@ if this_script:
 
 import brainvisa.maker.components_definition
 import brainvisa.maker.brainvisa_projects as brainvisa_projects
+from brainvisa.maker.brainvisa_projects_versions import project_version
 
+from brainvisa.maker.version_number import VersionNumber
 from brainvisa.maker.version_number import version_format_short
 
+if this_script:
+    cmake_root = os.path.join(os.path.dirname(this_script), 
+                              '..', 'share', 'brainvisa-cmake-%s' %
+                              str(VersionNumber(
+                                    project_version('brainvisa-cmake'), 
+                                    version_format_short)),
+                              'cmake')
+    #print('cmake_root:', cmake_root)
 
 def system(*args, **kwargs):
     print(' '.join(args))
@@ -1239,8 +1249,9 @@ class ComponentsConfigParser(DirectorySection):
 class BuildDirectory(ComponentsConfigParser):
 
     _validOptions = set(('build_type', 'make_options', 'cmake_options',
-                         'packaging_thirdparty', 'default_steps',
-                         'build_condition', 'clean_config', 'clean_build'))
+                         'packaging_thirdparty', 'cross_compiling_prefix', 
+                         'default_steps', 'build_condition', 'clean_config', 
+                         'clean_build'))
 
     sitecustomize_content = '''import os
 
@@ -1257,6 +1268,7 @@ for i in os.listdir(os.path.dirname(__file__)):
         self.make_options = ''
         self.cmake_options = ''
         self.packaging_thirdparty = ''
+        self.cross_compiling_prefix = ''
         self.clean_commands = True
         self.default_steps = ['configure', 'build']
         self.build_condition = None
@@ -1441,14 +1453,15 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         else:
             command_base = ['cmake']
 
-        command_base += self.cmake_options.split()
-        command_base += ['-DCMAKE_BUILD_TYPE:STRING=' + self.build_type]
-        command = command_base + [cmake_path(self.directory)]
+        command_options = self.cmake_options.split()
+        command_options += ['-DCMAKE_BUILD_TYPE:STRING=' + self.build_type]
         if self.packaging_thirdparty.upper() == 'ON':
-            command += ['-DBRAINVISA_PACKAGING_THIRDPARTY:BOOL=ON']
+            command_options += ['-DBRAINVISA_PACKAGING_THIRDPARTY:BOOL=ON']
         elif self.packaging_thirdparty.upper() == 'OFF':
-            command += ['-DBRAINVISA_PACKAGING_THIRDPARTY:BOOL=OFF']
+            command_options += ['-DBRAINVISA_PACKAGING_THIRDPARTY:BOOL=OFF']
 
+        config_dir = cmake_path(self.directory)
+        
         for component, build_model \
                 in six.iteritems(self.buildModelPerComponent):
             build_model.configure()
@@ -1457,6 +1470,43 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         os.environ['PATH'] = os.path.dirname(this_script) + os.pathsep \
             + os.getenv('PATH')
 
+        # cross compilation options
+        cross_compiling_prefix = self.cross_compiling_prefix.strip()
+        if len(cross_compiling_prefix) > 0:
+            cross_compiling_prefix_path = os.path.join( cmake_root, 
+                                                        'toolchains',
+                                                        cross_compiling_prefix )
+            cross_compiling_options = ['-DBRAINVISA_CMAKE_OPTIONS:STRING=' \
+                                       'CMAKE_CROSSCOMPILING;COMPILER_PREFIX;' \
+                                       'CMAKE_TOOLCHAIN_FILE', \
+                                       '-DCOMPILER_PREFIX:STRING=%s' % \
+                                       self.cross_compiling_prefix.strip(), \
+                                       '-DCMAKE_CROSSCOMPILING:BOOL=ON']
+            cross_compiling_toolchain_path = os.path.join(
+                                                cross_compiling_prefix_path,
+                                                'toolchain.cmake' )
+            
+            cross_compiling_init_cache_path = os.path.join(
+                                                cross_compiling_prefix_path,
+                                                'init-cache.cmake' )
+            #print("=== cross_compiling_prefix:", cross_compiling_prefix, "===")
+            #print("=== cross_compiling_prefix_path:", cross_compiling_prefix_path, "===")
+            #print("=== cross_compiling_toolchain_path:", cross_compiling_toolchain_path, "===")                        
+            #print("=== cross_compiling_init_cache_path:", cross_compiling_init_cache_path, "===")                        
+            if os.path.exists( cross_compiling_toolchain_path ):
+                cross_compiling_options += ['-DCMAKE_TOOLCHAIN_FILE:PATH=%s' % \
+                                            cmake_path(
+                                              cross_compiling_toolchain_path),]
+                                        
+            if os.path.exists( cross_compiling_init_cache_path ):
+                cross_compiling_options += ['-C', 
+                                            cmake_path(
+                                              cross_compiling_init_cache_path),]
+            #print('cross compiling using toolchain:', cross_compiling_prefix)
+            #print('  with options:', *cross_compiling_options)
+        else:
+            cross_compiling_options = []
+        
         # special case: if bv-cmake is part of the build directory, run cmake
         # in 2 passes: once to reinstall bv-cmake from sources, and a second
         # time to actually configure all projects using the newly installed
@@ -1473,15 +1523,21 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                         '-DCMAKE_INSTALL_PREFIX=%s' % self.directory]))
             system(cwd=bvcmake_dir, *['make', 'install'])
             print('=== now configuring all other projects ===')
-            # run with this local bv-cmake environment
-            command.insert(0, os.path.join(self.directory, 'bin',
-                                           'bv_env_host%s' % exe_suffix))
+            # run with this local bv-cmake environment                
             system(cwd=self.directory,
-                   *(command
-                     + ["-DBRAINVISA_CMAKE_BUILD_TYPE=no-brainvisa-cmake"]))
+                   *( [ os.path.join(self.directory, 'bin',
+                                     'bv_env_host%s' % exe_suffix) ]
+                     + command_base
+                     + command_options
+                     + cross_compiling_options
+                     + ["-DBRAINVISA_CMAKE_BUILD_TYPE=no-brainvisa-cmake"]
+                     + [config_dir]))
         else:
             # run cmake in a regular way
-            system(cwd=self.directory, *command)
+            system(cwd=self.directory, *( command_base
+                                        + command_options
+                                        + cross_compiling_options
+                                        + [config_dir]) )
 
     def build(self, options, args):
         self._process_configuration_lines()

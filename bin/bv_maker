@@ -50,6 +50,7 @@ import platform
 import shlex
 import time
 import traceback
+from smtplib import SMTP
 try:
     # compatibility for python3
     import six
@@ -235,6 +236,7 @@ http://brainvisa.info/brainvisa-cmake/
         self.sourcesDirectories = {}
         self.buildDirectories = {}
         self.packageDirectories = {}
+        self.general_section = None
         currentFilterSection = False
 
         directories = [os.path.normpath(os.path.realpath(os.path.abspath(d)))
@@ -282,7 +284,8 @@ http://brainvisa.info/brainvisa-cmake/
                         if line[-1] != ']':
                             raise SyntaxError()
                         l = line[1:-1].split(None, 1)
-                        if len(l) != 2 and l[0] not in ('if', 'endif', 'else'):
+                        if len(l) != 2 and l[0] not in ('if', 'endif', 'else',
+                                                        'general'):
                             raise SyntaxError()
 
                         if l[0] == 'source':
@@ -322,6 +325,10 @@ http://brainvisa.info/brainvisa-cmake/
                                 and currentFilterSection is not None:
                             # inverts the filtered section
                             currentFilterSection = not currentFilterSection
+                        elif l[0] == 'general' and len(l) == 1:
+                            currentDirectoryObject = GeneralSection(self)
+                            self.general_section = currentDirectoryObject
+                            currentFilterSection = None
                         else:
                             raise SyntaxError()
                     elif currentFilterSection in (None, True):
@@ -401,6 +408,7 @@ class StepCommand(object):
                     and o.conditional_build():
                 if not self.options.in_config or step in o.default_steps:
                     if o.has_satisfied_dependencies(step):
+                        self.redirect_stdout(d, o, step)
                         try:
                             getattr(o, method)(*meth_args, **meth_kwargs)
                             o.status[step] = 'succeeded' # mark as done
@@ -413,12 +421,115 @@ class StepCommand(object):
                             traceback.print_exc()
                             # record failure
                             o.status[step] = 'failed'
+                        self.release_notify_stdout(d, o, step)
                     else:
                         print('Skipping', step, 'of', d,
                               'because it depends on a step that failed.')
             elif configuration.verbose:
                 print('Skipping', step, 'of', d,
                       'because it is not in the selected directories.')
+
+    def redirect_stdout(self, d, o, step):
+        if configuration.general_section is None:
+            return
+        if configuration.general_section.failure_email == '' \
+                and configuration.general_section.success_email == '':
+            return
+        tmp_stdout = tempfile.mkstemp(prefix='buildout_')
+        os.close(tmp_stdout[0])
+        self.tmp_stdout = open(tmp_stdout[1], 'w')
+        self.start_time = time.localtime()
+        self.orig_stdout = sys.stdout
+        self.orig_stderr = sys.stderr
+        sys.stdout = self.tmp_stdout
+        sys.stderr = self.tmp_stdout
+
+    def release_notify_stdout(self, d, o, step):
+        if not hasattr(self, 'orig_stdout'):
+            return
+        sys.stdout = self.orig_stdout
+        sys.stderr = self.orig_stderr
+        self.tmp_stdout.close()
+        del self.orig_stderr
+        del self.orig_stdout
+        self.notify_log(d, o, step)
+        os.unlink(self.tmp_stdout.name)
+        del self.tmp_stdout
+
+    def notify_log(self, d, o, step):
+        status =  o.status.get(step, 'not run')
+        email = ''
+        if status in ('failed', 'interrupted'):
+            email = configuration.general_section.failure_email
+        elif status == 'succeeded':
+            email = configuration.general_section.success_email
+        email_sent = False
+        if email != '':
+            try:
+                self.send_log_email(email, d, step, status)
+                email_sent = True
+            except Exception, e:
+                print('WARNING: notification email could not be sent:',
+                      e.message)
+                traceback.print_exc()
+        if not email_sent:
+            print(self.message_header(d, step, status))
+            with open(self.tmp_stdout.name) as f:
+                for line in f.readlines():
+                    print(line)
+
+    def message_header(self, d, step, status):
+        message = '''========================================='
+== directory: %s ==
+== step: %s ==
+== status: %s ==
+=========================================
+
+--- environment: ---
+''' % (d, step, status)
+        message += '\n'.join(['%s=%s' % (var, value)
+                              for var, value in six.iteritems(os.environ)])
+        message += '\n------------------------------------------\n\n'
+
+        return message
+
+    def send_log_email(self, email, d, step, status):
+        from_address = '%s-%s@intra.cea.fr' \
+            % (os.getenv('USER'), gethostname())
+        reply_to_address = 'appli@saxifrage.saclay.cea.fr'
+        to_address = email
+        message = sys.argv[3]
+
+        # header
+        machine = gethostname()
+        osname = global_installer_variables()['os']
+        Status = status[0].upper() + status[1:]
+        message = '''MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Reply-To: %s
+Subject: %s - build %s on %s (%s)
+
+%s - build started %s, stopped %s on %s (%s)
+
+''' % (reply_to_address, Status, '%d/%d/%d' % self.start_time[:3],
+            machine, osname, Status,
+            '%d/%d/%d %d:%d' % self.start_time[:5],
+            '%d/%d/%d %d:%d' % time.localtime()[:5], machine, osname)
+
+        message += self.message_header(d, step, status)
+        # Read message from file
+        file = open(self.tmp_stdout.name)
+        message += file.read()
+        file.close()
+
+        if configuration.general_section.smtp_server != '':
+            smtp_server = configuration.general_section.smtp_server
+        else:
+            smtp_server = 'mx.intra.cea.fr'
+        server = SMTP(smtp_server)
+        server.sendmail(from_address, to_address, message)
+        server.quit()
 
 
 class InfoCommand(StepCommand):
@@ -670,6 +781,31 @@ class TestPackCommand(StepCommand):
                      'test_package', self.options, self.args)
 
 
+class GeneralSection(object):
+    _validOptions = set(('failure_email', 'success_email', 'smtp_server'))
+
+    def __init__(self, configuration):
+        self.configuration = configuration
+        self.configurationLines = []
+        self.failure_email = ''
+        self.success_email = ''
+        self.smtp_server = ''
+
+    def addConfigurationLine(self, line):
+        i = line.find('=')
+        if i > 0:
+            option = line[:i].strip()
+            value = line[i + 1:].strip()
+            if option not in self._validOptions:
+                raise SyntaxError('Invalid option: %s' % option)
+            if hasattr(self, option) \
+                    and type(getattr(self, option)) in (list, tuple):
+                value = value.split()
+            setattr(self, option, value)
+        else:
+            raise SyntaxError()
+
+
 class DirectorySection(object):
 
     def __init__(self):
@@ -740,7 +876,8 @@ class SourceDirectory(DirectorySection):
         if self.configuration.verbose:
             print('Processing source directory %s' % self.directory)
 
-    def addConfigurationLine(self, line, virtual=False, component_version=None):
+    def addConfigurationLine(self, line, virtual=False,
+                             component_version=None):
         # Supported lines in bv_maker.cfg for [ source ... ]:
         #    default_steps [info] [sources]
         #    git <url> <git_tag> [<dest_directory> [<bv_version>]]

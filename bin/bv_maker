@@ -396,8 +396,9 @@ class StepCommand(object):
     def process(self, step, directories_dict, method, *meth_args,
                 **meth_kwargs):
         for d, o in six.iteritems(directories_dict):
-            if not configuration.directories \
-                    or d in configuration.directories:
+            if (not configuration.directories
+                    or d in configuration.directories) \
+                    and o.conditional_build():
                 if not self.options.in_config or step in o.default_steps:
                     if o.has_satisfied_dependencies(step):
                         try:
@@ -677,6 +678,7 @@ class DirectorySection(object):
         self.status = {}
         self.depend_on_sections = {}
         self.deps_set = False
+        self.build_condition = None
 
     def has_failed(self, step):
         return self.status.get(step, 'not run') \
@@ -702,10 +704,31 @@ class DirectorySection(object):
     def set_dependencies(self):
         pass
 
+    def conditional_build(self):
+        '''Tells if the current directory has actually to be built.
+        If a condition option is False, it will not.
+        '''
+        if not self.build_condition:
+            return True
+        cond = True
+        try:
+            cond = eval(self.build_condition)
+        except Exception as e:
+            print('Directory', self.directory,
+                  ': error in parsing build_condition option:',
+                  file=sys.stderr)
+            print(self.build_condition, file=sys.stderr)
+            print('(Condition is evaluated as python expression). Error:',
+                  sys.stderr)
+            print(e, file=sys.stderr)
+            raise
+        return cond
+
 
 class SourceDirectory(DirectorySection):
 
-    _validOptions = set(('default_steps', 'revision_control'))
+    _validOptions = set(('default_steps', 'revision_control',
+                         'build_condition'))
 
     def __init__(self, directory, configuration):
         super(SourceDirectory, self).__init__()
@@ -1139,7 +1162,8 @@ class ComponentsConfigParser(DirectorySection):
                         project, component, version, build_model = pinfo
                         version = str(version)
                         if self.configuration.verbose:
-                            print('    adding component %s version %s from %s' % (component, version, directory))
+                            print('    adding component %s version %s from %s'
+                                  % (component, version, directory))
                         self.components[component] = (
                             directory, version, version, build_model)
                     else:
@@ -1160,7 +1184,8 @@ class ComponentsConfigParser(DirectorySection):
                                build_model = dir_version
                             if fnmatchcase(selected_version, versionPattern):
                                 if self.configuration.verbose:
-                                    print('    removing component %s from %s' % (component, dir))
+                                    print('    removing component %s from %s'
+                                          % (component, dir))
                                 del self.components[component]
                 elif first == 'brainvisa' \
                         or (first
@@ -1272,7 +1297,6 @@ for i in os.listdir(os.path.dirname(__file__)):
         self.cross_compiling_prefix = ''
         self.clean_commands = True
         self.default_steps = ['configure', 'build']
-        self.build_condition = None
         self.clean_config = 'OFF'
         self.clean_build = 'OFF'
 
@@ -1313,23 +1337,6 @@ for i in os.listdir(os.path.dirname(__file__)):
             'doc': [(self, 'build')],
             'test': [(self, 'build')],
         }
-
-    def conditional_build(self):
-        '''Tells if the current build directory has actually to be built.
-        If a condition option is False, it will not.
-        '''
-        if not self.build_condition:
-            return True
-        cond = True
-        try:
-            cond = eval(self.build_condition)
-        except Exception as e:
-            print('Build directory', self.directory, ': error in parsing build_condition option:', file=sys.stderr)
-            print(self.build_condition, file=sys.stderr)
-            print('(Condition is evaluated as python expression). Error:', sys.stderr)
-            print(e, file=sys.stderr)
-            raise
-        return cond
 
     def configure(self, options, args):
         self._process_configuration_lines()
@@ -1652,7 +1659,6 @@ class PackageDirectory(ComponentsConfigParser):
         self.build_directory = ''
         self.packaging_options = ''
         #self.packaging_thirdparty = ''
-        self.build_condition = None
         self.installer_filename = None
         self.data_repos_dir = ''
         self.test_install_dir = ''
@@ -1697,23 +1703,6 @@ class PackageDirectory(ComponentsConfigParser):
             'install_pack': [(self, 'pack')],
             'test_pack': [(self, 'install_pack')],
         }
-
-    def conditional_build(self):
-        '''Tells if the current package has actually to be built.
-        If a condition option is False, it will not.
-        '''
-        if not self.build_condition:
-            return True
-        cond = True
-        try:
-            cond = eval(self.build_condition)
-        except Exception as e:
-            print('Package directory', self.directory, ': error in parsing build_condition option:', file=sys.stderr)
-            print(self.build_condition, file=sys.stderr)
-            print('(Condition is evaluated as python expression). Error:', sys.stderr)
-            print(e, file=sys.stderr)
-            raise
-        return cond
 
     def test_config(self, options, args):
         if not self.conditional_build():

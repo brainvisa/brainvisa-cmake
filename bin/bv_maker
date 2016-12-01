@@ -421,7 +421,7 @@ class StepCommand(object):
                       'because it is not in the selected directories.')
 
 
-class InfoCommand(object):
+class InfoCommand(StepCommand):
 
     def __init__(self, argv, configuration):
         usage = '''%prog [global options] info [options]
@@ -444,12 +444,10 @@ class InfoCommand(object):
 
     def __call__(self):
         print('Configuration file:', configuration.configuration_file)
-        for d, o in six.iteritems(configuration.sourcesDirectories):
-            if not self.options.in_config or 'info' in o.default_steps:
-                o.info()
-        for d, o in six.iteritems(configuration.buildDirectories):
-            if not self.options.in_config or 'info' in o.default_steps:
-                o.info()
+        dirs = dict(configuration.sourcesDirectories)
+        dirs.update(configuration.buildDirectories)
+        dirs.update(configuration.packageDirectories)
+        self.process('info', dirs, 'info')
 
 
 class SourcesCommand(StepCommand):
@@ -1340,8 +1338,6 @@ for i in os.listdir(os.path.dirname(__file__)):
 
     def configure(self, options, args):
         self._process_configuration_lines()
-        if not self.conditional_build():
-            return
         # Order of projects and components is important for dependencies
         sortedProjects = [p for p in brainvisa_projects.ordered_projects
                           if p in self.projects]
@@ -1549,8 +1545,6 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 
     def build(self, options, args):
         self._process_configuration_lines()
-        if not self.conditional_build():
-            return
         if options.clean or self.clean_build.upper() == 'ON':
             if self.clean_commands:
                 clean_opts = ['-b']
@@ -1569,16 +1563,12 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 
     def doc(self):
         self._process_configuration_lines()
-        if not self.conditional_build():
-            return
         print('Building docs in directory:', self.directory)
         system(cwd=self.directory, *
                (['make'] + self.make_options.split() + ['doc']))
 
     def test(self):
         self._process_configuration_lines()
-        if not self.conditional_build():
-            return
         # get parallel jobs option if specified
         make_opts = self.make_options.split()
         options = []
@@ -1588,8 +1578,6 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 
     def info(self):
         self._process_configuration_lines()
-        if not self.conditional_build():
-            return
         print('Build directory: "' + self.directory + '"')
         for component, directory_version_model in six.iteritems(self.components):
             directory, selected_version, version, build_model = directory_version_model
@@ -1705,8 +1693,6 @@ class PackageDirectory(ComponentsConfigParser):
         }
 
     def test_config(self, options, args):
-        if not self.conditional_build():
-            return
         build_dir = configuration.buildDirectories.get(self.build_directory)
         if build_dir is None:
             raise RuntimeError(
@@ -1732,6 +1718,15 @@ class PackageDirectory(ComponentsConfigParser):
                #'-m', self.directory, '-o', installer_filename] \
             #+ pack_options
         #return cmd
+
+    def info(self):
+        self._process_configuration_lines()
+        print('Package directory: "' + self.directory + '"')
+        for component, directory_version_model \
+                in six.iteritems(self.components):
+            directory, selected_version, version, build_model \
+                = directory_version_model
+            print('  %s (%s) <- %s' % (component, version, directory))
 
     def installer_variables(self):
         if self.pathvars is not None:
@@ -1859,8 +1854,6 @@ Controller.prototype.FinishedPageCallback = function()
 
     def package(self, options, args):
         self.test_config(options, args)
-        if not self.conditional_build():
-            return
         directory = self.replace_vars(self.directory)
         print('Building package:', directory)
         print('    from build dir:', self.build_dir.directory)
@@ -1966,8 +1959,6 @@ Controller.prototype.FinishedPageCallback = function()
 
     def install_package(self, options, args):
         self.test_config(options, args)
-        if not self.conditional_build():
-            return
         directory = self.replace_vars(self.directory)
         if not self.test_install_dir:
             return
@@ -2009,8 +2000,6 @@ Controller.prototype.FinishedPageCallback = function()
 
     def test_package(self, options, args):
         self.test_config(options, args)
-        if not self.conditional_build():
-            return
         if not self.test_install_dir:
             raise RuntimeError(
                 'install_pack command needs test_install_dir option')

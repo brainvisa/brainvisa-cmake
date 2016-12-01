@@ -62,7 +62,7 @@ BRAINVISA_GLOB_AND_FILTER( GLOB_RECURSE _files
                            RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
                            "${CMAKE_CURRENT_SOURCE_DIR}/cmake/toolchains/*[^~]" )
 foreach(_f ${_files})
-    get_filename_component(_d "${_f}" DIRECTORY)
+    get_filename_component(_d "${_f}" PATH)
     install( FILES "${CMAKE_CURRENT_SOURCE_DIR}/${_f}"
              DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/${_d}"
              COMPONENT brainvisa-cmake )

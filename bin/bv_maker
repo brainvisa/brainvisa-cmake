@@ -396,7 +396,8 @@ class StepCommand(object):
     def process(self, step, directories_dict, method, *meth_args,
                 **meth_kwargs):
         for d, o in six.iteritems(directories_dict):
-            if not configuration.directories or d in configuration.directories:
+            if not configuration.directories \
+                    or d in configuration.directories:
                 if not self.options.in_config or step in o.default_steps:
                     if o.has_satisfied_dependencies(step):
                         try:
@@ -2105,7 +2106,8 @@ commands = {
     'test_pack': TestPackCommand,
 }
 
-default_commands = ['info', 'sources', 'configure', 'build', 'doc', 'test']
+default_commands = ['info', 'sources', 'configure', 'build', 'doc', 'test',
+                   'pack', 'install_pack', 'test_pack']
 options_by_command = {None: []}
 command = None
 for i in sys.argv[1:]:

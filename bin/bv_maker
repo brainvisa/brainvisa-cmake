@@ -462,19 +462,22 @@ class StepCommand(object):
         else:
             tmp_stdout = tempfile.mkstemp(prefix='buildout_')
             os.close(tmp_stdout[0])
+            print('redirecting outputs to temporary file:', tmp_stdout[1])
+            sys.stdout.flush()
+            sys.stderr.flush()
             self.tmp_stdout = open(tmp_stdout[1], 'w')
             self.tmp_stderr = self.tmp_stdout
-        self.orig_stdout = sys.stdout
-        self.orig_stderr = sys.stderr
-        sys.stdout = self.tmp_stdout
-        sys.stderr = self.tmp_stderr
+        self.orig_stdout = os.dup(sys.stdout.fileno())
+        self.orig_stderr = os.dup(sys.stderr.fileno())
+        os.dup2(self.tmp_stdout.fileno(), 1)
+        os.dup2(self.tmp_stderr.fileno(), 2)
 
     def release_notify_stdout(self, d, o, step):
         o.stop_time[step] = time.localtime()
         if not hasattr(self, 'orig_stdout'):
             return
-        sys.stdout = self.orig_stdout
-        sys.stderr = self.orig_stderr
+        os.dup2(self.orig_stdout, 1)
+        os.dup2(self.orig_stderr, 2)
         self.tmp_stdout.close()
         if self.tmp_stderr is not self.tmp_stdout:
             self.tmp_stderr.close()
@@ -483,8 +486,8 @@ class StepCommand(object):
         self.notify_log(d, o, step)
         if not o.stdout_file:
             os.unlink(self.tmp_stdout.name)
-        # stderr is never removed: either it is specified as a persistant file
-        # or it is stdout.
+        # tmp_stderr is never removed: either it is specified as a persistant
+        # file or it is tmp_stdout.
         del self.tmp_stdout
         del self.tmp_stderr
 

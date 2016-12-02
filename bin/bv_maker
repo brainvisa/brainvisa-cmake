@@ -2253,7 +2253,7 @@ def display_failure_summary(configuration):
     sys.stdout.flush()
     sys.stderr.flush()
     print('\nbv_maker summary:')
-    status_file = None
+    log_file = None
     if configuration.general_section \
             and configuration.general_section.global_status_file:
         log_file = configuration.general_section.global_status_file

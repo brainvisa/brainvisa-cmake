@@ -290,27 +290,35 @@ http://brainvisa.info/brainvisa-cmake/
 
                         if l[0] == 'source':
                             currentDirectoryObject = SourceDirectory(
-                                environmentVariablesSubstitution(l[1].strip()), self)
+                                environmentVariablesSubstitution(l[1].strip()),
+                                self)
                             self.sourcesDirectories[
-                                currentDirectoryObject.directory] = currentDirectoryObject
+                                currentDirectoryObject.directory] \
+                                    = currentDirectoryObject
                             currentFilterSection = None
                         elif l[0] == 'build':
                             currentDirectoryObject = BuildDirectory(
-                                environmentVariablesSubstitution(l[1].strip()), self)
+                                environmentVariablesSubstitution(l[1].strip()),
+                                self)
                             self.buildDirectories[
-                                currentDirectoryObject.directory] = currentDirectoryObject
+                                currentDirectoryObject.directory] \
+                                    = currentDirectoryObject
                             currentFilterSection = None
                         elif l[0] == 'virtualenv':
                             currentDirectoryObject = VirtualenvDirectory(
-                                environmentVariablesSubstitution(l[1].strip()), self)
+                                environmentVariablesSubstitution(l[1].strip()),
+                                self)
                             self.buildDirectories[
-                                currentDirectoryObject.directory] = currentDirectoryObject
+                                currentDirectoryObject.directory] \
+                                    = currentDirectoryObject
                             currentFilterSection = None
                         elif l[0] == 'package':
                             currentDirectoryObject = PackageDirectory(
-                                environmentVariablesSubstitution(l[1].strip()), self)
+                                environmentVariablesSubstitution(l[1].strip()),
+                                self)
                             self.packageDirectories[
-                                currentDirectoryObject.directory] = currentDirectoryObject
+                                currentDirectoryObject.directory] \
+                                    = currentDirectoryObject
                             currentFilterSection = None
                         elif l[0] == 'if' \
                                 and currentDirectoryObject is not None \
@@ -345,7 +353,8 @@ http://brainvisa.info/brainvisa-cmake/
                     if msg == '':
                         msg = 'Syntax error'
                     raise SyntaxError('%s in ' % msg + repr(
-                        options.configuration_file) + ' on line ' + str(lineCount))
+                        options.configuration_file) + ' on line '
+                        + str(lineCount))
 
         # store options and args
         self.options = options
@@ -413,7 +422,7 @@ class StepCommand(object):
                     if o.has_satisfied_dependencies(step):
                         self.redirect_stdout(d, o, step)
                         try:
-                            getattr(o, method)(*meth_args, **meth_kwargs)
+                            #getattr(o, method)(*meth_args, **meth_kwargs)
                             o.status[step] = 'succeeded' # mark as done
                         except KeyboardInterrupt:
                             # record failure
@@ -539,7 +548,6 @@ class StepCommand(object):
         else:
             reply_to_address = configuration.general_section.reply_to_email
         to_address = email
-        message = sys.argv[3]
 
         # header
         machine = gethostname()
@@ -553,10 +561,11 @@ Subject: %s - build %s on %s (%s)
 
 %s - build started %s, stopped %s on %s (%s)
 
-''' % (reply_to_address, Status, '%d/%d/%d' % o.start_time[step][:3],
+''' % (reply_to_address, Status, '%04d/%02d/%02d' % o.start_time[step][:3],
             machine, osname, Status,
-            '%d/%d/%d %d:%d' % o.start_time[step][:5],
-            '%d/%d/%d %d:%d' % o.stop_time[step][:5], machine, osname)
+            '%04d/%02d/%02d %02d:%02d' % o.start_time[step][:5],
+            '%04d/%02d/%02d %02d:%02d' % o.stop_time[step][:5], machine,
+            osname)
 
         message += self.message_header(d, o, step, status)
         if self.tmp_stderr is not self.tmp_stdout:
@@ -2268,10 +2277,12 @@ def display_failure_summary(configuration):
                     message = '%s step %s: %s' % (status, step, directory)
                     start = section.start_time.get(step)
                     if start:
-                        message += ', started: %d/%d/%d %d:%d' % start[:5]
+                        message += ', started: %04d/%02d/%02d %02d:%02d' \
+                            % start[:5]
                     stop = section.stop_time.get(step)
                     if stop:
-                        message += ', stopped: %d/%d/%d %d:%d' % stop[:5]
+                        message += ', stopped: %04d/%02d/%02d %02d:%02d' \
+                            % stop[:5]
                     print(message)
                     if log_file:
                         log_it = False

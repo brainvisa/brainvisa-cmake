@@ -37,17 +37,17 @@ if not os.path.exists(logfiles[0]):
     except:
         pass
 
-try:
-    michael_log = '/tmp/build-michael.log'
-    print('retreiving michael log')
-    subprocess.check_call(['scp',
-                           '%smichael:/home/i2bm-research/builds.log'
-                              % ssh_user,
-                           michael_log])
-    todel_files = [michael_log]
-    logfiles.append(michael_log)
-except:
-    pass
+#try:
+    #michael_log = '/tmp/build-michael.log'
+    #print('retreiving michael log')
+    #subprocess.check_call(['scp',
+                           #'%smichael:/home/i2bm-research/builds.log'
+                              #% ssh_user,
+                           #michael_log])
+    #todel_files = [michael_log]
+    #logfiles.append(michael_log)
+#except:
+    #pass
 
 app = QtGui.QApplication(sys.argv)
 mw = QtGui.QMainWindow(None)

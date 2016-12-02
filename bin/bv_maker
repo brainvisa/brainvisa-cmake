@@ -422,7 +422,7 @@ class StepCommand(object):
                     if o.has_satisfied_dependencies(step):
                         self.redirect_stdout(d, o, step)
                         try:
-                            #getattr(o, method)(*meth_args, **meth_kwargs)
+                            getattr(o, method)(*meth_args, **meth_kwargs)
                             o.status[step] = 'succeeded' # mark as done
                         except KeyboardInterrupt:
                             # record failure

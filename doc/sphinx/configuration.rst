@@ -18,7 +18,7 @@ A section may also contain conditional parts. See the `Conditional subsections`_
 General structure and syntax of bv_maker configuration file
 ===========================================================
 
-The :doc:`bv_maker` configuration file is composed of sections delimited by a line enclosed in square brackets: ``[ ... ]``. Each section contains the definition of a directory (either a source directory or a build directory). In this file, blank lines are ignored and spaces at the begining or end of lines are also ignored. It means that you can indent and separate lines as you wish. For instance the three following configurations are equivalent:
+The :doc:`bv_maker` configuration file is composed of sections delimited by a line enclosed in square brackets: ``[ ... ]``. Each section contains the definition of a directory (either a source directory, a build directory, or a packaging directoty), or a "general" section. In this file, blank lines are ignored and spaces at the begining or end of lines are also ignored. It means that you can indent and separate lines as you wish. For instance the three following configurations are equivalent:
 
 .. code-block:: bash
 
@@ -54,6 +54,26 @@ But the following line is not valid:
     [ build $HOME/brainvisa/build/trunk ] # This is a syntax error
 
 
+Definition of a general section
+===============================
+
+The general section is optional, and contains variable which are independent from each other sections (or shared accross them).
+
+The general section definition starts with a line with the following syntax:
+
+.. code-block:: bash
+
+    [ general ]
+
+Option variables are stored in this section using the syntax ``option = value``. The following options are supported:
+
+* ``failure_email``: email address where bv_maker outputs are sent in case of failure. If not specified, no email will be sent and bv_maker outputs will be sent to the standard output. One email will be sent for each directory and build step that fail.
+* ``success_email``: email address where bv_maker outputs are sent in case of success. If not specified, no email will be sent and bv_maker outputs will be sent to the standard output. One email will be sent for each directory and build step that succeeds.
+* ``smtp_server``: SMTP (email server) hostname to be used to send emails
+* ``from_email``: displayed expeditor of sent emails. If not specified, it will be ``<user>-<hostname>@intra.cea.fr`` (the suffix is needed, and is correct for our lab)
+* ``reply_to_email``: displayed reply email address in sent emails. If not specified, ``appli@saxifrage.saclay.cea.fr``.
+
+
 Definition of a source directory
 ================================
 
@@ -72,6 +92,9 @@ In the source section, it is also possible to define some options, delcared in t
 * ``build_condition``: a condition which must be True to allow configure and build steps, otherwise they will be skipped. The condition is evaluated in **python language**, and is otherwise free: it may typically be used to restrict build to certain systems or hostnames, some dates, etc.
 * ``revision_control``: ``ON`` (default) or ``OFF``. If enabled, revision control systems (*svn*, *git*) will be used to update the sources. If OFF, the sources directory will be left as is as a fixed sources tree.
 * ``default_steps``: steps performed for this build directory when bv_maker is invoked without specifying steps (typically just ``bv_maker``). Defaults to: ``sources``.
+* ``stderr_file``: file used to redirect the standard error stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If not specified, it will be mixed with standard output.
+* ``stdout_file``: file used to redirect the standard output stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If neither it nor ``stderr_file`` are specified, then a temporary file will be used, and erased when each step is finished.
+
 
 Add components to the list
 --------------------------
@@ -140,6 +163,8 @@ In the build section, it is also possible to define some build options:
 * ``clean_build``: ``ON`` or ``OFF`` (default), if set, the build tree will be cleaned of obsolete files before the build step (using the command ``bv_clean_build_tree``)
 * ``clean_config``: ``ON`` or ``OFF`` (default), if set, the build tree will be cleaned of obsolete files before the configuration step (using the command ``bv_clean_build_tree``)
 * ``default_steps``: steps performed for this build directory when bv_maker is invoked without specifying steps (typically just ``bv_maker``). Defaults to: ``configure build``, but may also include ``doc`` and ``test``.
+* ``stderr_file``: file used to redirect the standard error stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If not specified, it will be mixed with standard output.
+* ``stdout_file``: file used to redirect the standard output stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If neither it nor ``stderr_file`` are specified, then a temporary file will be used, and erased when each step is finished.
 
 **Example**
 
@@ -194,6 +219,8 @@ The package section must define some variables which specify which build directo
 * ``packaging_options``: options passed to the *bv_packaging* program (in *brainvisa-installer* project). Typically: --i2bm
 * ``build_condition``: As in build sections, condition when the package section steps are performed.
 * ``remote_test_host_cmd``: The contents of this variable is actually prepended to package install and package test commands. It it typically used to perform remote connections to a test machine, using ssh and/or docker for instance:
+* ``stderr_file``: file used to redirect the standard error stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If not specified, it will be mixed with standard output.
+* ``stdout_file``: file used to redirect the standard output stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If neither it nor ``stderr_file`` are specified, then a temporary file will be used, and erased when each step is finished.
 
   .. code-block:: bash
 

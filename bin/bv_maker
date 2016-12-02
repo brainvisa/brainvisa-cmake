@@ -326,8 +326,11 @@ http://brainvisa.info/brainvisa-cmake/
                             # inverts the filtered section
                             currentFilterSection = not currentFilterSection
                         elif l[0] == 'general' and len(l) == 1:
-                            currentDirectoryObject = GeneralSection(self)
-                            self.general_section = currentDirectoryObject
+                            if self.general_section is not None:
+                                currentDirectoryObject = self.general_section
+                            else:
+                                currentDirectoryObject = GeneralSection(self)
+                                self.general_section = currentDirectoryObject
                             currentFilterSection = None
                         else:
                             raise SyntaxError()
@@ -435,14 +438,26 @@ class StepCommand(object):
         if configuration.general_section.failure_email == '' \
                 and configuration.general_section.success_email == '':
             return
-        tmp_stdout = tempfile.mkstemp(prefix='buildout_')
-        os.close(tmp_stdout[0])
-        self.tmp_stdout = open(tmp_stdout[1], 'w')
+        if o.stdout_file or o.stderr_file:
+            if o.stdout_file:
+                self.tmp_stdout = open(o.stdout_file, 'w')
+                if o.stderr_file:
+                    self.tmp_stderr = open(o.stderr_file, 'w')
+                else:
+                    self.tmp_stderr = self.tmp_stdout
+            else:
+                self.tmp_stdout = open(o.stderr_file, 'w')
+                self.tmp_stderr = self.tmp_stdout
+        else:
+            tmp_stdout = tempfile.mkstemp(prefix='buildout_')
+            os.close(tmp_stdout[0])
+            self.tmp_stdout = open(tmp_stdout[1], 'w')
+            self.tmp_stderr = self.tmp_stdout
         self.start_time = time.localtime()
         self.orig_stdout = sys.stdout
         self.orig_stderr = sys.stderr
         sys.stdout = self.tmp_stdout
-        sys.stderr = self.tmp_stdout
+        sys.stderr = self.tmp_stderr
 
     def release_notify_stdout(self, d, o, step):
         if not hasattr(self, 'orig_stdout'):
@@ -450,11 +465,17 @@ class StepCommand(object):
         sys.stdout = self.orig_stdout
         sys.stderr = self.orig_stderr
         self.tmp_stdout.close()
+        if self.tmp_stderr is not self.tmp_stdout:
+            self.tmp_stderr.close()
         del self.orig_stderr
         del self.orig_stdout
         self.notify_log(d, o, step)
-        os.unlink(self.tmp_stdout.name)
+        if not o.stdout_file:
+            os.unlink(self.tmp_stdout.name)
+        # stderr is never removed: either it is specified as a persistant file
+        # or it is stdout.
         del self.tmp_stdout
+        del self.tmp_stderr
 
     def notify_log(self, d, o, step):
         status =  o.status.get(step, 'not run')
@@ -474,19 +495,31 @@ class StepCommand(object):
                 traceback.print_exc()
         if not email_sent:
             print(self.message_header(d, step, status))
+            if self.tmp_stderr is not self.tmp_stdout:
+                print('====== standard output ======\n')
+            else:
+                print('====== output ======\n')
             with open(self.tmp_stdout.name) as f:
+                for line in f.readlines():
+                    print(line)
+            if self.tmp_stderr is not self.tmp_stdout:
+                print('====== standard error ======\n')
+            with open(self.tmp_stderr.name) as f:
                 for line in f.readlines():
                     print(line)
 
     def message_header(self, d, step, status):
+        dlen = max((len(step), len(status), len(d)))
         message = '''========================================='
-== directory: %s ==
-== step: %s ==
-== status: %s ==
+== directory: %s%s ==
+== step:      %s%s ==
+== status:    %s%s ==
 =========================================
 
 --- environment: ---
-''' % (d, step, status)
+''' % (d, ' ' * (dlen - len(d)),
+            step, ' ' * (dlen - len(step)),
+            status, ' ' * (dlen - len(status)))
         message += '\n'.join(['%s=%s' % (var, value)
                               for var, value in six.iteritems(os.environ)])
         message += '\n------------------------------------------\n\n'
@@ -494,9 +527,15 @@ class StepCommand(object):
         return message
 
     def send_log_email(self, email, d, step, status):
-        from_address = '%s-%s@intra.cea.fr' \
-            % (os.getenv('USER'), gethostname())
-        reply_to_address = 'appli@saxifrage.saclay.cea.fr'
+        if configuration.general_section.from_email == '':
+            from_address = '%s-%s@intra.cea.fr' \
+                % (os.getenv('USER'), gethostname())
+        else:
+            from_address = configuration.general_section.from_email
+        if configuration.general_section.reply_to_email == '':
+            reply_to_address = 'appli@saxifrage.saclay.cea.fr'
+        else:
+            reply_to_address = configuration.general_section.reply_to_email
         to_address = email
         message = sys.argv[3]
 
@@ -518,8 +557,17 @@ Subject: %s - build %s on %s (%s)
             '%d/%d/%d %d:%d' % time.localtime()[:5], machine, osname)
 
         message += self.message_header(d, step, status)
+        if self.tmp_stderr is not self.tmp_stdout:
+            message += '====== standard output ======\n\n'
+        else:
+            message += '====== output ======\n\n'
         # Read message from file
         file = open(self.tmp_stdout.name)
+        message += file.read()
+        file.close()
+        if self.tmp_stderr is not self.tmp_stdout:
+            message += '====== standard error ======\n\n'
+        file = open(self.tmp_stderr.name)
         message += file.read()
         file.close()
 
@@ -782,7 +830,8 @@ class TestPackCommand(StepCommand):
 
 
 class GeneralSection(object):
-    _validOptions = set(('failure_email', 'success_email', 'smtp_server'))
+    _validOptions = set(('failure_email', 'success_email', 'smtp_server',
+                         'from_email', 'reply_to_email'))
 
     def __init__(self, configuration):
         self.configuration = configuration
@@ -790,6 +839,8 @@ class GeneralSection(object):
         self.failure_email = ''
         self.success_email = ''
         self.smtp_server = ''
+        self.from_email = ''
+        self.reply_to_email = ''
 
     def addConfigurationLine(self, line):
         i = line.find('=')
@@ -813,6 +864,8 @@ class DirectorySection(object):
         self.depend_on_sections = {}
         self.deps_set = False
         self.build_condition = None
+        self.stdout_file = None
+        self.stderr_file = None
 
     def has_failed(self, step):
         return self.status.get(step, 'not run') \
@@ -862,7 +915,7 @@ class DirectorySection(object):
 class SourceDirectory(DirectorySection):
 
     _validOptions = set(('default_steps', 'revision_control',
-                         'build_condition'))
+                         'build_condition', 'stdout_file', 'stderr_file'))
 
     def __init__(self, directory, configuration):
         super(SourceDirectory, self).__init__()
@@ -1412,7 +1465,7 @@ class BuildDirectory(ComponentsConfigParser):
     _validOptions = set(('build_type', 'make_options', 'cmake_options',
                          'packaging_thirdparty', 'cross_compiling_prefix', 
                          'default_steps', 'build_condition', 'clean_config', 
-                         'clean_build'))
+                         'clean_build', 'stdout_file', 'stderr_file'))
 
     sitecustomize_content = '''import os
 
@@ -1626,19 +1679,19 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
             cross_compiling_toolchain_path = os.path.join(
                                                 cross_compiling_prefix_path,
                                                 'toolchain.cmake' )
-            
+
             cross_compiling_init_cache_path = os.path.join(
                                                 cross_compiling_prefix_path,
                                                 'init-cache.cmake' )
             #print("=== cross_compiling_prefix:", cross_compiling_prefix, "===")
             #print("=== cross_compiling_prefix_path:", cross_compiling_prefix_path, "===")
-            #print("=== cross_compiling_toolchain_path:", cross_compiling_toolchain_path, "===")                        
-            #print("=== cross_compiling_init_cache_path:", cross_compiling_init_cache_path, "===")                        
+            #print("=== cross_compiling_toolchain_path:", cross_compiling_toolchain_path, "===")
+            #print("=== cross_compiling_init_cache_path:", cross_compiling_init_cache_path, "===")
             if os.path.exists( cross_compiling_toolchain_path ):
                 cross_compiling_options += ['-DCMAKE_TOOLCHAIN_FILE:PATH=%s' % \
                                             cmake_path(
                                               cross_compiling_toolchain_path),]
-                                        
+
             if os.path.exists( cross_compiling_init_cache_path ):
                 cross_compiling_options += ['-C', 
                                             cmake_path(
@@ -1647,7 +1700,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
             #print('  with options:', *cross_compiling_options)
         else:
             cross_compiling_options = []
-        
+
         # special case: if bv-cmake is part of the build directory, run cmake
         # in 2 passes: once to reinstall bv-cmake from sources, and a second
         # time to actually configure all projects using the newly installed
@@ -1716,8 +1769,10 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
     def info(self):
         self._process_configuration_lines()
         print('Build directory: "' + self.directory + '"')
-        for component, directory_version_model in six.iteritems(self.components):
-            directory, selected_version, version, build_model = directory_version_model
+        for component, directory_version_model \
+                in six.iteritems(self.components):
+            directory, selected_version, version, build_model \
+                = directory_version_model
             print('  %s (%s) <- %s' % (component, version, directory))
 
 
@@ -1777,7 +1832,8 @@ class PackageDirectory(ComponentsConfigParser):
                          'installer_filename', 'data_repos_dir',
                          'test_install_dir', 'remote_test_host_cmd',
                          'init_components_from_build_dir', 'pack_version',
-                         'default_steps', 'keep_n_older_repos'))
+                         'default_steps', 'keep_n_older_repos', 'stdout_file',
+                         'stderr_file'))
 
     def __init__(self, directory, configuration):
         super(PackageDirectory, self).__init__(directory, configuration)

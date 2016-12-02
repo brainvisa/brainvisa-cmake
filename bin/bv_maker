@@ -413,11 +413,12 @@ class StepCommand(object):
                     if o.has_satisfied_dependencies(step):
                         self.redirect_stdout(d, o, step)
                         try:
-                            getattr(o, method)(*meth_args, **meth_kwargs)
+                            #getattr(o, method)(*meth_args, **meth_kwargs)
                             o.status[step] = 'succeeded' # mark as done
                         except KeyboardInterrupt:
                             # record failure
                             o.status[step] = 'interrupted'
+                            o.stop_time[step] = time.localtime()
                             # user interruptions should stop all.
                             raise
                         except:
@@ -433,6 +434,7 @@ class StepCommand(object):
                       'because it is not in the selected directories.')
 
     def redirect_stdout(self, d, o, step):
+        o.start_time[step] = time.localtime()
         if configuration.general_section is None:
             return
         if configuration.general_section.failure_email == '' \
@@ -453,13 +455,13 @@ class StepCommand(object):
             os.close(tmp_stdout[0])
             self.tmp_stdout = open(tmp_stdout[1], 'w')
             self.tmp_stderr = self.tmp_stdout
-        self.start_time = time.localtime()
         self.orig_stdout = sys.stdout
         self.orig_stderr = sys.stderr
         sys.stdout = self.tmp_stdout
         sys.stderr = self.tmp_stderr
 
     def release_notify_stdout(self, d, o, step):
+        o.stop_time[step] = time.localtime()
         if not hasattr(self, 'orig_stdout'):
             return
         sys.stdout = self.orig_stdout
@@ -487,14 +489,14 @@ class StepCommand(object):
         email_sent = False
         if email != '':
             try:
-                self.send_log_email(email, d, step, status)
+                self.send_log_email(email, d, o, step, status)
                 email_sent = True
             except Exception, e:
                 print('WARNING: notification email could not be sent:',
                       e.message)
                 traceback.print_exc()
         if not email_sent:
-            print(self.message_header(d, step, status))
+            print(self.message_header(d, o, step, status))
             if self.tmp_stderr is not self.tmp_stdout:
                 print('====== standard output ======\n')
             else:
@@ -508,7 +510,7 @@ class StepCommand(object):
                 for line in f.readlines():
                     print(line)
 
-    def message_header(self, d, step, status):
+    def message_header(self, d, o, step, status):
         dlen = max((len(step), len(status), len(d)))
         message = '''========================================='
 == directory: %s%s ==
@@ -526,7 +528,7 @@ class StepCommand(object):
 
         return message
 
-    def send_log_email(self, email, d, step, status):
+    def send_log_email(self, email, d, o, step, status):
         if configuration.general_section.from_email == '':
             from_address = '%s-%s@intra.cea.fr' \
                 % (os.getenv('USER'), gethostname())
@@ -551,12 +553,12 @@ Subject: %s - build %s on %s (%s)
 
 %s - build started %s, stopped %s on %s (%s)
 
-''' % (reply_to_address, Status, '%d/%d/%d' % self.start_time[:3],
+''' % (reply_to_address, Status, '%d/%d/%d' % o.start_time[step][:3],
             machine, osname, Status,
-            '%d/%d/%d %d:%d' % self.start_time[:5],
-            '%d/%d/%d %d:%d' % time.localtime()[:5], machine, osname)
+            '%d/%d/%d %d:%d' % o.start_time[step][:5],
+            '%d/%d/%d %d:%d' % o.stop_time[step][:5], machine, osname)
 
-        message += self.message_header(d, step, status)
+        message += self.message_header(d, o, step, status)
         if self.tmp_stderr is not self.tmp_stdout:
             message += '====== standard output ======\n\n'
         else:
@@ -831,7 +833,7 @@ class TestPackCommand(StepCommand):
 
 class GeneralSection(object):
     _validOptions = set(('failure_email', 'success_email', 'smtp_server',
-                         'from_email', 'reply_to_email'))
+                         'from_email', 'reply_to_email', 'global_status_file'))
 
     def __init__(self, configuration):
         self.configuration = configuration
@@ -841,6 +843,7 @@ class GeneralSection(object):
         self.smtp_server = ''
         self.from_email = ''
         self.reply_to_email = ''
+        self.global_status_file = None
 
     def addConfigurationLine(self, line):
         i = line.find('=')
@@ -861,6 +864,8 @@ class DirectorySection(object):
 
     def __init__(self):
         self.status = {}
+        self.start_time = {}
+        self.stop_time = {}
         self.depend_on_sections = {}
         self.deps_set = False
         self.build_condition = None
@@ -2248,13 +2253,41 @@ def display_failure_summary(configuration):
     sys.stdout.flush()
     sys.stderr.flush()
     print('\nbv_maker summary:')
+    status_file = None
+    if configuration.general_section \
+            and configuration.general_section.global_status_file:
+        log_file = configuration.general_section.global_status_file
+        machine = gethostname()
+        osname = global_installer_variables()['os']
     for section_name, steps in sections:
         for directory, section \
                 in six.iteritems(getattr(configuration, section_name)):
             for step in steps:
                 status = status_map[section.get_status(step)]
                 if status != '':
-                    print('%s step %s:' % (status, step), directory)
+                    message = '%s step %s: %s' % (status, step, directory)
+                    start = section.start_time.get(step)
+                    if start:
+                        message += ', started: %d/%d/%d %d:%d' % start[:5]
+                    stop = section.stop_time.get(step)
+                    if stop:
+                        message += ', stopped: %d/%d/%d %d:%d' % stop[:5]
+                    print(message)
+                    if log_file:
+                        log_it = False
+                        if status == 'FAILED':
+                            log_it = True
+                        else:
+                            next_steps = range(steps.index(step)+1, len(steps))
+                            next_statuses \
+                                = [section.get_status(steps[next_step])
+                                   for next_step in next_steps]
+                            if 'failed' not in next_statuses \
+                                    and 'succeeded' not in next_statuses:
+                                log_it = True
+                        if log_it:
+                            open(log_file, 'a').write(
+                                '%s on %s (%s)\n' % (message, machine, osname))
                     if section.has_failed(step):
                         global_failed = True
     if global_failed:

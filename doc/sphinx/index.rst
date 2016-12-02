@@ -10,6 +10,7 @@ It handles all CMake does (compilation for compiled languages, build directopry 
 * Manages easy source repositories syncronization
 * Integrates in a common BrainVisa environment
 * Packaging (see the brainvisa-installer project)
+* Email notification of build, tests and every other operation
 
 BrainVisa-Cmake consists in several connected parts, mainly:
 

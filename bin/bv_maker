@@ -525,9 +525,9 @@ class StepCommand(object):
                     print(line)
             if self.tmp_stderr is not self.tmp_stdout:
                 print('====== standard error ======\n')
-            with open(self.tmp_stderr.name) as f:
-                for line in f.readlines():
-                    print(line)
+                with open(self.tmp_stderr.name) as f:
+                    for line in f.readlines():
+                        print(line)
 
     def message_header(self, d, o, step, status):
         dlen = max((len(step), len(status), len(d)))
@@ -589,9 +589,9 @@ Subject: %s - %s %s on %s (%s)
         file.close()
         if self.tmp_stderr is not self.tmp_stdout:
             message += '====== standard error ======\n\n'
-        file = open(self.tmp_stderr.name)
-        message += file.read()
-        file.close()
+            file = open(self.tmp_stderr.name)
+            message += file.read()
+            file.close()
 
         if configuration.general_section.smtp_server != '':
             smtp_server = configuration.general_section.smtp_server

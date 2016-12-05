@@ -38,9 +38,11 @@ Options:
                         several times to process several directories.
   -c CONFIG, --config=CONFIG
                         specify configuration file. Default
-                        ="/home/riviere/.brainvisa/bv_maker.cfg"
+                        ="/home/dr144257/.brainvisa/bv_maker.cfg"
   -s DIR, --sources=DIR
                         directory containing sources
   -b DIR, --build=DIR   build directory
   --username=USERNAME   specify user login to use with the svn server
+  -e, --email           Use email notification (if configured in the general
+                        section of the configuration file)
   -v, --verbose         show as much information as possible

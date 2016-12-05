@@ -67,6 +67,7 @@ The general section definition starts with a line with the following syntax:
 
 Option variables are stored in this section using the syntax ``option = value``. The following options are supported:
 
+* ``email_notification_by_default``: ``ON```or ``OFF`` (default). If set to ``ON``, email notification will always be used if ``failure_email`` or ``success_email`` are provided. Otherwise, the default behavior is to use email notification only when the ``bv_maker`` commabdline is invoked with the ``--email`` option.
 * ``global_status_file``: if this file is specified, a line will be appended to it for each source/build/package directory. This line will log the build status for the given directory: OK/FAILED, last step executed, directory, start and stop date and time, machine and system. It can be parsed and displayed using the command ``bv_show_build_log``.
 * ``failure_email``: email address where bv_maker outputs are sent in case of failure. If not specified, no email will be sent and bv_maker outputs will be sent to the standard output. One email will be sent for each directory and build step that fail.
 * ``success_email``: email address where bv_maker outputs are sent in case of success. If not specified, no email will be sent and bv_maker outputs will be sent to the standard output. One email will be sent for each directory and build step that succeeds.

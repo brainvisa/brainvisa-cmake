@@ -223,6 +223,9 @@ http://brainvisa.info/brainvisa-cmake/
         parser.add_option('--username', dest='username',
                           help='specify user login to use with the svn server',
                           metavar='USERNAME', default='')
+        parser.add_option('-e', '--email', action='store_true',
+                          help='Use email notification (if configured in the '
+                          'general section of the configuration file)')
         parser.add_option(
             '-v', '--verbose', dest='verbose', action='store_true',
             help='show as much information as possible')
@@ -446,8 +449,10 @@ class StepCommand(object):
         o.start_time[step] = time.localtime()
         if configuration.general_section is None:
             return
-        if configuration.general_section.failure_email == '' \
-                and configuration.general_section.success_email == '':
+        if (configuration.general_section.email_notification_by_default.upper()
+                != 'ON' and not configuration.options.email) \
+                or (configuration.general_section.failure_email == ''
+                    and configuration.general_section.success_email == ''):
             return
         if o.stdout_file or o.stderr_file:
             if o.stdout_file:
@@ -494,10 +499,12 @@ class StepCommand(object):
     def notify_log(self, d, o, step):
         status =  o.status.get(step, 'not run')
         email = ''
-        if status in ('failed', 'interrupted'):
-            email = configuration.general_section.failure_email
-        elif status == 'succeeded':
-            email = configuration.general_section.success_email
+        if configuration.general_section.email_notification_by_default.upper() \
+                == 'ON' or configuration.options.email:
+            if status in ('failed', 'interrupted'):
+                email = configuration.general_section.failure_email
+            elif status == 'succeeded':
+                email = configuration.general_section.success_email
         email_sent = False
         if email != '':
             try:
@@ -846,7 +853,8 @@ class TestPackCommand(StepCommand):
 
 class GeneralSection(object):
     _validOptions = set(('failure_email', 'success_email', 'smtp_server',
-                         'from_email', 'reply_to_email', 'global_status_file'))
+                         'from_email', 'reply_to_email', 'global_status_file',
+                         'email_notification_by_default'))
 
     def __init__(self, configuration):
         self.configuration = configuration
@@ -857,6 +865,7 @@ class GeneralSection(object):
         self.from_email = ''
         self.reply_to_email = ''
         self.global_status_file = None
+        self.email_notification_by_default = 'OFF'
 
     def addConfigurationLine(self, line):
         i = line.find('=')

@@ -50,7 +50,7 @@ esac
 
 run_bv_maker() {
   # build all
-  $binary_dir/bv_maker
+  $binary_dir/bv_maker -e
   status=$?
   return $status
 }

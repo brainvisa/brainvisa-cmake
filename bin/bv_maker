@@ -541,8 +541,8 @@ class StepCommand(object):
 ''' % (d, ' ' * (dlen - len(d)),
             step, ' ' * (dlen - len(step)),
             status, ' ' * (dlen - len(status)))
-        message += '\n'.join(['%s=%s' % (var, value)
-                              for var, value in six.iteritems(os.environ)])
+        message += '\n'.join(['%s=%s' % (var, os.environ[var])
+                              for var in sorted(os.environ.keys())])
         message += '\n------------------------------------------\n\n'
 
         return message

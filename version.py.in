@@ -1,0 +1,5 @@
+version_major = '@BRAINVISA_PACKAGE_VERSION_MAJOR@'
+version_minor = '@BRAINVISA_PACKAGE_VERSION_MINOR@'
+version_patch = '@BRAINVISA_PACKAGE_VERSION_PATCH@'
+
+version = '%s.%s.%s' % (version_major, version_minor, version_patch)

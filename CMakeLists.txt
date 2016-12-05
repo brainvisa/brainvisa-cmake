@@ -31,8 +31,14 @@ configure_file( cmake/brainvisa-cmake-config-version.cmake.in
                 "${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config-version.cmake"
                 @ONLY )
 install( FILES "${CMAKE_BINARY_DIR}/${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config.cmake"
-              "${CMAKE_BINARY_DIR}/${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config-version.cmake"
+               "${CMAKE_BINARY_DIR}/${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config-version.cmake"
          DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake"
+         COMPONENT brainvisa-cmake )
+configure_file( version.py.in
+                "python/brainvisa/maker/version.py"
+                @ONLY )
+install( FILES "${CMAKE_BINARY_DIR}/python/brainvisa/maker/version.py"
+         DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/python/brainvisa/maker"
          COMPONENT brainvisa-cmake )
 foreach( _dir cmake cmake/specific cmake/specific/linux_distribution cmake/specific/windows cmake/specific/mingw32 )
   file( GLOB _files "${CMAKE_CURRENT_SOURCE_DIR}/${_dir}/*.cmake" )

@@ -102,7 +102,7 @@ if this_script:
 
 import brainvisa.maker.components_definition
 import brainvisa.maker.brainvisa_projects as brainvisa_projects
-from brainvisa.maker.brainvisa_projects_versions import project_version
+from brainvisa.maker.version import version as brainvisa_cmake_version
 
 from brainvisa.maker.version_number import VersionNumber
 from brainvisa.maker.version_number import version_format_short
@@ -111,7 +111,7 @@ if this_script:
     cmake_root = os.path.join(os.path.dirname(this_script), 
                               '..', 'share', 'brainvisa-cmake-%s' %
                               str(VersionNumber(
-                                    project_version('brainvisa-cmake'), 
+                                    brainvisa_cmake_version, 
                                     version_format_short)),
                               'cmake')
     #print('cmake_root:', cmake_root)

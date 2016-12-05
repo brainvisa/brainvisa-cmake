@@ -560,11 +560,12 @@ class StepCommand(object):
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain; charset="utf-8"
 Reply-To: %s
-Subject: %s - build %s on %s (%s)
+Subject: %s - %s %s on %s (%s)
 
 %s - build started %s, stopped %s on %s (%s)
 
-''' % (reply_to_address, Status, '%04d/%02d/%02d' % o.start_time[step][:3],
+''' % (reply_to_address, Status, step,
+            '%04d/%02d/%02d' % o.start_time[step][:3],
             machine, osname, Status,
             '%04d/%02d/%02d %02d:%02d' % o.start_time[step][:5],
             '%04d/%02d/%02d %02d:%02d' % o.stop_time[step][:5], machine,

@@ -2038,15 +2038,13 @@ function Controller()
 
 Controller.prototype.IntroductionPageCallback = function()
 {
-    var widget = gui.currentPageWidget(); // get the current wizard page
-//     gui.clickButton(buttons.CustomButton1); // parameters
     installer.setTemporaryRepositories(repositories, true);
     gui.clickButton(buttons.NextButton)
 }
 
 Controller.prototype.TargetDirectoryPageCallback = function()
 {
-    var widget = gui.currentPageWidget();
+    var widget = gui.currentPageWidget(); // get the current wizard page
     widget.TargetDirectoryLineEdit.setText(install_dir);
     gui.clickButton(buttons.NextButton);
 }
@@ -2202,7 +2200,7 @@ Controller.prototype.FinishedPageCallback = function()
             print('    remote:', self.remote_test_host_cmd)
             tmp_dir = os.path.join(os.path.dirname(test_install_dir), 'tmp')
             if not os.path.exists(tmp_dir):
-                os.mkdir(tmp_dir)
+                os.makedirs(tmp_dir)
         repos_dir = directory
         if self.data_repos_dir:
             data_repos_dir = self.replace_vars(self.data_repos_dir)
@@ -2213,6 +2211,11 @@ Controller.prototype.FinishedPageCallback = function()
         if os.path.isdir(install_dir):
             print('removing previous test installation...')
             shutil.rmtree(install_dir)
+        if not os.path.isdir(repos_dir) \
+                or (data_repos_dir is not None
+                    and not os.path.isdir(data_repos_dir)):
+            raise RuntimeError('Some repositories are missing (%s, %s)'
+                               % (repos_dir, data_repos_dir))
         install_script = self.make_install_script(
             install_dir, repos_dir, data_repos_dir, temp_dir=tmp_dir)
         cmd = []

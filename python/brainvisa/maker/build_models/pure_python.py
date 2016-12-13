@@ -4,6 +4,8 @@ import os
 import sys
 import os.path as osp
 import distutils.spawn
+import six
+import string
 import subprocess
 import shlex
 
@@ -122,13 +124,26 @@ set( %(component_upper)s_FOUND true )
 
 class PurePythonComponentBuild(object):
     def __init__(self, component_name, source_directory, build_directory,
-                 options=None, args=None):
+                 cross_compiling_directories, options=None, args=None):
         self.component_name = component_name
         self.source_directory = source_directory
         self.build_directory = build_directory
+        self.cross_compiling_directories = cross_compiling_directories
+        self.cross_compiling_directory_match = None
         # options from option parser:
         self.options = options
         self.args = args
+       
+        if cross_compiling_directories is not None:
+            match = None
+            match_length = 0
+            for s, c in six.iteritems(cross_compiling_directories):
+                if self.source_directory.startswith(s) \
+                    and len(s) > match_length:
+                    self.cross_compiling_directory_match = (s, c)
+                    match_length = len(s)
+                    
+            #print('==== Pure python best match:', self.cross_compiling_directory_match)
 
     def configure(self):
         # Create a bv_maker_pure_python.py module in 
@@ -150,9 +165,17 @@ class PurePythonComponentBuild(object):
             directories = open(pth_path).read().split()
         else:
             directories = []
+
         sd = osp.join(self.source_directory, 'python')
         if not osp.exists(sd):
             sd = self.source_directory
+            
+        if self.cross_compiling_directory_match is not None:
+            match, repl = self.cross_compiling_directory_match
+            old_sd = sd
+            sd = osp.join(repl, string.lstrip(sd[len(match):], os.sep))
+            #print('==== Pure python: cross_compiling replacement:', old_sd , '=>', sd)
+               
         if sd not in directories:
             directories.append(sd)
             open(pth_path,'w').write( os.linesep.join(directories))

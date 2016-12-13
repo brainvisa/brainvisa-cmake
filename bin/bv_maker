@@ -291,7 +291,7 @@ http://brainvisa.info/brainvisa-cmake/
                                                         'general'):
                             raise SyntaxError()
 
-                        if l[0] == 'source':
+                        if l[0] == 'source':                            
                             currentDirectoryObject = SourceDirectory(
                                 environmentVariablesSubstitution(l[1].strip()),
                                 self)
@@ -942,7 +942,8 @@ class DirectorySection(object):
 class SourceDirectory(DirectorySection):
 
     _validOptions = set(('default_steps', 'revision_control',
-                         'build_condition', 'stdout_file', 'stderr_file'))
+                         'build_condition', 'cross_compiling_dirs', 
+                         'stdout_file', 'stderr_file'))
 
     def __init__(self, directory, configuration):
         super(SourceDirectory, self).__init__()
@@ -953,6 +954,12 @@ class SourceDirectory(DirectorySection):
         self.gitComponents = []
         self.default_steps = ['sources']
         self.revision_control = 'ON'
+        # cross_compiling_dirs contains toolchain substitutions for source 
+        # directories. This is used when execution needs different path to 
+        # access sources (i.e.: in windows cross compilation, for pure python 
+        # components, it is necessary to access source directory through network
+        # share, instead of NFS mount point.
+        self.cross_compiling_dirs = {}
         if self.configuration.verbose:
             print('Processing source directory %s' % self.directory)
 
@@ -974,9 +981,11 @@ class SourceDirectory(DirectorySection):
             value = line[i + 1:].strip()
             if option not in self._validOptions:
                 raise SyntaxError('Invalid option: %s' % option)
-            if hasattr(self, option) \
-                    and type(getattr(self, option)) in (list, tuple):
-                value = value.split()
+            if hasattr(self, option):
+                if type(getattr(self, option)) in (list, tuple):
+                    value = value.split()
+                elif type(getattr(self, option)) in (dict,):
+                    value = dict([v.split(':') for v in value.split()])
             setattr(self, option, value)
         else:
             l = line.split()
@@ -1598,6 +1607,17 @@ for i in os.listdir(os.path.dirname(__file__)):
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
 
+        cross_compiling_directories = {}
+        for k, s in six.iteritems(self.configuration.sourcesDirectories):
+            if s.cross_compiling_dirs is not None:
+                if len(self.cross_compiling_prefix) > 0:
+                    cross_compiling_dir = \
+                        s.cross_compiling_dirs.get(
+                            self.cross_compiling_prefix)
+
+                    cross_compiling_directories[k] = cross_compiling_dir
+        #print('==== Toolchain:', self.cross_compiling_prefix, 
+        #      'directories:', cross_compiling_directories)
         self.buildModelPerComponent = {}
         for component in sortedComponents:
             # find build model
@@ -1612,7 +1632,7 @@ for i in os.listdir(os.path.dirname(__file__)):
                     build_model)
                 build_model = build_model_class(
                     component, self.components[component][0], self,
-                    options=options, args=args)
+                    cross_compiling_directories, options=options, args=args)
                 self.buildModelPerComponent[component] = build_model
 
         cmakeFile = os.path.join(self.directory, 'bv_maker.cmake')

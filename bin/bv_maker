@@ -2265,6 +2265,8 @@ Controller.prototype.FinishedPageCallback = function()
         # set environment to point to install dir
         new_env = dict(os.environ)
         new_env['BRAINVISA_PACKAGE_INSTALL_PREFIX'] = install_dir
+        # binaries are in bin/real-bin/ (used by some python tests commands)
+        new_env['BRAINVISA_REAL_BIN'] = 'real-bin/'
         if self.remote_test_host_cmd:
             new_env['BRAINVISA_TEST_REMOTE_COMMAND'] \
                 = self.expand_shell(self.remote_test_host_cmd)

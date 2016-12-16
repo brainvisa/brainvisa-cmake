@@ -17,7 +17,14 @@ endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   if(HDF5_FOUND)
-    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${HDF5_hdf5_LIBRARY_RELEASE} )
+    # depending on cmake version, HDF5_hdf5_LIBRARY_RELEASE may not be defined
+    if( NOT HDF5_hdf5_LIBRARY_RELEASE )
+      BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} $
+        {HDF5_LIBRARY} )
+    else()
+      BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} $
+        {HDF5_hdf5_LIBRARY_RELEASE} )
+    endif()
     set(${component}_PACKAGED TRUE PARENT_SCOPE)
   else()
     set(${component}_PACKAGED FALSE PARENT_SCOPE)

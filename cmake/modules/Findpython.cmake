@@ -10,8 +10,10 @@
 #  PYTHON_LIBRARY - path to Python dynamic library
 #  PYTHON_VERSION - Python full version (e.g. "2.6.2")
 #  PYTHON_SHORT_VERSION - Python short version (e.g. "2.6")
+#  TARGET_PYTHON_EXECUTABLE - path to the target python interpreter
+#  TARGET_PYTHON_EXECUTABLE_NAME - name of the target python interpreter
 
-if ( PYTHON_VERSION )
+if ( PYTHON_VERSION AND TARGET_PYTHON_EXECUTABLE)
   # Python already found, do nothing
   set( PYTHON_FOUND TRUE )
 else()
@@ -127,6 +129,18 @@ else()
   #  NO_SYSTEM_ENVIRONMENT_PATH
   )
   mark_as_advanced( PYTHON_LIBRARY )
+  
+  # Also set python target variable
+  if(CMAKE_CROSSCOMPILING)
+    # Uses target python interpreter
+    set(TARGET_PYTHON_EXECUTABLE "${CROSSCOMPILING_PYTHON_EXECUTABLE}" CACHE FILEPATH "Target python executable path")
+    get_filename_component(TARGET_PYTHON_EXECUTABLE_NAME "${CROSSCOMPILING_PYTHON_EXECUTABLE}" NAME CACHE)
+  else()
+    # Uses host python interpreter
+    set(TARGET_PYTHON_EXECUTABLE "${PYTHON_EXECUTABLE}" CACHE FILEPATH "Target python executable path")
+    get_filename_component(TARGET_PYTHON_EXECUTABLE_NAME "${PYTHON_EXECUTABLE}" NAME CACHE)
+  endif()
+  
   
   # handle the QUIETLY and REQUIRED arguments and set PYTHONINTERP_FOUND to TRUE if
   # all listed variables are TRUE

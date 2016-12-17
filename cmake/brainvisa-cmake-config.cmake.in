@@ -1706,6 +1706,88 @@ function( BRAINVISA_ADD_EXECUTABLE name )
   unset(_exe_args)
 endfunction()
 
+# BRAINVISA_ADD_TEST
+#  Add a test to the project with the specified arguments.
+#  brainvisa_add_test(testname Exename arg1 arg2 ... )
+#  If TYPE Python is given, the appropriate python interpreter is used to
+#  start the test (i.e.: target python for cross compiling case).
+#  Test command is also launched through bv_env_test command.
+# Usage:
+#
+#   BRAINVISA_ADD_TEST( NAME <name> [CONFIGURATIONS [Debug|Release|...]]
+#                                   [WORKING_DIRECTORY dir]
+#                       COMMAND <command> [arg1 [arg2 ...]]
+#                                   [TYPE Exe|Python]
+#  )
+#
+function( BRAINVISA_ADD_TEST )
+  set(_argn ${ARGN})
+  
+  # Read options
+  set( _arg_index 0 )
+  unset(_current_arg)
+  unset(_name_args)
+  unset(_command_args)
+
+  foreach( _arg ${_argn} )
+    if( ${_arg_index} EQUAL 0 )
+      if( "${_arg}" STREQUAL "NAME" )
+        set(_current_arg "_name_args")
+      else()
+        list( GET _argn ${_arg_index} result )
+        set(_name_args "${result}")
+        set(_current_arg "_command_args")
+      endif()
+    elseif( "${_arg}" STREQUAL "COMMAND" )
+      set(_current_arg "_command_args")
+
+    else()
+      list( GET _argn ${_arg_index} result )
+      if( NOT DEFINED "${_current_arg}" )
+        # Sets argument value
+        set( "${_current_arg}" "${result}" )
+      else()
+        # Add argument to list of arguments
+        set("${_current_arg}" ${${_current_arg}} "${result}" )
+      endif()
+    endif()
+    
+    math(EXPR _arg_index "${_arg_index} + 1")
+  endforeach()
+#   
+#   list( GET _command_args 0 result )
+#   if ("${result}" STREQUAL "python" )
+#     list(REMOVE_AT _command_args 0)
+#     if(CMAKE_CROSSCOMPILING)
+#       # Uses target python interpreter
+#       get_filename_component(_python_test "${CROSSCOMPILING_PYTHON_EXECUTABLE}" NAME)
+#     else()
+#       # Uses host python interpreter
+#       get_filename_component(_python_test "${PYTHON_EXECUTABLE}" NAME)
+#     endif()
+#     
+#     set(_command_args "${_python_test}" "${_command_args}")
+#   endif()
+  
+  # Add bv_env_test encapsulation
+  set(_command_args "${CMAKE_BINARY_DIR}/bin/bv_env_test" 
+                    "-e" "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
+                    "${_command_args}")
+  
+  #message("====== NAME ${_name_args} =======")
+  #message("====== COMMAND ${_command_args} =======")
+  
+  # Add the test
+  add_test(NAME ${_name_args}
+           COMMAND ${_command_args})
+  
+  unset(_arg_index)
+  unset(_current_arg)
+  unset(_name_args)
+  unset(_command_args)
+  
+endfunction()
+
 # BRAINVISA_GENERATE_DOXYGEN_DOC
 #    Add rules to generate doxygen documentation with "make doc" or "make devdoc".
 #

@@ -1614,8 +1614,10 @@ for i in os.listdir(os.path.dirname(__file__)):
                     cross_compiling_dir = \
                         s.cross_compiling_dirs.get(
                             self.cross_compiling_prefix)
-
-                    cross_compiling_directories[k] = cross_compiling_dir
+                    
+                    if cross_compiling_dir is not None:
+                        cross_compiling_directories[k] = cross_compiling_dir
+                        
         #print('==== Toolchain:', self.cross_compiling_prefix, 
         #      'directories:', cross_compiling_directories)
         self.buildModelPerComponent = {}

@@ -76,7 +76,7 @@ endif()
 
 if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/${test}/test_%(component_name)s.py" )
     enable_testing()
-    add_test( %(component_name)s-tests "${CMAKE_BINARY_DIR}/bin/bv_env_test" "${PYTHON_EXECUTABLE}" "${BRAINVISA_REAL_SOURCE_DIR}/test/test_%(component_name)s.py" )
+    brainvisa_add_test( %(component_name)s-tests "${TARGET_PYTHON_EXECUTABLE_NAME}" "${BRAINVISA_REAL_SOURCE_DIR}/test/test_%(component_name)s.py" )
     BRAINVISA_COPY_DIRECTORY( "${BRAINVISA_REAL_SOURCE_DIR}/test"
                               test
                               ${PROJECT_NAME}-test )
@@ -171,10 +171,17 @@ class PurePythonComponentBuild(object):
             sd = self.source_directory
             
         if self.cross_compiling_directory_match is not None:
-            match, repl = self.cross_compiling_directory_match
-            old_sd = sd
-            sd = osp.join(repl, string.lstrip(sd[len(match):], os.sep))
-            #print('==== Pure python: cross_compiling replacement:', old_sd , '=>', sd)
+            if len(self.cross_compiling_directory_match) == 2:
+                match, repl = self.cross_compiling_directory_match
+                old_sd = sd
+                sd = osp.join(repl, string.lstrip(sd[len(match):], os.sep))
+                #print('==== Pure python: cross_compiling replacement:', old_sd , '=>', sd)
+                
+            else:
+                raise ValueError('Cross compiling directory match '
+                               + str(self.cross_compiling_directory_match) + ' '
+                                 'has inapropriate length. The list or tuple '
+                                 'must contain 2 values: (match, replacement).')
                
         if sd not in directories:
             directories.append(sd)
@@ -290,8 +297,8 @@ class PurePythonComponentBuild(object):
               nnum = ''
             for i, test in enumerate(tests):
                 test_str = '"' + '" "'.join(shlex.split(test)) + '"'
-                tests_code.append('''add_test( %s-tests%s
-          "${CMAKE_BINARY_DIR}/bin/bv_env_test" %s )'''
+                tests_code.append('''brainvisa_add_test( %s-tests%s
+          "${TARGET_PYTHON_EXECUTABLE_NAME}" %s )'''
                     % (self.component_name, nnum % {'num': i}, test_str))
         tests_str = '\n'.join(tests_code)
         if len(tests_str) != 0:

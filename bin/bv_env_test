@@ -20,12 +20,19 @@
 
 # use only basename of main executable
 # (to avoid hard-coded /usr/bin/python for instance)
-CMD=`basename $1`
-shift
-
 if [ -z ${BRAINVISA_PACKAGE_INSTALL_PREFIX} ]; then
   BRAINVISA_PACKAGE_INSTALL_PREFIX=$(dirname $(dirname $0))
 fi
+
+if [ "$1" == "-e" ]; then
+  BRAINVISA_ENV="$2"
+  shift 2
+else
+  BRAINVISA_ENV="${BRAINVISA_PACKAGE_INSTALL_PREFIX}/bin/bv_env"
+fi
+
+CMD=`basename $1`
+shift
 
 # get variables substitution inside arguments
 i=0
@@ -34,4 +41,4 @@ do
   exp[$i]=$(eval echo $var_value)
   i=$(($i+1))
 done
-exec ${BRAINVISA_TEST_REMOTE_COMMAND} "${BRAINVISA_PACKAGE_INSTALL_PREFIX}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}" "$CMD" "${exp[@]}"
+exec ${BRAINVISA_TEST_REMOTE_COMMAND} "${BRAINVISA_ENV}" "$CMD" "${exp[@]}"

@@ -297,8 +297,7 @@ class PurePythonComponentBuild(object):
               nnum = ''
             for i, test in enumerate(tests):
                 test_str = '"' + '" "'.join(shlex.split(test)) + '"'
-                tests_code.append('''brainvisa_add_test( %s-tests%s
-          "${TARGET_PYTHON_EXECUTABLE_NAME}" %s )'''
+                tests_code.append('''brainvisa_add_test( %s-tests%s %s )'''
                     % (self.component_name, nnum % {'num': i}, test_str))
         tests_str = '\n'.join(tests_code)
         if len(tests_str) != 0:

@@ -1728,11 +1728,13 @@ function( BRAINVISA_ADD_TEST )
   unset(_current_arg)
   unset(_name_args)
   unset(_command_args)
+  set(_form 1)
 
   foreach( _arg ${_argn} )
     if( ${_arg_index} EQUAL 0 )
       if( "${_arg}" STREQUAL "NAME" )
         set(_current_arg "_name_args")
+        set(_form 2)
       else()
         list( GET _argn ${_arg_index} result )
         set(_name_args "${result}")
@@ -1777,9 +1779,15 @@ function( BRAINVISA_ADD_TEST )
   #message("====== NAME ${_name_args} =======")
   #message("====== COMMAND ${_command_args} =======")
   
-  # Add the test
-  add_test(NAME ${_name_args}
-           COMMAND ${_command_args})
+  if(_form EQUAL 1)
+    # Add the test in the first manner
+    add_test(${_name_args}
+             ${_command_args})
+  else()
+    # Add the test in the second manner
+    add_test(NAME ${_name_args}
+             COMMAND ${_command_args})
+  endif()
   
   unset(_arg_index)
   unset(_current_arg)

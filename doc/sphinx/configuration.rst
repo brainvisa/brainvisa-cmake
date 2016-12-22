@@ -158,6 +158,7 @@ This section defines the list of components that will be built and their version
 In the build section, it is also possible to define some build options:
 
 * ``cmake_options``: passed to cmake (ex: ``-DMY_VARIABLE=dummy``)
+* ``ctest_options``: passed to ctest in the test step (ex: ``-j4 -VV -R carto*``)
 * ``make_options``: passed to make (ex: ``-j8``)
 * ``build_type``: ``Debug``, ``Release`` or none (no optimization options)
 * ``packaging_thirdparty``: Set this option to ``ON`` if you need to create a BrainVISA package containing thirdparty libraries dependency.
@@ -213,6 +214,7 @@ The package section allows 3 additional steps :doc:`bv_maker`: ``pack``, ``insta
 The package section must define some variables which specify which build directory will be packaged and how.
 
 * ``build_directory``: references a build directory, which must exist in the configuration file. It is mandatory.
+* ``ctest_options``: passed to ctest in the test_pack step (ex: ``-j4 -VV -R carto*``)
 * ``data_repos_dir``: Data repository directory. Mandatory when installing a non-data package (dependencies on data packages must be satisfied to install runtime packages)
 * ``default_steps``: steps performed for this package directory when bv_maker is invoked without specifying steps (typically just ``bv_maker``). Defaults to none, may include ``pack``, ``install_pack`` and ``test_pack``.
 *  ``init_components_from_build_dir``: if ``ON`` (default), the build directory will provide the initial list of projects and components to be packaged. If ``OFF``, the initial list of projects and components to be packages is empty.

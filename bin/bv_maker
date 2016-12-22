@@ -1501,7 +1501,8 @@ class BuildDirectory(ComponentsConfigParser):
     _validOptions = set(('build_type', 'make_options', 'cmake_options',
                          'packaging_thirdparty', 'cross_compiling_prefix', 
                          'default_steps', 'build_condition', 'clean_config', 
-                         'clean_build', 'stdout_file', 'stderr_file'))
+                         'clean_build', 'stdout_file', 'stderr_file',
+                         'ctest_options'))
 
     sitecustomize_content = '''import os
 
@@ -1523,6 +1524,7 @@ for i in os.listdir(os.path.dirname(__file__)):
         self.default_steps = ['configure', 'build']
         self.clean_config = 'OFF'
         self.clean_build = 'OFF'
+        self.ctest_options = []
 
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ build ... ]:
@@ -1810,7 +1812,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         self._process_configuration_lines()
         # get parallel jobs option if specified
         make_opts = self.make_options.split()
-        options = []
+        options = self.ctest_options
         print('testing directory:', self.directory)
         system(cwd=self.directory,
                *(['ctest', '--output-on-failure'] + options))
@@ -1882,7 +1884,7 @@ class PackageDirectory(ComponentsConfigParser):
                          'test_install_dir', 'remote_test_host_cmd',
                          'init_components_from_build_dir', 'pack_version',
                          'default_steps', 'keep_n_older_repos', 'stdout_file',
-                         'stderr_file'))
+                         'stderr_file', 'ctest_options'))
 
     def __init__(self, directory, configuration):
         super(PackageDirectory, self).__init__(directory, configuration)
@@ -1898,6 +1900,7 @@ class PackageDirectory(ComponentsConfigParser):
         self.pathvars = None
         self.default_steps = []
         self.keep_n_older_repos = 1
+        self.ctest_options = []
 
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ pack ... ]:
@@ -2267,7 +2270,7 @@ Controller.prototype.FinishedPageCallback = function()
         new_env = dict(os.environ)
         new_env['BRAINVISA_PACKAGE_INSTALL_PREFIX'] = install_dir
         # binaries are in bin/real-bin/ (used by some python tests commands)
-        new_env['BRAINVISA_REAL_BIN'] = 'real-bin/'
+        new_env['BRAINVISA_REAL_BIN'] = '/real-bin'
         if self.remote_test_host_cmd:
             new_env['BRAINVISA_TEST_REMOTE_COMMAND'] \
                 = self.expand_shell(self.remote_test_host_cmd)
@@ -2275,7 +2278,7 @@ Controller.prototype.FinishedPageCallback = function()
         report_file = os.path.join(repos_dir, 'tests_report.txt')
         try:
             system(cwd=self.build_dir.directory, env=new_env,
-                  *(['ctest', '--output-on-failure']))
+                  *(['ctest', '--output-on-failure'] + self.ctest_options))
         except:
             if os.path.isdir(repos_dir):
                 open(report_file, 'w').write('Tests_result: FAILED\n')

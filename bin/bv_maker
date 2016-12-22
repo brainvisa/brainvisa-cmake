@@ -2257,8 +2257,7 @@ Controller.prototype.FinishedPageCallback = function()
     def test_package(self, options, args):
         self.test_config(options, args)
         if not self.test_install_dir:
-            raise RuntimeError(
-                'install_pack command needs test_install_dir option')
+            return
         print('Testing package:', self.directory)
         print('    from build dir:', self.build_dir.directory)
         install_dir = self.replace_vars(self.test_install_dir)

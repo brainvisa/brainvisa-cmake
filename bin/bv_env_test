@@ -25,7 +25,7 @@ if [ -z ${BRAINVISA_PACKAGE_INSTALL_PREFIX} ]; then
 fi
 
 if [ "$1" == "-e" ]; then
-  BRAINVISA_ENV="$2"
+  BRAINVISA_ENV="$(eval echo $2)"
   shift 2
 else
   BRAINVISA_ENV="${BRAINVISA_PACKAGE_INSTALL_PREFIX}/bin/bv_env"

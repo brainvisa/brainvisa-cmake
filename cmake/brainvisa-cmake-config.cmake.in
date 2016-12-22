@@ -1773,7 +1773,7 @@ function( BRAINVISA_ADD_TEST )
   
   # Add bv_env_test encapsulation
   set(_command_args "${CMAKE_BINARY_DIR}/bin/bv_env_test" 
-                    "-e" "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
+                    "-e" "\$BRAINVISA_PACKAGE_INSTALL_PREFIX/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
                     "${_command_args}")
   
   #message("====== NAME ${_name_args} =======")

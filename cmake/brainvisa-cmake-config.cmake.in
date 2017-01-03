@@ -1756,24 +1756,36 @@ function( BRAINVISA_ADD_TEST )
     
     math(EXPR _arg_index "${_arg_index} + 1")
   endforeach()
-#   
-#   list( GET _command_args 0 result )
-#   if ("${result}" STREQUAL "python" )
-#     list(REMOVE_AT _command_args 0)
-#     if(CMAKE_CROSSCOMPILING)
-#       # Uses target python interpreter
-#       get_filename_component(_python_test "${CROSSCOMPILING_PYTHON_EXECUTABLE}" NAME)
-#     else()
-#       # Uses host python interpreter
-#       get_filename_component(_python_test "${PYTHON_EXECUTABLE}" NAME)
-#     endif()
-#     
-#     set(_command_args "${_python_test}" "${_command_args}")
-#   endif()
+
+  if(CMAKE_CROSSCOMPILING)
+    # Replaces python interpreter with target python interpreter
+    # in test command arguments
+    set(_arg_index 0)
+
+    # Get host python interpreter real path
+    get_filename_component(_python_executable "${PYTHON_EXECUTABLE}" REALPATH)
+
+    # Get target python interpreter name
+    get_filename_component(_python_test "${CROSSCOMPILING_PYTHON_EXECUTABLE}" NAME)
+    foreach( _arg ${_command_args} )
+      list( GET _command_args ${_arg_index} result )
+      if(EXISTS "${result}")
+        get_filename_component(result "${result}" REALPATH)
+        if("${result}" STREQUAL "${_python_executable}")
+          list(REMOVE_AT _command_args ${_arg_index})
+          list(INSERT _command_args ${_arg_index} "${_python_test}")
+        endif()
+      endif()
+      
+      math(EXPR _arg_index "${_arg_index} + 1")
+    endforeach()
+    
+    unset(_python_test)
+    unset(_python_executable)    
+  endif()
   
   # Add bv_env_test encapsulation
-  set(_command_args "${CMAKE_BINARY_DIR}/bin/bv_env_test" 
-                    "-e" "\$BRAINVISA_PACKAGE_INSTALL_PREFIX/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
+  set(_command_args "${CMAKE_BINARY_DIR}/bin/bv_env_test"
                     "${_command_args}")
   
   #message("====== NAME ${_name_args} =======")

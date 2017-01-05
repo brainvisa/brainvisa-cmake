@@ -38,7 +38,7 @@ Configure step
 Build step
 ----------
 
-.. include:: bv_maker_help_configure.rst
+.. include:: bv_maker_help_build.rst
 
 
 Doc step
@@ -68,6 +68,6 @@ Install_pack step
 Test_pack step
 --------------
 
-.. include:: bv_maker_help_info.rst
+.. include:: bv_maker_help_test_pack.rst
 
 

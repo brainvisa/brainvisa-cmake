@@ -763,6 +763,12 @@ class TestCommand(StepCommand):
                           'of bv_maker.cfg config file. Default steps are '
                           'normally "sources" for source sections, and '
                           '"configure build" for build sections')
+        parser.add_option('-t', '--ctest_options',
+                          default=None,
+                          help='options passed to ctest (ex: "-VV -R carto*"). '
+                          'Same as the configuration option ctest_options but '
+                          'specified at runtime. The commandline option here '
+                          'overrides the bv_maker.cfg options.')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
@@ -770,7 +776,8 @@ class TestCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('test', configuration.buildDirectories, 'test')
+        self.process('test', configuration.buildDirectories, 'test',
+                     self.options, self.args)
 
 
 class PackCommand(StepCommand):
@@ -840,6 +847,12 @@ class TestPackCommand(StepCommand):
                           'of bv_maker.cfg config file. Default steps are '
                           'normally "sources" for source sections, '
                           '"configure build" for build sections.')
+        parser.add_option('-t', '--ctest_options',
+                          default=None,
+                          help='options passed to ctest (ex: "-VV -R carto*"). '
+                          'Same as the configuration option ctest_options but '
+                          'specified at runtime. The commandline option here '
+                          'overrides the bv_maker.cfg options.')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
@@ -1808,14 +1821,17 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         system(cwd=self.directory, *
                (['make'] + self.make_options.split() + ['doc']))
 
-    def test(self):
+    def test(self, options, args):
         self._process_configuration_lines()
         # get parallel jobs option if specified
-        make_opts = self.make_options.split()
-        options = self.ctest_options
+        make_opts = shlex.split(self.make_options)
+        if options.ctest_options is not None:
+            ctoptions = shlex.split(options.ctest_options)
+        else:
+            ctoptions = self.ctest_options
         print('testing directory:', self.directory)
         system(cwd=self.directory,
-               *(['ctest', '--output-on-failure'] + options))
+               *(['ctest', '--output-on-failure'] + ctoptions))
 
     def info(self):
         self._process_configuration_lines()
@@ -2277,7 +2293,7 @@ Controller.prototype.FinishedPageCallback = function()
         print('    from build dir:', self.build_dir.directory)
         install_dir = self.replace_vars(self.test_install_dir)
         # get parallel jobs option if specified
-        make_opts = self.build_dir.make_options.split()
+        make_opts = shlex.split(self.build_dir.make_options)
         # set environment to point to install dir
         new_env = dict(os.environ)
         new_env['BRAINVISA_PACKAGE_INSTALL_PREFIX'] = install_dir
@@ -2288,9 +2304,13 @@ Controller.prototype.FinishedPageCallback = function()
                 = self.expand_shell(self.remote_test_host_cmd)
         repos_dir = self.replace_vars(self.directory)
         report_file = os.path.join(repos_dir, 'tests_report.txt')
+        if options.ctest_options is not None:
+            ctoptions = shlex.split(options.ctest_options)
+        else:
+            ctoptions = self.ctest_options
         try:
             system(cwd=self.build_dir.directory, env=new_env,
-                  *(['ctest', '--output-on-failure'] + self.ctest_options))
+                  *(['ctest', '--output-on-failure'] + ctoptions))
         except:
             if os.path.isdir(repos_dir):
                 open(report_file, 'w').write('Tests_result: FAILED\n')

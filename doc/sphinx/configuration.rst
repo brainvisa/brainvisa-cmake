@@ -217,6 +217,7 @@ The package section must define some variables which specify which build directo
 * ``ctest_options``: passed to ctest in the test_pack step (ex: ``-j4 -VV -R carto*``)
 * ``data_repos_dir``: Data repository directory. Mandatory when installing a non-data package (dependencies on data packages must be satisfied to install runtime packages)
 * ``default_steps``: steps performed for this package directory when bv_maker is invoked without specifying steps (typically just ``bv_maker``). Defaults to none, may include ``pack``, ``install_pack`` and ``test_pack``.
+* ``keep_n_older_repos``: if the package directory contains a date substitution pattern ("``%(date)s``"), a new package directory will be created every day (in automatic tests situation). This option specifies how to delete older package directories, by keeping only the specified latest ones. The default is 1: remove all but the last one.
 *  ``init_components_from_build_dir``: if ``ON`` (default), the build directory will provide the initial list of projects and components to be packaged. If ``OFF``, the initial list of projects and components to be packages is empty.
 * ``installer_filename``: output installer program file name. Mandatory unless packaging_options specify --data (data package, no installer output).
 * ``pack_version``: package version string. Optional. If not specified, it will be guessed from the python module ``brainvisa.config`` (from the *axon* project) if it is present.

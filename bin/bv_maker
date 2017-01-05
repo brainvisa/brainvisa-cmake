@@ -2168,7 +2168,7 @@ Controller.prototype.FinishedPageCallback = function()
             to_remove = set()
             for d in older_tmp_dirs:
                 if not d[:-4] in older_dirs:
-                    print('temp reps', d, 'has not real repos')
+                    print('temp repos', d, 'has no real repos')
                     self.rm_with_empty_dirs(d)
                     to_remove.add(d)
             older_tmp_dirs = sorted([d for d in older_tmp_dirs
@@ -2190,6 +2190,10 @@ Controller.prototype.FinishedPageCallback = function()
                 if d + '_tmp' in older_tmp_dirs:
                     print('removing:', d + '_tmp')
                     self.rm_with_empty_dirs(d + '_tmp')
+                infos_file = os.path.join(os.path.dirname(d),
+                                          'packages_infos.html')
+                if os.path.exists(infos_file):
+                    self.rm_with_empty_dirs(infos_file)
                 m = pattern.match(d)
                 r_date = m.group(1)
                 vars['date'] = r_date
@@ -2201,6 +2205,8 @@ Controller.prototype.FinishedPageCallback = function()
                     if os.path.exists(installer):
                         print('removing:', installer)
                         self.rm_with_empty_dirs(installer)
+                    if os.path.exists(installer + '.md5'):
+                        self.rm_with_empty_dirs(installer + '.md5')
                 # find associated install
                 if self.test_install_dir:
                     install_dir = os.path.abspath(
@@ -2209,6 +2215,12 @@ Controller.prototype.FinishedPageCallback = function()
                     if os.path.exists(install_dir):
                         print('removing', install_dir)
                         self.rm_with_empty_dirs(install_dir)
+                    # and tmp dir
+                    tmp_dir = os.path.join(os.path.dirname(install_dir), 'tmp')
+                    # remove it if empty
+                    if os.path.isdir(tmp_dir) and len(os.listdir(tmp_dir)) == 0:
+                        print('removing:', tmp_dir)
+                        self.rm_with_empty_dirs(tmp_dir)
 
 
     def install_package(self, options, args):

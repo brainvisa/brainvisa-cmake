@@ -1776,12 +1776,19 @@ function( BRAINVISA_ADD_TEST )
           list(INSERT _command_args ${_arg_index} "${_python_test}")
         endif()
       endif()
-      
+
       math(EXPR _arg_index "${_arg_index} + 1")
     endforeach()
     
     unset(_python_test)
-    unset(_python_executable)    
+    unset(_python_executable)
+    
+    if(WIN32)
+      # For cross compilation on windows it is necessary to start commands
+      # using a command interpreter (cmd) to get an environment
+      BRAINVISA_GET_SPACED_QUOTED_LIST( _command_args _command_args )
+      set( _command_args "cmd" "/c" "${_command_args}" )
+    endif()
   endif()
   
   # Add bv_env_test encapsulation

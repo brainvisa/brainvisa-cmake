@@ -388,23 +388,29 @@ vector<const char *> win_escape_command_args(vector<const char *> args) {
     vector<const char *> escaped;
     vector<const char *>::const_iterator it, ie = args.end();
     for(it = args.begin(); it != ie; ++it) {
-      if (*it) {
-          string arg = string(*it);
-          // Fixes special " windows character
-          string::size_type pos = arg.find( "\"" );
-          while(pos != string::npos) {
-            arg.replace(pos, 1, "\\\"");
-            pos = arg.find( "\"", pos + 2  );
-          }
+        if (*it) {
+            string arg = string(*it);
+            
+            // Fixes special " windows character in cases were argument is not
+            // an option argument (i.e. begining with /), otherwise the option
+            // will not be interpreted
+            string::size_type pos = arg.find("/");
+            if (pos != 0) {
+                pos = arg.find( "\"" );
+                while(pos != string::npos) {
+                    arg.replace(pos, 1, "\\\"");
+                    pos = arg.find( "\"", pos + 2  );
+                }
 
-          arg = "\"" + arg + "\"";
-          escaped.push_back(strdup(arg.c_str()));
-      }
-      else {
-         escaped.push_back( *it );
-      }
+                arg = "\"" + arg + "\"";
+            }
+            escaped.push_back(strdup(arg.c_str()));
+        }
+        else {
+            escaped.push_back( *it );
+        }
     }
-    
+
     return escaped;
 }
 
@@ -614,12 +620,12 @@ int main( int argc, char *argv[] )
     // otherwise contained spaces are used as argument separator
     vector<const char *> escaped_args = win_escape_command_args(args);
 
-    // cout << "Executing command : " << args[0] << endl << flush;
-    // cout << "Using arguments : " << endl << flush;
-    // vector<const char *>::const_iterator eait, eaie = escaped_args.end();
-    // for(eait = escaped_args.begin(); eait != eaie; ++eait) {
-      // cout << (*eait) << endl << flush;
-    // }
+//     cout << "Executing command : " << args[0] << endl << flush;
+//     cout << "Using arguments : " << endl << flush;
+//     vector<const char *>::const_iterator eait, eaie = escaped_args.end();
+//     for(eait = escaped_args.begin(); eait != eaie; ++eait) {
+//       cout << (*eait) << endl << flush;
+//     }
     
     // Command call: program name must not be enclosed by ""
     int res = _spawnvp( P_WAIT, args[0], (char * const *)&escaped_args[0] );

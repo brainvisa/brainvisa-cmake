@@ -11,7 +11,8 @@ endfunction()
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   if(GLIB_FOUND)
     BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${GLIB_LIBRARIES}
-                                         ${GTHREAD_LIBRARIES} )
+                                         ${GTHREAD_LIBRARIES}
+                                         ${GMODULE_LIBRARIES} )
     set(${component}_PACKAGED TRUE PARENT_SCOPE)
   else()
     set(${component}_PACKAGED FALSE PARENT_SCOPE)

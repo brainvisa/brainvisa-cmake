@@ -20,6 +20,11 @@ if(PKG_CONFIG_FOUND) # Glib search is supported only through pkg_config.
       find_library( GTHREAD_LIBRARIES ${_GTHREAD_LIBRARIES}
                     PATHS ${_GTHREAD_LIBRARY_DIRS} )
     endif()
+    pkg_search_module(_GMODULE gmodule-2.0)
+    if(_GMODULE_FOUND)
+      find_library( GMODULE_LIBRARIES ${_GMODULE_LIBRARIES}
+                    PATHS ${_GMODULE_LIBRARY_DIRS} )
+    endif()
     set( GLIB_INCLUDE_DIRS ${_GLIB_INCLUDE_DIRS} CACHE PATH "paths to Glib header files" )
     set( GLIB_VERSION "${_GLIB_VERSION}" CACHE STRING "version of Glib library")
 

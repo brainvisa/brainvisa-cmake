@@ -4,8 +4,20 @@ cmake_policy( SET CMP0009 NEW )
 get_property( config_done GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE )
 
 if ( COMPILER_PREFIX AND CMAKE_CROSSCOMPILING)
-  # Add toolchain specific module search path
-  set( CMAKE_MODULE_PATH "${brainvisa-cmake_DIR}/specific/${COMPILER_PREFIX}" ${CMAKE_MODULE_PATH} )
+  if(WIN32)
+  
+    # Fix for Windows-GNU.cmake to disable the use of .rsp files
+    # which is not allowed with distcc
+    foreach(_lang C CXX FORTRAN)
+      set( CMAKE_${_lang}_USE_RESPONSE_FILE_FOR_INCLUDES 0 )
+      set( CMAKE_${_lang}_USE_RESPONSE_FILE_FOR_OBJECTS 0 )
+    endforeach()
+       
+    # Add toolchain specific module search path
+    set( CMAKE_MODULE_PATH 
+        "${brainvisa-cmake_DIR}/specific/windows/${COMPILER_PREFIX}" 
+        ${CMAKE_MODULE_PATH} )
+  endif()
 endif()
 
 set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${brainvisa-cmake_DIR}/modules" )

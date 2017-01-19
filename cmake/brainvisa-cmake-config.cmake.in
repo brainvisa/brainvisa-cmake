@@ -78,11 +78,23 @@ if( NOT config_done )
     option( BRAINVISA_ADVANCED_FEATURE_TEST_MODE "Enable/disable BrainVISA advanced feature test mode" OFF )
   endif()
 
+  if(NOT DEFINED CCACHE_ENABLED)
+    option( CCACHE_ENABLED "Enable/disable use of ccache if possible" ON )
+  endif()
+  
   # Initialize python module containing compilation information
   set( BRAINVISA_COMPILATION_INFO "${CMAKE_BINARY_DIR}/python/brainvisa/compilation_info.py" )
   execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/python/brainvisa" )
   configure_file( "${brainvisa-cmake_DIR}/compilation_info.py.in" "${BRAINVISA_COMPILATION_INFO}" @ONLY )
   
+endif()
+
+if(CCACHE_ENABLED)
+  find_program(CCACHE_FOUND ccache)
+  if(CCACHE_FOUND)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+  endif(CCACHE_FOUND)
 endif()
 
 # This ugly fix allows Boost to detect recent library versions

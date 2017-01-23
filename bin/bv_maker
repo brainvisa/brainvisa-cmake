@@ -2223,6 +2223,19 @@ Controller.prototype.FinishedPageCallback = function()
                         self.rm_with_empty_dirs(installer)
                     if os.path.exists(installer + '.md5'):
                         self.rm_with_empty_dirs(installer + '.md5')
+                    # check for lock file leaved after installer crash
+                    lockfile = glob.glob(os.path.join(
+                        os.path.dirname(installer), 'lock*.lock'))
+                    for lock in lockfile:
+                        self.rm_with_empty_dirs(lock)
+                    # on Mac, remove .dmg files and .app directory
+                    if sys.platform == 'darwin':
+                        if os.path.exists(installer + '.dmg'):
+                            self.rm_with_empty_dirs(installer + '.dmg')
+                        if os.path.exists(installer + '.dmg.md5'):
+                            self.rm_with_empty_dirs(installer + '.dmg.md5')
+                        if os.path.exists(installer + '.app'):
+                            self.rm_with_empty_dirs(installer + '.app')
                 # find associated install
                 if self.test_install_dir:
                     install_dir = os.path.abspath(
@@ -2234,7 +2247,8 @@ Controller.prototype.FinishedPageCallback = function()
                     # and tmp dir
                     tmp_dir = os.path.join(os.path.dirname(install_dir), 'tmp')
                     # remove it if empty
-                    if os.path.isdir(tmp_dir) and len(os.listdir(tmp_dir)) == 0:
+                    if os.path.isdir(tmp_dir) \
+                            and len(os.listdir(tmp_dir)) == 0:
                         print('removing:', tmp_dir)
                         self.rm_with_empty_dirs(tmp_dir)
 

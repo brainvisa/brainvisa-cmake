@@ -10,8 +10,84 @@ if sys.version_info[0] >= 3:
     xrange = range
 
 logfiles = ['/neurospin/brainvisa/build/builds.log']
-todel_files = []
 ssh_user = ''
+tv = None # QTableWidget
+
+
+def reload_data():
+    global logfiles, tv
+    new_logfiles = logfiles
+
+    todel_files = []
+
+    if not os.path.exists(logfiles[0]):
+        try:
+            neurospin_log = '/tmp/build-neurospin.log'
+            print('retreiving neurospin log')
+            subprocess.check_call(['scp', '%sis208611:%s'
+                                  % (ssh_user, logfiles[0]),
+                                  neurospin_log])
+            todel_files.append(neurospin_log)
+            new_logfiles = [neurospin_log]
+        except:
+            pass
+
+    #try:
+        #michael_log = '/tmp/build-michael.log'
+        #print('retreiving michael log')
+        #subprocess.check_call(['scp',
+                              #'%smichael:/home/i2bm-research/builds.log'
+                                  #% ssh_user,
+                              #michael_log])
+        #todel_files = [michael_log]
+        #new_logfiles.append(michael_log)
+    #except:
+        #pass
+
+    r = re.compile('([^ ]+) - build started ([^,]+), stopped (.+) on ([^,]+)')
+    r2 = re.compile('^([^ ]+) +step ([^ :]+): ([^ ,]+), started: ([^,]+), stopped: (.+) on (.+)$')
+    r3 = re.compile('^UNMET DEP.*')
+
+    tv.setSortingEnabled(False)
+    tv.clearContents()
+    items = []
+    for logfile in new_logfiles:
+        for i, l in enumerate(open(logfile).readlines()):
+            m = r.match(l)
+            new_style = False
+            if not m or len(m.groups()) != 4:
+                m = r2.match(l) # new style
+                if not m or len(m.groups()) != 6:
+                    if r3.match(l): # unmet dep
+                        continue # skip this line
+                    else:
+                        raise SyntaxError('in file %s, line %d :\n%s'
+                                          % (logfile, i, l))
+                new_style = True
+            if new_style:
+                items.append((m.group(4), m.group(5), m.group(2), m.group(1),
+                              m.group(6), m.group(3)))
+            else:
+                items.append((m.group(2), m.group(3), 'all', m.group(1),
+                              m.group(4), ''))
+    tv.setRowCount(len(items))
+    for i in xrange(len(items)):
+        for j in xrange(len(items[-i-1])):
+            tv.setItem(i, j, QtGui.QTableWidgetItem(items[-i-1][j]))
+        if items[-i-1][3] in ('Error', 'FAILED', 'INTERRUPTED'):
+            tv.item(i, 3).setBackground( QtGui.QBrush( \
+                QtGui.QColor(255, 192, 192)))
+        else:
+            tv.item(i, 3).setBackground( QtGui.QBrush( \
+                QtGui.QColor(192, 255, 192)))
+
+    tv.sortItems(0, QtCore.Qt.DescendingOrder)
+    # tv.sortByColumn( 0, QtCore.Qt.DescendingOrder )
+    tv.resizeColumnsToContents()
+    tv.setSortingEnabled(True)
+
+    for file in todel_files:
+        os.unlink(file)
 
 parser = optparse.OptionParser('Display BrainVisa build logs in a GUI')
 parser.add_option('-i', '--input', dest='logfile', action='append',
@@ -26,30 +102,6 @@ if options.logfile:
 if options.user:
     ssh_user = options.user + '@'
 
-if not os.path.exists(logfiles[0]):
-    try:
-        neurospin_log = '/tmp/build-neurospin.log'
-        print('retreiving neurospin log')
-        subprocess.check_call(['scp', '%sis208611:%s'
-                               % (ssh_user, logfiles[0]),
-                              neurospin_log])
-        todel_files.append(neurospin_log)
-        logfiles = [neurospin_log]
-    except:
-        pass
-
-#try:
-    #michael_log = '/tmp/build-michael.log'
-    #print('retreiving michael log')
-    #subprocess.check_call(['scp',
-                           #'%smichael:/home/i2bm-research/builds.log'
-                              #% ssh_user,
-                           #michael_log])
-    #todel_files = [michael_log]
-    #logfiles.append(michael_log)
-#except:
-    #pass
-
 app = QtGui.QApplication(sys.argv)
 mw = QtGui.QMainWindow(None)
 mw.setWindowTitle('BrainVisa Builds logs')
@@ -62,49 +114,12 @@ tv.setColumnWidth(3, 100)
 tv.setColumnWidth(4, 100)
 tv.setHorizontalHeaderLabels(['start date', 'stop date', 'step', 'status',
                               'system', 'directory'])
-tv.setSortingEnabled(True)
-r = re.compile('([^ ]+) - build started ([^,]+), stopped (.+) on ([^,]+)')
-r2 = re.compile('^([^ ]+) +step ([^ :]+): ([^ ,]+), started: ([^,]+), stopped: (.+) on (.+)$')
-r3 = re.compile('^UNMET DEP.*')
-items = []
-for logfile in logfiles:
-    for i, l in enumerate(open(logfile).readlines()):
-        m = r.match(l)
-        new_style = False
-        if not m or len(m.groups()) != 4:
-            m = r2.match(l) # new style
-            if not m or len(m.groups()) != 6:
-                if r3.match(l): # unmet dep
-                    continue # skip this line
-                else:
-                    raise SyntaxError('in file %s, line %d :\n%s'
-                                      % (logfile, i, l))
-            new_style = True
-        if new_style:
-            items.append((m.group(4), m.group(5), m.group(2), m.group(1),
-                          m.group(6), m.group(3)))
-        else:
-            items.append((m.group(2), m.group(3), 'all', m.group(1),
-                          m.group(4), ''))
-    tv.setRowCount(len(items))
-    for i in xrange(len(items)):
-        for j in xrange(len(items[-i-1])):
-            tv.setItem(i, j, QtGui.QTableWidgetItem(items[-i-1][j]))
-        if items[-i-1][3] in ('Error', 'FAILED', 'INTERRUPTED'):
-            tv.item(i, 3).setBackground( QtGui.QBrush( \
-                QtGui.QColor(255, 192, 192)))
-        else:
-            tv.item(i, 3).setBackground( QtGui.QBrush( \
-                QtGui.QColor(192, 255, 192)))
+reload_data()
 
-tv.sortItems(0, QtCore.Qt.DescendingOrder)
-# tv.sortByColumn( 0, QtCore.Qt.DescendingOrder )
-tv.resizeColumnsToContents()
 p = mw.menuBar().addMenu('File')
+p.addAction(QtGui.QIcon(), 'Reload', reload_data, QtGui.QKeySequence.Refresh)
 p.addAction(QtGui.QIcon(), '&Quit', app.quit, QtGui.QKeySequence.Quit)
 mw.resize(800, 800)
 mw.show()
 app.exec_()
 
-for file in todel_files:
-    os.unlink(file)

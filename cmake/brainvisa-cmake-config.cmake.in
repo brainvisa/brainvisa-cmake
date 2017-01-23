@@ -1,5 +1,6 @@
 cmake_policy( SET CMP0011 NEW )
 cmake_policy( SET CMP0009 NEW )
+cmake_policy( SET CMP0054 NEW )
 
 get_property( config_done GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE )
 
@@ -17,6 +18,38 @@ if ( COMPILER_PREFIX AND CMAKE_CROSSCOMPILING)
     set( CMAKE_MODULE_PATH 
         "${brainvisa-cmake_DIR}/specific/windows/${COMPILER_PREFIX}" 
         ${CMAKE_MODULE_PATH} )
+  endif()
+endif()
+
+# OS identifier
+if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
+  if( EXISTS /etc/mandriva-release )
+      set( LSB_DISTRIB "mandriva"
+           CACHE STRING "Linux distribution identifier" )
+      file( READ /etc/mandriva-release _x )
+      string( REGEX MATCH "Mandriva Linux release ([0-9.]+)" _x "${_x}" )
+      if( _x )
+        set( LSB_DISTRIB_RELEASE ${CMAKE_MATCH_1} CACHE STRING "Linux distribution version" )
+      endif()
+  elseif( EXISTS /etc/lsb-release )
+    file( READ /etc/lsb-release _x )
+    string( REGEX MATCH "DISTRIB_ID=([^\n]+)" _y "${_x}" )
+    if( _y )
+      string( TOLOWER ${CMAKE_MATCH_1} _y )
+      set( LSB_DISTRIB ${_y} CACHE STRING "Linux distribution identifier" )
+      string( REGEX MATCH "DISTRIB_RELEASE=([0-9.]+)" _ver "${_x}" )
+      if( _ver )
+        set( LSB_DISTRIB_RELEASE ${CMAKE_MATCH_1} CACHE STRING "Linux distribution version" )
+      endif()
+    endif()
+  elseif( EXISTS /etc/redhat-release )
+    file( READ /etc/redhat-release _x )
+    string( REGEX MATCH "(.+) release ([0-9.]+)" _y "${_x}" )
+    if( _y )
+      string( TOLOWER ${CMAKE_MATCH_1} _y )
+      set( LSB_DISTRIB ${_y} CACHE STRING "Linux distribution identifier" )
+      set( LSB_DISTRIB_RELEASE ${CMAKE_MATCH_2} CACHE STRING "Linux distribution version" )
+    endif()
   endif()
 endif()
 

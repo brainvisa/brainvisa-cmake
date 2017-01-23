@@ -10,7 +10,6 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO cmake package_name
   string( REGEX MATCH "^.*libGLU${CMAKE_SHARED_LIBRARY_SUFFIX}[.](.*)$" match "${real}" )
   if( match )
     set( ${package_version} "${CMAKE_MATCH_1}" PARENT_SCOPE )
-    break()
   endif()
 endfunction()
 

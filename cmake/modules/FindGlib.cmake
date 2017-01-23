@@ -1,7 +1,5 @@
 # A CMake find module for Glib-2.0.
 #
-# http://openslide.org
-#
 # Once done, this module will define
 # GLIB_FOUND - system has Glib
 # GLIB_INCLUDE_DIRS - the Glib include directory

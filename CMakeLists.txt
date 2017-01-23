@@ -4,7 +4,8 @@ if( BRAINVISA_BVMAKER )
   set( CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR} )
 endif()
 
-project( brainvisa-cmake CXX )
+cmake_policy( SET CMP0048 NEW )
+project( brainvisa-cmake LANGUAGES CXX VERSION 1.0 )
 cmake_minimum_required( VERSION 2.6 )
 
 function( BRAINVISA_GLOB_AND_FILTER glob variable )

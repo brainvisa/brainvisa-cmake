@@ -13,9 +13,11 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
     endif()
   endif()
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS zlib RUN )
-  if( LSB_DISTRIB STREQUAL ubuntu
-      AND LSB_DISTRIB_RELEASE VERSION_GREATER 16.0 )
-    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS szlib RUN )
+  if( LSB_DISTRIB )
+    if( LSB_DISTRIB STREQUAL ubuntu
+        AND LSB_DISTRIB_RELEASE VERSION_GREATER 16.0 )
+      BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS szlib RUN )
+    endif()
   endif()
 endfunction()
 

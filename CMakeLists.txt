@@ -4,7 +4,7 @@ if( BRAINVISA_BVMAKER )
   set( CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR} )
 endif()
 
-if( CMAKE_MAJOR_VERSION GREATER 3 )
+if( CMAKE_MAJOR_VERSION GREATER 2 )
     cmake_policy( SET CMP0048 NEW )
     project( brainvisa-cmake LANGUAGES CXX VERSION 1.0 )
 else()

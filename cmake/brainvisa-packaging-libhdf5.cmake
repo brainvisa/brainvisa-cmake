@@ -12,19 +12,30 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
       set( ${package_version} "${CMAKE_MATCH_1}" PARENT_SCOPE )
     endif()
   endif()
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS zlib RUN )
+  if( LSB_DISTRIB STREQUAL ubuntu
+      AND LSB_DISTRIB_RELEASE VERSION_GREATER 16.0 )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS szlib RUN )
+  endif()
 endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   if(HDF5_FOUND)
     # depending on cmake version, HDF5_hdf5_LIBRARY_RELEASE may not be defined
-    if( NOT HDF5_hdf5_LIBRARY_RELEASE )
-      BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component}
-        ${HDF5_LIBRARY} )
+    if( HDF5_C_LIBRARIES )
+      set( _libs ${HDF5_C_LIBRARIES} ${HDF5_HL_LIBRARIES} )
     else()
-      BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component}
-        ${HDF5_hdf5_LIBRARY_RELEASE} )
+      set( _libs ${HDF5_hdf5_LIBRARY_RELEASE} ${HDF5_HL_LIBRARIES} )
     endif()
+    set( _libs_install )
+    foreach( _lib ${_libs} )
+      string( REGEX MATCH "hdf5" _match ${_lib} )
+      if( _match )
+        list( APPEND _libs_install ${_lib} )
+      endif()
+    endforeach()
+    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${_libs_install} )
     set(${component}_PACKAGED TRUE PARENT_SCOPE)
   else()
     set(${component}_PACKAGED FALSE PARENT_SCOPE)

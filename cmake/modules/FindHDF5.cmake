@@ -10,6 +10,7 @@ if( NOT HDF5_FOUND )
 
   if (NOT CMAKE_CROSSCOMPILING)
     # First, try to use the FindHDF5 module included with CMake 2.8 and later
+    set( HDF5_FIND_COMPONENTS C;HL )
     include("${CMAKE_ROOT}/Modules/FindHDF5.cmake" OPTIONAL)
   endif()
 

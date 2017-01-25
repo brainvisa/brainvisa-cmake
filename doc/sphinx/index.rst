@@ -47,6 +47,8 @@ BrainVisa-Cmake consists in several connected parts, mainly:
 :doc:`bv_packaging script <bv_packaging>`
 =========================================
 
+:doc:`CMake functions <cmake_functions>`
+========================================
 
 Contents
 ========
@@ -63,4 +65,5 @@ Contents
     testing_monitoring
     documenting
     bv_packaging
+    cmake_functions
 

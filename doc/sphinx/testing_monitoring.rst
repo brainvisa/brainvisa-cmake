@@ -145,24 +145,11 @@ In CMake
 
 ``brainvisa-cmake`` relies on `cmake <http://cmake.org>`_, and on `ctest <https://cmake.org/cmake/help/v3.0/manual/ctest.1.html>`_ for testing. Adding a new test if hence a matter of specifying it in the ``CMakeLists.txt`` file of the software project sources, using the `add_test <https://cmake.org/cmake/help/v3.0/command/add_test.html>`_ command.
 
-However ``brainvisa-cmake`` offers a light wrapper for it: ``brainvisa_add_test``, which handles the runtime test environment (build tree paths, or installed package testing), and also handles invoking python in a potentially cross-compilation environment:
-
-::
-
-    BRAINVISA_ADD_TEST( NAME <name> [CONFIGURATIONS [Debug|Release|...]]
-                                    [WORKING_DIRECTORY dir]
-                        COMMAND <command> [arg1 [arg2 ...]]
-                                    [TYPE Exe|Python] )
-
-    Add a test to the project with the specified arguments.
-    brainvisa_add_test(testname Exename arg1 arg2 ... )
-    If TYPE Python is given, the appropriate python interpreter is used to
-    start the test (i.e.: target python for cross compiling case).
-    Test command is also launched through bv_env_test command.
+However ``brainvisa-cmake`` offers a light wrapper for it: :ref:`brainvisa_add_test`, which handles the runtime test environment (build tree paths, or installed package testing), and also handles invoking python in a potentially cross-compilation environment.
 
 ex:
 
-::
+.. code-block:: cmake
 
     brainvisa_add_test(axon-tests "${TARGET_PYTHON_EXECUTABLE_NAME}" -m brainvisa.tests.test_axon)
 

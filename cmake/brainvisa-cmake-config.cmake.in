@@ -1887,8 +1887,8 @@ endfunction()
 #                  if defined, otherwise they are copied in 
 #                  ${PROJECT_BINARY_DIR}/doxygen. The doxygen configuration
 #                  file is generated in the same directory.
-#  <input prefix>: directory where finding input files
-#  <component>: component name for this doxygen documentation. it is used to create the output directory and the tag file name. 
+#  INPUT_PREFIX: directory where to find input files
+#  COMPONENT: component name for this doxygen documentation. it is used to create the output directory and the tag file name.
 #   By default it is the PROJECT_NAME. but it is useful to give an alternative name when there are several libraries documented with doxygen in the same project.
 #
 #   Before calling this macro, it is possible to specify values that are going

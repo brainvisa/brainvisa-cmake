@@ -3,7 +3,20 @@ find_package( ZLIB )
 function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )
   set( ${package_name} ${component} PARENT_SCOPE )
   set( ${package_maintainer} "IFR 49" PARENT_SCOPE )
-  set( ${package_version} ${ZLIB_VERSION_STRING} PARENT_SCOPE )
+  # Find version
+  if( NOT ZLIB_VERSION_STRING )
+    set( ${package_version} "0.0.0" PARENT_SCOPE )
+    if( EXISTS "${ZLIB_INCLUDE_DIR}/zlib.h" )
+      file( READ "${ZLIB_INCLUDE_DIR}/zlib.h" header )
+      string( REGEX MATCH "#define[ \\t]*ZLIB_VERSION[ \\t]*\"([^\"]*)\""
+              match "${header}" )
+      if( match )
+        set( ${package_version} "${CMAKE_MATCH_1}" PARENT_SCOPE )
+      endif()
+    endif()
+  else()
+    set( ${package_version} ${ZLIB_VERSION_STRING} PARENT_SCOPE )
+  endif()
 endfunction()
 
 

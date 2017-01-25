@@ -38,6 +38,12 @@ BrainVisa-Cmake consists in several connected parts, mainly:
 :doc:`bv_env program and similar shell scripts <bv_env>`
 ========================================================
 
+:doc:`Testing and monitoring infrastructure <testing_monitoring>`
+=================================================================
+
+:doc:`Documenting projects using brainvisa-cmake <documenting>`
+===============================================================
+
 :doc:`bv_packaging script <bv_packaging>`
 =========================================
 
@@ -54,5 +60,7 @@ Contents
     dependencies
     bv_maker
     bv_env
+    testing_monitoring
+    documenting
     bv_packaging
 

@@ -54,6 +54,8 @@ But the following line is not valid:
     [ build $HOME/brainvisa/build/trunk ] # This is a syntax error
 
 
+.. _general_section:
+
 Definition of a general section
 ===============================
 
@@ -67,7 +69,7 @@ The general section definition starts with a line with the following syntax:
 
 Option variables are stored in this section using the syntax ``option = value``. The following options are supported:
 
-* ``email_notification_by_default``: ``ON```or ``OFF`` (default). If set to ``ON``, email notification will always be used if ``failure_email`` or ``success_email`` are provided. Otherwise, the default behavior is to use email notification only when the ``bv_maker`` commabdline is invoked with the ``--email`` option.
+* ``email_notification_by_default``: ``ON```or ``OFF`` (default). If set to ``ON``, email notification will always be used if ``failure_email`` or ``success_email`` are provided. Otherwise, the default behavior is to use email notification only when the ``bv_maker`` commandline is invoked with the ``--email`` option.
 * ``global_status_file``: if this file is specified, a line will be appended to it for each source/build/package directory. This line will log the build status for the given directory: OK/FAILED, last step executed, directory, start and stop date and time, machine and system. It can be parsed and displayed using the command ``bv_show_build_log``.
 * ``failure_email``: email address where bv_maker outputs are sent in case of failure. If not specified, no email will be sent and bv_maker outputs will be sent to the standard output. One email will be sent for each directory and build step that fail.
 * ``success_email``: email address where bv_maker outputs are sent in case of success. If not specified, no email will be sent and bv_maker outputs will be sent to the standard output. One email will be sent for each directory and build step that succeeds.
@@ -75,6 +77,8 @@ Option variables are stored in this section using the syntax ``option = value``.
 * ``from_email``: displayed expeditor of sent emails. If not specified, it will be ``<user>-<hostname>@intra.cea.fr`` (the suffix is needed, and is correct for our lab)
 * ``reply_to_email``: displayed reply email address in sent emails. If not specified, ``appli@saxifrage.saclay.cea.fr``.
 
+
+.. _source_directory:
 
 Definition of a source directory
 ================================
@@ -142,6 +146,8 @@ Whereas the following configuration will link the same repository directory with
       + perso/myself/myproject myproject
 
 
+.. _build_directory:
+
 Definition of a build directory
 ===============================
 
@@ -193,6 +199,8 @@ A build directory may also be a *python virtualenv* directory. To specify it the
 
 A virtualenv directory will be initialized the first time it is used, and a python virtualenv environment will be installed there. Then it will be used as a build directory in addition. This allows to use ``pip install`` commands within it with a local install, just for this build directory.
 
+
+.. _package_directory:
 
 Definition of a package directory
 =================================

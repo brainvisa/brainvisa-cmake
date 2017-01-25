@@ -10,6 +10,7 @@ if sys.version_info[0] >= 3:
     xrange = range
 
 logfiles = ['/neurospin/brainvisa/build/builds.log']
+ssh_remote_host = 'is208611'
 ssh_user = ''
 tv = None # QTableWidget
 
@@ -24,8 +25,8 @@ def reload_data():
         try:
             neurospin_log = '/tmp/build-neurospin.log'
             print('retreiving neurospin log')
-            subprocess.check_call(['scp', '%sis208611:%s'
-                                  % (ssh_user, logfiles[0]),
+            subprocess.check_call(['scp', '%s%s:%s'
+                                  % (ssh_user, ssh_remote_host, logfiles[0]),
                                   neurospin_log])
             todel_files.append(neurospin_log)
             new_logfiles = [neurospin_log]
@@ -92,12 +93,18 @@ def reload_data():
 parser = optparse.OptionParser('Display BrainVisa build logs in a GUI')
 parser.add_option('-i', '--input', dest='logfile', action='append',
     help='input log file(s) [default: %s]' % str(logfiles))
+parser.add_option('-s', '--ssh', dest='ssh_host',
+    help='remote host for ssh access. default: %s. Only used if the log '
+    'file cannot be found on the local filesystem.' % ssh_remote_host)
 parser.add_option('-u', '--user', dest='user',
     help='user for ssh access. default: not specified, use current one')
 
 options, args = parser.parse_args(sys.argv)
 if options.logfile:
     logfiles = options.logfile
+
+if options.ssh_host:
+    ssh_remote_host = optons.ssh_host
 
 if options.user:
     ssh_user = options.user + '@'

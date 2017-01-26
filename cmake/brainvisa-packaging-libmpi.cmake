@@ -6,10 +6,11 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   # Find version
   set( ${package_version} "0.0.0" PARENT_SCOPE )
   # on Ubuntu >= 14 mpi is linked against libnuma, libhwlock, libltdl...
-#   if( LSB_DISTRIB STREQUAL "ubuntu"
-#       AND LSB_DISTRIB_RELEASE VERSION_GREATER 14.0 )
+  if( LSB_DISTRIB STREQUAL "ubuntu"
+      AND LSB_DISTRIB_RELEASE VERSION_GREATER 14.0 )
 #     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libnuma RUN )
-#   endif()
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libltdl7 RUN )
+  endif()
 endfunction()
 
 

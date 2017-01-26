@@ -14,9 +14,10 @@ Add target to generate command help files
 
 ::
 
-    BRAINVISA_ADD_COMMAND_HELP( name [COMPONENT <component>]
-                                     [HELP_COMMAND <command>]
-                                     [HELP_DEPENDS <dependencies>] )
+    BRAINVISA_ADD_COMMAND_HELP( name
+                                [COMPONENT <component>]
+                                [HELP_COMMAND <command>]
+                                [HELP_DEPENDS <dependencies>] )
 
 
 brainvisa_add_executable
@@ -46,32 +47,41 @@ brainvisa_add_sip_python_module
 
 ::
 
-    BRAINVISA_ADD_SIP_PYTHON_MODULE( <module> <directory> <mainSipFile> [ SIP_SOURCES <file> ... ] [ SIP_INCLUDE <directory> ... ] [ SIP_INSTALL <directory> ] )
+    BRAINVISA_ADD_SIP_PYTHON_MODULE( <module> <directory> <mainSipFile>
+                                     [ SIP_SOURCES <file> ... ]
+                                     [ SIP_INCLUDE <directory> ... ]
+                                     [ SIP_INSTALL <directory> ] )
 
 
 brainvisa_add_pytranslation
 ---------------------------
 
-Search recursively PyQt linguist source files (*.ts) generated from python
+Search recursively PyQt linguist source files (``*.ts``) generated from python
 (PyQt) sources, in the directory source share directory
-and generates the commands to create the associated *.qm files in the build
+and generates the commands to create the associated ``*.qm`` files in the build
 share directory and creates associated install rules.
 
 ::
 
-    BRAINVISA_ADD_PYTRANSLATION( <name of the source share directory where finding the *.ts files> <name of the destination share directory where writing the *.qm files> <component> [source directory to search python files] )
+    BRAINVISA_ADD_PYTRANSLATION(
+      <name of the source share directory where finding the *.ts files>
+      <name of the destination share directory where writing the *.qm files> <component>
+      [source directory to search python files] )
 
 
 brainvisa_add_translation
 -------------------------
 
-Search recursively qt linguist source files (*.ts) in the directory source share directory
-and generates the commands to create the associated *.qm files in the build share directory
+Search recursively qt linguist source files (``*.ts``) in the directory source share directory
+and generates the commands to create the associated ``*.qm`` files in the build share directory
 and creates associated install rules.
 
 ::
 
-    BRAINVISA_ADD_TRANSLATION( <name of the source share directory where finding the *.ts files> <name of the destination share directory where writing the *.qm files> <component> [source directory to search c++ files] )
+    BRAINVISA_ADD_TRANSLATION(
+      <name of the source share directory where finding the *.ts files>
+      <name of the destination share directory where writing the *.qm files> <component>
+      [source directory to search c++ files] )
 
 
 .. _brainvisa_add_test:
@@ -82,9 +92,9 @@ brainvisa_add_test
 ::
 
     BRAINVISA_ADD_TEST( NAME <name> [CONFIGURATIONS [Debug|Release|...]]
-                                    [WORKING_DIRECTORY dir]
+                        [WORKING_DIRECTORY dir]
                         COMMAND <command> [arg1 [arg2 ...]]
-                                    [TYPE Exe|Python] )
+                        [TYPE Exe|Python] )
 
 Add a test to the project with the specified arguments.
 brainvisa_add_test(testname Exename arg1 arg2 ... )
@@ -96,7 +106,8 @@ ex:
 
 .. code-block:: cmake
 
-    brainvisa_add_test(axon-tests "${TARGET_PYTHON_EXECUTABLE_NAME}" -m brainvisa.tests.test_axon)
+    brainvisa_add_test( axon-tests "${TARGET_PYTHON_EXECUTABLE_NAME}"
+                        -m brainvisa.tests.test_axon )
 
 
 brainvisa_copy_and_install_headers
@@ -104,7 +115,9 @@ brainvisa_copy_and_install_headers
 
 ::
 
-    BRAINVISA_COPY_AND_INSTALL_HEADERS( <headers list> <include directory> <install component> [NO_SYMLINKS] )
+    BRAINVISA_COPY_AND_INSTALL_HEADERS( <headers list> <include directory>
+                                        <install component>
+                                        [NO_SYMLINKS] )
 
 
 brainvisa_copy_directory
@@ -115,7 +128,11 @@ Recursively copy and install all files in <source directory> except files named
 
 ::
 
-    BRAINVISA_COPY_DIRECTORY( <source directory> <destination directory> <component> [IMMEDIATE] [GET_TARGET <target variable>] [NO_SYMLINKS] )
+    BRAINVISA_COPY_DIRECTORY( <source directory> <destination directory>
+                              <component>
+                              [IMMEDIATE]
+                              [GET_TARGET <target variable>]
+                              [NO_SYMLINKS] )
 
 
 brainvisa_copy_files
@@ -123,7 +140,14 @@ brainvisa_copy_files
 
 ::
 
-    BRAINVISA_COPY_FILES( <component> <source files> [SOURCE_DIRECTORY <directory>] DESTINATION <destination directory>  [IMMEDIATE] [GET_TARGET <target variable>] [TARGET <target name>] [GET_OUTPUT_FILES <target variable>] [NO_SYMLINKS] )
+    BRAINVISA_COPY_FILES( <component> <source files>
+                          [SOURCE_DIRECTORY <directory>]
+                          DESTINATION <destination directory>
+                          [IMMEDIATE]
+                          [GET_TARGET <target variable>]
+                          [TARGET <target name>]
+                          [GET_OUTPUT_FILES <target variable>]
+                          [NO_SYMLINKS] )
 
 
 brainvisa_copy_python_directory
@@ -135,7 +159,8 @@ contained in a directory.
 ::
 
     BRAINVISA_COPY_PYTHON_DIRECTORY( <python directory> <component>
-                                     <destination directory> [NO_SYMLINKS]
+                                     <destination directory>
+                                     [NO_SYMLINKS]
                                      [INSTALL_ONLY] )
 
 ``<python directory>``
@@ -159,7 +184,8 @@ Example:
 
 ::
 
-    BRAINVISA_COPY_PYTHON_DIRECTORY(  ${CMAKE_CURRENT_SOURCE_DIR}/python brainvisa_python )
+    BRAINVISA_COPY_PYTHON_DIRECTORY( ${CMAKE_CURRENT_SOURCE_DIR}/python
+                                     brainvisa_python )
 
 
 brainvisa_dependency
@@ -167,7 +193,10 @@ brainvisa_dependency
 
 ::
 
-   BRAINVISA_DEPENDENCY( <package type> <dependency type> <component> <component package type> [ <version ranges> ] [BINARY_INDEPENDENT] )
+   BRAINVISA_DEPENDENCY( <package type> <dependency type> <component>
+                         <component package type>
+                         [ <version ranges> ]
+                         [BINARY_INDEPENDENT] )
 
 Examples:
 
@@ -179,7 +208,8 @@ Examples:
     BRAINVISA_DEPENDENCY( DEV RECOMMENDS dcmtk DEV )
     BRAINVISA_DEPENDENCY( RUN DEPENDS soma-io RUN "3.2.4-20100908" )
     BRAINVISA_DEPENDENCY( DEV DEPENDS soma-io DEV ">= 3.2.0;<< 3.3.0" )
-    BRAINVISA_DEPENDENCY( RUN DEPENDS soma-base RUN ">= 3.2.0;<< 3.3.0" BINARY_INDEPENDENT )
+    BRAINVISA_DEPENDENCY( RUN DEPENDS soma-base RUN ">= 3.2.0;<< 3.3.0"
+                          BINARY_INDEPENDENT )
     BRAINVISA_DEPENDENCY( DEV DEPENDS soma-base DEV ">= 3.2.0;<< 3.3.0" )
 
 
@@ -190,13 +220,16 @@ Find file system entries from PATHS using search PATTERNS.
 
 ::
 
-    BRAINVISA_FIND_FSENTRY( output_variable PATTERNS [ <pattern> ... ] PATHS [ <path> ... ] )
+    BRAINVISA_FIND_FSENTRY( output_variable
+                            PATTERNS [ <pattern> ... ]
+                            PATHS [ <path> ... ] )
 
 Example:
 
 ::
 
-    BRAINVISA_FIND_FSENTRY( real_files PATTERNS *.so PATHS /usr/lib/ )
+    BRAINVISA_FIND_FSENTRY( real_files
+                            PATTERNS *.so PATHS /usr/lib/ )
     foreach( file ${real_files} )
       message( "${file}" )
     endforeach()
@@ -209,7 +242,8 @@ Add targets to generate commands help
 
 ::
 
-    BRAINVISA_GENERATE_COMMANDS_HELP( [COMPONENT] <component_1> ... <component_N>  )
+    BRAINVISA_GENERATE_COMMANDS_HELP( [COMPONENT]
+                                      <component_1> ... <component_N>  )
 
 
 brainvisa_generate_commands_help_index
@@ -247,7 +281,10 @@ Add rules to generate doxygen documentation with "make doc" or "make devdoc".
 
 ::
 
-    BRAINVISA_GENERATE_DOXYGEN_DOC( <input_variable> [<file to copy> ...] [INPUT_PREFIX <path>] [COMPONENT <name>] )
+    BRAINVISA_GENERATE_DOXYGEN_DOC( <input_variable>
+                                    [<file to copy> ...]
+                                    [INPUT_PREFIX <path>]
+                                    [COMPONENT <name>] )
 
 ``<input_variable>``
     variable containing a string or a list of input sources.
@@ -280,13 +317,13 @@ Example:
 
     find_package( Doxygen )
     if( DOXYGEN_FOUND )
-      set(component_name "cartodata")
-      set( DOXYFILE_PREDEFINED "${AIMS_DEFINITIONS}")
-      set( DOXYFILE_TAGFILES "cartobase.tag=../../cartobase-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/doxygen")
+      set( component_name "cartodata" )
+      set( DOXYFILE_PREDEFINED "${AIMS_DEFINITIONS}" )
+      set( DOXYFILE_TAGFILES "cartobase.tag=../../cartobase-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/doxygen" )
       BRAINVISA_GENERATE_DOXYGEN_DOC(
         _headers
         INPUT_PREFIX "${CMAKE_BINARY_DIR}/include/${component_name}"
-        COMPONENT "${component_name}")
+        COMPONENT "${component_name}" )
     endif( DOXYGEN_FOUND )
 
 
@@ -297,7 +334,10 @@ Add rules to generate epydoc documentation with ``make doc`` or ``make <componen
 
 ::
 
-    BRAINVISA_GENERATE_EPYDOC_DOC( <source directory> [ <source directory> ... ] <output directory> [ EXCLUDE <exclude list> ] )
+    BRAINVISA_GENERATE_EPYDOC_DOC( <source directory>
+                                   [ <source directory> ... ]
+                                   <output directory>
+                                   [ EXCLUDE <exclude list> ] )
 
 .. note::
 
@@ -350,18 +390,21 @@ brainvisa_generate_target_name
 brainvisa_get_file_list_from_pro
 --------------------------------
 
-Retrieve one (or more) list of file names from an *.pro file. This macro
-exists for backward compatibility with build-config.
+Retrieve one (or more) list of file names from a ``.pro`` file. This macro
+exists for backward compatibility with the older ``build-config`` tool (now abandoned).
 
 ::
 
-    BRAINVISA_GET_FILE_LIST_FROM_PRO( <pro file name> <pro variable> <cmake variable> [<pro variable> <cmake variable>...] )
+    BRAINVISA_GET_FILE_LIST_FROM_PRO( <pro file name> <pro variable>
+                                      <cmake variable>
+                                      [<pro variable> <cmake variable>...] )
 
 Example:
 
 .. code-block:: cmake
 
-    BRAINVISA_GET_FILE_LIST_FROM_PRO(  ${CMAKE_CURRENT_SOURCE_DIR}/libvip.pro "HEADERS" _h "SOURCES" _s )
+    BRAINVISA_GET_FILE_LIST_FROM_PRO(
+      ${CMAKE_CURRENT_SOURCE_DIR}/libvip.pro "HEADERS" _h "SOURCES" _s )
 
 
 brainvisa_get_spaced_quoted_list
@@ -395,13 +438,14 @@ Install a directory without copying it into the build tree.
 
 ::
 
-    BRAINVISA_INSTALL_DIRECTORY <directory> <destination> <component> )
+    BRAINVISA_INSTALL_DIRECTORY( <directory> <destination> <component> )
 
 Example:
 
 ::
 
-    BRAINVISA_INSTALL_DIRECTORY( "/usr/lib/python2.6" "python" "brainvisa-python" )
+    BRAINVISA_INSTALL_DIRECTORY( "/usr/lib/python2.6" "python"
+                                 "brainvisa-python" )
 
 
 brainvisa_install_runtime_libraries
@@ -480,7 +524,8 @@ library file.
 
 ::
 
-    BRAINVISA_RESOLVE_SYMBOL_LIBRARIES( <output_variable> PATHS <list of library files> )
+    BRAINVISA_RESOLVE_SYMBOL_LIBRARIES( <output_variable>
+                                        PATHS <list of library files> )
 
 Example:
 
@@ -495,7 +540,11 @@ brainvisa_thirdparty_dependency
 
 ::
 
-    BRAINVISA_THIRDPARTY_DEPENDENCY( <source component> <package type> <dependency type> <dest component> <dest component package type> [ <version ranges> ] [BINARY_INDEPENDENT] )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( <source component> <package type>
+                                     <dependency type> <dest component>
+                                     <dest component package type>
+                                     [ <version ranges> ]
+                                     [BINARY_INDEPENDENT] )
 
 Examples:
 
@@ -512,7 +561,8 @@ Convert version number either to hexadecimal version either to string version.
 
 ::
 
-    BRAINVISA_VERSION_CONVERT( <variable> version [HEX] [STR] [BYTES <number_of_bytes>] )
+    BRAINVISA_VERSION_CONVERT( <variable> version
+                               [HEX] [STR] [BYTES <number_of_bytes>] )
 
 Example:
 

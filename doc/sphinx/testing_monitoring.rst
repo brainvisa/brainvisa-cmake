@@ -10,7 +10,7 @@ Running tests
 Testing build directories
 -------------------------
 
-Basically, tests can be run through the bv_maker command:
+Basically, tests can be run through the :doc:`bv_maker` command:
 
 .. code-block:: bash
 
@@ -18,11 +18,11 @@ Basically, tests can be run through the bv_maker command:
 
 Of course options may be added to restrict to some build directories for instance using the ``-d`` option (see :doc:`bv_maker options <bv_maker>` for details).
 
-bv_maker also has :ref:`options specific to the test step <test_step>`, namely the ``-t`` option which may be used to run only a part of tests. For instance:
+``bv_maker`` also has :ref:`options specific to the test step <test_step>`, namely the ``-t`` option which may be used to run only a part of tests. For instance:
 
 .. code-block:: bash
 
-    bv_maker test -t '-VV -R carto*'
+    bv_maker test -t '-VV -R ^carto'
 
 will run tests in verbose mode, and run only tests whth names starting with ``carto``.
 
@@ -31,7 +31,7 @@ Basically, this ``bv_maker`` command runs `ctest <https://cmake.org/cmake/help/v
 .. code-block:: bash
 
     cd /home/brutus/build
-    ctest -VV -R carto*
+    ctest -VV -R ^carto
 
 These commands will do almost the same as the bv_maker variant, except that notification and logging will not take place.
 
@@ -54,6 +54,10 @@ Here again, options are allowed to restrict to specific package directories, par
 .. code-block:: bash
 
     bv_maker -d '/neurospin/tmp/brainvisa/tests/repositories/public/%(version)s-%(date)s/%(os)s/packages' test_pack -t '-VV -R carto*'
+
+.. note::
+
+    Contrarily to build directories tests, the ``test_pack`` step cannot be run through a ``ctest`` or ``make`` command equivalent, because ``bv_maker`` has to setup tesing into the installed package before running tests, in a way that is not recorded in cmake/make configuration.
 
 
 Notifying build and test executions
@@ -110,7 +114,7 @@ This file is a simple text file, containing just one line per bv_maker step exec
 Displaying the log file
 -----------------------
 
-The ``bv_show_build_logs`` tool allows to display the contents of the above log file in a graphics table:
+The ``bv_show_build_logs`` tool allows to display the contents of the above log file in a graphical table:
 
 .. code-block:: bash
 
@@ -118,7 +122,7 @@ The ``bv_show_build_logs`` tool allows to display the contents of the above log 
 
 .. image:: _static/bv_show_build_logs.jpg
 
-The display tool allows to sort by column, which may make easier to find the status for a specific build step, machine, or date...
+The display tool allows to sort by column, which may make it easier to find the status for a specific build step, machine, or date...
 
 ``bv_show_build_logs`` may also retreive the log file from a distant machine through ssh:
 
@@ -151,7 +155,8 @@ ex:
 
 .. code-block:: cmake
 
-    brainvisa_add_test(axon-tests "${TARGET_PYTHON_EXECUTABLE_NAME}" -m brainvisa.tests.test_axon)
+    brainvisa_add_test( axon-tests "${TARGET_PYTHON_EXECUTABLE_NAME}"
+                        -m brainvisa.tests.test_axon )
 
 
 In python projects
@@ -181,7 +186,7 @@ Configuring installed packages tests
 Config options
 --------------
 
-``bv_maker`` can run tests of installed packaged (after successful ``pack`` and ``install_pack`` steps), within the ``test_pack`` step. Such tests can make use of remote or virtual machines to perform tests in a "clean", controlled, test environment, different from the build machine.
+``bv_maker`` can run tests of installed packages (after successful ``pack`` and ``install_pack`` steps), within the ``test_pack`` step. Such tests can make use of remote or virtual machines to perform tests in a "clean", controlled, test environment, different from the build machine. Actually, to be precise, the ``install_pack`` step also uses the same mechanism and can also take place on a remote or virtual machine, in the same manner as running the tests themselves.
 
 However tests are always triggered from the build machine, which will in turn, connect to remote or virtual test machines.
 
@@ -216,11 +221,11 @@ Thus the appropriate docker command will be prepended to all tests.
 
 Note that here we are running Docker using the same user as the host machine, and we export the home directory and X11 connection from the host machine, allowing to perform graphical display.
 
-In addition here we run commands through `xvfb-run <https://en.wikipedia.org/wiki/Xvfb>`_: XVFB is a virtual X server which does not actually perform grpahical display on screen. This is used to perform tests on non-graphical build and test machines. This xvfb indirection should replace the X11 redirection (``DISPLAY`` and ``/tmp/.X11-unix settings``) thus the latter should not be needed, however we prefer to keep them because it's easy then to remove the xvfb indirection and get real interactive graphical display to fix some tests when needed.
+In addition here we run commands through `xvfb-run <https://en.wikipedia.org/wiki/Xvfb>`_: XVFB is a virtual X server which does not actually perform graphical display on screen. This is used to perform tests on non-graphical build and test machines. This xvfb indirection should replace the X11 redirection (``DISPLAY`` and ``/tmp/.X11-unix settings``) thus the latter should not be needed, however we prefer to keep them because it's easy then to remove the xvfb indirection and get real interactive graphical display to fix some tests when needed.
 
 Last, the docker image we are using here is: ``cati/brainvisa-test:ubuntu-16.04``. This is a docker image of an Ununtu 16.04 system. It should work as is, the image is found on `dockerhub <https://hub.docker.com/>`_ so docker should find it directly and download it if it is not already installed.
 
-This docker image is a minimal system, with minimal software installation: it contains only the libraries required to run the `Qt installer <http://doc.qt.io/qtinstallerframework/>`_ which binary installations are using, a X11 server and XVFB. Using this "smaller possible" system allows to find out missing thirdparty software dependencies in the tested software packages. The image and docker container will normally not be modified by the tests, so can be reused for later tests.
+This docker image is a minimal system, with minimal software installation: it contains only the libraries required to run the `Qt installer <http://doc.qt.io/qtinstallerframework/>`_ which binary installations are using, a X11 server and XVFB. Using this "smallest possible" system allows to find out missing thirdparty software dependencies in the tested software packages. The image and docker container will normally not be modified by the tests, so can be reused for later tests.
 
 
 Mixing SSH and Docker

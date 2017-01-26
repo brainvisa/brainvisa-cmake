@@ -123,7 +123,7 @@ In pure python projects, the CMake configuration file is not present in the sour
 Sphinx sources
 --------------
 
-Sphinx sources should be located in a directory from the sources tree. The directory should contain the ``conf.py`` file expected by sphinx.
+Sphinx sources should be located in a subdirectory of the project sources tree. The directory should contain the ``conf.py`` file expected by sphinx.
 
 For new developers, in a few words, Sphinx sources are text files using a markup language, `ReStructuredText <http://docutils.sourceforge.net/rst.html>`_ which is fairly simple and mostly human readable.
 

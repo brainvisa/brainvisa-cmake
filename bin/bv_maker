@@ -2289,6 +2289,10 @@ Controller.prototype.FinishedPageCallback = function()
         if self.remote_test_host_cmd:
             cmd = shlex.split(self.remote_test_host_cmd)
         cmd += [installer_filename, '--script', install_script]
+        if sys.platform == 'darwin':
+            # on Mac, the installer is a .app: run it through
+            # 'open installer_file'
+            cmd = ['open'] + cmd
         try:
             print('installing...')
             cmd = '"' + '" "'.join(cmd) + '"'

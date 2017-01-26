@@ -17,7 +17,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
       AND LSB_DISTRIB_RELEASE VERSION_GREATER 16.0 )
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS szlib RUN )
   endif()
-  if( HDF5_C_COMPILER_EXECUTABLE STREQUAL "h5pcc" )
+  if( HDF5_IS_PARALLEL )
     # mpi variant: depend on libmpi
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libmpi RUN )
   endif()

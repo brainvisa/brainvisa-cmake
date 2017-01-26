@@ -35,6 +35,11 @@ if( NOT HDF5_FOUND )
       /usr/lib
     )
 
+    find_library( HDF5_HL_LIBRARIES hdf5_hl
+      ${HDF5_DIR}/lib
+      /usr/lib
+    )
+
     IF( HDF5_INCLUDE_DIR )
     IF( HDF5_LIBRARIES )
 

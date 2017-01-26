@@ -2291,8 +2291,9 @@ Controller.prototype.FinishedPageCallback = function()
         cmd += [installer_filename, '--script', install_script]
         if sys.platform == 'darwin':
             # on Mac, the installer is a .app: run it through
-            # 'open installer_file'
+            # 'open installer_file.app'
             cmd = ['open'] + cmd
+            cmd[1] += '.app'
         try:
             print('installing...')
             cmd = '"' + '" "'.join(cmd) + '"'

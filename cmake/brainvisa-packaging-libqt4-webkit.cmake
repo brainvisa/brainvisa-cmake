@@ -21,6 +21,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO cmake package_name package_maintain
       AND LSB_DISTRIB_RELEASE VERSION_GREATER "12.0" )
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN
                                      DEPENDS libgstreamer RUN )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS liborc RUN )
   endif()
 endfunction()
 

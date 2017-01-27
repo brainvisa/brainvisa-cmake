@@ -30,6 +30,18 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       string( REGEX MATCH "(mpi)|(open)" _match ${_lib} )
       if( _match )
         list( APPEND _libs_install ${_lib} )
+        # on Ubuntu 12.04, libmpi.so is a symlink to libmpi.so.x.y.z
+        # but we need libmpi.so.x
+        if( LSB_DISTRIB STREQUAL "ubuntu"
+            AND LSB_DISTRIB_RELEASE VERSION_EQUAL 12.04 )
+          get_filename_component( _name ${_lib} NAME )
+          if( _name STREQUAL "libmpi.so" )
+            file( GLOB _libmpi_num "${_lib}.?" )
+            if( _libmpi_num )
+              list( APPEND _libs_install ${_libmpi_num} )
+            endif()
+          endif()
+        endif()
       endif()
     endforeach()
     BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${_libs_install} )

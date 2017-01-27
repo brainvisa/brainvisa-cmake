@@ -12,8 +12,6 @@ if( SZLIB_LIBRARIES )
 
 else()
 
-  message("*** FindSZLib ***")
-
   find_library( SZLIB_LIBRARIES sz )
   if( SZLIB_LIBRARIES )
     find_library( LIBAEC_LIBRARY aec )

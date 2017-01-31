@@ -632,6 +632,19 @@ components_definition = [
             }],
         ],
     }),
+    ('casa', {
+        'description': 'CATI and BrainVISA DevOps platform',
+        'components': [
+            ['casa-distro', {
+                'groups': ['all', 'cati_platform'],
+                'branches': {
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/casa/casa-distro/branches/bug_fix','casa-distro/trunk'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/casa/casa-distro/branches/bug_fix','casa-distro/bug_fix'),
+                },
+                'build_model': 'pure_python',
+            }],
+        ],
+    }),
 ]
 
 customize_components_definition = [os.path.expanduser('~/.brainvisa/components_definition.py')]

@@ -66,7 +66,7 @@ components_definition = [
     ('brainvisa-installer', {
         'components': [
             ['brainvisa-installer', {
-                'groups': ['all', 'cati_platform'],
+                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-installer/trunk','brainvisa-installer/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-installer/branches/bug_fix','brainvisa-installer/bug_fix'),

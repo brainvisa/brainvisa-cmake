@@ -169,6 +169,34 @@ def environmentVariablesSubstitution(path):
     return os.path.normpath(os.path.realpath(os.path.abspath(result)))
 
 
+def run_and_log_tests(cwd=None, env=None, options=None):
+    # get test labels to assign them to projects
+    test_labels = subprocess.check_output(
+        ['ctest', '--print-labels'] + options, cwd=cwd)
+    labels = [line.strip() for line in test_labels.split('\n')[2:-1]]
+    print('labels:', labels)
+    exc = None
+    logs = {}
+    for label in labels:
+        logfile = tempfile.mkstemp(prefix='bv_test_%s' % label, suffix='.log')
+        os.close(logfile[0])
+        start_time = time.localtime()
+        try:
+            system(cwd=cwd, env=env,
+                  *(['ctest', '-L', '^%s$' % label, '--output-on-failure',
+                     '-O', logfile[1]] + options))
+        except Exception as e:
+            logitem = {}
+            logitem['log_file'] = logfile[1]
+            logitem['exception'] = e
+            logitem['start_time'] = start_time
+            logitem['stop_time'] = time.localtime()
+            logs[label] = logitem
+        else:
+            os.unlink(logfile[1])
+    return logs
+
+
 class GlobalConfiguration(object):
 
     def __init__(self, argv):
@@ -424,9 +452,12 @@ class StepCommand(object):
                 if not self.options.in_config or step in o.default_steps:
                     if o.has_satisfied_dependencies(step):
                         self.redirect_stdout(d, o, step)
+                        logs = None
                         try:
-                            getattr(o, method)(*meth_args, **meth_kwargs)
-                            o.status[step] = 'succeeded' # mark as done
+                            logs = getattr(o, method)(*meth_args,
+                                                      **meth_kwargs)
+                            if not logs:
+                                o.status[step] = 'succeeded' # mark as done
                         except KeyboardInterrupt:
                             # record failure
                             o.status[step] = 'interrupted'
@@ -437,7 +468,21 @@ class StepCommand(object):
                             traceback.print_exc()
                             # record failure
                             o.status[step] = 'failed'
-                        self.release_notify_stdout(d, o, step)
+                        if logs:
+                            o.stop_time[step] = time.localtime()
+                            o.status[step] = 'interrupted'
+                            for label, item in six.iteritems(logs):
+                                log = item['log_file']
+                                exc = item['exception']
+                                full_step = '%s:%s' % (step, label)
+                                o.start_time[full_step] = item['start_time']
+                                o.stop_time[full_step] = item['stop_time']
+                                if not isinstance(exc, KeyboardInterrupt):
+                                    o.status[step] = 'failed'
+                                self.release_notify_log(d, o, step, label, log,
+                                                        exc)
+                        else:
+                            self.release_notify_stdout(d, o, step)
                     else:
                         print('Skipping', step, 'of', d,
                               'because it depends on a step that failed.')
@@ -495,6 +540,37 @@ class StepCommand(object):
         # file or it is tmp_stdout.
         del self.tmp_stdout
         del self.tmp_stderr
+
+    def release_stdout(self, o):
+        if not hasattr(self, 'orig_stdout'):
+            return
+        os.dup2(self.orig_stdout, 1)
+        os.dup2(self.orig_stderr, 2)
+        self.tmp_stdout.close()
+        if self.tmp_stderr is not self.tmp_stdout:
+            self.tmp_stderr.close()
+        del self.orig_stderr
+        del self.orig_stdout
+        if not o.stdout_file:
+            os.unlink(self.tmp_stdout.name)
+        # tmp_stderr is never removed: either it is specified as a persistant
+        # file or it is tmp_stdout.
+        del self.tmp_stdout
+        del self.tmp_stderr
+
+    def release_notify_log(self, d, o, step, label, log, exc):
+        self.release_stdout(o)
+        self.tmp_stdout = open(log)
+        self.tmp_stdout.close()
+        self.tmp_stderr = self.tmp_stdout
+        full_step = '%s:%s' % (step, label)
+        if isinstance(exc, KeyboardInterrupt):
+            o.status[full_step] = 'interrupted'
+        else:
+            o.status[full_step] = 'failed'
+        self.notify_log(d, o, full_step)
+        del self.tmp_stdout
+        os.unlink(log)
 
     def notify_log(self, d, o, step):
         status =  o.status.get(step, 'not run')
@@ -1830,8 +1906,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         else:
             ctoptions = self.ctest_options
         print('testing directory:', self.directory)
-        system(cwd=self.directory,
-               *(['ctest', '--output-on-failure'] + ctoptions))
+        return run_and_log_tests(cwd=self.directory, options=ctoptions)
 
     def info(self):
         self._process_configuration_lines()
@@ -2327,15 +2402,14 @@ Controller.prototype.FinishedPageCallback = function()
             ctoptions = shlex.split(options.ctest_options)
         else:
             ctoptions = self.ctest_options
-        try:
-            system(cwd=self.build_dir.directory, env=new_env,
-                  *(['ctest', '--output-on-failure'] + ctoptions))
-        except:
+        test_res = run_and_log_tests(cwd=self.build_dir.directory,
+                                     env=new_env, options=ctoptions)
+        if res:
             if os.path.isdir(repos_dir):
                 open(report_file, 'w').write('Tests_result: FAILED\n')
-            raise
-        if os.path.isdir(repos_dir):
+        elif os.path.isdir(repos_dir):
             open(report_file, 'w').write('Tests_result: OK\n')
+        return test_res
 
 
     def expand_shell(self, line):

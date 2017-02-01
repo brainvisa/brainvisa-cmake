@@ -1771,6 +1771,7 @@ endfunction()
 #  If TYPE Python is given, the appropriate python interpreter is used to
 #  start the test (i.e.: target python for cross compiling case).
 #  Test command is also launched through bv_env_test command.
+#  Each test in ctest is assigned a label corresponding to the project name
 # Usage:
 #
 #   BRAINVISA_ADD_TEST( NAME <name> [CONFIGURATIONS [Debug|Release|...]]
@@ -1866,7 +1867,15 @@ function( BRAINVISA_ADD_TEST )
     add_test(NAME ${_name_args}
              COMMAND ${_command_args})
   endif()
-  
+  # set project as test label
+  if( BRAINVISA_PACKAGE_MAIN_PROJECT )
+    set_tests_properties( ${_name_args} PROPERTIES
+                          LABELS "${BRAINVISA_PACKAGE_MAIN_PROJECT}" )
+  else()
+    set_tests_properties( ${_name_args} PROPERTIES
+                          LABELS "${PROJECT_NAME}" )
+  endif()
+
   unset(_arg_index)
   unset(_current_arg)
   unset(_name_args)

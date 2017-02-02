@@ -490,6 +490,7 @@ class StepCommand(object):
                 print('Skipping', step, 'of', d,
                       'because it is not in the selected directories.')
 
+
     def redirect_stdout(self, d, o, step):
         o.start_time[step] = time.localtime()
         if configuration.general_section is None:
@@ -497,7 +498,9 @@ class StepCommand(object):
         if (configuration.general_section.email_notification_by_default.upper()
                 != 'ON' and not configuration.options.email) \
                 or (configuration.general_section.failure_email == ''
-                    and configuration.general_section.success_email == ''):
+                    and configuration.general_section.success_email == ''
+                    and configuration.general_section.failure_email_by_project
+                        == {}):
             return
         if o.stdout_file or o.stderr_file:
             if o.stdout_file:
@@ -579,10 +582,16 @@ class StepCommand(object):
                 == 'ON' or configuration.options.email:
             if status in ('failed', 'interrupted'):
                 email = configuration.general_section.failure_email
+                if configuration.general_section.failure_email_by_project:
+                    project = step.split(':')[-1]
+                    if project in  configuration.general_section. \
+                            failure_email_by_project:
+                        email = configuration.general_section. \
+                            failure_email_by_project[project]
             elif status == 'succeeded':
                 email = configuration.general_section.success_email
         email_sent = False
-        if email != '':
+        if email:
             try:
                 self.send_log_email(email, d, o, step, status)
                 email_sent = True
@@ -943,12 +952,14 @@ class TestPackCommand(StepCommand):
 class GeneralSection(object):
     _validOptions = set(('failure_email', 'success_email', 'smtp_server',
                          'from_email', 'reply_to_email', 'global_status_file',
-                         'email_notification_by_default'))
+                         'email_notification_by_default',
+                         'failure_email_by_project'))
 
     def __init__(self, configuration):
         self.configuration = configuration
         self.configurationLines = []
         self.failure_email = ''
+        self.failure_email_by_project = {}
         self.success_email = ''
         self.smtp_server = ''
         self.from_email = ''
@@ -963,9 +974,11 @@ class GeneralSection(object):
             value = line[i + 1:].strip()
             if option not in self._validOptions:
                 raise SyntaxError('Invalid option: %s' % option)
-            if hasattr(self, option) \
-                    and type(getattr(self, option)) in (list, tuple):
-                value = value.split()
+            if hasattr(self, option):
+                if type(getattr(self, option)) in (list, tuple):
+                    value = value.split()
+                elif isinstance(getattr(self, option), dict):
+                    value = dict(eval(value))
             setattr(self, option, value)
         else:
             raise SyntaxError()

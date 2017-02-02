@@ -72,6 +72,12 @@ Option variables are stored in this section using the syntax ``option = value``.
 * ``email_notification_by_default``: ``ON```or ``OFF`` (default). If set to ``ON``, email notification will always be used if ``failure_email`` or ``success_email`` are provided. Otherwise, the default behavior is to use email notification only when the ``bv_maker`` commandline is invoked with the ``--email`` option.
 * ``global_status_file``: if this file is specified, a line will be appended to it for each source/build/package directory. This line will log the build status for the given directory: OK/FAILED, last step executed, directory, start and stop date and time, machine and system. It can be parsed and displayed using the command ``bv_show_build_log``.
 * ``failure_email``: email address where bv_maker outputs are sent in case of failure. If not specified, no email will be sent and bv_maker outputs will be sent to the standard output. One email will be sent for each directory and build step that fail.
+* ``failure_email_by_project``: dictionary of email addresses, in a project-indexed dictionary (json or python syntax). Adresses can be lists of strings. Ex:
+
+    .. code-block:: bash
+
+        failure_email_by_project = {'aims': 'maintainer@aims.org', 'anatomist': ['maintainer@aims.org', 'maintainer@anatomist.org']}
+
 * ``success_email``: email address where bv_maker outputs are sent in case of success. If not specified, no email will be sent and bv_maker outputs will be sent to the standard output. One email will be sent for each directory and build step that succeeds.
 * ``smtp_server``: SMTP (email server) hostname to be used to send emails
 * ``from_email``: displayed expeditor of sent emails. If not specified, it will be ``<user>-<hostname>@intra.cea.fr`` (the suffix is needed, and is correct for our lab)

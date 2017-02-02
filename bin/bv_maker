@@ -51,6 +51,11 @@ import shlex
 import time
 import traceback
 from smtplib import SMTP
+import gzip
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib2 import urlopen
 try:
     # compatibility for python3
     import six
@@ -193,7 +198,13 @@ def run_and_log_tests(cwd=None, env=None, options=None):
             logitem['stop_time'] = time.localtime()
             logs[label] = logitem
         else:
-            os.unlink(logfile[1])
+            logitem = {}
+            logitem['log_file'] = logfile[1]
+            logitem['exception'] = None
+            logitem['start_time'] = start_time
+            logitem['stop_time'] = time.localtime()
+            logs[label] = logitem
+            #os.unlink(logfile[1])
     return logs
 
 
@@ -443,6 +454,11 @@ def global_installer_variables():
 
 class StepCommand(object):
 
+    def __del__(self):
+        # cleanup jenkins CLI temp file
+        if hasattr(self, 'jenkins_cli'):
+            shutil.rmtree(os.path.dirname(self.jenkins_cli))
+
     def process(self, step, directories_dict, method, *meth_args,
                 **meth_kwargs):
         for d, o in six.iteritems(directories_dict):
@@ -470,14 +486,21 @@ class StepCommand(object):
                             o.status[step] = 'failed'
                         if logs:
                             o.stop_time[step] = time.localtime()
-                            o.status[step] = 'interrupted'
+                            o.status[step] = 'succeeded'
                             for label, item in six.iteritems(logs):
                                 log = item['log_file']
                                 exc = item['exception']
                                 full_step = '%s:%s' % (step, label)
                                 o.start_time[full_step] = item['start_time']
                                 o.stop_time[full_step] = item['stop_time']
-                                if not isinstance(exc, KeyboardInterrupt):
+                                if exc is None:
+                                    o.status[full_step] = 'succeeded'
+                                elif isinstance(exc, KeyboardInterrupt):
+                                    o.status[full_step] = 'interrupted'
+                                    if o.status[step] != 'failed':
+                                        o.status[step] = 'interrupted'
+                                else:
+                                    o.status[full_step] = 'failed'
                                     o.status[step] = 'failed'
                                 self.release_notify_log(d, o, step, label, log,
                                                         exc)
@@ -567,7 +590,9 @@ class StepCommand(object):
         self.tmp_stdout.close()
         self.tmp_stderr = self.tmp_stdout
         full_step = '%s:%s' % (step, label)
-        if isinstance(exc, KeyboardInterrupt):
+        if exc is None:
+            o.status[full_step] = 'succeeded'
+        elif isinstance(exc, KeyboardInterrupt):
             o.status[full_step] = 'interrupted'
         else:
             o.status[full_step] = 'failed'
@@ -599,20 +624,10 @@ class StepCommand(object):
                 print('WARNING: notification email could not be sent:',
                       e.message)
                 traceback.print_exc()
+        self.jenkins_notification(d, o, step, status)
         if not email_sent:
             print(self.message_header(d, o, step, status))
-            if self.tmp_stderr is not self.tmp_stdout:
-                print('====== standard output ======\n')
-            else:
-                print('====== output ======\n')
-            with open(self.tmp_stdout.name) as f:
-                for line in f.readlines():
-                    print(line)
-            if self.tmp_stderr is not self.tmp_stdout:
-                print('====== standard error ======\n')
-                with open(self.tmp_stderr.name) as f:
-                    for line in f.readlines():
-                        print(line)
+            print(self.log_message_content())
 
     def message_header(self, d, o, step, status):
         dlen = max((len(step), len(status), len(d)))
@@ -664,10 +679,21 @@ Subject: %s - %s %s on %s (%s)
             osname)
 
         message += self.message_header(d, o, step, status)
-        if self.tmp_stderr is not self.tmp_stdout:
-            message += '====== standard output ======\n\n'
+        message += self.log_message_content()
+
+        if configuration.general_section.smtp_server != '':
+            smtp_server = configuration.general_section.smtp_server
         else:
-            message += '====== output ======\n\n'
+            smtp_server = 'mx.intra.cea.fr'
+        server = SMTP(smtp_server)
+        server.sendmail(from_address, to_address, message)
+        server.quit()
+
+    def log_message_content(self):
+        if self.tmp_stderr is not self.tmp_stdout:
+            message = '====== standard output ======\n\n'
+        else:
+            message = '====== output ======\n\n'
         # Read message from file
         file = open(self.tmp_stdout.name)
         message += file.read()
@@ -677,14 +703,68 @@ Subject: %s - %s %s on %s (%s)
             file = open(self.tmp_stderr.name)
             message += file.read()
             file.close()
+        return message
 
-        if configuration.general_section.smtp_server != '':
-            smtp_server = configuration.general_section.smtp_server
+    def jenkins_notification(self, d, o, step, status):
+        ''' Notify job execution (build, test etc) to a Jenkins server
+        '''
+        if not configuration.general_section.jenkins_server_url:
+            return # don't notify
+        machine = gethostname()
+        osname = global_installer_variables()['os']
+        #Status = status[0].upper() + status[1:]
+        if 'exception' not in o.status[step] \
+                or o.status[step]['exception'] is None:
+            res = 0
+        elif isinstance(o.status[step]['exception'], KeyboardInterrupt):
+            res = 2
         else:
-            smtp_server = 'mx.intra.cea.fr'
-        server = SMTP(smtp_server)
-        server.sendmail(from_address, to_address, message)
-        server.quit()
+            res = 1
+
+        message = self.message_header(d, o, step, status)
+        message += self.log_message_content()
+        # gzip content
+        zlog_f = tempfile.mkstemp(prefix='log_%s' %step, suffix='.gz')
+        os.close(zlog_f[0])
+        zlog = zlog_f[1]
+        gf = gzip.GzipFile(zlog, 'wb')
+        gf.write(message)
+        gf.close()
+        try:
+            job_name = '%s-%s-%s-%s' \
+                % (configuration.general_section.jenkins_build_name, step,
+                   machine, osname)
+            job_long_name = '%s, step %s, on %s (%s)' \
+                % (configuration.general_section.jenkins_build_name, step,
+                   machine, osname)
+            duration_t = [y - x
+                          for x, y in zip(o.start_time[step],
+                                          o.stop_time[step])]
+            # duration in seconds
+            duration = int(time.mktime(duration_t) - time.mktime((0, ) * 9))
+            # jenkins-cli.jar can / should? be retreived from the server
+            #jenkins_cli_path = 'jenkins-cli.jar'
+            jenkins_cli_path = self.get_jenkins_cli()
+            jkn_cmd = ['java', '-jar', jenkins_cli_path, '-s',
+                      configuration.general_section.jenkins_server_url,
+                      'set-external-build-result', '--display',
+                      job_long_name, '--job', job_name, '--result', res,
+                      '--duration', duration, '--log', zlog]
+            subprocess.check_call(jkn_cmd)
+        finally:
+            os.unlink(zlog)
+
+    def get_jenkins_cli(self):
+        if hasattr(self, 'jenkins_cli'):
+            return self.jenkins_cli
+        cli_file_d = tempfile.mkdtemp(prefix='bv_maker_jenkins')
+        cli_file = os.path.join(cli_file_d, 'jenkins-cli.jar')
+        url = configuration.general_section.jenkins_server_url \
+            + '/jnlpJars/jenkins-cli.jar'
+        f = urlopen(url)
+        open(cli_file, 'wb').write(f.read())
+        self.jenkins_cli = cli_file
+        return self.jenkins_cli
 
 
 class InfoCommand(StepCommand):
@@ -953,7 +1033,7 @@ class GeneralSection(object):
     _validOptions = set(('failure_email', 'success_email', 'smtp_server',
                          'from_email', 'reply_to_email', 'global_status_file',
                          'email_notification_by_default',
-                         'failure_email_by_project'))
+                         'failure_email_by_project', 'jenkins_server_url'))
 
     def __init__(self, configuration):
         self.configuration = configuration
@@ -966,6 +1046,7 @@ class GeneralSection(object):
         self.reply_to_email = ''
         self.global_status_file = None
         self.email_notification_by_default = 'OFF'
+        self.jenkins_server_url = ''
 
     def addConfigurationLine(self, line):
         i = line.find('=')
@@ -2376,12 +2457,12 @@ Controller.prototype.FinishedPageCallback = function()
         cmd = []
         if self.remote_test_host_cmd:
             cmd = shlex.split(self.remote_test_host_cmd)
-        cmd += [installer_filename, '--script', install_script]
         if sys.platform == 'darwin':
             # on Mac, the installer is a .app: run it through
             # 'open installer_file.app'
-            cmd = ['open'] + cmd
-            cmd[1] += '.app'
+            installer_filename += '.app'
+            cmd.append('open')
+        cmd += [installer_filename, '--script', install_script]
         try:
             print('installing...')
             cmd = '"' + '" "'.join(cmd) + '"'
@@ -2418,8 +2499,12 @@ Controller.prototype.FinishedPageCallback = function()
         test_res = run_and_log_tests(cwd=self.build_dir.directory,
                                      env=new_env, options=ctoptions)
         if res:
+            status = 'OK'
+            for item in six.itervalues(res):
+                if item['exception'] is not None:
+                    status = 'FAILED'
             if os.path.isdir(repos_dir):
-                open(report_file, 'w').write('Tests_result: FAILED\n')
+                open(report_file, 'w').write('Tests_result: %s\n' % status)
         elif os.path.isdir(repos_dir):
             open(report_file, 'w').write('Tests_result: OK\n')
         return test_res

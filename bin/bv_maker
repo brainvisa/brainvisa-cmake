@@ -550,22 +550,24 @@ class StepCommand(object):
 
     def release_notify_stdout(self, d, o, step):
         o.stop_time[step] = time.localtime()
-        if not hasattr(self, 'orig_stdout'):
-            return
-        os.dup2(self.orig_stdout, 1)
-        os.dup2(self.orig_stderr, 2)
-        self.tmp_stdout.close()
-        if self.tmp_stderr is not self.tmp_stdout:
-            self.tmp_stderr.close()
-        del self.orig_stderr
-        del self.orig_stdout
+        fix_stdout = False
+        if hasattr(self, 'orig_stdout'):
+            fix_stdout = True
+            os.dup2(self.orig_stdout, 1)
+            os.dup2(self.orig_stderr, 2)
+            self.tmp_stdout.close()
+            if self.tmp_stderr is not self.tmp_stdout:
+                self.tmp_stderr.close()
         self.notify_log(d, o, step)
-        if not o.stdout_file:
-            os.unlink(self.tmp_stdout.name)
-        # tmp_stderr is never removed: either it is specified as a persistant
-        # file or it is tmp_stdout.
-        del self.tmp_stdout
-        del self.tmp_stderr
+        if fix_stdout:
+            del self.orig_stderr
+            del self.orig_stdout
+            if not o.stdout_file:
+                os.unlink(self.tmp_stdout.name)
+            # tmp_stderr is never removed: either it is specified as a
+            # persistant file or it is tmp_stdout.
+            del self.tmp_stdout
+            del self.tmp_stderr
 
     def release_stdout(self, o):
         if not hasattr(self, 'orig_stdout'):
@@ -602,6 +604,9 @@ class StepCommand(object):
 
     def notify_log(self, d, o, step):
         status =  o.status.get(step, 'not run')
+        # global log file notification
+        self.log_in_global_log_file(d, o, step, status)
+        # email notification
         email = ''
         if configuration.general_section.email_notification_by_default.upper() \
                 == 'ON' or configuration.options.email:
@@ -615,17 +620,18 @@ class StepCommand(object):
                             failure_email_by_project[project]
             elif status == 'succeeded':
                 email = configuration.general_section.success_email
-        email_sent = False
         if email:
             try:
                 self.send_log_email(email, d, o, step, status)
-                email_sent = True
             except Exception, e:
                 print('WARNING: notification email could not be sent:',
                       e.message)
                 traceback.print_exc()
+        # Jenkins notification
         self.jenkins_notification(d, o, step, status)
-        if not email_sent:
+        # console notification
+        if email and status in ('failed', 'interrupted'):
+            # original stdout has been changed, we need to print again
             print(self.message_header(d, o, step, status))
             print(self.log_message_content())
 
@@ -704,6 +710,35 @@ Subject: %s - %s %s on %s (%s)
             message += file.read()
             file.close()
         return message
+
+    def log_in_global_log_file(self, d, o, step, status):
+        print('log_in_global_log_file', step, status)
+        if status == 'not run':
+            return # don't log non-running steps
+        log_file = None
+        if configuration.general_section \
+                and configuration.general_section.global_status_file:
+            log_file = configuration.general_section.global_status_file
+        if not log_file:
+            return
+
+        status = status.upper()
+        if status == 'SUCCEEDED':
+            status = 'OK' # we used OK, so let's go on
+        machine = gethostname()
+        osname = global_installer_variables()['os']
+
+        message = '%s step %s: %s' % (status, step, d)
+        start = o.start_time.get(step)
+        if start:
+            message += ', started: %04d/%02d/%02d %02d:%02d' \
+                % start[:5]
+        stop = o.stop_time.get(step)
+        if stop:
+            message += ', stopped: %04d/%02d/%02d %02d:%02d' \
+                % stop[:5]
+        open(log_file, 'a').write(
+            '%s on %s (%s)\n' % (message, machine, osname))
 
     def jenkins_notification(self, d, o, step, status):
         ''' Notify job execution (build, test etc) to a Jenkins server
@@ -2539,12 +2574,12 @@ def display_failure_summary(configuration):
     sys.stdout.flush()
     sys.stderr.flush()
     print('\nbv_maker summary:')
-    log_file = None
-    if configuration.general_section \
-            and configuration.general_section.global_status_file:
-        log_file = configuration.general_section.global_status_file
-        machine = gethostname()
-        osname = global_installer_variables()['os']
+    #log_file = None
+    #if configuration.general_section \
+            #and configuration.general_section.global_status_file:
+        #log_file = configuration.general_section.global_status_file
+        #machine = gethostname()
+        #osname = global_installer_variables()['os']
     for section_name, steps in sections:
         for directory, section \
                 in six.iteritems(getattr(configuration, section_name)):
@@ -2561,21 +2596,21 @@ def display_failure_summary(configuration):
                         message += ', stopped: %04d/%02d/%02d %02d:%02d' \
                             % stop[:5]
                     print(message)
-                    if log_file:
-                        log_it = False
-                        if status == 'FAILED':
-                            log_it = True
-                        else:
-                            next_steps = range(steps.index(step)+1, len(steps))
-                            next_statuses \
-                                = [section.get_status(steps[next_step])
-                                   for next_step in next_steps]
-                            if 'failed' not in next_statuses \
-                                    and 'succeeded' not in next_statuses:
-                                log_it = True
-                        if log_it:
-                            open(log_file, 'a').write(
-                                '%s on %s (%s)\n' % (message, machine, osname))
+                    #if log_file:
+                        #log_it = False
+                        #if status == 'FAILED':
+                            #log_it = True
+                        #else:
+                            #next_steps = range(steps.index(step)+1, len(steps))
+                            #next_statuses \
+                                #= [section.get_status(steps[next_step])
+                                   #for next_step in next_steps]
+                            #if 'failed' not in next_statuses \
+                                    #and 'succeeded' not in next_statuses:
+                                #log_it = True
+                        #if log_it:
+                            #open(log_file, 'a').write(
+                                #'%s on %s (%s)\n' % (message, machine, osname))
                     if section.has_failed(step):
                         global_failed = True
     if global_failed:

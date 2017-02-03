@@ -13,6 +13,7 @@ logfiles = ['/neurospin/brainvisa/build/builds.log']
 ssh_remote_host = 'is208611'
 ssh_user = ''
 tv = None # QTableWidget
+status_col = 4
 
 
 def reload_data():
@@ -46,7 +47,7 @@ def reload_data():
         #pass
 
     r = re.compile('([^ ]+) - build started ([^,]+), stopped (.+) on ([^,]+)')
-    r2 = re.compile('^([^ ]+) +step ([^ :]+): ([^ ,]+), started: ([^,]+), stopped: (.+) on (.+)$')
+    r2 = re.compile('^([^ ]+) +step ([^ :]+)(:([^ ]+))?: ([^ ,]+), started: ([^,]+), stopped: (.+) on (.+)$')
     r3 = re.compile('^UNMET DEP.*')
 
     tv.setSortingEnabled(False)
@@ -55,10 +56,11 @@ def reload_data():
     for logfile in new_logfiles:
         for i, l in enumerate(open(logfile).readlines()):
             m = r.match(l)
+            print(l)
             new_style = False
             if not m or len(m.groups()) != 4:
                 m = r2.match(l) # new style
-                if not m or len(m.groups()) != 6:
+                if not m:
                     if r3.match(l): # unmet dep
                         continue # skip this line
                     else:
@@ -66,20 +68,23 @@ def reload_data():
                                           % (logfile, i, l))
                 new_style = True
             if new_style:
-                items.append((m.group(4), m.group(5), m.group(2), m.group(1),
-                              m.group(6), m.group(3)))
+                project = ''
+                if m.group(4) is not None:
+                    project = m.group(4)
+                items.append((m.group(6), m.group(7), m.group(2), project,
+                              m.group(1), m.group(8), m.group(5)))
             else:
-                items.append((m.group(2), m.group(3), 'all', m.group(1),
+                items.append((m.group(2), m.group(3), 'all', '', m.group(1),
                               m.group(4), ''))
     tv.setRowCount(len(items))
     for i in xrange(len(items)):
         for j in xrange(len(items[-i-1])):
             tv.setItem(i, j, QtGui.QTableWidgetItem(items[-i-1][j]))
-        if items[-i-1][3] in ('Error', 'FAILED', 'INTERRUPTED'):
-            tv.item(i, 3).setBackground( QtGui.QBrush( \
+        if items[-i-1][status_col] in ('Error', 'FAILED', 'INTERRUPTED'):
+            tv.item(i, status_col).setBackground( QtGui.QBrush( \
                 QtGui.QColor(255, 192, 192)))
         else:
-            tv.item(i, 3).setBackground( QtGui.QBrush( \
+            tv.item(i, status_col).setBackground( QtGui.QBrush( \
                 QtGui.QColor(192, 255, 192)))
 
     tv.sortItems(0, QtCore.Qt.DescendingOrder)
@@ -114,13 +119,13 @@ mw = QtGui.QMainWindow(None)
 mw.setWindowTitle('BrainVisa Builds logs')
 tv = QtGui.QTableWidget(mw)
 mw.setCentralWidget(tv)
-tv.setColumnCount(6)
+tv.setColumnCount(7)
 tv.setColumnWidth(0, 200)
 tv.setColumnWidth(1, 200)
-tv.setColumnWidth(3, 100)
 tv.setColumnWidth(4, 100)
-tv.setHorizontalHeaderLabels(['start date', 'stop date', 'step', 'status',
-                              'system', 'directory'])
+tv.setColumnWidth(5, 100)
+tv.setHorizontalHeaderLabels(['start date', 'stop date', 'step', 'project',
+                              'status', 'system', 'directory'])
 reload_data()
 
 p = mw.menuBar().addMenu('File')

@@ -123,9 +123,9 @@ components_definition = [
             ['soma-workflow', {
                 'groups': ['all', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/neurospin/soma-workflow.git master','soma/soma-workflow/trunk'),
-                    'bug_fix': ('git https://github.com/neurospin/soma-workflow.git bug_fix','soma/soma-workflow/bug_fix'),
-                    'tag': ('git https://github.com/neurospin/soma-workflow.git latest_release','soma/soma-workflow/latest_release'),
+                    'trunk': ('git https://github.com/neurospin/soma-workflow.git branch:master','soma/soma-workflow/trunk'),
+                    'bug_fix': ('git https://github.com/neurospin/soma-workflow.git branch:bug_fix','soma/soma-workflow/bug_fix'),
+                    'tag': ('git https://github.com/neurospin/soma-workflow.git tag:latest_release','soma/soma-workflow/latest_release'),
                 },
             }],
         ],
@@ -135,9 +135,9 @@ components_definition = [
             ['capsul', {
                 'groups': ['all', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/neurospin/capsul.git integration','capsul/trunk'),
-                    'bug_fix': ('git https://github.com/neurospin/capsul.git v1','capsul/bug_fix'),
-                    'tag': ('git https://github.com/neurospin/capsul.git latest_release','capsul/latest_release'),
+                    'trunk': ('git https://github.com/neurospin/capsul.git branch:integration','capsul/trunk'),
+                    'bug_fix': ('git https://github.com/neurospin/capsul.git branch:v1','capsul/bug_fix'),
+                    'tag': ('git https://github.com/neurospin/capsul.git tag:latest_release','capsul/latest_release'),
                 },
                 'build_model': 'pure_python',
             }],
@@ -293,9 +293,9 @@ components_definition = [
             ['morphologist-ui', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/neurospin/morphologist.git integration', 'morphologist/morphologist-ui/trunk'),
-                    'bug_fix': ('git https://github.com/neurospin/morphologist.git master', 'morphologist/morphologist-ui/bug_fix'),
-                    'tag': ('git https://github.com/neurospin/morphologist.git latest_release', 'morphologist/morphologist-ui/latest_release'),
+                    'trunk': ('git https://github.com/neurospin/morphologist.git branch:integration', 'morphologist/morphologist-ui/trunk'),
+                    'bug_fix': ('git https://github.com/neurospin/morphologist.git branch:master', 'morphologist/morphologist-ui/bug_fix'),
+                    'tag': ('git https://github.com/neurospin/morphologist.git tag:latest_release', 'morphologist/morphologist-ui/latest_release'),
                 },
             }],
         ],

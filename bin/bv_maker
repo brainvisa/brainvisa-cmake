@@ -1178,6 +1178,7 @@ class SourceDirectory(DirectorySection):
                     raise SyntaxError()
                 sign, url, git_tag, dest_directory, bv_version = (
                     l + [None, None])[:5]
+                git_tag_type, git_tag = (['branch'] + git_tag.split(':',1))[-2:]
                 if self.configuration.verbose:
                     print('    adding repository: git', url, git_tag)
                     print('                   in:', \

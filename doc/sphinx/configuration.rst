@@ -78,6 +78,7 @@ Option variables are stored in this section using the syntax ``option = value``.
 
         failure_email_by_project = {'aims': 'maintainer@aims.org', 'anatomist': ['maintainer@aims.org', 'maintainer@anatomist.org']}
 
+* ``jenkins_build_name``: prefix to Jenkins job name used to submit to a Jenkins dashboard. Only used if ``jenkins_server_url`` is also set.
 * ``jenkins_server_url``: URL of a `Jenkins <https://jenkins.io/>`_ server which can be used to log build and tests logs. The log will be sent to the Jenkins dashboard through client commandline interface as an external job.
 * ``success_email``: email address where bv_maker outputs are sent in case of success. If not specified, no email will be sent and bv_maker outputs will be sent to the standard output. One email will be sent for each directory and build step that succeeds.
 * ``smtp_server``: SMTP (email server) hostname to be used to send emails

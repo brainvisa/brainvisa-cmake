@@ -65,6 +65,11 @@ except ImportError:
        @staticmethod
        def iteritems(obj, *args, **kwargs):
           return obj.iteritems(*args, **kwargs)
+try:
+    from cStringIO import StringIO
+except ImportError:
+    # python3
+    from io import StringIO
 
 # the following imports are just to make functions available in tests
 # using eval() in filters/conditions
@@ -748,13 +753,13 @@ Subject: %s - %s %s on %s (%s)
         machine = gethostname()
         osname = global_installer_variables()['os']
         #Status = status[0].upper() + status[1:]
-        if 'exception' not in o.status[step] \
-                or o.status[step]['exception'] is None:
+        if o.status[step] not in ('interrupted', 'failed'):
             res = 0
         #elif isinstance(o.status[step]['exception'], KeyboardInterrupt):
             #res = 2
         else:
             res = 1
+        print('res:', res, ', status:', status)
 
         message = self.message_header(d, o, step, status)
         message += self.log_message_content()
@@ -769,6 +774,7 @@ Subject: %s - %s %s on %s (%s)
             job_name = '%s-%s-%s-%s' \
                 % (configuration.general_section.jenkins_build_name, step,
                    machine, osname)
+            job_name = job_name.replace(':', '-')
             job_long_name = '%s, step %s, on %s (%s)' \
                 % (configuration.general_section.jenkins_build_name, step,
                    machine, osname)
@@ -777,23 +783,23 @@ Subject: %s - %s %s on %s (%s)
                                           o.stop_time[step])]
             # duration in seconds
             duration = int(time.mktime(duration_t) - time.mktime((0, ) * 9))
-            # jenkins-cli.jar can / should? be retreived from the server
-            #jenkins_cli_path = 'jenkins-cli.jar'
+            self.create_jenkins_job(job_name)
             jenkins_cli_path = self.get_jenkins_cli()
             jkn_cmd = ['java', '-jar', jenkins_cli_path, '-s',
                       configuration.general_section.jenkins_server_url,
                       'set-external-build-result', '--display',
-                      job_long_name, '--job', job_name, '--result', res,
-                      '--duration', duration, '--log', zlog]
-            #print('Run jenkins:')
-            #print(jkn_cmd)
-            subprocess.check_call(jkn_cmd)
+                      job_long_name, '--job', job_name, '--result', str(res),
+                      '--duration', str(duration), '--log', '-']
+            print('Run jenkins:')
+            print(jkn_cmd)
+            subprocess.check_call(jkn_cmd, stdin=open(zlog))
         finally:
             os.unlink(zlog)
 
     def get_jenkins_cli(self):
         if hasattr(self, 'jenkins_cli'):
             return self.jenkins_cli
+        # jenkins-cli.jar is retreived from the server
         cli_file_d = tempfile.mkdtemp(prefix='bv_maker_jenkins')
         cli_file = os.path.join(cli_file_d, 'jenkins-cli.jar')
         url = configuration.general_section.jenkins_server_url \
@@ -802,6 +808,32 @@ Subject: %s - %s %s on %s (%s)
         open(cli_file, 'wb').write(f.read())
         self.jenkins_cli = cli_file
         return self.jenkins_cli
+
+    def create_jenkins_job(self, job_name):
+        jenkins_cli_path = self.get_jenkins_cli()
+        # check if the job exists
+        jkn_cmd = ['java', '-jar', jenkins_cli_path, '-s',
+                  configuration.general_section.jenkins_server_url,
+                  'list-jobs']
+        jobs = subprocess.check_output(jkn_cmd).strip().split('\n')
+        if job_name not in jobs:
+            template  = '''<?xml version='1.0' encoding='UTF-8'?>
+<hudson.model.ExternalJob plugin="external-monitor-job@1.7">
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+</hudson.model.ExternalJob>'''
+            tfile = tempfile.mkstemp(prefix='bv_maker_jenkins_', suffix='.xml')
+            os.close(tfile[0])
+            open(tfile[1], 'w').write(template)
+            jkn_cmd = ['java', '-jar', jenkins_cli_path, '-s',
+                      configuration.general_section.jenkins_server_url,
+                      'create-job', job_name]
+            #print('jkn cmd:', jkn_cmd)
+            try:
+                subprocess.check_call(jkn_cmd, stdin=open(tfile[1]))
+            finally:
+                os.unlink(tfile[1])
 
 
 class InfoCommand(StepCommand):

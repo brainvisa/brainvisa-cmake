@@ -751,8 +751,8 @@ Subject: %s - %s %s on %s (%s)
         if 'exception' not in o.status[step] \
                 or o.status[step]['exception'] is None:
             res = 0
-        elif isinstance(o.status[step]['exception'], KeyboardInterrupt):
-            res = 2
+        #elif isinstance(o.status[step]['exception'], KeyboardInterrupt):
+            #res = 2
         else:
             res = 1
 
@@ -785,6 +785,8 @@ Subject: %s - %s %s on %s (%s)
                       'set-external-build-result', '--display',
                       job_long_name, '--job', job_name, '--result', res,
                       '--duration', duration, '--log', zlog]
+            #print('Run jenkins:')
+            #print(jkn_cmd)
             subprocess.check_call(jkn_cmd)
         finally:
             os.unlink(zlog)
@@ -1068,7 +1070,8 @@ class GeneralSection(object):
     _validOptions = set(('failure_email', 'success_email', 'smtp_server',
                          'from_email', 'reply_to_email', 'global_status_file',
                          'email_notification_by_default',
-                         'failure_email_by_project', 'jenkins_server_url'))
+                         'failure_email_by_project', 'jenkins_server_url',
+                         'jenkins_build_name'))
 
     def __init__(self, configuration):
         self.configuration = configuration
@@ -1082,6 +1085,7 @@ class GeneralSection(object):
         self.global_status_file = None
         self.email_notification_by_default = 'OFF'
         self.jenkins_server_url = ''
+        self.jenkins_build_name = ''
 
     def addConfigurationLine(self, line):
         i = line.find('=')
@@ -2672,6 +2676,9 @@ except KeyboardInterrupt:
     failed = True
 
 failed |= display_failure_summary(configuration)
+
+# cleanup
+del f, todo, commands, options_by_command, configuration
+
 if failed:
     sys.exit(1)
-

@@ -283,7 +283,7 @@ http://brainvisa.info/brainvisa-cmake/
         self.sourcesDirectories = {}
         self.buildDirectories = {}
         self.packageDirectories = {}
-        self.general_section = None
+        self.general_section = GeneralSection(self)
         currentFilterSection = False
 
         directories = [os.path.normpath(os.path.realpath(os.path.abspath(d)))
@@ -381,11 +381,7 @@ http://brainvisa.info/brainvisa-cmake/
                             # inverts the filtered section
                             currentFilterSection = not currentFilterSection
                         elif l[0] == 'general' and len(l) == 1:
-                            if self.general_section is not None:
-                                currentDirectoryObject = self.general_section
-                            else:
-                                currentDirectoryObject = GeneralSection(self)
-                                self.general_section = currentDirectoryObject
+                            currentDirectoryObject = self.general_section
                             currentFilterSection = None
                         else:
                             raise SyntaxError()

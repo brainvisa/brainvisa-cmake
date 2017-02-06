@@ -777,7 +777,8 @@ Subject: %s - %s %s on %s (%s)
                           for x, y in zip(o.start_time[step],
                                           o.stop_time[step])]
             # duration in seconds
-            duration = int(time.mktime(duration_t) - time.mktime((0, ) * 9))
+            duration = int(time.mktime(duration_t) - time.mktime((0, ) * 9)) \
+                * 1000
             self.create_jenkins_job(job_name)
             jenkins_cli_path = self.get_jenkins_cli()
             jkn_cmd = ['java', '-jar', jenkins_cli_path, '-s',

@@ -78,7 +78,16 @@ Option variables are stored in this section using the syntax ``option = value``.
 
         failure_email_by_project = {'aims': 'maintainer@aims.org', 'anatomist': ['maintainer@aims.org', 'maintainer@anatomist.org']}
 
-* ``jenkins_build_name``: prefix to Jenkins job name used to submit to a Jenkins dashboard. Only used if ``jenkins_server_url`` is also set.
+* ``jenkins_build_name``: pattern to Jenkins job name used to submit to a Jenkins dashboard. Only used if ``jenkins_server_url`` is also set. The pattern here may include replacement strings specified in a python style ``"%(variable)s"``. Allowed variables are:
+
+    * ``date``
+    * ``directory_id``: ``directory_id`` specified in the current section, or directory name of the build section (short name without path)
+    * ``hostname``
+    * ``os``
+    * ``project``
+    * ``step``
+    * ``time``
+
 * ``jenkins_server_url``: URL of a `Jenkins <https://jenkins.io/>`_ server which can be used to log build and tests logs. The log will be sent to the Jenkins dashboard through client commandline interface as an external job.
 * ``success_email``: email address where bv_maker outputs are sent in case of success. If not specified, no email will be sent and bv_maker outputs will be sent to the standard output. One email will be sent for each directory and build step that succeeds.
 * ``smtp_server``: SMTP (email server) hostname to be used to send emails
@@ -104,6 +113,7 @@ The content of the source directory section is composed of a set of rules to sel
 In the source section, it is also possible to define some options, delcared in the syntax ``option = value``. The following options are supported:
 
 * ``build_condition``: a condition which must be True to allow configure and build steps, otherwise they will be skipped. The condition is evaluated in **python language**, and is otherwise free: it may typically be used to restrict build to certain systems or hostnames, some dates, etc.
+* ``directory_id``: used in Jenkins notification
 * ``revision_control``: ``ON`` (default) or ``OFF``. If enabled, revision control systems (*svn*, *git*) will be used to update the sources. If OFF, the sources directory will be left as is as a fixed sources tree.
 * ``default_steps``: steps performed for this build directory when bv_maker is invoked without specifying steps (typically just ``bv_maker``). Defaults to: ``sources``.
 * ``stderr_file``: file used to redirect the standard error stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If not specified, it will be mixed with standard output.
@@ -173,6 +183,7 @@ In the build section, it is also possible to define some build options:
 
 * ``cmake_options``: passed to cmake (ex: ``-DMY_VARIABLE=dummy``)
 * ``ctest_options``: passed to ctest in the test step (ex: ``-j4 -VV -R carto*``)
+* ``directory_id``: used in Jenkins notification
 * ``make_options``: passed to make (ex: ``-j8``)
 * ``build_type``: ``Debug``, ``Release`` or none (no optimization options)
 * ``packaging_thirdparty``: Set this option to ``ON`` if you need to create a BrainVISA package containing thirdparty libraries dependency.
@@ -233,6 +244,7 @@ The package section must define some variables which specify which build directo
 * ``ctest_options``: passed to ctest in the test_pack step (ex: ``-j4 -VV -R carto*``)
 * ``data_repos_dir``: Data repository directory. Mandatory when installing a non-data package (dependencies on data packages must be satisfied to install runtime packages)
 * ``default_steps``: steps performed for this package directory when bv_maker is invoked without specifying steps (typically just ``bv_maker``). Defaults to none, may include ``pack``, ``install_pack`` and ``test_pack``.
+* ``directory_id``: used in Jenkins notification
 * ``keep_n_older_repos``: if the package directory contains a date substitution pattern ("``%(date)s``"), a new package directory will be created every day (in automatic tests situation). This option specifies how to delete older package directories, by keeping only the specified latest ones. The default is 1: remove all but the last one.
 *  ``init_components_from_build_dir``: if ``ON`` (default), the build directory will provide the initial list of projects and components to be packaged. If ``OFF``, the initial list of projects and components to be packages is empty.
 * ``installer_filename``: output installer program file name. Mandatory unless packaging_options specify --data (data package, no installer output).

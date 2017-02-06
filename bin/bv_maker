@@ -449,7 +449,8 @@ def global_installer_variables():
     p_date = '%04d_%02d_%02d' % plt[:3]
     p_time = '%02d:%02d:%02d' % plt[3:6]
 
-    _installer_variables = {'os': osname, 'date': p_date, 'time': p_time}
+    _installer_variables = {'os': osname, 'date': p_date, 'time': p_time,
+                            'hostname': gethostname().split('.')[0]}
     return _installer_variables
 
 
@@ -519,12 +520,13 @@ class StepCommand(object):
         o.start_time[step] = time.localtime()
         if configuration.general_section is None:
             return
-        if (configuration.general_section.email_notification_by_default.upper()
-                != 'ON' and not configuration.options.email) \
+        if ((configuration.general_section.email_notification_by_default. \
+                upper() != 'ON' and not configuration.options.email) \
                 or (configuration.general_section.failure_email == ''
                     and configuration.general_section.success_email == ''
                     and configuration.general_section.failure_email_by_project
-                        == {}):
+                        == {})) \
+                and not configuration.general_section.jenkins_server_url:
             return
         if o.stdout_file or o.stderr_file:
             if o.stdout_file:
@@ -741,13 +743,42 @@ Subject: %s - %s %s on %s (%s)
         open(log_file, 'a').write(
             '%s on %s (%s)\n' % (message, machine, osname))
 
+    def jenkins_job_name(self, o, step):
+        vars = dict(global_installer_variables())
+        if o.directory_id:
+            vars['directory_id'] = o.directory_id
+        else:
+            vars['directory_id'] = os.path.basename(o.directory)
+        project = ''
+        if ':' in step:
+            step = step.split(':')[0]
+            project = '-' + step.split(':')[1:].replace(':', '-')
+        vars['step'] = step
+        vars['project'] = project
+        job_name = configuration.general_section.jenkins_build_name % vars
+        return job_name
+
+    def jenkins_long_job_name(self, o, step):
+        vars = dict(global_installer_variables())
+        if o.directory_id:
+            vars['directory_id'] = o.directory_id
+        else:
+            vars['directory_id'] = os.path.basename(o.directory)
+        project = ''
+        if ':' in step:
+            step = step.split(':')[0]
+            project = '-' + step.split(':')[1:].replace(':', '-')
+        vars['step'] = step
+        vars['project'] = project
+        job_long_name = '%(directory_id)s step %(step)s%(project)s, on ' \
+            '%(hostname)s (%(os)s)' % vars
+        return job_long_name
+
     def jenkins_notification(self, d, o, step, status):
         ''' Notify job execution (build, test etc) to a Jenkins server
         '''
         if not configuration.general_section.jenkins_server_url:
             return # don't notify
-        machine = gethostname()
-        osname = global_installer_variables()['os']
         #Status = status[0].upper() + status[1:]
         if o.status[step] not in ('interrupted', 'failed'):
             res = 0
@@ -766,13 +797,8 @@ Subject: %s - %s %s on %s (%s)
         gf.write(message)
         gf.close()
         try:
-            job_name = '%s-%s-%s-%s' \
-                % (configuration.general_section.jenkins_build_name, step,
-                   machine, osname)
-            job_name = job_name.replace(':', '-')
-            job_long_name = '%s, step %s, on %s (%s)' \
-                % (configuration.general_section.jenkins_build_name, step,
-                   machine, osname)
+            job_name = self.jenkins_job_name(o, step)
+            job_long_name = self.jenkins_long_job_name(o, step)
             duration_t = [y - x
                           for x, y in zip(o.start_time[step],
                                           o.stop_time[step])]
@@ -1193,7 +1219,7 @@ class SourceDirectory(DirectorySection):
 
     _validOptions = set(('default_steps', 'revision_control',
                          'build_condition', 'cross_compiling_dirs', 
-                         'stdout_file', 'stderr_file'))
+                         'stdout_file', 'stderr_file', 'directory_id'))
 
     def __init__(self, directory, configuration):
         super(SourceDirectory, self).__init__()
@@ -1204,6 +1230,7 @@ class SourceDirectory(DirectorySection):
         self.gitComponents = []
         self.default_steps = ['sources']
         self.revision_control = 'ON'
+        self.directory_id = ''
         # cross_compiling_dirs contains toolchain substitutions for source 
         # directories. This is used when execution needs different path to 
         # access sources (i.e.: in windows cross compilation, for pure python 
@@ -1245,7 +1272,8 @@ class SourceDirectory(DirectorySection):
                     raise SyntaxError()
                 sign, url, git_tag, dest_directory, bv_version = (
                     l + [None, None])[:5]
-                git_tag_type, git_tag = (['branch'] + git_tag.split(':',1))[-2:]
+                git_tag_type, git_tag = (['branch'] \
+                    + git_tag.split(':',1))[-2:]
                 if self.configuration.verbose:
                     print('    adding repository: git', url, git_tag)
                     print('                   in:', \
@@ -1254,7 +1282,8 @@ class SourceDirectory(DirectorySection):
                         print('                  for: %s version %s' \
                             % component_version)
                 self.gitComponents.append(
-                    (component_version, url, git_tag, dest_directory, bv_version))
+                    (component_version, url, git_tag, dest_directory,
+                     bv_version))
             else:
                 if len(l) < 2 or len(l) > 4:
                     raise SyntaxError()
@@ -1263,18 +1292,21 @@ class SourceDirectory(DirectorySection):
                 if sign == 'svn' or (sign == '+' and '/' in componentPattern):
                     if '*' in componentPattern:
                         raise SyntaxError()
-                    if componentPattern.startswith('http') or componentPattern.startswith('file'):
+                    if componentPattern.startswith('http') \
+                            or componentPattern.startswith('file'):
                         url = componentPattern
                         dest_directory = versionPattern
                     else:
-                        url = brainvisa_projects.SVN_URL + '/' + componentPattern
+                        url = brainvisa_projects.SVN_URL + '/' \
+                            + componentPattern
                         dest_directory = versionPattern
                         if dest_directory is None:
                             dest_directory = componentPattern
                     if dest_directory is None:
                         raise SyntaxError()
                     if self.configuration.verbose:
-                        print('    adding repository: svn', url, component_version)
+                        print('    adding repository: svn', url,
+                              component_version)
                         print('                   in:', \
                             os.path.join(self.directory, dest_directory))
                         if component_version:
@@ -1712,7 +1744,8 @@ class ComponentsConfigParser(DirectorySection):
                                     self.components[component] = (
                                         directory, version, component_version, build_model)
                                 else:
-                                    print('WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % directory)
+                                    print('WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found'
+                                          % directory)
                 elif first == 'pip':
                     if '=' in rest:
                         module, version = rest.split(None, 1)
@@ -1753,7 +1786,7 @@ class BuildDirectory(ComponentsConfigParser):
                          'packaging_thirdparty', 'cross_compiling_prefix', 
                          'default_steps', 'build_condition', 'clean_config', 
                          'clean_build', 'stdout_file', 'stderr_file',
-                         'ctest_options'))
+                         'ctest_options', 'directory_id'))
 
     sitecustomize_content = '''import os
 
@@ -1776,6 +1809,7 @@ for i in os.listdir(os.path.dirname(__file__)):
         self.clean_config = 'OFF'
         self.clean_build = 'OFF'
         self.ctest_options = []
+        self.directory_id = ''
 
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ build ... ]:
@@ -2137,7 +2171,7 @@ class PackageDirectory(ComponentsConfigParser):
                          'test_install_dir', 'remote_test_host_cmd',
                          'init_components_from_build_dir', 'pack_version',
                          'default_steps', 'keep_n_older_repos', 'stdout_file',
-                         'stderr_file', 'ctest_options'))
+                         'stderr_file', 'ctest_options', 'directory_id'))
 
     def __init__(self, directory, configuration):
         super(PackageDirectory, self).__init__(directory, configuration)
@@ -2154,6 +2188,7 @@ class PackageDirectory(ComponentsConfigParser):
         self.default_steps = []
         self.keep_n_older_repos = 1
         self.ctest_options = []
+        self.directory_id = ''
 
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ pack ... ]:

@@ -56,7 +56,6 @@ def reload_data():
     for logfile in new_logfiles:
         for i, l in enumerate(open(logfile).readlines()):
             m = r.match(l)
-            print(l)
             new_style = False
             if not m or len(m.groups()) != 4:
                 m = r2.match(l) # new style

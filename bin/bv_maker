@@ -750,8 +750,8 @@ Subject: %s - %s %s on %s (%s)
             vars['directory_id'] = os.path.basename(o.directory)
         project = ''
         if ':' in step:
-            step = step.split(':')[0]
             project = '-' + '-'.join(step.split(':')[1:])
+            step = step.split(':')[0]
         vars['step'] = step
         vars['project'] = project
         job_name = configuration.general_section.jenkins_build_name % vars
@@ -765,8 +765,8 @@ Subject: %s - %s %s on %s (%s)
             vars['directory_id'] = os.path.basename(o.directory)
         project = ''
         if ':' in step:
-            step = step.split(':')[0]
             project = '-' + '-'.join(step.split(':')[1:])
+            step = step.split(':')[0]
         vars['step'] = step
         vars['project'] = project
         job_long_name = '%(directory_id)s step %(step)s%(project)s, on ' \

@@ -755,7 +755,6 @@ Subject: %s - %s %s on %s (%s)
             #res = 2
         else:
             res = 1
-        print('res:', res, ', status:', status)
 
         message = self.message_header(d, o, step, status)
         message += self.log_message_content()
@@ -786,8 +785,8 @@ Subject: %s - %s %s on %s (%s)
                       'set-external-build-result', '--display',
                       job_long_name, '--job', job_name, '--result', str(res),
                       '--duration', str(duration), '--log', '-']
-            print('Run jenkins:')
-            print(jkn_cmd)
+            #print('Run jenkins:')
+            #print(jkn_cmd)
             subprocess.check_call(jkn_cmd, stdin=open(zlog))
         finally:
             os.unlink(zlog)

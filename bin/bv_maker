@@ -1449,6 +1449,8 @@ class SourceDirectory(DirectorySection):
         cmd = ['svn']
         if self.configuration.username:
             cmd += [' --username', self.configuration.username]
+            if self.configuration.username == 'brainvisa':
+                cmd += [' --password', 'Soma2009']
         cmd.extend(svnargs)
         system(*cmd)
 

@@ -9,7 +9,7 @@ tmpdir=
 cleanup() {
     rm -rf "$tmpdir"
 }
-trap cleanup EXIT HUP INT QUIT TERM
+trap cleanup EXIT HUP INT TERM
 tmpdir=$(mktemp -d)
 
 verbose=true

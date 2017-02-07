@@ -1124,7 +1124,8 @@ class GeneralSection(object):
                          'from_email', 'reply_to_email', 'global_status_file',
                          'email_notification_by_default',
                          'failure_email_by_project', 'jenkins_server_url',
-                         'jenkins_build_name'))
+                         'jenkins_build_name', 'jenkins_user',
+                         'jenkins_token'))
 
     def __init__(self, configuration):
         self.configuration = configuration
@@ -1139,6 +1140,8 @@ class GeneralSection(object):
         self.email_notification_by_default = 'OFF'
         self.jenkins_server_url = ''
         self.jenkins_build_name = ''
+        self.jenkins_user = None
+        self.jenkins_token = None
 
     def addConfigurationLine(self, line):
         i = line.find('=')
@@ -2602,9 +2605,9 @@ Controller.prototype.FinishedPageCallback = function()
             ctoptions = self.ctest_options
         test_res = run_and_log_tests(cwd=self.build_dir.directory,
                                      env=new_env, options=ctoptions)
-        if res:
+        if test_res:
             status = 'OK'
-            for item in six.itervalues(res):
+            for item in six.itervalues(test_res):
                 if item['exception'] is not None:
                     status = 'FAILED'
             if os.path.isdir(repos_dir):

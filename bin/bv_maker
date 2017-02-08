@@ -878,7 +878,6 @@ Subject: %s - %s %s on %s (%s)
         except:
             print('Could not check java version. Not using Jenkins-cli')
             java = None
-        java = None
         if not java:
             self.jenkins_cli = None
             return None

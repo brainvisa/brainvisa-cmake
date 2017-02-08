@@ -1251,7 +1251,7 @@ class GeneralSection(object):
         self.email_notification_by_default = 'OFF'
         self.jenkins_server_url = ''
         self.jenkins_build_name = ''
-        self.jenkins_user = None
+        self.jenkins_username = None
         self.jenkins_token = None
 
     def addConfigurationLine(self, line):

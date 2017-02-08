@@ -123,6 +123,8 @@ from brainvisa.maker.version import version as brainvisa_cmake_version
 from brainvisa.maker.version_number import VersionNumber
 from brainvisa.maker.version_number import version_format_short
 
+IGNORED_STEP = 'ignored'
+
 if this_script:
     cmake_root = os.path.join(os.path.dirname(this_script), 
                               '..', 'share', 'brainvisa-cmake-%s' %
@@ -492,6 +494,11 @@ class StepCommand(object):
                             # record failure
                             o.status[step] = 'failed'
                         if logs:
+                            if logs == IGNORED_STEP:
+                                # step did nothing and should be ignored
+                                o.status[step] = 'not run'
+                                self.release_stdout(o)
+                                continue
                             o.stop_time[step] = time.localtime()
                             o.status[step] = 'succeeded'
                             for label, item in six.iteritems(logs):
@@ -2643,7 +2650,7 @@ Controller.prototype.FinishedPageCallback = function()
         self.test_config(options, args)
         directory = self.replace_vars(self.directory)
         if not self.test_install_dir:
-            return
+            return IGNORED_STEP
         print('Installing package:', directory)
         print('    from build dir:', self.build_dir.directory)
         test_install_dir = self.replace_vars(self.test_install_dir)
@@ -2693,7 +2700,7 @@ Controller.prototype.FinishedPageCallback = function()
     def test_package(self, options, args):
         self.test_config(options, args)
         if not self.test_install_dir:
-            return
+            return IGNORED_STEP
         print('Testing package:', self.directory)
         print('    from build dir:', self.build_dir.directory)
         install_dir = self.replace_vars(self.test_install_dir)
@@ -2777,21 +2784,6 @@ def display_failure_summary(configuration):
                         message += ', stopped: %04d/%02d/%02d %02d:%02d' \
                             % stop[:5]
                     print(message)
-                    #if log_file:
-                        #log_it = False
-                        #if status == 'FAILED':
-                            #log_it = True
-                        #else:
-                            #next_steps = range(steps.index(step)+1, len(steps))
-                            #next_statuses \
-                                #= [section.get_status(steps[next_step])
-                                   #for next_step in next_steps]
-                            #if 'failed' not in next_statuses \
-                                    #and 'succeeded' not in next_statuses:
-                                #log_it = True
-                        #if log_it:
-                            #open(log_file, 'a').write(
-                                #'%s on %s (%s)\n' % (message, machine, osname))
                     if section.has_failed(step):
                         global_failed = True
     if global_failed:

@@ -114,7 +114,7 @@ if( NOT config_done )
   endif()
 
   if(NOT DEFINED CCACHE_ENABLED)
-    option( CCACHE_ENABLED "Enable/disable use of ccache if possible" ON )
+    option( CCACHE_ENABLED "Enable/disable use of ccache if possible" OFF )
   endif()
   
   # Initialize python module containing compilation information

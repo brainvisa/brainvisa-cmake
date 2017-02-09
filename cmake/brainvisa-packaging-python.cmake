@@ -86,6 +86,8 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       set( _pythonv "python${_python_major}" )
       add_custom_command( TARGET install-${component} POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "Python.app/Contents/MacOS/Python" "$(BRAINVISA_INSTALL_PREFIX)/bin/${_pythonv}" )
+      add_custom_command( TARGET install-${component} POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "Python.app/Contents/MacOS/Python" "$(BRAINVISA_INSTALL_PREFIX)/bin/python${PYTHON_SHORT_VERSION}" )
 
     else()
 

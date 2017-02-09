@@ -727,7 +727,7 @@ Subject: %s - %s %s on %s (%s)
         return message
 
     def log_in_global_log_file(self, d, o, step, status):
-        print('log_in_global_log_file', step, status)
+        # print('log_in_global_log_file', step, status)
         if status == 'not run':
             return # don't log non-running steps
         log_file = None
@@ -2682,10 +2682,9 @@ Controller.prototype.FinishedPageCallback = function()
         if self.remote_test_host_cmd:
             cmd = shlex.split(self.remote_test_host_cmd)
         if sys.platform == 'darwin':
-            # on Mac, the installer is a .app: run it through
-            # 'open installer_file.app'
-            installer_filename += '.app'
-            cmd.append('open')
+            # on Mac, the installer is a .app
+            installer_filename += '.app/Contents/MacOS/%s' \
+                % os.path.basename(installer_filename)
         cmd += [installer_filename, '--script', install_script]
         try:
             print('installing...')

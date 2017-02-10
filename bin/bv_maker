@@ -868,19 +868,19 @@ Subject: %s - %s %s on %s (%s)
             java_ver = subprocess.check_output(['java', '-version'],
                                                stderr=subprocess.STDOUT)
             ver = java_ver.split('\n')[0].strip()
-            print('java ver:', ver)
             jvre = re.match('^.* version "([^"]+)"$', ver)
             if jvre:
-                jver = [int(x) for x in jvre.group(1).split('.')[:2]]
-                print('jver:', jver)
+                jver_s = jvre.group(1)
+                jver = [int(x) for x in jver_s.split('.')[:2]]
                 if jver < [1, 7]:
-                    print('Java version %s is too old for enkins-cli.')
+                    print('Java version %s is too old for Jenkins-cli.'
+                          % jver_s)
                     java = None
                 else:
-                    print('Java version OK for jankins-cli')
+                    print('Java version %s OK for jenkins-cli' % jver_s)
             else:
                 print('Java version %s cannot be parsed. '
-                      'Not using Jenkins-cli')
+                      'Not using Jenkins-cli' % jver_s)
                 java = None
         except:
             print('Could not check java version. Not using Jenkins-cli')

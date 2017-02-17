@@ -840,7 +840,7 @@ Subject: %s - %s %s on %s (%s)
             jen = self.jenkins
 
             POST_BUILD_RESULT = \
-                '%(folder_url)s/job/%(short_name)s/postBuildResult'
+                '%(folder_url)sjob/%(short_name)s/postBuildResult'
 
             config = '''<run>
               <log encoding="hexBinary">%s</log>

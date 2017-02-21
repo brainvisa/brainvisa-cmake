@@ -1778,7 +1778,7 @@ endfunction()
 # Usage:
 #
 #   BRAINVISA_ADD_TEST( NAME <name> [CONFIGURATIONS [Debug|Release|...]]
-#                                   [WORKING_DIRECTORY dir]
+#                       [WORKING_DIRECTORY dir]
 #                       COMMAND <command> [arg1 [arg2 ...]]
 #  )
 #

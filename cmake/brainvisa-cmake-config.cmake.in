@@ -385,8 +385,8 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
                                    DESCRIPTION "External dependencies : qt, sigc++, libxml..." )
 
     add_dependencies( install-dev install-runtime )
-    # targets to generate documentation
 
+    # targets to generate documentation
     add_custom_target( doc )
     add_custom_target( usrdoc )
     add_custom_target( devdoc )
@@ -394,11 +394,14 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
     add_dependencies( install-doc install-usrdoc install-devdoc )
     add_dependencies( install-usrdoc usrdoc )
     add_dependencies( install-devdoc devdoc )
+
+    # targets to install the tests
     if( NOT TARGET install-test )
       add_custom_target( install-test )
     endif()
     add_dependencies( install-test install-runtime )
 
+    # target to install without doc
     add_custom_target( install-nodoc )
     add_dependencies( install-nodoc install-runtime install-dev )
 
@@ -1771,13 +1774,12 @@ endfunction()
 #  If TYPE Python is given, the appropriate python interpreter is used to
 #  start the test (i.e.: target python for cross compiling case).
 #  Test command is also launched through bv_env_test command.
-#  Each test in ctest is assigned a label corresponding to the project name
+#  Each test in ctest is assigned a label corresponding to the project name.
 # Usage:
 #
 #   BRAINVISA_ADD_TEST( NAME <name> [CONFIGURATIONS [Debug|Release|...]]
 #                                   [WORKING_DIRECTORY dir]
 #                       COMMAND <command> [arg1 [arg2 ...]]
-#                                   [TYPE Exe|Python]
 #  )
 #
 function( BRAINVISA_ADD_TEST )

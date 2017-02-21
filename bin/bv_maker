@@ -2222,7 +2222,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
             ctoptions = shlex.split(options.ctest_options)
         else:
             ctoptions = self.ctest_options
-        print('testing directory:', self.directory)
+        print('Testing directory:', self.directory)
         return run_and_log_tests(cwd=self.directory, options=ctoptions)
 
     def info(self):

@@ -893,9 +893,13 @@ Subject: %s - %s %s on %s (%s)
         cli_file = os.path.join(cli_file_d, 'jenkins-cli.jar')
         url = configuration.general_section.jenkins_server_url \
             + '/jnlpJars/jenkins-cli.jar'
-        f = urlopen(url)
-        open(cli_file, 'wb').write(f.read())
-        self.jenkins_cli = cli_file
+        try:
+            f = urlopen(url)
+            open(cli_file, 'wb').write(f.read())
+            self.jenkins_cli = cli_file
+        except:
+            shutil.rmtree(cli_file_d)
+            self.jenkins_cli = None
         return self.jenkins_cli
 
 

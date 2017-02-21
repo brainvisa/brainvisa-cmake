@@ -126,10 +126,10 @@ from brainvisa.maker.version_number import version_format_short
 IGNORED_STEP = 'ignored'
 
 if this_script:
-    cmake_root = os.path.join(os.path.dirname(this_script), 
+    cmake_root = os.path.join(os.path.dirname(this_script),
                               '..', 'share', 'brainvisa-cmake-%s' %
                               str(VersionNumber(
-                                    brainvisa_cmake_version, 
+                                    brainvisa_cmake_version,
                                     version_format_short)),
                               'cmake')
     #print('cmake_root:', cmake_root)
@@ -342,7 +342,7 @@ http://brainvisa.info/brainvisa-cmake/
                                                         'general'):
                             raise SyntaxError()
 
-                        if l[0] == 'source':                            
+                        if l[0] == 'source':
                             currentDirectoryObject = SourceDirectory(
                                 environmentVariablesSubstitution(l[1].strip()),
                                 self)
@@ -1337,7 +1337,7 @@ class DirectorySection(object):
 class SourceDirectory(DirectorySection):
 
     _validOptions = set(('default_steps', 'revision_control',
-                         'build_condition', 'cross_compiling_dirs', 
+                         'build_condition', 'cross_compiling_dirs',
                          'stdout_file', 'stderr_file', 'directory_id'))
 
     def __init__(self, directory, configuration):
@@ -1350,9 +1350,9 @@ class SourceDirectory(DirectorySection):
         self.default_steps = ['sources']
         self.revision_control = 'ON'
         self.directory_id = ''
-        # cross_compiling_dirs contains toolchain substitutions for source 
-        # directories. This is used when execution needs different path to 
-        # access sources (i.e.: in windows cross compilation, for pure python 
+        # cross_compiling_dirs contains toolchain substitutions for source
+        # directories. This is used when execution needs different path to
+        # access sources (i.e.: in windows cross compilation, for pure python
         # components, it is necessary to access source directory through network
         # share, instead of NFS mount point.
         self.cross_compiling_dirs = {}
@@ -1904,8 +1904,8 @@ class ComponentsConfigParser(DirectorySection):
 class BuildDirectory(ComponentsConfigParser):
 
     _validOptions = set(('build_type', 'make_options', 'cmake_options',
-                         'packaging_thirdparty', 'cross_compiling_prefix', 
-                         'default_steps', 'build_condition', 'clean_config', 
+                         'packaging_thirdparty', 'cross_compiling_prefix',
+                         'default_steps', 'build_condition', 'clean_config',
                          'clean_build', 'stdout_file', 'stderr_file',
                          'ctest_options', 'directory_id'))
 
@@ -2022,11 +2022,11 @@ for i in os.listdir(os.path.dirname(__file__)):
                     cross_compiling_dir = \
                         s.cross_compiling_dirs.get(
                             self.cross_compiling_prefix)
-                    
+
                     if cross_compiling_dir is not None:
                         cross_compiling_directories[k] = cross_compiling_dir
-                        
-        #print('==== Toolchain:', self.cross_compiling_prefix, 
+
+        #print('==== Toolchain:', self.cross_compiling_prefix,
         #      'directories:', cross_compiling_directories)
         self.buildModelPerComponent = {}
         for component in sortedComponents:
@@ -2112,7 +2112,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
             command_options += ['-DBRAINVISA_PACKAGING_THIRDPARTY:BOOL=OFF']
 
         config_dir = cmake_path(self.directory)
-        
+
         for component, build_model \
                 in six.iteritems(self.buildModelPerComponent):
             build_model.configure()
@@ -2124,7 +2124,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         # cross compilation options
         cross_compiling_prefix = self.cross_compiling_prefix.strip()
         if len(cross_compiling_prefix) > 0:
-            cross_compiling_prefix_path = os.path.join( cmake_root, 
+            cross_compiling_prefix_path = os.path.join( cmake_root,
                                                         'toolchains',
                                                         cross_compiling_prefix )
             cross_compiling_options = ['-DBRAINVISA_CMAKE_OPTIONS:STRING=' \
@@ -2150,7 +2150,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                                               cross_compiling_toolchain_path),]
 
             if os.path.exists( cross_compiling_init_cache_path ):
-                cross_compiling_options += ['-C', 
+                cross_compiling_options += ['-C',
                                             cmake_path(
                                               cross_compiling_init_cache_path),]
             #print('cross compiling using toolchain:', cross_compiling_prefix)
@@ -2174,7 +2174,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                         '-DCMAKE_INSTALL_PREFIX=%s' % self.directory]))
             system(cwd=bvcmake_dir, *['make', 'install'])
             print('=== now configuring all other projects ===')
-            # run with this local bv-cmake environment                
+            # run with this local bv-cmake environment
             system(cwd=self.directory,
                    *( [ os.path.join(self.directory, 'bin',
                                      'bv_env_host%s' % exe_suffix) ]

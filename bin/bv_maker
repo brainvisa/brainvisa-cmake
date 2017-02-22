@@ -236,6 +236,7 @@ Commands:
 * build: compile all selected build directories.
 * doc: Generate documentation (sphinx, doxygen, docbook, epydoc)
 * test: Execute tests using ctest.
+* testref: Execute tests in a special mode to generate machine-specific reference files.
 * pack: Generate binary packages
 * install_pack: install binary packages
 * test_pack: run tests in installed binary packages
@@ -1155,6 +1156,32 @@ class TestCommand(StepCommand):
                      self.options, self.args)
 
 
+class TestrefCommand(StepCommand):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] testref
+
+    Executes tests in the testref mode (used to generate reference files).'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, and '
+                          '"configure build" for build sections')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        self.process('testref', configuration.buildDirectories, 'testref',
+                     self.options, self.args)
+
+
 class PackCommand(StepCommand):
 
     def __init__(self, argv, configuration):
@@ -1910,7 +1937,8 @@ class BuildDirectory(ComponentsConfigParser):
                          'packaging_thirdparty', 'cross_compiling_prefix',
                          'default_steps', 'build_condition', 'clean_config',
                          'clean_build', 'stdout_file', 'stderr_file',
-                         'ctest_options', 'directory_id'))
+                         'ctest_options', 'directory_id', 'test_ref_data_dir',
+                         'test_run_data_dir'))
 
     sitecustomize_content = '''import os
 
@@ -1934,6 +1962,8 @@ for i in os.listdir(os.path.dirname(__file__)):
         self.clean_build = 'OFF'
         self.ctest_options = []
         self.directory_id = ''
+        self.test_run_data_dir = tempfile.gettempdir()
+        self.test_ref_data_dir = ''
 
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ build ... ]:
@@ -1971,6 +2001,7 @@ for i in os.listdir(os.path.dirname(__file__)):
             'build': [(self, 'configure')],
             'doc': [(self, 'build')],
             'test': [(self, 'build')],
+            'testref': [(self, 'build')],
         }
 
     def configure(self, options, args):
@@ -2161,6 +2192,12 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         else:
             cross_compiling_options = []
 
+        # test and testref options
+        test_options = [
+            "-DBRAINVISA_TEST_RUN_DATA_DIR=" + self.test_run_data_dir,
+            "-DBRAINVISA_TEST_REF_DATA_DIR=" + self.test_ref_data_dir
+        ]
+
         # special case: if bv-cmake is part of the build directory, run cmake
         # in 2 passes: once to reinstall bv-cmake from sources, and a second
         # time to actually configure all projects using the newly installed
@@ -2184,6 +2221,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                      + command_base
                      + command_options
                      + cross_compiling_options
+                     + test_options
                      + ["-DBRAINVISA_CMAKE_BUILD_TYPE=no-brainvisa-cmake"]
                      + [config_dir]))
         else:
@@ -2191,6 +2229,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
             system(cwd=self.directory, *( command_base
                                         + command_options
                                         + cross_compiling_options
+                                        + test_options
                                         + [config_dir]) )
 
     def build(self, options, args):
@@ -2225,6 +2264,12 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
             ctoptions = self.ctest_options
         print('Testing directory:', self.directory)
         return run_and_log_tests(cwd=self.directory, options=ctoptions)
+
+    def testref(self, options, args):
+        self._process_configuration_lines()
+        print('Creating test reference data for directory:', self.directory)
+        system(cwd=self.directory,
+               *(['make'] + self.make_options.split()) + ['testref'])
 
     def info(self):
         self._process_configuration_lines()
@@ -2797,6 +2842,7 @@ commands = {
     'build': BuildCommand,
     'doc': DocCommand,
     'test': TestCommand,
+    'testref': TestrefCommand,
     'pack' : PackCommand,
     'install_pack': InstallPackCommand,
     'test_pack': TestPackCommand,
@@ -2826,7 +2872,7 @@ if len(options_by_command) == 1:
         options_by_command[i] = ['--only-if-default']
 # Ordered command list
 for command in ['info', 'sources', 'configure', 'build', 'doc', 'test',
-                'pack', 'install_pack', 'test_pack']:
+                'testref', 'pack', 'install_pack', 'test_pack']:
     if command in options_by_command:
         todo.append(
             commands[command](options_by_command[command], configuration))

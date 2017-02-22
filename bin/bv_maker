@@ -192,7 +192,6 @@ def run_and_log_tests(cwd=None, env=None, options=None):
     test_labels = subprocess.check_output(
         ['ctest', '--print-labels'] + options, cwd=cwd)
     labels = [line.strip() for line in test_labels.split('\n')[2:-1]]
-    exc = None
     logs = {}
     for label in labels:
         logfile = tempfile.mkstemp(prefix='bv_test_%s' % label, suffix='.log')
@@ -2220,8 +2219,6 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 
     def test(self, options, args):
         self._process_configuration_lines()
-        # get parallel jobs option if specified
-        make_opts = shlex.split(self.make_options)
         if options.ctest_options is not None:
             ctoptions = shlex.split(options.ctest_options)
         else:
@@ -2699,7 +2696,6 @@ Controller.prototype.FinishedPageCallback = function()
         finally:
             os.unlink(install_script)
 
-
     def test_package(self, options, args):
         self.test_config(options, args)
         if not self.test_install_dir:
@@ -2707,8 +2703,6 @@ Controller.prototype.FinishedPageCallback = function()
         print('Testing package:', self.directory)
         print('    from build dir:', self.build_dir.directory)
         install_dir = self.replace_vars(self.test_install_dir)
-        # get parallel jobs option if specified
-        make_opts = shlex.split(self.build_dir.make_options)
         # set environment to point to install dir
         new_env = dict(os.environ)
         new_env['BRAINVISA_PACKAGE_INSTALL_PREFIX'] = install_dir
@@ -2735,7 +2729,6 @@ Controller.prototype.FinishedPageCallback = function()
         elif os.path.isdir(repos_dir):
             open(report_file, 'w').write('Tests_result: OK\n')
         return test_res
-
 
     def expand_shell(self, line):
         ''' Allow shell commands expressions $(command arg) in string

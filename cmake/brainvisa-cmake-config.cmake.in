@@ -1867,19 +1867,25 @@ function( BRAINVISA_ADD_TEST )
   #message("====== NAME ${_name_args} =======")
   #message("====== COMMAND ${_command_args} =======")
 
+  # If the test is markef _no_testref we don't pass options for run mode (so this test don't have to bother about options)
+  if(_no_testref)
+    set(_run_testmode_opt "")
+  else()
+    set(_run_testmode_opt "--test_mode=run")
+  endif()
   if(_form EQUAL 1)
     # Add the test in the first manner
     add_test(${_name_args}
-             ${_command_args} --test_mode=run ${BRAINVISA_TEST_REF_DATA_DIR} ${BRAINVISA_TEST_RUN_DATA_DIR})
+             ${_command_args} ${_run_testmode_opt})
   else()
     # Add the test in the second manner
     add_test(NAME ${_name_args}
-             COMMAND ${_command_args} --test_mode=run ${BRAINVISA_TEST_REF_DATA_DIR} ${BRAINVISA_TEST_RUN_DATA_DIR})
+             COMMAND ${_command_args} ${_run_testmode_opt})
   endif()
   # Add the command in ref mode to the testref target
   if(NOT _no_testref)
     add_custom_target(${_name_args}-testref
-                      COMMAND ${_command_args} --test_mode=ref ${BRAINVISA_TEST_REF_DATA_DIR})
+                      COMMAND ${_command_args} --test_mode=ref)
     add_dependencies(testref ${_name_args}-testref)
   endif()
   # set project as test label

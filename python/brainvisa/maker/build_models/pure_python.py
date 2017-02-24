@@ -74,9 +74,9 @@ endif()
 
 %(test_commands)s
 
-if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/${test}/test_%(component_name)s.py" )
+if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/test/test_%(component_name)s.py" )
     enable_testing()
-    brainvisa_add_test( %(component_name)s-tests "${TARGET_PYTHON_EXECUTABLE_NAME}" "${BRAINVISA_REAL_SOURCE_DIR}/test/test_%(component_name)s.py" )
+    brainvisa_add_test( %(component_name)s-tests-script "${TARGET_PYTHON_EXECUTABLE_NAME}" "${BRAINVISA_REAL_SOURCE_DIR}/test/test_%(component_name)s.py" %(tests_script_use_testref)s )
     BRAINVISA_COPY_DIRECTORY( "${BRAINVISA_REAL_SOURCE_DIR}/test"
                               test
                               ${PROJECT_NAME}-test )
@@ -125,6 +125,12 @@ set( %(component_upper)s_FOUND true )
 
 
 class PurePythonComponentBuild(object):
+    bool_to_cmake_testref = {
+        True: "TESTREF",
+        False: ""
+    }
+    bv_add_test_cmd_fmt = '''brainvisa_add_test( {0}-tests{1} {2} {3} )'''
+
     def __init__(self, component_name, source_directory, build_directory,
                  cross_compiling_directories, options=None, args=None):
         self.component_name = component_name
@@ -219,6 +225,8 @@ class PurePythonComponentBuild(object):
                 else:
                     brainvisa_dependencies.append(
                         self.dependency_string(dcomponent))
+            tests_script_options = dinfo.get('tests_script_options',
+                                             {'use_testref': False})
             tests = dinfo.get('test_commands', [])
         brainvisa_dependencies = '\n'.join(brainvisa_dependencies)
 
@@ -238,7 +246,10 @@ class PurePythonComponentBuild(object):
                                   self.source_directory
                               ).replace('\\', '\\\\'),
             brainvisa_dependencies=brainvisa_dependencies,
-            test_commands=tests_str)
+            test_commands=tests_str,
+            tests_script_use_testref=self.bool_to_cmake_testref[
+                tests_script_options.get('use_testref', False)]
+        )
         cmakelists_path = osp.join(src_directory, 'CMakeLists.txt')
         write_cmakelists = False
         if osp.exists(cmakelists_path):
@@ -297,9 +308,22 @@ class PurePythonComponentBuild(object):
             else:
               nnum = ''
             for i, test in enumerate(tests):
-                test_str = '"' + '" "'.join(shlex.split(test)) + '"'
-                tests_code.append('''brainvisa_add_test( %s-tests%s %s )'''
-                    % (self.component_name, nnum % {'num': i}, test_str))
+                if isinstance(test, (tuple, list)):
+                    if len(test) != 2:
+                        raise ValueError("content of test_commands mus be a string or a 2-tuple (command, options)")
+                    test_cmd, test_options = test
+                    use_testref = self.bool_to_cmake_testref[
+                        test_options.get('use_testref', False)
+                    ]
+                else:
+                    test_cmd = test
+                    use_testref = self.bool_to_cmake_testref[False]
+                test_str = '"' + '" "'.join(shlex.split(test_cmd)) + '"'
+                bv_add_test = self.bv_add_test_cmd_fmt.format(
+                    self.component_name, nnum % {'num': i}, test_str,
+                    use_testref
+                )
+                tests_code.append(bv_add_test)
         tests_str = '\n'.join(tests_code)
         if len(tests_str) != 0:
             tests_str += '\n'

@@ -119,7 +119,7 @@ set( %(component)s_VERSION_PATCH %(version_patch)s )
 set( %(component)s_VERSION ${%(component)s_VERSION_MAJOR}.${%(component)s_VERSION_MINOR}.${%(component)s_VERSION_PATCH} )
 
 find_package( PythonInterp REQUIRED )
-     
+
 set( %(component_upper)s_FOUND true )
 '''
 
@@ -135,7 +135,7 @@ class PurePythonComponentBuild(object):
         # options from option parser:
         self.options = options
         self.args = args
-       
+
         if cross_compiling_directories is not None:
             match = None
             match_length = 0
@@ -144,11 +144,11 @@ class PurePythonComponentBuild(object):
                     and len(s) > match_length:
                     self.cross_compiling_directory_match = (s, c)
                     match_length = len(s)
-                    
+
             #print('==== Pure python best match:', self.cross_compiling_directory_match)
 
     def configure(self):
-        # Create a bv_maker_pure_python.py module in 
+        # Create a bv_maker_pure_python.py module in
         # <build>/python/sitecustomize (which is created by bv_maker). Modules
         # in this directory are loaded at Python startup time (only in the
         # buld tree, they are not installed in packages). This module adds the
@@ -171,20 +171,20 @@ class PurePythonComponentBuild(object):
         sd = osp.join(self.source_directory, 'python')
         if not osp.exists(sd):
             sd = self.source_directory
-            
+
         if self.cross_compiling_directory_match is not None:
             if len(self.cross_compiling_directory_match) == 2:
                 match, repl = self.cross_compiling_directory_match
                 old_sd = sd
                 sd = osp.join(repl, string.lstrip(sd[len(match):], os.sep))
                 #print('==== Pure python: cross_compiling replacement:', old_sd , '=>', sd)
-                
+
             else:
                 raise ValueError('Cross compiling directory match '
                                + str(self.cross_compiling_directory_match) + ' '
                                  'has inapropriate length. The list or tuple '
                                  'must contain 2 values: (match, replacement).')
-               
+
         if sd not in directories:
             directories.append(sd)
             open(pth_path,'w').write( os.linesep.join(directories))
@@ -223,7 +223,7 @@ class PurePythonComponentBuild(object):
         brainvisa_dependencies = '\n'.join(brainvisa_dependencies)
 
         # Create <build directory>/build_files/<component>_src/CMakeLists.txt
-        src_directory = osp.join(self.build_directory.directory, 'build_files', 
+        src_directory = osp.join(self.build_directory.directory, 'build_files',
                                  '%s_src' % self.component_name)
         if not osp.exists(src_directory):
             os.makedirs(src_directory)
@@ -242,7 +242,7 @@ class PurePythonComponentBuild(object):
         cmakelists_path = osp.join(src_directory, 'CMakeLists.txt')
         write_cmakelists = False
         if osp.exists(cmakelists_path):
-            write_cmakelists = (open(cmakelists_path).read() != 
+            write_cmakelists = (open(cmakelists_path).read() !=
                                 cmakelists_content)
         else:
             write_cmakelists = True
@@ -251,7 +251,7 @@ class PurePythonComponentBuild(object):
 
         name, component, version = read_project_info(self.source_directory)[:3]
         cmake_dir = osp.join(self.build_directory.directory,
-                             'share', 
+                             'share',
                              '%s-%s.%s' % (self.component_name, version[0],
                                            version[1]),
                              'cmake')
@@ -268,13 +268,13 @@ class PurePythonComponentBuild(object):
             version_patch = version[2],
             )
         if osp.exists(cmake_config_path):
-            write_cmake_config = (open(cmake_config_path).read() != 
+            write_cmake_config = (open(cmake_config_path).read() !=
                                   cmake_config_content)
         else:
             write_cmake_config = True
         if write_cmake_config:
             open(cmake_config_path,'w').write(cmake_config_content)
-            
+
         if self.options.clean:
             import brainvisa
             # look for <my_path>/bin when we are in <my_path>/python/brainvisa
@@ -287,7 +287,6 @@ class PurePythonComponentBuild(object):
             print('cleaning build tree', self.source_directory)
             subprocess.call([sys.executable, bv_clean, '-d',
                              self.source_directory])
-
 
     def build_tests_cmake_code(self, tests):
         tests_code = []
@@ -324,5 +323,3 @@ else()
 endif()''' % (' '.join('"%s"' % i for i in dcomponent),
               ' '.join('"%s"' % i for i in qt5_dep))
             return dep_string
-
-

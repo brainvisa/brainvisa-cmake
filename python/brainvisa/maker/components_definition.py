@@ -312,7 +312,7 @@ components_definition = [
                 },
             }],
             ['brainrat-private', {
-                'groups': ['all'],
+                'groups': ['all', 'standard'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/brainrat-private/trunk','brainrat/brainrat-private/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/brainrat-private/branches/bug_fix','brainrat/brainrat-private/bug_fix'),

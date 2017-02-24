@@ -134,6 +134,7 @@ if this_script:
                               'cmake')
     #print('cmake_root:', cmake_root)
 
+
 def system(*args, **kwargs):
     print(' '.join(args))
     popen = subprocess.Popen(args, **kwargs)
@@ -230,16 +231,18 @@ In order to work, the commands svn and svnadmin must be installed on your system
 
 Commands:
 
-* info: Just output info about configured components
-* sources: Create or updated selected sources directories from Subversion repository.
+* info: Just output info about configured components.
+* sources: Create or updated selected sources directories from Subversion
+  repository.
 * configure: Create and configure selected build directories with CMake.
 * build: compile all selected build directories.
-* doc: Generate documentation (sphinx, doxygen, docbook, epydoc)
+* doc: Generate documentation (sphinx, doxygen, docbook, epydoc).
+* testref: Execute tests in a special mode to generate machine-specific
+  reference files (this is needed by some tests).
 * test: Execute tests using ctest.
-* testref: Execute tests in a special mode to generate machine-specific reference files.
-* pack: Generate binary packages
-* install_pack: install binary packages
-* test_pack: run tests in installed binary packages
+* pack: Generate binary packages.
+* install_pack: Install binary packages.
+* test_pack: Run tests in installed binary packages.
 
 To get help for a specific command, use -h option of the command. Example: "%prog build -h".
 
@@ -409,6 +412,7 @@ http://brainvisa.info/brainvisa-cmake/
         # store options and args
         self.options = options
         self.args = args
+
 
 def check_filter_condition(filters):
     # for now, use python eval()
@@ -1962,8 +1966,8 @@ for i in os.listdir(os.path.dirname(__file__)):
         self.clean_build = 'OFF'
         self.ctest_options = []
         self.directory_id = ''
-        self.test_run_data_dir = tempfile.gettempdir()
         self.test_ref_data_dir = ''
+        self.test_run_data_dir = tempfile.gettempdir()
 
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ build ... ]:
@@ -2843,13 +2847,13 @@ commands = {
     'doc': DocCommand,
     'test': TestCommand,
     'testref': TestrefCommand,
-    'pack' : PackCommand,
+    'pack': PackCommand,
     'install_pack': InstallPackCommand,
     'test_pack': TestPackCommand,
 }
 
 default_commands = ['info', 'sources', 'configure', 'build', 'doc', 'test',
-                   'pack', 'install_pack', 'test_pack']
+                    'pack', 'install_pack', 'test_pack']
 options_by_command = {None: []}
 command = None
 for i in sys.argv[1:]:

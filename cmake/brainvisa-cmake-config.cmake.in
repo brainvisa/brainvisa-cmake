@@ -1778,12 +1778,15 @@ endfunction()
 #  start the test (i.e.: target python for cross compiling case).
 #  Test command is also launched through bv_env_test command.
 #  Each test in ctest is assigned a label corresponding to the project name.
+#  If TESTREF is used, we re-use the command to run it in a special mode
+#  for the generation of reference test files (this is launched by the testref
+#  target).
 # Usage:
 #
 #   BRAINVISA_ADD_TEST( NAME <name> [CONFIGURATIONS [Debug|Release|...]]
 #                       [WORKING_DIRECTORY dir]
 #                       COMMAND <command> [arg1 [arg2 ...]]
-#                       [NO_TESTREF]
+#                       [TESTREF]
 #  )
 #
 function( BRAINVISA_ADD_TEST )
@@ -1795,7 +1798,7 @@ function( BRAINVISA_ADD_TEST )
   unset(_name_args)
   unset(_command_args)
   set(_form 1)
-  set(_no_testref OFF)
+  set(testref OFF)
 
   foreach( _arg ${_argn} )
     if( ${_arg_index} EQUAL 0 )
@@ -1807,8 +1810,8 @@ function( BRAINVISA_ADD_TEST )
         set(_name_args "${result}")
         set(_current_arg "_command_args")
       endif()
-    elseif( "${_arg}" STREQUAL "NO_TESTREF" )
-      set(_no_testref ON)
+    elseif( "${_arg}" STREQUAL "TESTREF" )
+      set(testref ON)
     elseif( "${_arg}" STREQUAL "COMMAND" )
       set(_current_arg "_command_args")
 
@@ -1867,11 +1870,12 @@ function( BRAINVISA_ADD_TEST )
   #message("====== NAME ${_name_args} =======")
   #message("====== COMMAND ${_command_args} =======")
 
-  # If the test is markef _no_testref we don't pass options for run mode (so this test don't have to bother about options)
-  if(_no_testref)
-    set(_run_testmode_opt "")
-  else()
+  # If the test is not marked testref we don't pass options for run mode
+  # (so this test don't have to bother about options)
+  if(testref)
     set(_run_testmode_opt "--test_mode=run")
+  else()
+    set(_run_testmode_opt "")
   endif()
   if(_form EQUAL 1)
     # Add the test in the first manner
@@ -1883,7 +1887,7 @@ function( BRAINVISA_ADD_TEST )
              COMMAND ${_command_args} ${_run_testmode_opt})
   endif()
   # Add the command in ref mode to the testref target
-  if(NOT _no_testref)
+  if(testref)
     add_custom_target(${_name_args}-testref
                       COMMAND ${_command_args} --test_mode=ref)
     add_dependencies(testref ${_name_args}-testref)
@@ -1901,7 +1905,7 @@ function( BRAINVISA_ADD_TEST )
   unset(_current_arg)
   unset(_name_args)
   unset(_command_args)
-  unset(_no_testref)
+  unset(testref)
 
 endfunction()
 

@@ -2196,12 +2196,6 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         else:
             cross_compiling_options = []
 
-        # test and testref options
-        test_options = [
-            "-DBRAINVISA_TEST_RUN_DATA_DIR=" + self.test_run_data_dir,
-            "-DBRAINVISA_TEST_REF_DATA_DIR=" + self.test_ref_data_dir
-        ]
-
         # special case: if bv-cmake is part of the build directory, run cmake
         # in 2 passes: once to reinstall bv-cmake from sources, and a second
         # time to actually configure all projects using the newly installed
@@ -2225,7 +2219,6 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                      + command_base
                      + command_options
                      + cross_compiling_options
-                     + test_options
                      + ["-DBRAINVISA_CMAKE_BUILD_TYPE=no-brainvisa-cmake"]
                      + [config_dir]))
         else:
@@ -2233,7 +2226,6 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
             system(cwd=self.directory, *( command_base
                                         + command_options
                                         + cross_compiling_options
-                                        + test_options
                                         + [config_dir]) )
 
     def build(self, options, args):
@@ -2267,12 +2259,27 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         else:
             ctoptions = self.ctest_options
         print('Testing directory:', self.directory)
-        return run_and_log_tests(cwd=self.directory, options=ctoptions)
+        if not self.test_ref_data_dir:
+            print("Warning: test_ref_data_dir is not defined; tests may fail.")
+        env = dict(os.environ)
+        env.update({
+            "BRAINVISA_TEST_REF_DATA_DIR": self.test_ref_data_dir,
+            "BRAINVISA_TEST_RUN_DATA_DIR": self.test_run_data_dir
+        })
+        return run_and_log_tests(cwd=self.directory, options=ctoptions,
+                                 env=env)
 
     def testref(self, options, args):
         self._process_configuration_lines()
         print('Creating test reference data for directory:', self.directory)
-        system(cwd=self.directory,
+        if not self.test_ref_data_dir:
+            print(("Warning: test_ref_data_dir should be defined to create "
+                   "reference files."))
+        env = dict(os.environ)
+        env.update({
+            "BRAINVISA_TEST_REF_DATA_DIR": self.test_ref_data_dir
+        })
+        system(cwd=self.directory, env=env,
                *(['make'] + self.make_options.split()) + ['testref'])
 
     def info(self):

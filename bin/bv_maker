@@ -242,6 +242,8 @@ Commands:
 * test: Execute tests using ctest.
 * pack: Generate binary packages.
 * install_pack: Install binary packages.
+* testref_pack: Create the machine-specific reference files for tests in
+  installed binary package.
 * test_pack: Run tests in installed binary packages.
 
 To get help for a specific command, use -h option of the command. Example: "%prog build -h".
@@ -1270,6 +1272,32 @@ class TestPackCommand(StepCommand):
                      'test_package', self.options, self.args)
 
 
+class TestrefPackCommand(StepCommand):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] testref_pack [options]
+
+    Create test reference files in installed package for the selected build directory.'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, '
+                          '"configure build" for build sections.')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        self.process('testref_pack', configuration.packageDirectories,
+                     'testref_package', self.options, self.args)
+
+
 class GeneralSection(object):
     _validOptions = set(('failure_email', 'success_email', 'smtp_server',
                          'from_email', 'reply_to_email', 'global_status_file',
@@ -2261,6 +2289,12 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         print('Testing directory:', self.directory)
         if not self.test_ref_data_dir:
             print("Warning: test_ref_data_dir is not defined; tests may fail.")
+        # Create test_run_data_dir and test_ref_data_dir
+        if not os.path.exists(self.test_run_data_dir):
+            os.makedirs(self.test_run_data_dir)
+        if not os.path.exists(self.test_ref_data_dir):
+            os.makedirs(self.test_ref_data_dir)
+        # Add directories to env
         env = dict(os.environ)
         env.update({
             "BRAINVISA_TEST_REF_DATA_DIR": self.test_ref_data_dir,
@@ -2273,8 +2307,12 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         self._process_configuration_lines()
         print('Creating test reference data for directory:', self.directory)
         if not self.test_ref_data_dir:
-            print(("Warning: test_ref_data_dir should be defined to create "
-                   "reference files."))
+            print("Warning: test_ref_data_dir should be defined to create "
+                  "reference files.")
+        # Create test_ref_data_dir
+        if not os.path.exists(self.test_ref_data_dir):
+            os.makedirs(self.test_ref_data_dir)
+        # Add directories to env
         env = dict(os.environ)
         env.update({
             "BRAINVISA_TEST_REF_DATA_DIR": self.test_ref_data_dir
@@ -2349,7 +2387,8 @@ class PackageDirectory(ComponentsConfigParser):
                          'test_install_dir', 'remote_test_host_cmd',
                          'init_components_from_build_dir', 'pack_version',
                          'default_steps', 'keep_n_older_repos', 'stdout_file',
-                         'stderr_file', 'ctest_options', 'directory_id'))
+                         'stderr_file', 'ctest_options', 'directory_id',
+                         'test_ref_data_dir', 'test_run_data_dir'))
 
     def __init__(self, directory, configuration):
         super(PackageDirectory, self).__init__(directory, configuration)
@@ -2367,6 +2406,8 @@ class PackageDirectory(ComponentsConfigParser):
         self.keep_n_older_repos = 1
         self.ctest_options = []
         self.directory_id = ''
+        self.test_ref_data_dir = ''
+        self.test_run_data_dir = tempfile.gettempdir()
 
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ pack ... ]:
@@ -2752,13 +2793,7 @@ Controller.prototype.FinishedPageCallback = function()
         finally:
             os.unlink(install_script)
 
-    def test_package(self, options, args):
-        self.test_config(options, args)
-        if not self.test_install_dir:
-            return IGNORED_STEP
-        print('Testing package:', self.directory)
-        print('    from build dir:', self.build_dir.directory)
-        install_dir = self.replace_vars(self.test_install_dir)
+    def _prepare_env_for_tests(self, install_dir, testref_mode=False):
         # set environment to point to install dir
         new_env = dict(os.environ)
         new_env['BRAINVISA_PACKAGE_INSTALL_PREFIX'] = install_dir
@@ -2767,6 +2802,34 @@ Controller.prototype.FinishedPageCallback = function()
         if self.remote_test_host_cmd:
             new_env['BRAINVISA_TEST_REMOTE_COMMAND'] \
                 = self.expand_shell(self.remote_test_host_cmd)
+        # Add test_run_data_dir and test_run_data_dir
+        if not testref_mode:
+            new_env.update({
+                "BRAINVISA_TEST_REF_DATA_DIR": self.test_ref_data_dir,
+                "BRAINVISA_TEST_RUN_DATA_DIR": self.test_run_data_dir
+            })
+        else:
+            new_env.update({
+                "BRAINVISA_TEST_REF_DATA_DIR": self.test_ref_data_dir
+            })
+        return new_env
+
+    def test_package(self, options, args):
+        self.test_config(options, args)
+        if not self.test_install_dir:
+            return IGNORED_STEP
+        if not self.test_ref_data_dir:
+            print("Warning: test_ref_data_dir is not defined; tests may fail.")
+        # Create test_run_data_dir and test_ref_data_dir
+        if not os.path.exists(self.test_run_data_dir):
+            os.makedirs(self.test_run_data_dir)
+        if not os.path.exists(self.test_ref_data_dir):
+            os.makedirs(self.test_ref_data_dir)
+        print('Testing package:', self.directory)
+        print('    from build dir:', self.build_dir.directory)
+        install_dir = self.replace_vars(self.test_install_dir)
+        # Add directories to env
+        new_env = self._prepare_env_for_tests(install_dir)
         repos_dir = self.replace_vars(self.directory)
         report_file = os.path.join(repos_dir, 'tests_report.txt')
         if options.ctest_options is not None:
@@ -2785,6 +2848,24 @@ Controller.prototype.FinishedPageCallback = function()
         elif os.path.isdir(repos_dir):
             open(report_file, 'w').write('Tests_result: OK\n')
         return test_res
+
+    def testref_package(self, options, args):
+        self.test_config(options, args)
+        if not self.test_install_dir:
+            return IGNORED_STEP
+        if not self.test_ref_data_dir:
+            print("Warning: test_ref_data_dir should be defined to create "
+                  "reference files.")
+        # Create test_ref_data_dir
+        if not os.path.exists(self.test_ref_data_dir):
+            os.makedirs(self.test_ref_data_dir)
+        print('Creating test reference files for package:', self.directory)
+        print('    from build dir:', self.build_dir.directory)
+        install_dir = self.replace_vars(self.test_install_dir)
+        # Add directories to env
+        new_env = self._prepare_env_for_tests(install_dir, testref_mode=True)
+        system(cwd=self.build_dir.directory, env=new_env,
+               *(['make', 'testref']))
 
     def expand_shell(self, line):
         ''' Allow shell commands expressions $(command arg) in string
@@ -2857,6 +2938,7 @@ commands = {
     'pack': PackCommand,
     'install_pack': InstallPackCommand,
     'test_pack': TestPackCommand,
+    'testref_pack': TestrefPackCommand,
 }
 
 default_commands = ['info', 'sources', 'configure', 'build', 'doc', 'test',
@@ -2883,7 +2965,8 @@ if len(options_by_command) == 1:
         options_by_command[i] = ['--only-if-default']
 # Ordered command list
 for command in ['info', 'sources', 'configure', 'build', 'doc', 'test',
-                'testref', 'pack', 'install_pack', 'test_pack']:
+                'testref', 'pack', 'install_pack', 'test_pack',
+                'testref_pack']:
     if command in options_by_command:
         todo.append(
             commands[command](options_by_command[command], configuration))

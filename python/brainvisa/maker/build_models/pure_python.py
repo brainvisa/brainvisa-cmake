@@ -74,13 +74,6 @@ endif()
 
 %(test_commands)s
 
-if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/test/test_%(component_name)s.py" )
-    enable_testing()
-    brainvisa_add_test( %(component_name)s-tests-script "${TARGET_PYTHON_EXECUTABLE_NAME}" "${BRAINVISA_REAL_SOURCE_DIR}/test/test_%(component_name)s.py" %(tests_script_use_testref)s )
-    BRAINVISA_COPY_DIRECTORY( "${BRAINVISA_REAL_SOURCE_DIR}/test"
-                              test
-                              ${PROJECT_NAME}-test )
-endif()
 UNSET( BRAINVISA_REAL_SOURCE_DIR )
 '''
 
@@ -225,8 +218,6 @@ class PurePythonComponentBuild(object):
                 else:
                     brainvisa_dependencies.append(
                         self.dependency_string(dcomponent))
-            tests_script_options = dinfo.get('tests_script_options',
-                                             {'use_testref': False})
             tests = dinfo.get('test_commands', [])
         brainvisa_dependencies = '\n'.join(brainvisa_dependencies)
 
@@ -246,9 +237,7 @@ class PurePythonComponentBuild(object):
                                   self.source_directory
                               ).replace('\\', '\\\\'),
             brainvisa_dependencies=brainvisa_dependencies,
-            test_commands=tests_str,
-            tests_script_use_testref=self.bool_to_cmake_testref[
-                tests_script_options.get('use_testref', False)]
+            test_commands=tests_str
         )
         cmakelists_path = osp.join(src_directory, 'CMakeLists.txt')
         write_cmakelists = False

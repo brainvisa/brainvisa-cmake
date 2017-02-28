@@ -2289,17 +2289,18 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         print('Testing directory:', self.directory)
         if not self.test_ref_data_dir:
             print("Warning: test_ref_data_dir is not defined; tests may fail.")
-        # Create test_run_data_dir and test_ref_data_dir
-        if not os.path.exists(self.test_run_data_dir):
-            os.makedirs(self.test_run_data_dir)
-        if not os.path.exists(self.test_ref_data_dir):
-            os.makedirs(self.test_ref_data_dir)
-        # Add directories to env
         env = dict(os.environ)
-        env.update({
-            "BRAINVISA_TEST_REF_DATA_DIR": self.test_ref_data_dir,
-            "BRAINVISA_TEST_RUN_DATA_DIR": self.test_run_data_dir
-        })
+        # Create test_run_data_dir and test_ref_data_dir
+        if self.test_run_data_dir:
+            if not os.path.exists(self.test_run_data_dir):
+                os.makedirs(self.test_run_data_dir)
+            # Add directories to env
+            env["BRAINVISA_TEST_RUN_DATA_DIR"] = self.test_run_data_dir
+        if self.test_ref_data_dir:
+            if not os.path.exists(self.test_ref_data_dir):
+                os.makedirs(self.test_ref_data_dir)
+            # Add directories to env
+            env["BRAINVISA_TEST_REF_DATA_DIR"] = self.test_ref_data_dir
         return run_and_log_tests(cwd=self.directory, options=ctoptions,
                                  env=env)
 
@@ -2309,14 +2310,15 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         if not self.test_ref_data_dir:
             print("Warning: test_ref_data_dir should be defined to create "
                   "reference files.")
-        # Create test_ref_data_dir
-        if not os.path.exists(self.test_ref_data_dir):
-            os.makedirs(self.test_ref_data_dir)
-        # Add directories to env
         env = dict(os.environ)
-        env.update({
-            "BRAINVISA_TEST_REF_DATA_DIR": self.test_ref_data_dir
-        })
+        # Create test_ref_data_dir
+        if self.test_ref_data_dir:
+            if not os.path.exists(self.test_ref_data_dir):
+                os.makedirs(self.test_ref_data_dir)
+            # Add directories to env
+            env.update({
+                "BRAINVISA_TEST_REF_DATA_DIR": self.test_ref_data_dir
+            })
         system(cwd=self.directory, env=env,
                *(['make'] + self.make_options.split()) + ['testref'])
 
@@ -2547,6 +2549,8 @@ class PackageDirectory(ComponentsConfigParser):
                sys.executable, bvi, '-r', directory]
         if installer_filename:
             cmd += ['-i', installer_filename]
+        else:
+            cmd.append( '--repository-only' )
         cmd += pack_options + ['-p'] + projects + ['-n'] + components
         return cmd
 
@@ -2821,9 +2825,11 @@ Controller.prototype.FinishedPageCallback = function()
         if not self.test_ref_data_dir:
             print("Warning: test_ref_data_dir is not defined; tests may fail.")
         # Create test_run_data_dir and test_ref_data_dir
-        if not os.path.exists(self.test_run_data_dir):
+        if self.test_run_data_dir \
+                and not os.path.exists(self.test_run_data_dir):
             os.makedirs(self.test_run_data_dir)
-        if not os.path.exists(self.test_ref_data_dir):
+        if self.test_ref_data_dir \
+                and not os.path.exists(self.test_ref_data_dir):
             os.makedirs(self.test_ref_data_dir)
         print('Testing package:', self.directory)
         print('    from build dir:', self.build_dir.directory)
@@ -2857,7 +2863,8 @@ Controller.prototype.FinishedPageCallback = function()
             print("Warning: test_ref_data_dir should be defined to create "
                   "reference files.")
         # Create test_ref_data_dir
-        if not os.path.exists(self.test_ref_data_dir):
+        if self.test_ref_data_dir \
+                and not os.path.exists(self.test_ref_data_dir):
             os.makedirs(self.test_ref_data_dir)
         print('Creating test reference files for package:', self.directory)
         print('    from build dir:', self.build_dir.directory)

@@ -249,7 +249,7 @@ The package section must define some variables which specify which build directo
 * ``directory_id``: used in Jenkins notification
 * ``keep_n_older_repos``: if the package directory contains a date substitution pattern ("``%(date)s``"), a new package directory will be created every day (in automatic tests situation). This option specifies how to delete older package directories, by keeping only the specified latest ones. The default is 1: remove all but the last one.
 *  ``init_components_from_build_dir``: if ``ON`` (default), the build directory will provide the initial list of projects and components to be packaged. If ``OFF``, the initial list of projects and components to be packages is empty.
-* ``installer_filename``: output installer program file name. Mandatory unless packaging_options specify --data (data package, no installer output).
+* ``installer_filename``: output installer program file name. If not specified, no installer program will actually be generated, only the packages repository will be done.
 * ``pack_version``: package version string. Optional. If not specified, it will be guessed from the python module ``brainvisa.config`` (from the *axon* project) if it is present.
 * ``packaging_options``: options passed to the *bv_packaging* program (in *brainvisa-installer* project). Typically: --i2bm
 * ``build_condition``: As in build sections, condition when the package section steps are performed.

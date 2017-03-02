@@ -1628,12 +1628,12 @@ class SourceDirectory(DirectorySection):
             os.path.join(self.directory, 'components_sources.json'), 'w'), indent=2)
 
     def svncommand(self, *svnargs):
-        cmd = ['svn']
+        cmd = ['svn', svnargs[0]]
         if self.configuration.username:
             cmd += ['--username', self.configuration.username]
             if self.configuration.username == 'brainvisa':
                 cmd += ['--password', 'Soma2009']
-        cmd.extend(svnargs)
+        cmd.extend(svnargs[1:])
         system(*cmd)
 
     def get_git_remotes(self, dest):

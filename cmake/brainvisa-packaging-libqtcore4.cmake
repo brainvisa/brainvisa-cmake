@@ -17,6 +17,11 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
     if( GLIB_FOUND )
       BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS glib RUN )
     endif()
+    if( LSB_DISTRIB STREQUAL "ubuntu"
+        AND LSB_DISTRIB_RELEASE VERSION_GREATER "12.0" )
+      BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN
+                                       DEPENDS libpcre RUN )
+    endif()
   endif()
 endfunction()
 

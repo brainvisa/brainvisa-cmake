@@ -1,0 +1,29 @@
+# Find LibPcre
+#
+# LIBPCRE_FOUND
+# LIBPCRE_LIBRARIES - pcre library
+
+IF(LIBPCRE_LIBRARIES)
+  # already found
+  SET(LIBPCRE_FOUND TRUE)
+ELSE()
+  find_library(LIBPCRE_LIBRARIES pcre)
+  if(NOT LIBPCRE_LIBRARIES)
+    file( GLOB LIBPCRE_LIBRARIES /usr/lib/libpcre.so.? )
+  endif()
+  IF(LIBPCRE_LIBRARIES)
+    set(LIBPCRE_LIBRARIES ${LIBPCRE_LIBRARIES} CACHE PATH "LibPcre libraries" FORCE)
+    SET(LIBPCRE_FOUND TRUE)
+  ELSE()
+    SET(LIBPCRE_FOUND FALSE)
+
+    IF( LIBPCRE_FIND_REQUIRED )
+        MESSAGE( SEND_ERROR "LibPcre was not found." )
+    ENDIF()
+    IF(NOT LIBPCRE_FIND_QUIETLY)
+        MESSAGE(STATUS "LibPcre was not found.")
+    ENDIF()
+  ENDIF()
+
+ENDIF()
+

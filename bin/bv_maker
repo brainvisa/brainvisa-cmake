@@ -124,6 +124,8 @@ from brainvisa.maker.version_number import VersionNumber
 from brainvisa.maker.version_number import version_format_short
 
 IGNORED_STEP = 'ignored'
+jenkins_cli = None
+jenkins_wrapper = None
 
 if this_script:
     cmake_root = os.path.join(os.path.dirname(this_script),
@@ -467,12 +469,270 @@ def global_installer_variables():
     return _installer_variables
 
 
-class StepCommand(object):
+class JenkinsWrapper(object):
+
+    jenkins_cli = ''
+
+    def __init__(self):
+        pass
+
 
     def __del__(self):
         # cleanup jenkins CLI temp file
-        if hasattr(self, 'jenkins_cli') and self.jenkins_cli:
+        if self.__class__.jenkins_cli:
             shutil.rmtree(os.path.dirname(self.jenkins_cli))
+            self.__class__.jenkins_cli = ''
+
+
+    def jenkins_job_name(self, o, step):
+        vars = dict(global_installer_variables())
+        if o.directory_id:
+            vars['directory_id'] = o.directory_id
+        else:
+            vars['directory_id'] = os.path.basename(o.directory)
+        project = ''
+        if ':' in step:
+            project = '-' + '-'.join(step.split(':')[1:])
+            step = step.split(':')[0]
+        vars['step'] = step
+        vars['project'] = project
+        job_name = configuration.general_section.jenkins_build_name % vars
+        return job_name
+
+
+    def jenkins_global_job_name(self):
+        vars = dict(global_installer_variables())
+        vars['directory_id'] = 'all'
+        vars['step'] = ''
+        vars['project'] = ''
+        job_name = configuration.general_section.jenkins_build_name % vars
+        return job_name
+
+
+    def jenkins_long_job_name(self, o, step):
+        vars = dict(global_installer_variables())
+        if o.directory_id:
+            vars['directory_id'] = o.directory_id
+        else:
+            vars['directory_id'] = os.path.basename(o.directory)
+        project = ''
+        if ':' in step:
+            project = '-' + '-'.join(step.split(':')[1:])
+            step = step.split(':')[0]
+        vars['step'] = step
+        vars['project'] = project
+        job_long_name = '%(directory_id)s step %(step)s%(project)s, on ' \
+            '%(hostname)s (%(os)s)' % vars
+        return job_long_name
+
+
+    def jenkins_notification(self, message, d, o, step, status):
+        ''' Notify job execution (build, test etc) to a Jenkins server
+        '''
+        if not configuration.general_section.jenkins_server_url:
+            return # don't notify
+        #Status = status[0].upper() + status[1:]
+        if o.status[step] not in ('interrupted', 'failed'):
+            res = 0
+        #elif isinstance(o.status[step]['exception'], KeyboardInterrupt):
+            #res = 2
+        else:
+            res = 1
+
+        job_name = self.jenkins_job_name(o, step)
+        job_long_name = self.jenkins_long_job_name(o, step)
+        duration_t = [y - x
+                      for x, y in zip(o.start_time[step],
+                                      o.stop_time[step])]
+        # duration in seconds
+        duration = int(time.mktime(duration_t) - time.mktime((0, ) * 9)) \
+            * 1000
+
+        self.create_jenkins_job(job_name)
+        self.submit_job_result(job_name, job_long_name, res, duration,
+                               message, o.status[step], step)
+
+
+    def submit_job_result(self, job_name, job_long_name, res, duration,
+                          message, status, step='all'):
+        jenkins_cli_path = self.get_jenkins_cli()
+        if jenkins_cli_path:
+            # gzip content
+            zlog_f = tempfile.mkstemp(prefix='log_%s' %step, suffix='.gz')
+            os.close(zlog_f[0])
+            zlog = zlog_f[1]
+            gf = gzip.GzipFile(zlog, 'wb')
+            gf.write(message)
+            gf.close()
+            try:
+                jkn_cmd = ['java', '-jar', jenkins_cli_path, '-s',
+                          configuration.general_section.jenkins_server_url,
+                          'set-external-build-result', '--display',
+                          job_long_name, '--job', job_name,
+                          '--result', str(int(res)),
+                          '--duration', str(duration), '--log', '-']
+                #print('Run jenkins:')
+                #print(jkn_cmd)
+                subprocess.check_call(jkn_cmd, stdin=open(zlog))
+
+
+            finally:
+                os.unlink(zlog)
+        elif jenkins:
+            # jenkins_cli unavailable, use python-jenkins
+            jen = self.jenkins
+
+            POST_BUILD_RESULT = \
+                '%(folder_url)sjob/%(short_name)s/postBuildResult'
+
+            config = '''<run>
+              <log encoding="hexBinary">%s</log>
+              <result>%d</result>
+              <duration>%d</duration>
+              <displayName>%s</displayName>
+              <description>%s</description>
+            </run>''' % (message.encode('hex'), int(res), duration, job_long_name,
+                         status)
+
+            folder_url, short_name = jen._get_job_folder(job_name)
+            jen.jenkins_open(jenkins.Request(
+                jen._build_url(POST_BUILD_RESULT,
+                              {'folder_url': folder_url,
+                               'short_name': short_name}),
+                config.encode('utf-8'), jenkins.DEFAULT_HEADERS))
+
+
+    def jenkins_global_notification(self, message, res, start_time,
+                                    stop_time, status):
+        if not configuration.general_section.jenkins_server_url:
+            return # don't notify
+
+        job_name = self.jenkins_global_job_name()
+        self.create_jenkins_job(job_name)
+
+        # duration in seconds
+        if start_time is None or stop_time is None:
+            duration = 0
+        else:
+            duration_t = [y - x for x, y in zip(start_time, stop_time)]
+            duration = int(time.mktime(duration_t) - time.mktime((0, ) * 9)) \
+                * 1000
+
+        job_long_name = job_name
+
+        self.submit_job_result(job_name, job_long_name, res, duration,
+                               message, status)
+
+
+    def jenkins_global_notify_running(self):
+        if not configuration.general_section.jenkins_server_url:
+            return # don't notify
+        job_name = self.jenkins_global_job_name()
+        self.create_jenkins_job(job_name)
+        self.submit_job_result(job_name, 'RUNNING...', 0, 0,
+                               'Job in progress.', '')
+
+
+    @classmethod
+    def get_jenkins_cli(cls):
+        if cls.jenkins_cli is None or cls.jenkins_cli:
+            return cls.jenkins_cli
+        java = distutils.spawn.find_executable('java')
+        # test java version
+        try:
+            java_ver = subprocess.check_output(['java', '-version'],
+                                               stderr=subprocess.STDOUT)
+            ver = java_ver.split('\n')[0].strip()
+            jvre = re.match('^.* version "([^"]+)"$', ver)
+            if jvre:
+                jver_s = jvre.group(1)
+                jver = [int(x) for x in jver_s.split('.')[:2]]
+                if jver < [1, 7]:
+                    print('Java version %s is too old for Jenkins-cli.'
+                          % jver_s)
+                    java = None
+                else:
+                    print('Java version %s OK for jenkins-cli' % jver_s)
+            else:
+                print('Java version %s cannot be parsed. '
+                      'Not using Jenkins-cli' % jver_s)
+                java = None
+        except:
+            print('Could not check java version. Not using Jenkins-cli')
+            java = None
+        if not java:
+            cls.jenkins_cli = None
+            return None
+        # jenkins-cli.jar is retreived from the server
+        cli_file_d = tempfile.mkdtemp(prefix='bv_maker_jenkins')
+        cli_file = os.path.join(cli_file_d, 'jenkins-cli.jar')
+        url = configuration.general_section.jenkins_server_url \
+            + '/jnlpJars/jenkins-cli.jar'
+        try:
+            f = urlopen(url)
+            open(cli_file, 'wb').write(f.read())
+            cls.jenkins_cli = cli_file
+        except:
+            shutil.rmtree(cli_file_d)
+            cls.jenkins_cli = None
+        return cls.jenkins_cli
+
+
+    def create_jenkins_job(self, job_name):
+        jenkins_cli_path = self.get_jenkins_cli()
+        if jenkins_cli_path:
+            return self.create_jenkins_job_cli(job_name)
+        elif jenkins:
+            # use jenkins module
+            return self.create_jenkins_job_py(job_name)
+
+
+    def create_jenkins_job_cli(self, job_name):
+        jenkins_cli_path = self.get_jenkins_cli()
+        # check if the job exists
+        jkn_cmd = ['java', '-jar', jenkins_cli_path, '-s',
+                  configuration.general_section.jenkins_server_url,
+                  'list-jobs']
+        jobs = subprocess.check_output(jkn_cmd).strip().split('\n')
+        if job_name not in jobs:
+            # create new job
+            template  = '''<?xml version='1.0' encoding='UTF-8'?>
+<hudson.model.ExternalJob plugin="external-monitor-job@1.7">
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+</hudson.model.ExternalJob>'''
+            tfile = tempfile.mkstemp(prefix='bv_maker_jenkins_',
+                                      suffix='.xml')
+            os.close(tfile[0])
+            open(tfile[1], 'w').write(template)
+            jkn_cmd = ['java', '-jar', jenkins_cli_path, '-s',
+                      configuration.general_section.jenkins_server_url,
+                      'create-job', job_name]
+            #print('jkn cmd:', jkn_cmd)
+            try:
+                subprocess.check_call(jkn_cmd, stdin=open(tfile[1]))
+            finally:
+                os.unlink(tfile[1])
+
+
+    def create_jenkins_job_py(self, job_name):
+        if not hasattr(self, 'jenkins'):
+            self.jenkins = jenkins.Jenkins(
+                configuration.general_section.jenkins_server_url, configuration.general_section.jenkins_username,
+                configuration.general_section.jenkins_token)
+        jen = self.jenkins
+        if not jen.get_job_name(job_name):
+            config = '''<?xml version='1.0' encoding='UTF-8'?>
+<hudson.model.ExternalJob plugin="external-monitor-job@1.7">
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+</hudson.model.ExternalJob>'''
+            jen.create_job(job_name, config)
+
+
+class StepCommand(object):
 
     def process(self, step, directories_dict, method, *meth_args,
                 **meth_kwargs):
@@ -761,227 +1021,15 @@ Subject: %s - %s %s on %s (%s)
         open(log_file, 'a').write(
             '%s on %s (%s)\n' % (message, machine, osname))
 
-    def jenkins_job_name(self, o, step):
-        vars = dict(global_installer_variables())
-        if o.directory_id:
-            vars['directory_id'] = o.directory_id
-        else:
-            vars['directory_id'] = os.path.basename(o.directory)
-        project = ''
-        if ':' in step:
-            project = '-' + '-'.join(step.split(':')[1:])
-            step = step.split(':')[0]
-        vars['step'] = step
-        vars['project'] = project
-        job_name = configuration.general_section.jenkins_build_name % vars
-        return job_name
-
-    def jenkins_long_job_name(self, o, step):
-        vars = dict(global_installer_variables())
-        if o.directory_id:
-            vars['directory_id'] = o.directory_id
-        else:
-            vars['directory_id'] = os.path.basename(o.directory)
-        project = ''
-        if ':' in step:
-            project = '-' + '-'.join(step.split(':')[1:])
-            step = step.split(':')[0]
-        vars['step'] = step
-        vars['project'] = project
-        job_long_name = '%(directory_id)s step %(step)s%(project)s, on ' \
-            '%(hostname)s (%(os)s)' % vars
-        return job_long_name
-
     def jenkins_notification(self, d, o, step, status):
         ''' Notify job execution (build, test etc) to a Jenkins server
         '''
-        if not configuration.general_section.jenkins_server_url:
-            return # don't notify
-        #Status = status[0].upper() + status[1:]
-        if o.status[step] not in ('interrupted', 'failed'):
-            res = 0
-        #elif isinstance(o.status[step]['exception'], KeyboardInterrupt):
-            #res = 2
-        else:
-            res = 1
-
         message = self.message_header(d, o, step, status)
         message += self.log_message_content()
-        job_name = self.jenkins_job_name(o, step)
-        job_long_name = self.jenkins_long_job_name(o, step)
-        duration_t = [y - x
-                      for x, y in zip(o.start_time[step],
-                                      o.stop_time[step])]
-        # duration in seconds
-        duration = int(time.mktime(duration_t) - time.mktime((0, ) * 9)) \
-            * 1000
-
-        self.create_jenkins_job(job_name)
-
-        jenkins_cli_path = self.get_jenkins_cli()
-        if jenkins_cli_path:
-            # gzip content
-            zlog_f = tempfile.mkstemp(prefix='log_%s' %step, suffix='.gz')
-            os.close(zlog_f[0])
-            zlog = zlog_f[1]
-            gf = gzip.GzipFile(zlog, 'wb')
-            gf.write(message)
-            gf.close()
-            try:
-                jkn_cmd = ['java', '-jar', jenkins_cli_path, '-s',
-                          configuration.general_section.jenkins_server_url,
-                          'set-external-build-result', '--display',
-                          job_long_name, '--job', job_name,
-                          '--result', str(res),
-                          '--duration', str(duration), '--log', '-']
-                #print('Run jenkins:')
-                #print(jkn_cmd)
-                subprocess.check_call(jkn_cmd, stdin=open(zlog))
-
-
-            finally:
-                os.unlink(zlog)
-        elif jenkins:
-            # jenkins_cli unavailable, use python-jenkins
-            jen = self.jenkins
-
-            POST_BUILD_RESULT = \
-                '%(folder_url)sjob/%(short_name)s/postBuildResult'
-
-            config = '''<run>
-              <log encoding="hexBinary">%s</log>
-              <result>%d</result>
-              <duration>%d</duration>
-              <displayName>%s</displayName>
-              <description>%s</description>
-            </run>''' % (message.encode('hex'), res, duration, job_long_name,
-                         o.status[step])
-
-            folder_url, short_name = jen._get_job_folder(job_name)
-            jen.jenkins_open(jenkins.Request(
-                jen._build_url(POST_BUILD_RESULT,
-                              {'folder_url': folder_url,
-                               'short_name': short_name}),
-                config.encode('utf-8'), jenkins.DEFAULT_HEADERS))
-
-
-    def get_jenkins_cli(self):
-        if hasattr(self, 'jenkins_cli'):
-            return self.jenkins_cli
-        java = distutils.spawn.find_executable('java')
-        # test java version
-        try:
-            java_ver = subprocess.check_output(['java', '-version'],
-                                               stderr=subprocess.STDOUT)
-            ver = java_ver.split('\n')[0].strip()
-            jvre = re.match('^.* version "([^"]+)"$', ver)
-            if jvre:
-                jver_s = jvre.group(1)
-                jver = [int(x) for x in jver_s.split('.')[:2]]
-                if jver < [1, 7]:
-                    print('Java version %s is too old for Jenkins-cli.'
-                          % jver_s)
-                    java = None
-                else:
-                    print('Java version %s OK for jenkins-cli' % jver_s)
-            else:
-                print('Java version %s cannot be parsed. '
-                      'Not using Jenkins-cli' % jver_s)
-                java = None
-        except:
-            print('Could not check java version. Not using Jenkins-cli')
-            java = None
-        if not java:
-            self.jenkins_cli = None
-            return None
-        # jenkins-cli.jar is retreived from the server
-        cli_file_d = tempfile.mkdtemp(prefix='bv_maker_jenkins')
-        cli_file = os.path.join(cli_file_d, 'jenkins-cli.jar')
-        url = configuration.general_section.jenkins_server_url \
-            + '/jnlpJars/jenkins-cli.jar'
-        try:
-            f = urlopen(url)
-            open(cli_file, 'wb').write(f.read())
-            self.jenkins_cli = cli_file
-        except:
-            shutil.rmtree(cli_file_d)
-            self.jenkins_cli = None
-        return self.jenkins_cli
-
-
-    def create_jenkins_job(self, job_name):
-        jenkins_cli_path = self.get_jenkins_cli()
-        if jenkins_cli_path:
-            return self.create_jenkins_job_cli(job_name)
-        elif jenkins:
-            # use jenkins module
-            return self.create_jenkins_job_py(job_name)
-
-
-    def create_jenkins_job_cli(self, job_name):
-        jenkins_cli_path = self.get_jenkins_cli()
-        # check if the job exists
-        jkn_cmd = ['java', '-jar', jenkins_cli_path, '-s',
-                  configuration.general_section.jenkins_server_url,
-                  'list-jobs']
-        jobs = subprocess.check_output(jkn_cmd).strip().split('\n')
-        if job_name not in jobs:
-            # create new job
-            template  = '''<?xml version='1.0' encoding='UTF-8'?>
-<hudson.model.ExternalJob plugin="external-monitor-job@1.7">
-  <description></description>
-  <keepDependencies>false</keepDependencies>
-  <properties/>
-</hudson.model.ExternalJob>'''
-            tfile = tempfile.mkstemp(prefix='bv_maker_jenkins_',
-                                      suffix='.xml')
-            os.close(tfile[0])
-            open(tfile[1], 'w').write(template)
-            jkn_cmd = ['java', '-jar', jenkins_cli_path, '-s',
-                      configuration.general_section.jenkins_server_url,
-                      'create-job', job_name]
-            #print('jkn cmd:', jkn_cmd)
-            try:
-                subprocess.check_call(jkn_cmd, stdin=open(tfile[1]))
-            finally:
-                os.unlink(tfile[1])
-
-
-    def create_jenkins_job_py(self, job_name):
-        if not hasattr(self, 'jenkins'):
-            self.jenkins = jenkins.Jenkins(
-                configuration.general_section.jenkins_server_url, configuration.general_section.jenkins_username,
-                configuration.general_section.jenkins_token)
-        jen = self.jenkins
-        if not jen.get_job_name(job_name):
-            config = '''<?xml version='1.0' encoding='UTF-8'?>
-<hudson.model.ExternalJob plugin="external-monitor-job@1.7">
-  <description></description>
-  <keepDependencies>false</keepDependencies>
-  <properties/>
-</hudson.model.ExternalJob>'''
-            jen.create_job(job_name, config)
-
-
-    #def create_jenkins_job_rest(self, job_name):
-        #''' Does not work...
-        #'''
-        #if not self.jenkins_crumb:
-            #jenkins_crumb = requests.get(
-                #configuration.general_section.jenkins_server_url + '/crumbIssuer/api/xml?xpath=//crumb',
-                #auth=(configuration.general_section.jenkins_username, configuration.general_section.jenkins_token)).content
-        ## check if the job exists
-        #res = requests.get(configuration.general_section.jenkins_server_url + '/job/%s/' % job_name,
-                           #auth=(configuration.general_section.jenkins_username, configuration.general_section.jenkins_token))
-        #if res.status_code == 404:
-            ## not existing: create it
-            #res = requests.get(
-                #configuration.general_section.jenkins_server_url +
-                #'/createItem?Jenkins-Crumb=%s&&name=%s'
-                #% (self.jenkins_crumb, job_name),
-                               #auth=(configuration.general_section..jenkins_username,
-                                     #configuration.general_section..jenkins_token),
-                               #data=)
+        global jenkins_wrapper
+        if jenkins_wrapper is None:
+            jenkins_wrapper = JenkinsWrapper()
+        jenkins_wrapper.jenkins_notification(message, d, o, step, status)
 
 
 class InfoCommand(StepCommand):
@@ -2901,13 +2949,16 @@ def display_failure_summary(configuration):
                   'interrupted': 'INTERRUPTED'}
     sys.stdout.flush()
     sys.stderr.flush()
-    print('\nbv_maker summary:')
+    messages = ['\nbv_maker summary:']
+    print(messages[0])
     #log_file = None
     #if configuration.general_section \
             #and configuration.general_section.global_status_file:
         #log_file = configuration.general_section.global_status_file
         #machine = gethostname()
         #osname = global_installer_variables()['os']
+    first_start = None
+    last_stop = None
     for section_name, steps in sections:
         for directory, section \
                 in six.iteritems(getattr(configuration, section_name)):
@@ -2917,19 +2968,29 @@ def display_failure_summary(configuration):
                     message = '%s step %s: %s' % (status, step, directory)
                     start = section.start_time.get(step)
                     if start:
+                        if first_start is None:
+                            first_start = start
                         message += ', started: %04d/%02d/%02d %02d:%02d' \
                             % start[:5]
                     stop = section.stop_time.get(step)
                     if stop:
+                        last_stop = stop
                         message += ', stopped: %04d/%02d/%02d %02d:%02d' \
                             % stop[:5]
+                    messages.append(message)
                     print(message)
                     if section.has_failed(step):
                         global_failed = True
     if global_failed:
-        print('There were errors.')
+        status = 'here were errors.'
+        print(status)
     else:
-        print('All went good.')
+        status = 'All went good.'
+        print(status)
+    global jenkins_wrapper
+    jenkins_wrapper.jenkins_global_notification(
+        '\n'.join(messages) + '\n', global_failed, first_start, last_stop,
+        status)
     return global_failed
 
 # ---
@@ -2970,6 +3031,11 @@ if len(options_by_command) == 1:
     # No command selected => do all default commands
     for i in default_commands:
         options_by_command[i] = ['--only-if-default']
+
+if not jenkins_wrapper:
+    jenkins_wrapper = JenkinsWrapper()
+jenkins_wrapper.jenkins_global_notify_running()
+
 # Ordered command list
 for command in ['info', 'sources', 'configure', 'build', 'doc', 'test',
                 'testref', 'pack', 'install_pack', 'test_pack',

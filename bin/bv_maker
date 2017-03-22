@@ -622,6 +622,10 @@ class JenkinsWrapper(object):
 
         self.submit_job_result(job_name, job_long_name, res, duration,
                                message, status)
+        # remove the temporary "running" build
+        if hasattr(self, 'running_build'):
+            self.delete_build(job_name, self.running_build)
+            del self.running_build
 
 
     def jenkins_global_notify_running(self):
@@ -631,6 +635,60 @@ class JenkinsWrapper(object):
         self.create_jenkins_job(job_name)
         self.submit_job_result(job_name, 'RUNNING...', 0, 0,
                                'Job in progress.', '')
+        # keep this temporary "running" build to allow deleting it later
+        running_build = self.get_last_build(job_name)
+        if running_build is not None:
+            self.running_build = running_build
+
+
+    def get_last_build(self, job_name):
+        jenkins_cli_path = self.get_jenkins_cli()
+        if jenkins_cli_path:
+            return self.get_last_build_cli(job_name)
+        else:
+            return self.get_last_build_py(job_name)
+
+
+    def get_last_build_cli(self, job_name):
+        # cli does not allow to get builds list in a job...
+        if jenkins and not hasattr(self, 'jenkins'):
+            self.jenkins = jenkins.Jenkins(
+                configuration.general_section.jenkins_server_url, configuration.general_section.jenkins_username,
+                configuration.general_section.jenkins_token)
+        if hasattr(self, 'jenkins'):
+            return self.get_last_build_py(job_name)
+
+
+    def get_last_build_py(self, job_name):
+        return str(self.jenkins.get_job_info(job_name)['lastBuild']['number'])
+
+
+    def delete_build(self, job_name, build_name):
+        if hasattr(self, 'jenkins'):
+            self.delete_build_py(job_name, build_name)
+        #jenkins_cli_path = self.get_jenkins_cli()
+        #if jenkins_cli_path:
+            #self.delete_build_cli(job_name, build_name)
+        #else:
+            #self.delete_build_py(job_name, build_name)
+
+
+    def delete_build_cli(self, job_name, build_name):
+        # doesn't work: always returns "ERROR: No such job"
+        jenkins_cli_path = self.get_jenkins_cli()
+        # check if the job exists
+        jkn_cmd = ['java', '-jar', jenkins_cli_path, '-s',
+                  configuration.general_section.jenkins_server_url,
+                  'delete-builds', job_name, build_name]
+        subprocess.check_output(jkn_cmd).strip().split('\n')
+
+
+    def delete_build_py(self, job_name, build_name):
+        DELETE_BUILD \
+            = '%(folder_url)sjob/%(short_name)s/%(build_name)s/doDelete'
+        folder_url, short_name = self.jenkins._get_job_folder(job_name)
+        self.jenkins.jenkins_open(jenkins.Request(
+            self.jenkins._build_url(DELETE_BUILD, locals()), b''))
 
 
     @classmethod

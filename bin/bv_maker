@@ -591,8 +591,8 @@ class JenkinsWrapper(object):
               <duration>%d</duration>
               <displayName>%s</displayName>
               <description>%s</description>
-            </run>''' % (message.encode('hex'), int(res), duration, job_long_name,
-                         status)
+            </run>''' % (message.encode('hex'), int(res), duration,
+                         job_long_name, status)
 
             folder_url, short_name = jen._get_job_folder(job_name)
             jen.jenkins_open(jenkins.Request(
@@ -1024,6 +1024,8 @@ Subject: %s - %s %s on %s (%s)
     def jenkins_notification(self, d, o, step, status):
         ''' Notify job execution (build, test etc) to a Jenkins server
         '''
+        if not configuration.general_section.jenkins_server_url:
+            return # don't notify
         message = self.message_header(d, o, step, status)
         message += self.log_message_content()
         global jenkins_wrapper

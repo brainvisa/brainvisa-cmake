@@ -3042,7 +3042,7 @@ def display_failure_summary(configuration):
                     if section.has_failed(step):
                         global_failed = True
     if global_failed:
-        status = 'here were errors.'
+        status = 'There were errors.'
         print(status)
     else:
         status = 'All went good.'

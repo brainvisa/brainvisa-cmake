@@ -2080,12 +2080,30 @@ class BuildDirectory(ComponentsConfigParser):
                          'ctest_options', 'directory_id', 'test_ref_data_dir',
                          'test_run_data_dir'))
 
-    sitecustomize_content = '''import os
+    sitecustomize_content = '''import os, sys
 
 for i in os.listdir(os.path.dirname(__file__)):
     if i.endswith('.py') and i != '__init__.py':
         module = i[:-3]
         __import__('sitecustomize.%s' % module)
+
+# seek for other sitecustomize modules in path
+try:
+    i = sys.path.index(os.path.dirname(os.path.dirname(__file__)))
+except ValueError:
+    i = -1
+old_file = __file__
+for p in sys.path[i+1:]:
+    if os.path.isdir(p):
+        filename = os.path.join(p, 'sitecustomize.py')
+        if not os.path.exists(filename):
+            filename = os.path.join(p, 'sitecustomize', '__init__.py')
+        if os.path.exists(filename):
+            __file__ = filename
+            exec(compile(open(filename).read(), filename, 'exec'))
+        del filename
+__file__ = old_file
+del old_file, p, i
 '''
 
     def __init__(self, directory, configuration):

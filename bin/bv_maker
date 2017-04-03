@@ -75,7 +75,7 @@ try:
 
         jenkins.Jenkins._get_job_folder = get_job_folder
         del get_job_folder
-    if 'Request' not in jenkins:
+    if 'Request' not in jenkins.__dict__:
         from urllib2 import Request
         jenkins.Request = Request
 except ImportError:

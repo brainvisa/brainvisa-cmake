@@ -2092,7 +2092,9 @@ try:
     i = sys.path.index(os.path.dirname(os.path.dirname(__file__)))
 except ValueError:
     i = -1
-old_file = __file__
+if 'old_file' not in globals():
+  old_file = []
+old_file.append(__file__)
 for p in sys.path[i+1:]:
     if os.path.isdir(p):
         filename = os.path.join(p, 'sitecustomize.py')
@@ -2101,9 +2103,13 @@ for p in sys.path[i+1:]:
         if os.path.exists(filename):
             __file__ = filename
             exec(compile(open(filename).read(), filename, 'exec'))
-        del filename
-__file__ = old_file
-del old_file, p, i
+__file__ = old_file.pop()
+for v in ('filename', 'p', 'i'):
+    if v in globals():
+        del globals()[v]
+del v
+if len(old_file) == 0:
+    del old_file
 '''
 
     def __init__(self, directory, configuration):

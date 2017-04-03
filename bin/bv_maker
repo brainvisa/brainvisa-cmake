@@ -75,6 +75,20 @@ try:
 
         jenkins.Jenkins._get_job_folder = get_job_folder
         del get_job_folder
+
+    if '_build_url' not in jenkins.Jenkins.__dict__:
+        def build_url(self, format_spec, variables=None):
+
+        if variables:
+            url_path = format_spec % self._get_encoded_params(variables)
+        else:
+            url_path = format_spec
+
+        return urljoin(self.server, url_path)
+
+    jenkins.Jenkins._build_url = build_url
+    del build_url
+
     if 'Request' not in jenkins.__dict__:
         from urllib2 import Request
         jenkins.Request = Request

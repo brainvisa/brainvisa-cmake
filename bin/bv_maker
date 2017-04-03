@@ -79,19 +79,20 @@ try:
     if '_build_url' not in jenkins.Jenkins.__dict__:
         def build_url(self, format_spec, variables=None):
 
-        if variables:
-            url_path = format_spec % self._get_encoded_params(variables)
-        else:
-            url_path = format_spec
+            if variables:
+                url_path = format_spec % self._get_encoded_params(variables)
+            else:
+                url_path = format_spec
 
-        return urljoin(self.server, url_path)
+            return urljoin(self.server, url_path)
 
-    jenkins.Jenkins._build_url = build_url
-    del build_url
+        jenkins.Jenkins._build_url = build_url
+        del build_url
 
     if 'Request' not in jenkins.__dict__:
         from urllib2 import Request
         jenkins.Request = Request
+
 except ImportError:
     # jenkins module is not here
     print('Warning: jenkins module is not available')

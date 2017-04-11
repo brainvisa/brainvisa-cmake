@@ -187,12 +187,22 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
 
       if( "${PYTHON_BIN_DIR}" STREQUAL "/usr/bin"
           OR "${PYTHON_BIN_DIR}" STREQUAL "${CMAKE_BINARY_DIR}/bin" )
-        # Ubuntu typical system install
         set( _inv_pypath ${PYTHON_MODULES_PATH} )
+        list( REVERSE _inv_pypath )
+        # Ubuntu typical system install
+        foreach( _pypath ${_inv_pypath} )
+          add_custom_command( TARGET install-${component} PRE_BUILD
+            COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\; then ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" -e "${_pypath}/dist-packages" "${_pypath}" "$(BRAINVISA_INSTALL_PREFIX)/lib" \; else ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" -e "${_pypath}/dist-packages" "${_pypath}"  "${CMAKE_INSTALL_PREFIX}/lib" \; fi )
+        endforeach()
+        # Get additional site-packages directories
+        execute_process(
+          COMMAND ${REAL_PYTHON_EXECUTABLE} "${brainvisa-cmake_DIR}/findpysitepackages.py" "${PYTHON_MODULES_PATH}"
+          OUTPUT_VARIABLE _pypath_list )
+        set( _inv_pypath ${_pypath_list} )
         list( REVERSE _inv_pypath )
         foreach( _pypath ${_inv_pypath} )
           add_custom_command( TARGET install-${component} PRE_BUILD
-            COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" -e "${_pypath}/dist-packages" "${_pypath}" "$(BRAINVISA_INSTALL_PREFIX)/lib" \;else ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" -e "${_pypath}" "${_pypath}"  "${CMAKE_INSTALL_PREFIX}/lib" \; fi )
+            COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\; then ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "${_pypath}" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}" \; else ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "${_pypath}"  "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}" \; fi )
         endforeach()
 
         # fix wrong _get_default_scheme() in sysconfig.py on Ubuntu 12.04
@@ -276,31 +286,34 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ )
     endif()
     
-    # Install lib/python${PYTHON_SHORT_VERSION}/site-packages/*
-    # from build dir because it is here that are installed modules
-    # with pip and virtualenv
-    set(site_packages "${CMAKE_BINARY_DIR}/lib/python${PYTHON_SHORT_VERSION}/site-packages")
-    file(GLOB modules RELATIVE "${site_packages}" "${site_packages}/*")
-    foreach(m ${modules})
-        if((NOT m MATCHES ".*\\.egg-info") AND
-           (NOT m MATCHES "distribute.*\\.egg") AND
-           (NOT m MATCHES "pip.*\\.egg") AND
-           (NOT m STREQUAL "easy-install.pth") AND
-           (NOT m STREQUAL "setuptools.pth"))
-            set(fp "${site_packages}/${m}")
-            if(IS_DIRECTORY "${fp}")
-                BRAINVISA_INSTALL(DIRECTORY "${fp}"
-                    DESTINATION "lib/python${PYTHON_SHORT_VERSION}"
-                    USE_SOURCE_PERMISSIONS
-                    COMPONENT "${component}")
-            else()
-                BRAINVISA_INSTALL(FILES "${fp}"
-                    DESTINATION "lib/python${PYTHON_SHORT_VERSION}"
-                    PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-                    COMPONENT "${component}")
-            endif()
-        endif()
-    endforeach()
+    # virtualenv build dir should already be taken into account by
+    # the site-packages (findpysitepackages.py) above
+
+#     # Install lib/python${PYTHON_SHORT_VERSION}/site-packages/*
+#     # from build dir because it is here that are installed modules
+#     # with pip and virtualenv
+#     set(site_packages "${CMAKE_BINARY_DIR}/lib/python${PYTHON_SHORT_VERSION}/site-packages")
+#     file(GLOB modules RELATIVE "${site_packages}" "${site_packages}/*")
+#     foreach(m ${modules})
+#         if((NOT m MATCHES ".*\\.egg-info") AND
+#            (NOT m MATCHES "distribute.*\\.egg") AND
+#            (NOT m MATCHES "pip.*\\.egg") AND
+#            (NOT m STREQUAL "easy-install.pth") AND
+#            (NOT m STREQUAL "setuptools.pth"))
+#             set(fp "${site_packages}/${m}")
+#             if(IS_DIRECTORY "${fp}")
+#                 BRAINVISA_INSTALL(DIRECTORY "${fp}"
+#                     DESTINATION "lib/python${PYTHON_SHORT_VERSION}/site-packages"
+#                     USE_SOURCE_PERMISSIONS
+#                     COMPONENT "${component}")
+#             else()
+#                 BRAINVISA_INSTALL(FILES "${fp}"
+#                     DESTINATION "lib/python${PYTHON_SHORT_VERSION}/site-packages"
+#                     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
+#                     COMPONENT "${component}")
+#             endif()
+#         endif()
+#     endforeach()
 
     set(${component}_PACKAGED TRUE PARENT_SCOPE)
   else()

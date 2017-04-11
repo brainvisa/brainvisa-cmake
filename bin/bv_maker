@@ -89,6 +89,18 @@ try:
         jenkins.Jenkins._build_url = build_url
         del build_url
 
+    if '_get_encoded_params' not in jenkins.Jenkins.__dict__:
+        def get_encoded_params(self, params):
+            for k, v in params.items():
+                if k in ["name", "msg", "short_name", "from_short_name",
+                        "to_short_name", "folder_url", "from_folder_url",
+                        "to_folder_url"]:
+                    params[k] = quote(v)
+            return params
+
+        jenkins.Jenkins._get_encoded_params = get_encoded_params
+        del get_encoded_params
+
     if 'Request' not in jenkins.__dict__:
         from urllib2 import Request
         jenkins.Request = Request

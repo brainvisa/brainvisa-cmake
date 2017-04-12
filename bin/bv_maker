@@ -77,6 +77,8 @@ try:
         del get_job_folder
 
     if '_build_url' not in jenkins.Jenkins.__dict__:
+        from six.moves.urllib.parse import urljoin
+
         def build_url(self, format_spec, variables=None):
 
             if variables:
@@ -90,6 +92,8 @@ try:
         del build_url
 
     if '_get_encoded_params' not in jenkins.Jenkins.__dict__:
+        from six.moves.urllib.parse import quote
+
         def get_encoded_params(self, params):
             for k, v in params.items():
                 if k in ["name", "msg", "short_name", "from_short_name",

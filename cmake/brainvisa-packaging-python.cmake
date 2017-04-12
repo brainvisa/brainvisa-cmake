@@ -191,7 +191,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         list( REVERSE _inv_pypath )
         # Ubuntu typical system install
         foreach( _pypath ${_inv_pypath} )
-          add_custom_command( TARGET install-${component} PRE_BUILD
+#           add_custom_command( TARGET install-${component} PRE_BUILD
 #             COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\; then ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" -e "${_pypath}/dist-packages" "${_pypath}" "$(BRAINVISA_INSTALL_PREFIX)/lib" \; else ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" -e "${_pypath}/dist-packages" "${_pypath}"  "${CMAKE_INSTALL_PREFIX}/lib" \; fi )
           add_custom_command( TARGET install-${component} PRE_BUILD
             COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\; then ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "${_pypath}" "$(BRAINVISA_INSTALL_PREFIX)/lib" \; else ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "${_pypath}"  "${CMAKE_INSTALL_PREFIX}/lib" \; fi )

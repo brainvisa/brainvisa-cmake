@@ -4,6 +4,7 @@ from optparse import OptionParser
 import os
 import sys
 import shutil
+import errno
 
 
 def realrealpath(path):
@@ -61,6 +62,19 @@ def symlink(reldpath, destpath, simulation):
         os.symlink(reldpath, destpath)
 
 
+def copy2(source, dest, simulation=False):
+    if not simulation:
+        try:
+            shutil.copy2(source, dest)
+        except OSError as e:
+            # some filesystems cannot carry all flags
+            if e.errno == errno.EOPNOTSUPP:
+                # fallback to a standard copy
+                shutil.copy(source, dest)
+            else:
+                raise # real error
+
+
 def make_ext_symlink(source, dest, ext_links, simulation):
     if ext_links.has_key(source):
         realsrc = ext_links[source]
@@ -72,7 +86,7 @@ def make_ext_symlink(source, dest, ext_links, simulation):
         # make a real copy, and record this destination
         ext_links[source] = dest
         if not simulation:
-            shutil.copy2(source, dest)
+            copy2(source, dest)
 
 
 parser = OptionParser(sys.argv[0] + ' [options] source1 [source2] [...] dest'
@@ -182,4 +196,4 @@ while sources:
             if not options.simulation:
                 if os.path.lexists(destpath):
                     os.remove(destpath)
-                shutil.copy2(spath, destpath)
+                copy2(spath, destpath)

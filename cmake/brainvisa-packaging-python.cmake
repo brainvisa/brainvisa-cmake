@@ -188,7 +188,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       if( "${PYTHON_BIN_DIR}" STREQUAL "/usr/bin"
           OR "${PYTHON_BIN_DIR}" STREQUAL "${CMAKE_BINARY_DIR}/bin" )
         set( _inv_pypath ${PYTHON_MODULES_PATH} )
-        list( REVERSE _inv_pypath )
+        if( _inv_pypath )
+          # if _inv_pypath is empty, list( REVERSE ) fails...
+          list( REVERSE _inv_pypath )
+        endif()
         # Ubuntu typical system install
         foreach( _pypath ${_inv_pypath} )
 #           add_custom_command( TARGET install-${component} PRE_BUILD
@@ -283,7 +286,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       COMMAND ${REAL_PYTHON_EXECUTABLE} "${brainvisa-cmake_DIR}/findpysitepackages.py" "${PYTHON_MODULES_PATH}"
       OUTPUT_VARIABLE _pypath_list )
     set( _inv_pypath ${_pypath_list} )
-    list( REVERSE _inv_pypath )
+    if( _inv_pypath )
+      # if _inv_pypath is empty, list( REVERSE ) fails...
+      list( REVERSE _inv_pypath )
+    endif()
     foreach( _pypath ${_inv_pypath} )
       add_custom_command( TARGET install-${component} PRE_BUILD
         COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\; then ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "${_pypath}" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}" \; else ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "${_pypath}"  "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}" \; fi )

@@ -18,7 +18,7 @@ A section may also contain conditional parts. See the `Conditional subsections`_
 General structure and syntax of bv_maker configuration file
 ===========================================================
 
-The :doc:`bv_maker` configuration file is composed of sections delimited by a line enclosed in square brackets: ``[ ... ]``. Each section contains the definition of a directory (either a source directory, a build directory, or a packaging directoty), or a "general" section. In this file, blank lines are ignored and spaces at the begining or end of lines are also ignored. It means that you can indent and separate lines as you wish. For instance the three following configurations are equivalent:
+The :doc:`bv_maker` configuration file is composed of sections delimited by a line enclosed in square brackets: ``[ ... ]``. Each section contains the definition of a directory (either a source directory, a build directory, or a packaging directoty), or a "general" section. In this file, blank lines are ignored and spaces at the begining or end of lines are also ignored. It means that you can indent and separate lines as you wish. For instance:
 
 .. code-block:: bash
 
@@ -46,12 +46,64 @@ A line begining with ``#`` or ``//`` is considered as a comment and ignored. Com
       # Another comment
     // This is also a comment !
 
-
 But the following line is not valid:
 
 .. code-block:: bash
 
     [ build $HOME/brainvisa/build/trunk ] # This is a syntax error
+
+Each line in a section contains either a "variable" definition, or some section-specific declarations such as components definitions.
+
+Option Variables
+----------------
+
+A variable declaration looks the following:
+
+.. code-block:: bash
+
+    variable = value
+
+Some variables may support additive or substractive declarations, once they have been defined a first time:
+
+.. code-block:: bash
+
+    make_options = -j6
+    make_options += VERBOSE=1
+
+This possibility depends on the variable type (here a list), but also on the variable itself (which must be understood in bv_maker as additive)
+
+Most variables are strings, but a few are lists: elements are separated by blank spaces.
+
+Some variables are "dictionaries" which may contain several sub-variables. A typical example is the ``env`` variable which contains environment variables to be set during execution of the steps for the given directory section. The syntax is the following:
+
+.. code-block:: bash
+
+    env = PATH: /home/myself/bin:$PATH, LD_LIBRARY_PATH:/home/myself/lib:$LD_LIBRARY_PATH
+
+or, in additive mode:
+
+.. code-block:: bash
+
+    env += PATH: /home/myself/bin:$PATH, LD_LIBRARY_PATH=/home/myself/lib:$LD_LIBRARY_PATH
+
+The difference between the two above examples is that the first will override the full set of environment variables defined in bv_maker.cfg, whereas the second will only add / replace 2 entries.
+
+The above syntax is somewhat limited. If needed a "pythonic" syntax is allowed:
+
+.. code-block:: bash
+
+    env += {'PATH': '/home/myself/bin:$PATH', 'LD_LIBRARY_PATH': '/home/myself/lib:$LD_LIBRARY_PATH'}
+
+
+Variables substitution
+----------------------
+
+Some variables (not all) with string values support environment variables substitution (``$VARIABLE``), and / or "python-like" string substitution (``%(variable)s``)for a few variables (``date``, ``hostname``, ``time``, ``os``, a few more in some sections).
+Dictionary variables do support both:
+
+.. code-block:: bash
+
+    env += PATH: $HOME/bin:$PATH, BRAINVISA_TEST_DIR: $HOME/tests-%(hostname)s-%(date)s
 
 
 .. _general_section:
@@ -112,12 +164,13 @@ where ``<directory>`` is the name of the directory that will be created and whos
 
 The content of the source directory section is composed of a set of rules to select and unselect Subversion directories to copy in the source directory. Each source directory is first associated with an empty list of subdirectories. Then, the configuration file is parsed in order to modify this list. Each line in the source directory section correspond to an action that can modify the list. These actions are executed in the order they are given. It means that you can unselect directories previously selected or the contrary. For instance if one wants to select all components but one, he will make a first action to select all components and a second one to remove the component to ignore. There are three kind of actions that can be done to modify this list of subdirectories. The syntax of the configuration rules corresponding to these actions are described in the following paragraphs.
 
-In the source section, it is also possible to define some options, delcared in the syntax ``option = value``. The following options are supported:
+In the source section, it is also possible to define some option variables, delcared in the syntax ``option = value``. The following options are supported:
 
 * ``build_condition``: a condition which must be True to allow configure and build steps, otherwise they will be skipped. The condition is evaluated in **python language**, and is otherwise free: it may typically be used to restrict build to certain systems or hostnames, some dates, etc.
 * ``directory_id``: used in Jenkins notification
 * ``revision_control``: ``ON`` (default) or ``OFF``. If enabled, revision control systems (*svn*, *git*) will be used to update the sources. If OFF, the sources directory will be left as is as a fixed sources tree.
 * ``default_steps``: steps performed for this build directory when bv_maker is invoked without specifying steps (typically just ``bv_maker``). Defaults to: ``sources``.
+* ``env``: environment variables dictionary
 * ``stderr_file``: file used to redirect the standard error stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If not specified, it will be mixed with standard output.
 * ``stdout_file``: file used to redirect the standard output stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If neither it nor ``stderr_file`` are specified, then a temporary file will be used, and erased when each step is finished.
 
@@ -186,6 +239,7 @@ In the build section, it is also possible to define some build options:
 * ``cmake_options``: passed to cmake (ex: ``-DMY_VARIABLE=dummy``)
 * ``ctest_options``: passed to ctest in the test step (ex: ``-j4 -VV -R carto*``)
 * ``directory_id``: used in Jenkins notification
+* ``env``: environment variables dictionary
 * ``make_options``: passed to make (ex: ``-j8``)
 * ``build_type``: ``Debug``, ``Release`` or none (no optimization options)
 * ``packaging_thirdparty``: Set this option to ``ON`` if you need to create a BrainVISA package containing thirdparty libraries dependency.
@@ -247,6 +301,7 @@ The package section must define some variables which specify which build directo
 * ``data_repos_dir``: Data repository directory. Mandatory when installing a non-data package (dependencies on data packages must be satisfied to install runtime packages)
 * ``default_steps``: steps performed for this package directory when bv_maker is invoked without specifying steps (typically just ``bv_maker``). Defaults to none, may include ``pack``, ``install_pack`` and ``test_pack``.
 * ``directory_id``: used in Jenkins notification
+* ``env``: environment variables dictionary
 * ``keep_n_older_repos``: if the package directory contains a date substitution pattern ("``%(date)s``"), a new package directory will be created every day (in automatic tests situation). This option specifies how to delete older package directories, by keeping only the specified latest ones. The default is 1: remove all but the last one.
 *  ``init_components_from_build_dir``: if ``ON`` (default), the build directory will provide the initial list of projects and components to be packaged. If ``OFF``, the initial list of projects and components to be packages is empty.
 * ``installer_filename``: output installer program file name. If not specified, no installer program will actually be generated, only the packages repository will be done.

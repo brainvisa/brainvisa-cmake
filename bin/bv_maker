@@ -1461,7 +1461,89 @@ class TestrefPackCommand(StepCommand):
                      'testref_package', self.options, self.args)
 
 
-class GeneralSection(object):
+class ConfigVariableParser(object):
+
+    def addConfigurationLine(self, line):
+        i = line.find('=')
+        if i > 0:
+            oper = '' # assign (=) operator by default
+            if i > 1 and line[i-1] in ('-', '+'): # operators -=, +=
+                oper = line[i-1]
+                option = line[:i-1].strip()
+            else:
+                option = line[:i].strip()
+            value = line[i + 1:].strip()
+            if option not in self._validOptions:
+                raise SyntaxError('Invalid option: %s' % option)
+            var_type = str
+            if hasattr(self, option):
+                var_type = type(getattr(self, option))
+                if var_type in (list, tuple):
+                    value = value.split()
+                elif var_type is dict:
+                    if value.startswith('{') and value.endswith('}'):
+                        try:
+                            value = eval(value)
+                        except:
+                            raise SyntaxError()
+                    else:
+                        try:
+                            value = eval('{' + value + '}')
+                        except:
+                            # try simpler syntax without quotes
+                            try:
+                                value = [x.strip() for x in value.split(',')]
+                                value = dict([(x[:x.find(':')],
+                                               x[x.find(':') + 1:].strip())
+                                    for x in value])
+                            except:
+                                raise SyntaxError()
+                    value = dict([(x, self.replace_vars(y))
+                                  for x, y in six.iteritems(value)])
+            if oper == '':
+                setattr(self, option, value)
+            elif oper == '+':
+                old_value = getattr(self, option)
+                if var_type in (dict, set):
+                    old_value.update(value)
+                else:
+                    old_value += value
+            elif oper == '-':
+                old_value = getattr(self, option)
+                if var_type is dict:
+                    for k in value:
+                        if k in old_value:
+                            del old_value[k]
+                elif var_type is set:
+                    old_value.difference_update(value)
+                elif var_type is list:
+                    old_value = [x for x in old_value if x not in value]
+                else:
+                    try:
+                        old_value -= value
+                    except:
+                        raise SyntaxError()
+            return True # parsed
+        return False # not parsed
+
+    def get_environ(self):
+        env = getattr(self, 'env', None)
+        if env:
+            sys_env = dict(os.environ)
+            sys_env.update(env)
+            return sys_env
+        return None
+
+    def replace_vars(self, path_string):
+        if hasattr(self, 'installer_variables'):
+            vars = self.installer_variables()
+        else:
+            vars = global_installer_variables()
+        return os.path.abspath(
+            environmentVariablesSubstitution(path_string)) % vars
+
+
+class GeneralSection(ConfigVariableParser):
     _validOptions = set(('failure_email', 'success_email', 'smtp_server',
                          'from_email', 'reply_to_email', 'global_status_file',
                          'email_notification_by_default',
@@ -1486,18 +1568,8 @@ class GeneralSection(object):
         self.jenkins_token = None
 
     def addConfigurationLine(self, line):
-        i = line.find('=')
-        if i > 0:
-            option = line[:i].strip()
-            value = line[i + 1:].strip()
-            if option not in self._validOptions:
-                raise SyntaxError('Invalid option: %s' % option)
-            if hasattr(self, option):
-                if type(getattr(self, option)) in (list, tuple):
-                    value = value.split()
-                elif isinstance(getattr(self, option), dict):
-                    value = dict(eval(value))
-            setattr(self, option, value)
+        if ConfigVariableParser.addConfigurationLine(self, line):
+            pass
         else:
             raise SyntaxError()
 
@@ -1559,7 +1631,7 @@ class DirectorySection(object):
         return cond
 
 
-class SourceDirectory(DirectorySection):
+class SourceDirectory(DirectorySection, ConfigVariableParser):
 
     _validOptions = set(('default_steps', 'revision_control',
                          'build_condition', 'cross_compiling_dirs',
@@ -1596,18 +1668,8 @@ class SourceDirectory(DirectorySection):
         #    + https://svn.url [<dest_directory>] [<bv_version>]]
         #    + <component_pattern> <version_pattern>
         #    - <component_pattern> [<version_pattern>]
-        i = line.find('=')
-        if i > 0:
-            option = line[:i].strip()
-            value = line[i + 1:].strip()
-            if option not in self._validOptions:
-                raise SyntaxError('Invalid option: %s' % option)
-            if hasattr(self, option):
-                if type(getattr(self, option)) in (list, tuple):
-                    value = value.split()
-                elif type(getattr(self, option)) in (dict,):
-                    value = dict([v.split(':') for v in value.split()])
-            setattr(self, option, value)
+        if ConfigVariableParser.addConfigurationLine(self, line):
+            pass
         else:
             l = line.split()
             sign = l[0]
@@ -2126,14 +2188,17 @@ class ComponentsConfigParser(DirectorySection):
                 print('Build directory %s parsing done.' % self.directory)
 
 
-class BuildDirectory(ComponentsConfigParser):
+class BuildDirectory(ComponentsConfigParser, ConfigVariableParser):
 
-    _validOptions = set(('build_type', 'make_options', 'cmake_options',
+    _validAdditiveOptions = set(('make_options', 'cmake_options', 'env',
+                                 'default_steps', 'ctest_options'))
+    _validOptions = set(('build_type',
                          'packaging_thirdparty', 'cross_compiling_prefix',
-                         'default_steps', 'build_condition', 'clean_config',
+                         'build_condition', 'clean_config',
                          'clean_build', 'stdout_file', 'stderr_file',
-                         'ctest_options', 'directory_id', 'test_ref_data_dir',
+                         'directory_id', 'test_ref_data_dir',
                          'test_run_data_dir'))
+    _validOptions.update(_validAdditiveOptions)
 
     sitecustomize_content = '''import os, sys
 
@@ -2171,8 +2236,8 @@ if len(old_file) == 0:
         super(BuildDirectory, self).__init__(directory, configuration)
         # self.configurationDirectories = []
         self.build_type = ''
-        self.make_options = ''
-        self.cmake_options = ''
+        self.make_options = []
+        self.cmake_options = []
         self.packaging_thirdparty = ''
         self.cross_compiling_prefix = ''
         self.clean_commands = True
@@ -2181,6 +2246,7 @@ if len(old_file) == 0:
         self.clean_build = 'OFF'
         self.ctest_options = []
         self.directory_id = ''
+        self.env = {}
         self.test_ref_data_dir = ''
         self.test_run_data_dir = tempfile.gettempdir()
 
@@ -2193,16 +2259,8 @@ if len(old_file) == 0:
         #    + <directory>
         #    - <component_pattern> [<version_pattern>]
         #    <component_pattern> <version_pattern> <source_directory>
-        i = line.find('=')
-        if i > 0:
-            option = line[:i].strip()
-            value = line[i + 1:].strip()
-            if option not in self._validOptions:
-                raise SyntaxError('Invalid option: %s' % option)
-            if hasattr(self, option) \
-                    and type(getattr(self, option)) in (list, tuple):
-                value = value.split()
-            setattr(self, option, value)
+        if ConfigVariableParser.addConfigurationLine(self, line):
+            pass
         elif line[0] == '+':
             if '*' in line:
                 raise SyntaxError()
@@ -2247,7 +2305,8 @@ if len(old_file) == 0:
             print('cleaning build tree', self.directory)
             # clean and remove empty dirs. Don't use -b option here
             # because configuration has to be done first.
-            subprocess.call([sys.executable, bv_clean, '-d', self.directory])
+            subprocess.call([sys.executable, bv_clean, '-d', self.directory],
+                            env=self.get_environ())
 
         # Create a sitecustomize Python package that imports all modules it
         # contains during Python startup. This is mainly used to modify
@@ -2357,7 +2416,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         else:
             command_base = ['cmake']
 
-        command_options = self.cmake_options.split()
+        command_options = list(self.cmake_options)
         command_options += ['-DCMAKE_BUILD_TYPE:STRING=' + self.build_type]
         if self.packaging_thirdparty.upper() == 'ON':
             command_options += ['-DBRAINVISA_PACKAGING_THIRDPARTY:BOOL=ON']
@@ -2424,8 +2483,10 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                    *(command_base
                      + [self.components['brainvisa-cmake'][0],
                         '-DBRAINVISA_CMAKE_BUILD_TYPE=brainvisa-cmake-only',
-                        '-DCMAKE_INSTALL_PREFIX=%s' % self.directory]))
-            system(cwd=bvcmake_dir, *['make', 'install'])
+                        '-DCMAKE_INSTALL_PREFIX=%s' % self.directory]),
+                     env=self.get_environ())
+            system(cwd=bvcmake_dir, *['make', 'install'],
+                   env=self.get_environ())
             print('=== now configuring all other projects ===')
             # run with this local bv-cmake environment
             system(cwd=self.directory,
@@ -2435,13 +2496,15 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                      + command_options
                      + cross_compiling_options
                      + ["-DBRAINVISA_CMAKE_BUILD_TYPE=no-brainvisa-cmake"]
-                     + [config_dir]))
+                     + [config_dir]),
+                   env=self.get_environ())
         else:
             # run cmake in a regular way
             system(cwd=self.directory, *( command_base
                                         + command_options
                                         + cross_compiling_options
-                                        + [config_dir]) )
+                                        + [config_dir]),
+                   env=self.get_environ())
 
     def build(self, options, args):
         self._process_configuration_lines()
@@ -2456,16 +2519,19 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
             # don't remove empty dirs here since configure may have created
             # directories which will be used during build
             subprocess.call(
-                [sys.executable, bv_clean] + clean_opts + [self.directory])
+                [sys.executable, bv_clean] + clean_opts + [self.directory],
+                env=self.get_environ())
 
         print('Building directory:', self.directory)
-        system(cwd=self.directory, *(['make'] + self.make_options.split()))
+        system(cwd=self.directory, *(['make'] + self.make_options),
+               env=self.get_environ())
 
     def doc(self):
         self._process_configuration_lines()
         print('Building docs in directory:', self.directory)
         system(cwd=self.directory, *
-               (['make'] + self.make_options.split() + ['doc']))
+               (['make'] + self.make_options + ['doc']),
+               env=self.get_environ())
 
     def test(self, options, args):
         self._process_configuration_lines()
@@ -2476,7 +2542,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         print('Testing directory:', self.directory)
         if not self.test_ref_data_dir:
             print("Warning: test_ref_data_dir is not defined; tests may fail.")
-        env = dict(os.environ)
+        env = self.get_environ()
         # Create test_run_data_dir and test_ref_data_dir
         if self.test_run_data_dir:
             if not os.path.exists(self.test_run_data_dir):
@@ -2497,7 +2563,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         if not self.test_ref_data_dir:
             print("Warning: test_ref_data_dir should be defined to create "
                   "reference files.")
-        env = dict(os.environ)
+        env = self.get_environ()
         # Create test_ref_data_dir
         if self.test_ref_data_dir:
             if not os.path.exists(self.test_ref_data_dir):
@@ -2507,7 +2573,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                 "BRAINVISA_TEST_REF_DATA_DIR": self.test_ref_data_dir
             })
         system(cwd=self.directory, env=env,
-               *(['make'] + self.make_options.split()) + ['testref'])
+               *(['make'] + self.make_options) + ['testref'])
 
     def info(self):
         self._process_configuration_lines()
@@ -2561,23 +2627,26 @@ class VirtualenvDirectory(BuildDirectory):
         if not os.path.isfile(active_path):
             cmd = ["virtualenv",  "--system-site-packages"]
             cmd.append(env_path)
-            system(*cmd)
+            system(*cmd, env=self.get_environ())
         else:
             print("No need to virtualenv init '%s' since it is already initialized." \
                 % env_path)
         pass
 
 
-class PackageDirectory(ComponentsConfigParser):
+class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
 
-    _validOptions = set(('build_directory', 'packaging_options',
+    _validAdditiveOptions = set(('packaging_options', 'default_steps',
+                                 'ctest_options', 'env'))
+    _validOptions = set(('build_directory',
                          'build_condition',
                          'installer_filename', 'data_repos_dir',
                          'test_install_dir', 'remote_test_host_cmd',
                          'init_components_from_build_dir', 'pack_version',
-                         'default_steps', 'keep_n_older_repos', 'stdout_file',
-                         'stderr_file', 'ctest_options', 'directory_id',
+                         'keep_n_older_repos', 'stdout_file',
+                         'stderr_file', 'directory_id',
                          'test_ref_data_dir', 'test_run_data_dir'))
+    _validOptions.update(_validAdditiveOptions)
 
     def __init__(self, directory, configuration):
         super(PackageDirectory, self).__init__(directory, configuration)
@@ -2595,25 +2664,14 @@ class PackageDirectory(ComponentsConfigParser):
         self.keep_n_older_repos = 1
         self.ctest_options = []
         self.directory_id = ''
+        self.env = {}
         self.test_ref_data_dir = ''
         self.test_run_data_dir = tempfile.gettempdir()
 
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ pack ... ]:
-        i = line.find('=')
-        if i > 0:
-            option = line[:i].strip()
-            value = line[i + 1:].strip()
-            if option not in self._validOptions:
-                raise SyntaxError()
-            if hasattr(self, option) \
-                    and type(getattr(self, option)) in (list, tuple):
-                value = value.split()
-            if option == 'build_directory':
-                value = os.path.normpath(
-                    os.path.abspath(environmentVariablesSubstitution(
-                        value)))
-            setattr(self, option, value)
+        if ConfigVariableParser.addConfigurationLine(self, line):
+            pass
         else:
             l = line.split(None, 2)
         self.configurationLines.append(line)
@@ -2812,7 +2870,8 @@ Controller.prototype.FinishedPageCallback = function()
         self.cleanup_package_dir()
         cmd = self.installer_cmdline()
         print('running:', "'" + "' '".join(cmd) + "'")
-        subprocess.check_call(cmd, cwd=self.build_dir.directory)
+        subprocess.check_call(cmd, cwd=self.build_dir.directory,
+                              env=self.get_environ())
 
     @staticmethod
     def rm_with_empty_dirs(path):
@@ -2979,14 +3038,14 @@ Controller.prototype.FinishedPageCallback = function()
             print('installing...')
             cmd = '"' + '" "'.join(cmd) + '"'
             print(cmd)
-            subprocess.check_call(cmd, shell=True)
+            subprocess.check_call(cmd, shell=True, env=self.get_environ())
             print('done.')
         finally:
             os.unlink(install_script)
 
     def _prepare_env_for_tests(self, install_dir, testref_mode=False):
         # set environment to point to install dir
-        new_env = dict(os.environ)
+        new_env = self.get_environ()
         new_env['BRAINVISA_PACKAGE_INSTALL_PREFIX'] = install_dir
         # binaries are in bin/real-bin/ (used by some python tests commands)
         new_env['BRAINVISA_REAL_BIN'] = '/real-bin'

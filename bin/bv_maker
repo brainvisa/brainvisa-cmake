@@ -1479,7 +1479,7 @@ class ConfigVariableParser(object):
             if hasattr(self, option):
                 var_type = type(getattr(self, option))
                 if var_type in (list, tuple):
-                    value = value.split()
+                    value = shlex.split(value)
                 elif var_type is dict:
                     if value.startswith('{') and value.endswith('}'):
                         try:
@@ -2651,7 +2651,7 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
     def __init__(self, directory, configuration):
         super(PackageDirectory, self).__init__(directory, configuration)
         self.build_directory = ''
-        self.packaging_options = ''
+        self.packaging_options = []
         #self.packaging_thirdparty = ''
         self.installer_filename = None
         self.data_repos_dir = ''
@@ -2704,20 +2704,6 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
             self.components = build_dir.components
         self._process_configuration_lines()
 
-    #def installer_cmdline_i2bm(self):
-        #pack_options = self.packaging_options.split()
-        #installer_filename = self.installer_filename
-        #if not installer_filename:
-            #installer_filename = os.path.join(
-                #os.path.dirname(self.directory),
-                #'brainvisa-installer/brainvisa_installer-'
-                #'%(version)s-%(os)s-%(online)s%(public)s')
-        #cmd = [sys.executable,
-               #distutils.spawn.find_executable('bv_build_installer_i2bm'),
-               #'-m', self.directory, '-o', installer_filename] \
-            #+ pack_options
-        #return cmd
-
     def info(self):
         self._process_configuration_lines()
         print('Package directory: "' + self.directory + '"')
@@ -2734,7 +2720,7 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
         public = ''
         online = 'online'
 
-        if '--i2bm' in self.packaging_options.split():
+        if '--i2bm' in self.packaging_options:
             i2bm_str = 'i2bm'
             public = '-i2bm'
 
@@ -2759,15 +2745,10 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                               'public': public, 'online': online})
         return self.pathvars
 
-    def replace_vars(self, path_string):
-        vars = self.installer_variables()
-        return os.path.abspath(
-            environmentVariablesSubstitution(path_string)) % vars
-
     def installer_cmdline(self):
         components = self.components.keys()
         projects = list(self.projects)
-        pack_options = shlex.split(self.packaging_options)
+        pack_options = self.packaging_options
         installer_filename = self.installer_filename
         #if not installer_filename:
             #installer_filename = os.path.join(
@@ -2890,7 +2871,7 @@ Controller.prototype.FinishedPageCallback = function()
     def cleanup_package_dir(self):
         directory = self.replace_vars(self.directory)
         dirs = [directory, directory + '_tmp']
-        pack_options = shlex.split(self.packaging_options)
+        pack_options = self.packaging_options
         if '--skip-repos' not in pack_options \
                 and '--skip-existing' not in pack_options:
             for d in dirs:

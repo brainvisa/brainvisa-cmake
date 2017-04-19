@@ -1526,13 +1526,13 @@ class ConfigVariableParser(object):
             return True # parsed
         return False # not parsed
 
-    def get_environ(self):
+    def get_environ(self, default=None):
         env = getattr(self, 'env', None)
         if env:
             sys_env = dict(os.environ)
             sys_env.update(env)
             return sys_env
-        return None
+        return default
 
     def replace_vars(self, path_string):
         if hasattr(self, 'installer_variables'):
@@ -2542,7 +2542,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         print('Testing directory:', self.directory)
         if not self.test_ref_data_dir:
             print("Warning: test_ref_data_dir is not defined; tests may fail.")
-        env = self.get_environ()
+        env = self.get_environ({})
         # Create test_run_data_dir and test_ref_data_dir
         if self.test_run_data_dir:
             if not os.path.exists(self.test_run_data_dir):
@@ -2563,7 +2563,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         if not self.test_ref_data_dir:
             print("Warning: test_ref_data_dir should be defined to create "
                   "reference files.")
-        env = self.get_environ()
+        env = self.get_environ({})
         # Create test_ref_data_dir
         if self.test_ref_data_dir:
             if not os.path.exists(self.test_ref_data_dir):
@@ -3026,7 +3026,7 @@ Controller.prototype.FinishedPageCallback = function()
 
     def _prepare_env_for_tests(self, install_dir, testref_mode=False):
         # set environment to point to install dir
-        new_env = self.get_environ()
+        new_env = self.get_environ({})
         new_env['BRAINVISA_PACKAGE_INSTALL_PREFIX'] = install_dir
         # binaries are in bin/real-bin/ (used by some python tests commands)
         new_env['BRAINVISA_REAL_BIN'] = '/real-bin'

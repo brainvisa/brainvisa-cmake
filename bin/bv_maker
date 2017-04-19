@@ -1594,7 +1594,7 @@ class ConfigVariableParser(object):
 class GeneralSection(ConfigVariableParser):
     _variables_with_replacements = set(('jenkins_build_name',
                                         'jenkins_server_url'))
-    _path_variables = set(('global_status_file'))
+    _path_variables = set(('global_status_file', ))
     _validOptions = set(('failure_email', 'success_email', 'smtp_server',
                          'from_email', 'reply_to_email',
                          'email_notification_by_default',

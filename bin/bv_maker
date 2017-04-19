@@ -1579,7 +1579,7 @@ class ConfigVariableParser(object):
 
     def replace_vars_if_allowed(self, variable, value):
         if self.is_path(variable):
-            return self.replace_vars(variable)
+            return self.replace_vars(value)
         elif self.allow_variable_replacements(variable):
             if hasattr(self, 'installer_variables'):
                 vars = self.installer_variables()

@@ -1585,7 +1585,6 @@ class ConfigVariableParser(object):
                 vars = self.installer_variables()
             else:
                 vars = global_installer_variables()
-                value, env=self.get_environ()) % vars)
             return environmentVariablesSubstitution(
                 value, env=self.get_environ()) % vars
         else:

@@ -230,19 +230,26 @@ def copy_brainvisa_cmake(installDir):
         shutil.copy(os.path.join(sourceDir, p, f), d)
 
 
-def environmentVariablesSubstitution(path):
+def environmentVariablesSubstitution(path, env=None):
     result = path
     r = re.compile(r'\$([A-Za-z0-9_]*)')
     offset = 0
+    if env is None:
+        env = os.environ
     for m in r.finditer(path):
-        variableContent = os.environ.get(m.group(1))
+        variableContent = env.get(m.group(1))
         if variableContent is not None:
             start, end = m.span()
             start += offset
             end += offset
             offset += len(variableContent) - end + start
             result = result[:start] + variableContent + result[end:]
-    return os.path.normpath(os.path.realpath(os.path.abspath(result)))
+    return result
+
+
+def environmentPathVariablesSubstitution(path, env=None):
+    return os.path.normpath(os.path.realpath(os.path.abspath(
+        environmentVariablesSubstitution(path, env))))
 
 
 def run_and_log_tests(cwd=None, env=None, options=None):
@@ -374,7 +381,8 @@ http://brainvisa.info/brainvisa-cmake/
             reload(brainvisa_projects)
 
             bd = BuildDirectory(
-                environmentVariablesSubstitution(options.build_directory),
+                environmentPAthVariablesSubstitution(
+                    options.build_directory),
                 self)
             self.buildDirectories[bd.directory] = bd
             for sd in options.sources_directories:
@@ -406,7 +414,8 @@ http://brainvisa.info/brainvisa-cmake/
 
                         if l[0] == 'source':
                             currentDirectoryObject = SourceDirectory(
-                                environmentVariablesSubstitution(l[1].strip()),
+                                environmentPathVariablesSubstitution(
+                                    l[1].strip()),
                                 self)
                             self.sourcesDirectories[
                                 currentDirectoryObject.directory] \
@@ -414,7 +423,8 @@ http://brainvisa.info/brainvisa-cmake/
                             currentFilterSection = None
                         elif l[0] == 'build':
                             currentDirectoryObject = BuildDirectory(
-                                environmentVariablesSubstitution(l[1].strip()),
+                                environmentPathVariablesSubstitution(
+                                    l[1].strip()),
                                 self)
                             self.buildDirectories[
                                 currentDirectoryObject.directory] \
@@ -422,7 +432,8 @@ http://brainvisa.info/brainvisa-cmake/
                             currentFilterSection = None
                         elif l[0] == 'virtualenv':
                             currentDirectoryObject = VirtualenvDirectory(
-                                environmentVariablesSubstitution(l[1].strip()),
+                                environmentPathVariablesSubstitution(
+                                    l[1].strip()),
                                 self)
                             self.buildDirectories[
                                 currentDirectoryObject.directory] \
@@ -430,7 +441,8 @@ http://brainvisa.info/brainvisa-cmake/
                             currentFilterSection = None
                         elif l[0] == 'package':
                             currentDirectoryObject = PackageDirectory(
-                                environmentVariablesSubstitution(l[1].strip()),
+                                environmentPathVariablesSubstitution(
+                                    l[1].strip()),
                                 self)
                             self.packageDirectories[
                                 currentDirectoryObject.directory] \
@@ -1463,6 +1475,11 @@ class TestrefPackCommand(StepCommand):
 
 class ConfigVariableParser(object):
 
+    _validOptions = set()
+    _validAdditiveOptions = set()
+    _path_variables = set()
+    _variables_with_replacements = set()
+
     def addConfigurationLine(self, line):
         i = line.find('=')
         if i > 0:
@@ -1470,6 +1487,9 @@ class ConfigVariableParser(object):
             if i > 1 and line[i-1] in ('-', '+'): # operators -=, +=
                 oper = line[i-1]
                 option = line[:i-1].strip()
+                if option not in self._validAdditiveOptions:
+                    raise SyntaxError('Option %s does not allow additive '
+                                      'assignation (+=, -=)' % option)
             else:
                 option = line[:i].strip()
             value = line[i + 1:].strip()
@@ -1480,6 +1500,9 @@ class ConfigVariableParser(object):
                 var_type = type(getattr(self, option))
                 if var_type in (list, tuple):
                     value = shlex.split(value)
+                    value = type(value)(
+                        [self.replace_vars_if_allowed(option, x)
+                         for x in value])
                 elif var_type is dict:
                     if value.startswith('{') and value.endswith('}'):
                         try:
@@ -1498,8 +1521,13 @@ class ConfigVariableParser(object):
                                     for x in value])
                             except:
                                 raise SyntaxError()
-                    value = dict([(x, self.replace_vars(y))
+                    value = dict([(x, self.replace_vars_if_allowed(option, y))
                                   for x, y in six.iteritems(value)])
+                else:
+                    value = self.replace_vars_if_allowed(option, value)
+            else:
+                value = self.replace_vars_if_allowed(option, value)
+
             if oper == '':
                 setattr(self, option, value)
             elif oper == '+':
@@ -1526,6 +1554,13 @@ class ConfigVariableParser(object):
             return True # parsed
         return False # not parsed
 
+    def is_path(self, variable):
+        return variable in getattr(self, '_path_variables', set())
+
+    def allow_variable_replacements(self, variable):
+        return self.is_path(variable) \
+            or variable in getattr(self, '_variables_with_replacements')
+
     def get_environ(self, default=None):
         env = getattr(self, 'env', None)
         if env:
@@ -1539,17 +1574,36 @@ class ConfigVariableParser(object):
             vars = self.installer_variables()
         else:
             vars = global_installer_variables()
-        return os.path.abspath(
-            environmentVariablesSubstitution(path_string)) % vars
+        return environmentPathVariablesSubstitution(
+            path_string, env=self.get_environ()) % vars
+
+    def replace_vars_if_allowed(self, variable, value):
+        if self.is_path(variable):
+            return self.replace_vars(variable)
+        elif self.allow_variable_replacements(variable):
+            if hasattr(self, 'installer_variables'):
+                vars = self.installer_variables()
+            else:
+                vars = global_installer_variables()
+                value, env=self.get_environ()) % vars)
+            return environmentVariablesSubstitution(
+                value, env=self.get_environ()) % vars
+        else:
+            return value
 
 
 class GeneralSection(ConfigVariableParser):
+    _variables_with_replacements = set(('jenkins_build_name',
+                                        'jenkins_server_url'))
+    _path_variables = set(('global_status_file'))
     _validOptions = set(('failure_email', 'success_email', 'smtp_server',
-                         'from_email', 'reply_to_email', 'global_status_file',
+                         'from_email', 'reply_to_email',
                          'email_notification_by_default',
-                         'failure_email_by_project', 'jenkins_server_url',
-                         'jenkins_build_name', 'jenkins_username',
+                         'failure_email_by_project',
+                         'jenkins_username',
                          'jenkins_token'))
+    _validOptions.update(_variables_with_replacements)
+    _validOptions.update(_path_variables)
 
     def __init__(self, configuration):
         self.configuration = configuration
@@ -1633,9 +1687,15 @@ class DirectorySection(object):
 
 class SourceDirectory(DirectorySection, ConfigVariableParser):
 
-    _validOptions = set(('default_steps', 'revision_control',
-                         'build_condition', 'cross_compiling_dirs',
-                         'stdout_file', 'stderr_file', 'directory_id'))
+    _variables_with_replacements = set(('directory_id', ))
+    _path_variables = set(('cross_compiling_dirs', ))
+    _validAdditiveOptions = set(('default_steps', 'cross_compiling_dirs'))
+    _validOptions = set(('revision_control',
+                         'build_condition',
+                         'stdout_file', 'stderr_file'))
+    _validOptions.update(_variables_with_replacements)
+    _validOptions.update(_path_variables)
+    _validOptions.update(_validAdditiveOptions)
 
     def __init__(self, directory, configuration):
         super(SourceDirectory, self).__init__()
@@ -1650,8 +1710,8 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
         # cross_compiling_dirs contains toolchain substitutions for source
         # directories. This is used when execution needs different path to
         # access sources (i.e.: in windows cross compilation, for pure python
-        # components, it is necessary to access source directory through network
-        # share, instead of NFS mount point.
+        # components, it is necessary to access source directory through
+        # network share, instead of NFS mount point.
         self.cross_compiling_dirs = {}
         if self.configuration.verbose:
             print('Processing source directory %s' % self.directory)
@@ -2066,9 +2126,8 @@ class ComponentsConfigParser(DirectorySection):
                     continue
                 first, rest = line.split(None, 1)
                 if first in ('directory', '+'):
-                    directory = os.path.normpath(
-                        os.path.abspath(environmentVariablesSubstitution(
-                            rest.strip())))
+                    directory = environmentPathVariablesSubstitution(
+                            rest.strip(), env=self.get_environ())
                     pinfo = brainvisa_projects.read_project_info(
                         directory,
                         version_format=version_format_short
@@ -2116,9 +2175,8 @@ class ComponentsConfigParser(DirectorySection):
                         l = rest.split(None, 1)
                         componentPattern = first
                         versionPattern, sourceDirectory = l
-                    sourceDirectory = os.path.normpath(
-                        os.path.abspath(environmentVariablesSubstitution(
-                            sourceDirectory)))
+                    sourceDirectory = environmentPathVariablesSubstitution(
+                            sourceDirectory, env=self.get_environ())
                     components_sources = json.load(
                         open(os.path.join(sourceDirectory,
                                           'components_sources.json')))
@@ -2190,15 +2248,20 @@ class ComponentsConfigParser(DirectorySection):
 
 class BuildDirectory(ComponentsConfigParser, ConfigVariableParser):
 
+    _path_variables = set(('env', 'stdout_file', 'stderr_file',
+                           'test_ref_data_dir', 'test_run_data_dir'))
+    _variables_with_replacements = set(('cross_compiling_prefix',
+                                        'make_options', 'cmake_options',
+                                        'ctest_options', 'directory_id', ))
     _validAdditiveOptions = set(('make_options', 'cmake_options', 'env',
                                  'default_steps', 'ctest_options'))
     _validOptions = set(('build_type',
-                         'packaging_thirdparty', 'cross_compiling_prefix',
+                         'packaging_thirdparty',
                          'build_condition', 'clean_config',
-                         'clean_build', 'stdout_file', 'stderr_file',
-                         'directory_id', 'test_ref_data_dir',
-                         'test_run_data_dir'))
+                         'clean_build'))
     _validOptions.update(_validAdditiveOptions)
+    _validOptions.update(_variables_with_replacements)
+    _validOptions.update(_path_variables)
 
     sitecustomize_content = '''import os, sys
 
@@ -2636,17 +2699,22 @@ class VirtualenvDirectory(BuildDirectory):
 
 class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
 
+    _path_variables = set(('env', 'build_directory', 'installer_filename',
+                           'data_repos_dir', 'test_install_dir',
+                           'stdout_file', 'stderr_file', 'test_ref_data_dir',
+                           'test_run_data_dir'))
+    _variables_with_replacements = set(('pack_version', 'directory_id',
+                                        'packaging_options'))
     _validAdditiveOptions = set(('packaging_options', 'default_steps',
                                  'ctest_options', 'env'))
-    _validOptions = set(('build_directory',
-                         'build_condition',
-                         'installer_filename', 'data_repos_dir',
-                         'test_install_dir', 'remote_test_host_cmd',
-                         'init_components_from_build_dir', 'pack_version',
-                         'keep_n_older_repos', 'stdout_file',
-                         'stderr_file', 'directory_id',
-                         'test_ref_data_dir', 'test_run_data_dir'))
+    _validOptions = set(('build_condition',
+                         'remote_test_host_cmd',
+                         'init_components_from_build_dir',
+                         'keep_n_older_repos'))
+    _validOptions.update(_variables_with_replacements)
+    _validOptions.update(_path_variables)
     _validOptions.update(_validAdditiveOptions)
+
 
     def __init__(self, directory, configuration):
         super(PackageDirectory, self).__init__(directory, configuration)
@@ -2886,10 +2954,10 @@ Controller.prototype.FinishedPageCallback = function()
             real_vars = self.installer_variables()
             vars = dict(real_vars) # copy vars
             vars['date'] = '*'
-            my_dir = os.path.abspath(
-                environmentVariablesSubstitution(self.directory)) % real_vars
-            dir_pattern = os.path.abspath(
-                environmentVariablesSubstitution(self.directory)) % vars
+            my_dir = environmentPathVariablesSubstitution(
+                self.directory, env=self.get_environ()) % real_vars
+            dir_pattern = environmentPathVariablesSubstitution(
+                self.directory, env=self.get_environ()) % vars
             older_dirs = [d for d in glob.glob(dir_pattern) if d != my_dir]
             older_tmp_dirs = [d for d in glob.glob(dir_pattern + '_tmp')
                               if d != my_dir + '_tmp']
@@ -2918,8 +2986,8 @@ Controller.prototype.FinishedPageCallback = function()
                     older_dirs[:len(older_dirs) - keep_n_older_repos])
             # remove older repos and installs
             vars['date'] = '%(date)s' # keep date pattern as is
-            pattern = os.path.abspath(
-                environmentVariablesSubstitution(self.directory)) % vars
+            pattern = environmentPathVariablesSubstitution(
+                self.directory, env=self.get_environ()) % vars
             pattern = pattern.replace('\\', '\\\\').replace('.', '\.')
             pattern = re.compile(pattern % {'date': '(.+)'})
             for d in repos_to_remove:
@@ -2937,9 +3005,9 @@ Controller.prototype.FinishedPageCallback = function()
                 vars['date'] = r_date
                 # find associated installer
                 if self.installer_filename:
-                    installer = os.path.abspath(
-                        environmentVariablesSubstitution(
-                            self.installer_filename)) % vars
+                    installer = environmentPathVariablesSubstitution(
+                        self.installer_filename,
+                        env=self.get_environ()) % vars
                     if os.path.exists(installer):
                         print('removing:', installer)
                         self.rm_with_empty_dirs(installer)
@@ -2960,9 +3028,9 @@ Controller.prototype.FinishedPageCallback = function()
                             self.rm_with_empty_dirs(installer + '.app')
                 # find associated install
                 if self.test_install_dir:
-                    install_dir = os.path.abspath(
-                        environmentVariablesSubstitution(
-                            self.test_install_dir)) % vars
+                    install_dir = environmentPathVariablesSubstitution(
+                        self.test_install_dir,
+                        env=self.get_environ()) % vars
                     if os.path.exists(install_dir):
                         print('removing', install_dir)
                         self.rm_with_empty_dirs(install_dir)

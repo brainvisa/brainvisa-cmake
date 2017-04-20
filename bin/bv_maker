@@ -1043,6 +1043,10 @@ class StepCommand(object):
 
     def message_header(self, d, o, step, status):
         dlen = max((len(step), len(status), len(d)))
+        if hasattr(o, 'get_environ'):
+            env = o.get_environ(os.environ)
+        else:
+            env = os.environ
         message = '''========================================='
 == directory: %s%s ==
 == step:      %s%s ==
@@ -1053,8 +1057,8 @@ class StepCommand(object):
 ''' % (d, ' ' * (dlen - len(d)),
             step, ' ' * (dlen - len(step)),
             status, ' ' * (dlen - len(status)))
-        message += '\n'.join(['%s=%s' % (var, os.environ[var])
-                              for var in sorted(os.environ.keys())])
+        message += '\n'.join(['%s=%s' % (var, env[var])
+                              for var in sorted(env.keys())])
         message += '\n------------------------------------------\n\n'
 
         return message

@@ -703,7 +703,10 @@ class JenkinsWrapper(object):
         self.submit_job_result(job_name, 'RUNNING...', 0, 0,
                                'Job in progress.', '')
         # keep this temporary "running" build to allow deleting it later
-        running_build = self.get_last_build(job_name)
+        try:
+            running_build = self.get_last_build(job_name)
+        except AttributeError: # jenkins module not available
+            running_build = None
         if running_build is not None:
             self.running_build = running_build
 

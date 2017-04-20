@@ -381,7 +381,7 @@ http://brainvisa.info/brainvisa-cmake/
             reload(brainvisa_projects)
 
             bd = BuildDirectory(
-                environmentPAthVariablesSubstitution(
+                environmentPathVariablesSubstitution(
                     options.build_directory),
                 self)
             self.buildDirectories[bd.directory] = bd

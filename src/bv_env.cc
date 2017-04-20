@@ -193,6 +193,8 @@ string convert_env( const string &str, const system_conversion mode = WindowsToU
       sep1 = UNIX_ENV_SEP;
       sep2 = WIN_ENV_SEP;
       break;
+    default:
+      break;
   }
   
   v = split_env( str, sep1 );

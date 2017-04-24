@@ -346,6 +346,9 @@ http://brainvisa.info/brainvisa-cmake/
         parser.add_option('-e', '--email', action='store_true',
                           help='Use email notification (if configured in the '
                           'general section of the configuration file)')
+        parser.add_option('--disable-jenkins', action='store_true',
+                          dest='disable_jenkins',
+                          help='disable Jenkins server logging')
         parser.add_option(
             '-v', '--verbose', dest='verbose', action='store_true',
             help='show as much information as possible')
@@ -596,7 +599,8 @@ class JenkinsWrapper(object):
     def jenkins_notification(self, message, d, o, step, status):
         ''' Notify job execution (build, test etc) to a Jenkins server
         '''
-        if not configuration.general_section.jenkins_server_url:
+        if not configuration.general_section.jenkins_server_url \
+                or configuration.options.disable_jenkins:
             return # don't notify
         #Status = status[0].upper() + status[1:]
         if o.status[step] not in ('interrupted', 'failed'):

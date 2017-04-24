@@ -1045,7 +1045,8 @@ class StepCommand(object):
             print(self.log_message_content())
 
     def message_header(self, d, o, step, status):
-        dlen = max((len(step), len(status), len(d)))
+        real_dir = self.replace_vars(d)
+        dlen = max((len(step), len(status), len(real_dir)))
         if hasattr(o, 'get_environ'):
             env = o.get_environ(os.environ)
         else:
@@ -1057,7 +1058,7 @@ class StepCommand(object):
 =========================================
 
 --- environment: ---
-''' % (d, ' ' * (dlen - len(d)),
+''' % (real_dir, ' ' * (dlen - len(real_dir)),
             step, ' ' * (dlen - len(step)),
             status, ' ' * (dlen - len(status)))
         message += '\n'.join(['%s=%s' % (var, env[var])

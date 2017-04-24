@@ -2781,6 +2781,8 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
     def info(self):
         self._process_configuration_lines()
         print('Package directory: "' + self.directory + '"')
+        print('Real package directory:', self.replace_vars(self.directory))
+        print('Build directory:', self.build_directory)
         for component, directory_version_model \
                 in six.iteritems(self.components):
             directory, selected_version, version, build_model \

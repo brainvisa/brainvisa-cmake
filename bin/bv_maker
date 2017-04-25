@@ -675,7 +675,8 @@ class JenkinsWrapper(object):
 
     def jenkins_global_notification(self, message, res, start_time,
                                     stop_time, status):
-        if not configuration.general_section.jenkins_server_url:
+        if not configuration.general_section.jenkins_server_url \
+                or configuration.options.disable_jenkins:
             return # don't notify
 
         job_name = self.jenkins_global_job_name()
@@ -700,7 +701,8 @@ class JenkinsWrapper(object):
 
 
     def jenkins_global_notify_running(self):
-        if not configuration.general_section.jenkins_server_url:
+        if not configuration.general_section.jenkins_server_url \
+                or configuration.options.disable_jenkins:
             return # don't notify
         job_name = self.jenkins_global_job_name()
         self.create_jenkins_job(job_name)
@@ -936,7 +938,8 @@ class StepCommand(object):
                     and configuration.general_section.success_email == ''
                     and configuration.general_section.failure_email_by_project
                         == {})) \
-                and not configuration.general_section.jenkins_server_url:
+                and (not configuration.general_section.jenkins_server_url
+                     or configuration.options.disable_jenkins):
             return
         if o.stdout_file or o.stderr_file:
             if o.stdout_file:
@@ -1161,7 +1164,8 @@ Subject: %s - %s %s on %s (%s)
     def jenkins_notification(self, d, o, step, status):
         ''' Notify job execution (build, test etc) to a Jenkins server
         '''
-        if not configuration.general_section.jenkins_server_url:
+        if not configuration.general_section.jenkins_server_url \
+                or configuration.options.disable_jenkins:
             return # don't notify
         message = self.message_header(d, o, step, status)
         message += self.log_message_content()

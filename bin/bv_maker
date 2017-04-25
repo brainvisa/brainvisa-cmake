@@ -347,7 +347,7 @@ http://brainvisa.info/brainvisa-cmake/
                           help='Use email notification (if configured in the '
                           'general section of the configuration file)')
         parser.add_option('--disable-jenkins', action='store_true',
-                          dest='disable_jenkins',
+                          dest='disable_jenkins', default=False,
                           help='disable Jenkins server logging')
         parser.add_option(
             '-v', '--verbose', dest='verbose', action='store_true',

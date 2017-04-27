@@ -2799,8 +2799,6 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
             print('  %s (%s) <- %s' % (component, version, directory))
 
     def installer_variables(self):
-        if self.pathvars is not None:
-            return self.pathvars
         i2bm_str = 'public'
         public = ''
         online = 'online'
@@ -2825,10 +2823,10 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                 except ImportError:
                     pass
 
-        self.pathvars = dict(global_installer_variables())
-        self.pathvars.update({'i2bm': i2bm_str, 'version': fullVersion,
-                              'public': public, 'online': online})
-        return self.pathvars
+        pathvars = dict(global_installer_variables())
+        pathvars.update({'i2bm': i2bm_str, 'version': fullVersion,
+                         'public': public, 'online': online})
+        return pathvars
 
     def installer_cmdline(self):
         components = self.components.keys()

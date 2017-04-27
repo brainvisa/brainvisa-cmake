@@ -36,3 +36,12 @@ set( SIP_VERSION "${SIP_VERSION}"
 set( NUMPY_INCLUDE_DIR "${BRAINVISA_CROSSCOMPILATION_DIR}/python/Lib/site-packages/numpy/core/include"
      CACHE PATH "Numpy include" )
      
+# Set specific options for debug symbols when wine is used
+# at the runtime
+set(CMAKE_C_FLAGS_DEBUG "-gstabs" 
+    CACHE STRING "Flags used by the compiler during debug builds.")
+set(CMAKE_CXX_FLAGS_DEBUG "-gstabs"
+    CACHE STRING "Flags used by the compiler during debug builds.")
+set(CMAKE_Fortran_FLAGS_DEBUG "-gstabs" 
+    CACHE STRING "Flags used by the compiler during debug builds.")
+    

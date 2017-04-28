@@ -257,7 +257,7 @@ def run_and_log_tests(cwd=None, env=None, options=None):
     test_labels = subprocess.check_output(
         ['ctest', '--print-labels'] + options, cwd=cwd)
     lines = test_labels.split('\n')
-    labels_index = lines.find('All Labels:')
+    labels_index = lines.index('All Labels:')
     labels = [line.strip() for line in lines[labels_index+1:]]
     logs = {}
     for label in labels:

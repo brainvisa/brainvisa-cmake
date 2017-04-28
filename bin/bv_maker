@@ -2263,9 +2263,9 @@ class ComponentsConfigParser(DirectorySection):
 
 class BuildDirectory(ComponentsConfigParser, ConfigVariableParser):
 
-    _path_variables = set(('env', 'stdout_file', 'stderr_file',
+    _path_variables = set(('stdout_file', 'stderr_file',
                            'test_ref_data_dir', 'test_run_data_dir'))
-    _variables_with_replacements = set(('cross_compiling_prefix',
+    _variables_with_replacements = set(('cross_compiling_prefix', 'env',
                                         'make_options', 'cmake_options',
                                         'ctest_options', 'directory_id', ))
     _validAdditiveOptions = set(('make_options', 'cmake_options', 'env',
@@ -2714,12 +2714,12 @@ class VirtualenvDirectory(BuildDirectory):
 
 class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
 
-    _path_variables = set(('env', 'build_directory', 'installer_filename',
+    _path_variables = set(('build_directory', 'installer_filename',
                            'data_repos_dir', 'test_install_dir',
                            'stdout_file', 'stderr_file', 'test_ref_data_dir',
                            'test_run_data_dir'))
     _variables_with_replacements = set(('pack_version', 'directory_id',
-                                        'packaging_options'))
+                                        'env', 'packaging_options'))
     _validAdditiveOptions = set(('packaging_options', 'default_steps',
                                  'ctest_options', 'env'))
     _validOptions = set(('build_condition',

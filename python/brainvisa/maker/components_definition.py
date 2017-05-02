@@ -374,17 +374,17 @@ components_definition = [
             ['constellation-gpl', {
                 'groups': ['all'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/constellation-gpl/trunk','constellation-gpl/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/constellation-gpl/branches/bug_fix','constellation-gpl/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/constellation-gpl/tags/latest_release','constellation-gpl/latest_release'),
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/constellation/constellation-gpl/trunk','constellation/constellation-gpl/trunk'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/constellation/constellation-gpl/branches/bug_fix','constellation/constellation-gpl/bug_fix'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/constellation/constellation-gpl/tags/latest_release','constellation/constellation-gpl/latest_release'),
                 },
             }],
             ['constellation-private', {
                 'groups': ['all'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/constellation-private/trunk','constellation-private/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/constellation-private/branches/bug_fix','constellation-private/bug_fix'),
-                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/constellation-private/tags/latest_release','constellation-private/latest_release'),
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/constellation/constellation-private/trunk','constellation/constellation-private/trunk'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/constellation/constellation-private/branches/bug_fix','constellation/constellation-private/bug_fix'),
+                    'tag': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/constellation/constellation-private/tags/latest_release','constellation/constellation-private/latest_release'),
                 },
             }],
         ],

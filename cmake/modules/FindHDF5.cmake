@@ -2,8 +2,9 @@
 # Once done this will define
 #
 # HDF5_FOUND         - system has hdf5 and it can be used
-# HDF5_INCLUDE_DIR - directory where the header file can be found
+# HDF5_INCLUDE_DIRS  - directory where the header file can be found
 # HDF5_LIBRARIES     - the hdf5 libraries
+# HDF5_DEFINITIONS
 
 
 if( NOT HDF5_FOUND )
@@ -44,6 +45,8 @@ if( NOT HDF5_FOUND )
     IF( HDF5_LIBRARIES )
 
       SET( HDF5_FOUND "YES" )
+      set( HDF5_DEFINITIONS )
+      set( HDF5_INCLUDE_DIRS ${HDF5_INCLUDE_DIR} )
 
     ENDIF( HDF5_LIBRARIES )
     ENDIF( HDF5_INCLUDE_DIR )

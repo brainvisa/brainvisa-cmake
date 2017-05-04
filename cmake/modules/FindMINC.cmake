@@ -105,7 +105,7 @@ IF( MINC_volumeio_LIBRARY )
 
   SET( MINC_FOUND "YES" )
 
-  set( LIBMINC_DEFINITIONS )
+  set( LIBMINC_DEFINITIONS ${HDF5_DEFINITIONS} )
   if( _minc_hdf5_version STREQUAL "1" )
     set( LIBMINC_DEFINITIONS "-DH5_USE_16_API" )
   endif()
@@ -113,7 +113,7 @@ IF( MINC_volumeio_LIBRARY )
   SET(LIBMINC_INCLUDE_DIRS
      ${MINC_INCLUDE_DIR}
      ${NETCDF_INCLUDE_DIR}
-     ${HDF5_INCLUDE_DIR}
+     ${HDF5_INCLUDE_DIRS}
      CACHE FILEPATH "MINC include paths"
   )
 
@@ -121,7 +121,7 @@ IF( MINC_volumeio_LIBRARY )
     ${MINC_volumeio_LIBRARY}
     ${MINC_minc_LIBRARY}
     ${NETCDF_LIBRARY}
-    ${HDF5_LIBRARY}
+    ${HDF5_LIBRARIES}
     CACHE FILEPATH "MINC libraries"
   )
 

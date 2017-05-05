@@ -1704,8 +1704,8 @@ class DirectorySection(object):
 
 class SourceDirectory(DirectorySection, ConfigVariableParser):
 
-    _variables_with_replacements = set(('directory_id', ))
-    _path_variables = set(('cross_compiling_dirs', ))
+    _variables_with_replacements = set(('directory_id',  'cross_compiling_dirs'))
+    _path_variables = set()
     _validAdditiveOptions = set(('default_steps', 'cross_compiling_dirs'))
     _validOptions = set(('revision_control',
                          'build_condition',

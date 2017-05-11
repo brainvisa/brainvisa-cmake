@@ -33,6 +33,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
+from __future__ import print_function
 import sys
 import os
 import re
@@ -42,6 +43,7 @@ import tempfile
 import shutil
 import glob
 import time
+import six
 from stat import S_IRUSR, S_IXUSR, S_IRGRP, S_IXGRP, S_IROTH, S_IXOTH
 
 if os.path.exists(sys.argv[0]):
@@ -66,9 +68,9 @@ from brainvisa.compilation_info import packages_info, packages_dependencies, bui
 
 def system_call(options, command, cwd=None, env=None, return_output=False):
     if options.verbose and not return_output:
-        print
-        print '->', ' '.join((repr(i) for i in command))
-        print
+        print()
+        print('->', ' '.join((repr(i) for i in command)))
+        print()
         stdout = None
         stderr = None
     else:
@@ -78,8 +80,16 @@ def system_call(options, command, cwd=None, env=None, return_output=False):
                              stdout=stdout, stderr=stderr, cwd=cwd, env=env)
     result = popen.communicate()[0]
     if popen.returncode:
+        print('-- failed command: --')
+        print('-- command:', command)
+        print('-- options:', options)
+        print('-- return code: %d, output: --' % popen.returncode)
+        print(result)
+        print('-- end of command outpput --')
         raise subprocess.CalledProcessError(
             popen.returncode, ' '.join((repr(i) for i in command)))
+    elif stdout is not None:
+        print(result)
     return result
 
 
@@ -143,7 +153,7 @@ def packages_selection(rules):
                         fnmatch.translate(pattern))
                 for package_info in packages_info.itervalues():
                     selected = True
-                    for attribute, pattern in attributes.iteritems():
+                    for attribute, pattern in six.iteritems(attributes):
                         value = package_info.get(attribute)
                         if value is None:
                             raise SyntaxWarning(
@@ -188,14 +198,14 @@ def list_selected_packages(options, selected_packages, dependencies):
     else:
         out = open(options.output, 'w')
     if options.dependencies and dependencies:
-        print >> out, 'Selected packages:'
+        print('Selected packages:', file=out)
         indent = '  '
     else:
         indent = ''
-    print >> out, indent + ('\n' + indent).join(selected_packages)
+    print(indent + ('\n' + indent).join(selected_packages), file=out)
     if options.dependencies and dependencies:
-        print >> out, '\nDependencies packages:'
-        print >> out, '  ' + '\n  '.join(dependencies)
+        print('\nDependencies packages:', file=out)
+        print('  ' + '\n  '.join(dependencies), file=out)
 
 
 def create_graphviz_dependencies(options, selected_packages, dependencies):
@@ -204,7 +214,7 @@ def create_graphviz_dependencies(options, selected_packages, dependencies):
     else:
         out = open(options.output, 'w')
     nodes = {}
-    print >> out, 'digraph packages_dependencies {'
+    print('digraph packages_dependencies {', file=out)
     done = set()
     todo = selected_packages
     while todo:
@@ -218,11 +228,11 @@ def create_graphviz_dependencies(options, selected_packages, dependencies):
             source_node = str(len(nodes))
             nodes[source_package['name']] = source_node
             if source_package['project'] == 'thirdparty':
-                print >> out, '  %s [ label="%s", color=orange ]' % (
-                    source_node, source_package['name'])
+                print('  %s [ label="%s", color=orange ]' % (
+                      source_node, source_package['name']), file=out)
             else:
-                print >> out, '  %s [ label="%s" ]' % (
-                    source_node, source_package['name'])
+                print('  %s [ label="%s" ]' % (
+                      source_node, source_package['name']), file=out)
         for dependency_type, dest_package, version_ranges, binary_independent in packages_dependencies.get(source_package['name'], ()):
             if not options.dependencies and dest_package not in selected_packages:
                 continue
@@ -233,20 +243,20 @@ def create_graphviz_dependencies(options, selected_packages, dependencies):
                 dest_node = str(len(nodes))
                 nodes[dest_package['name']] = dest_node
                 if dest_package['project'] == 'thirdparty':
-                    print >> out, '  %s [ label="%s", color=orange ]' % (
-                        dest_node, dest_package['name'])
+                    print('  %s [ label="%s", color=orange ]' % (
+                          dest_node, dest_package['name']), file=out)
                 else:
-                    print >> out, '  %s [ label="%s" ]' % (
-                        dest_node, dest_package['name'])
+                    print('  %s [ label="%s" ]' % (
+                          dest_node, dest_package['name']), file=out)
             if dependency_type == 'DEPENDS':
                 color = 'black'
             elif dependency_type == 'RECOMMENDS':
                 color = 'green'
             else:
                 color = 'blue'
-            print >> out, '  %s -> %s [ color=%s ]' % (
-                source_node, dest_node, color)
-    print >> out, '}'
+            print('  %s -> %s [ color=%s ]' % (
+                  source_node, dest_node, color), file=out)
+    print('}', file=out)
 
 
 def is_shell_script(filename):
@@ -280,7 +290,7 @@ def create_directory_package(options, selected_packages, dependencies,
 
     for package in (selected_packages + dependencies
                     if options.dependencies else selected_packages):
-        print 'Installing', package
+        print('Installing', package)
         install_cmd_name = 'install-' + packages_info[package]['component']
         if package == 'brainvisa-release' and options.installer:
             install_cmd_name = 'install-brainvisa-release_installer_doc'
@@ -297,11 +307,11 @@ def create_directory_package(options, selected_packages, dependencies,
     if ((sys.platform[:3] != "win") and (sys.platform[:6] != "darwin")
             and options.dependencies):
         if os.path.exists(os.path.join(install_directory, "lib")):
-            print "Trying to remove RPATH from packaged libraries headers"
+            print("Trying to remove RPATH from packaged libraries headers")
             os.chdir(os.path.join(install_directory, "lib"))
             patch_output = system_call(
                 options, ["bv_patch_libs.sh"], return_output=True)
-            print patch_output
+            print(patch_output)
     os.chdir(current_dir)
 
     # create scripts that call bv_env before calling the command to setup
@@ -556,27 +566,27 @@ def create_directory_package(options, selected_packages, dependencies,
                     os.symlink(icns, os.path.join(shortcut, 'Contents',
                                                   'Resources', '%s.icns' % exe_name))
                 f = open(os.path.join(shortcut, 'Contents', 'PkgInfo'), 'w')
-                print >> f, 'APPL????'
+                print('APPL????', file=f)
                 f.close()
                 f = open(
                     os.path.join(shortcut, 'Contents', 'Info.plist'), 'w')
-                print >> f, '''<?xml version="1.0" encoding="UTF-8"?>
+                print('''<?xml version="1.0" encoding="UTF-8"?>
   <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
   <plist version="1.0">
   <dict>
           <key>CFBundleExecutable</key>
           <string>%s</string>
-''' % exe_name
+''' % exe_name, file=f)
                 if icns:
-                    print >> f, '''          <key>CFBundleIconFile</key>
+                    print('''          <key>CFBundleIconFile</key>
           <string>%s.icns</string>
-''' % exe_name
-                print >> f, '''          <key>CFBundleIdentifier</key>
+''' % exe_name, file=f)
+                print('''          <key>CFBundleIdentifier</key>
           <string>%s</string>
           <key>CFBundlePackageType</key>
           <string>APPL</string>
   </dict>
-  </plist>''' % exe_name
+  </plist>''' % exe_name, file=f)
                 f.close()
 
         if hasBrainvisa:
@@ -594,13 +604,13 @@ def create_directory_package(options, selected_packages, dependencies,
     hasBVShare = "brainvisa-share" in selected_packages \
         or (options.dependencies and "brainvisa-share" in dependencies)
     if hasBVShare:
-        print "Updating BrainVISA shared database"
+        print("Updating BrainVISA shared database")
         try:
             cmd = [os.path.join(brainvisacmake_directory, 'bin', 'bv_env'),
                    'brainvisa', '-b', '--setup']
-            print 'running:', ' '.join(cmd)
+            print('running:', ' '.join(cmd))
             subprocess.check_call(cmd)
-            print 'update done.'
+            print('update done.')
             share_conf = os.path.join(brainvisacmake_directory, 'python',
                                       'brainvisa_share', 'config.py')
             if os.path.exists(share_conf):
@@ -623,16 +633,16 @@ def create_directory_package(options, selected_packages, dependencies,
                         shutil.copyfile(f, outf)
                         os.chmod(outf, 0666)
         except Exception, e:
-            print 'database update / copy failed:'
-            print e
-            print '(ignored)'
+            print('database update / copy failed:')
+            print(e)
+            print('(ignored)')
 
     # create a .README file with install / run instrutctions
     create_readme_file(install_directory)
 
     if list_installed_paths:
         result = {}
-        for path, package in ((i[len(install_directory) + 1:], j) for i, j in installed_paths.iteritems()):
+        for path, package in ((i[len(install_directory) + 1:], j) for i, j in six.iteritems(installed_paths)):
             result.setdefault(package, []).append(path)
     else:
         result = None
@@ -666,12 +676,14 @@ def create_compressed_package(options, selected_packages, dependencies):
         options.output = output
         if sys.platform[:3] != 'win':  # compressing in tar.bz2 with tar
             output = output + ".tar.bz2"
-            print 'Compressing %s in %s' % (repr(install_directory), repr(output))
+            print('Compressing %s in %s' % (repr(install_directory),
+                                            repr(output)))
             system_call(
                 options, ['tar', 'jcf', system_path(output, 'auto2unix'), os.path.basename(install_directory)], cwd=temp_directory)
         else:  # compressing in zip with zipfile module
             output = output + ".zip"
-            print 'Compressing %s in %s' % (repr(install_directory), repr(output))
+            print('Compressing %s in %s' % (repr(install_directory),
+                                            repr(output)))
             os.chdir(temp_directory)
             import zipfile
             zf = zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED)
@@ -682,14 +694,14 @@ def create_compressed_package(options, selected_packages, dependencies):
                     for f in files:
                         _store(zf, os.path.join(file, f))
                 else:
-                    # print 'zipping', file
+                    # print('zipping', file)
                     zf.write(file)
             _store(zf, os.path.basename(install_directory))
             zf.close()
         # copy readme file outside the temp directory
         shutil.copy(install_directory + '.README', options.output + '.README')
     finally:
-        print 'Removing %s' % repr(temp_directory)
+        print('Removing %s' % repr(temp_directory))
         os.chdir(os.path.dirname(temp_directory))
         shutil.rmtree(temp_directory)
 
@@ -709,7 +721,7 @@ def create_readme_file(install_directory):
     packname = os.path.basename(install_directory)
     zfile = packname + zipext
     readme = open(install_directory + '.README', 'w')
-    print >> readme, '''                            BRAINVISA / ANATOMIST
+    print('''                            BRAINVISA / ANATOMIST
                             INSTALL INSTRUCTIONS
 
 Pack Version : ''' + version + '''
@@ -820,7 +832,7 @@ might influence the rendering (which proved useful on some Windows machines):
 
 On Windows you can also lower the level of 3D hardware acceleration in the display properties of Windows, it quite often helps to bypass hardware driver
 bugs.
-'''
+''', file=readme)
     readme.close()
     shutil.copyfile(install_directory + '.README',
                     os.path.join(install_directory, "README"))
@@ -855,13 +867,13 @@ def create_debian_packages(options, selected_packages, dependencies):
         options.output = output
         debs_directory = os.path.join(install_directory, 'deb_packages')
         os.mkdir(debs_directory)
-        for package, paths in installed_paths.iteritems():
+        for package, paths in six.iteritems(installed_paths):
             package_info = packages_info[package]
             debian_name = validDebianPackageName(package)
             package_info['debian_name'] = debian_name
             deb_file = os.path.join(options.output, debian_name + '-' + package_info[
                                     'version'] + '-' + build_system + '-' + architecture + '.deb')
-            print 'Creating package', deb_file
+            print('Creating package', deb_file)
             deb_directory = os.path.join(debs_directory, package)
             os.mkdir(deb_directory)
 
@@ -869,27 +881,28 @@ def create_debian_packages(options, selected_packages, dependencies):
             os.mkdir(os.path.join(deb_directory, 'DEBIAN'))
             control = open(
                 os.path.join(deb_directory, 'DEBIAN', 'control'), 'w')
-            print >> control, ('''Package: %(debian_name)s
+            print(('''Package: %(debian_name)s
 Version: %(version)s
 Maintainer: %(maintainer)s
 Architecture: ''' + architecture + '''
 Description: %(type)s package for BrainVISA component %(name)s.
 Priority: optional
-Section: multiverse/science''') % package_info
+Section: multiverse/science''') % package_info, file=control)
             dependencies = {}
             for dependency_type, dest_package, version_ranges, binary_independent in packages_dependencies.get(package, ()):
-                print dependency_type, dest_package, version_ranges, binary_independent
+                print(dependency_type, dest_package, version_ranges,
+                      binary_independent)
                 for version_range in version_ranges.split(';'):
                     dependencies.setdefault(dependency_type, []).append(validDebianPackageName(
                         dest_package) + (' ( ' + version_range + ' )' if version_ranges else ''))
             for dependency_type in ('DEPENDS', 'RECOMMENDS', 'SUGGESTS', 'ENHANCES'):
                 deps = dependencies.get(dependency_type)
                 if deps:
-                    print >> control, dependency_type.capitalize() + ':', ', '.join(
-                        deps)
+                    print(dependency_type.capitalize() + ':',
+                          ', '.join(deps), file=control)
             # deps = dependencies.get( 'RECOMMENDS' )
             # if deps:
-                # print >> control, 'Depends:', ', '.join( deps )
+                # print('Depends:', ', '.join( deps ), file=control)
             control.close()
 
             # Move files installed for this package in deb_directory
@@ -907,11 +920,12 @@ Section: multiverse/science''') % package_info
                 system_call(options, ('dpkg', '--build', system_path(
                     deb_directory, 'auto2unix'), system_path(deb_file, 'auto2unix')))
             except subprocess.CalledProcessError:
-                print >> sys.stderr, '\nDebian control file for %s' % package
+                print('\nDebian control file for %s' % package,
+                      file=sys.stderr)
                 sys.stderr.write(open(control.name).read())
                 raise
     finally:
-        print 'Removing %s' % repr(install_directory)
+        print('Removing %s' % repr(install_directory))
         os.chdir(os.path.dirname(install_directory))
         shutil.rmtree(install_directory)
 
@@ -1029,7 +1043,7 @@ Options:
     while index < len(args):
         if args[index] in ('-h', '--help'):
             options.help = True
-            print usage
+            print(usage)
             sys.exit(0)
         elif args[index] in ('-v', '--verbose'):
             options.verbose = True
@@ -1037,7 +1051,7 @@ Options:
         elif args[index] in ('-o', '--output'):
             del args[index]
             if index == len(args):
-                print >> sys.stderr, 'Missing output file or directory name'
+                print('Missing output file or directory name', file=sys.stderr)
                 sys.exit(1)
             options.output = os.path.abspath(args[index])
             del args[index]
@@ -1059,21 +1073,21 @@ Options:
         elif args[index] == '--cmake':
             del args[index]
             if index == len(args):
-                print >> sys.stderr, 'Missing cmake location'
+                print('Missing cmake location', file=sys.stderr)
                 sys.exit(1)
             options.cmake = args[index]
             del args[index]
         elif args[index] == '--tmp':
             del args[index]
             if index == len(args):
-                print >> sys.stderr, 'Missing temporary directory name'
+                print('Missing temporary directory name', file=sys.stderr)
                 sys.exit(1)
             tempfile.tempdir = args[index]
             del args[index]
         elif args[index] == '--compressed-packdir':
             del args[index]
             if index == len(args):
-                print >> sys.stderr, 'Missing compressed pack dir'
+                print('Missing compressed pack dir', file=sys.stderr)
                 sys.exit(1)
             options.compressedpackdir = args[index]
             del args[index]
@@ -1084,17 +1098,17 @@ Options:
             index += 1
 
     if len(args) < 1:
-        print >> sys.stderr, 'No command given (use -h option to get help)'
+        print('No command given (use -h option to get help)', file=sys.stderr)
         sys.exit(1)
     command = commands.get(args[0])
     if command is None:
-        print >> sys.stderr, 'Unknown command "%s" (use -h option to get help)' % args[
-            0]
+        print('Unknown command "%s" (use -h option to get help)'
+              % args[0], file=sys.stderr)
         sys.exit(1)
 
     try:
         packages, dependencies = packages_selection(args[1:])
         command(options, packages, dependencies)
     except Warning, e:
-        print >> sys.stderr, str(e)
+        print(str(e), file=sys.stderr)
         sys.exit(1)

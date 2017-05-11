@@ -202,6 +202,20 @@ def system(*args, **kwargs):
             txt = '%s\nFrom directory: %s' % (txt, kwargs['cwd'])
         raise OSError(txt)
 
+def system_output_on_error(*args, **kwargs):
+    print(' '.join([str(x) for x in args]))
+    try:
+        output = subprocess.check_output(*args, stderr=subprocess.STDOUT,
+                                         **kwargs)
+    except subprocess.CalledProcessError as e:
+        print('-- failed command: --')
+        print('-- command:', args)
+        print('-- popen kwargs:', kwargs)
+        print('-- return code: %d, output: --' % e.returncode)
+        print(e.output)
+        print('-- end of command outpput --')
+        raise
+    return output
 
 def cmake_path(path):
     if sys.platform == 'win32':
@@ -254,7 +268,7 @@ def environmentPathVariablesSubstitution(path, env=None):
 
 def run_and_log_tests(cwd=None, env=None, options=None):
     # get test labels to assign them to projects
-    test_labels = subprocess.check_output(
+    test_labels = system_output_on_error(
         ['ctest', '--print-labels'] + options, cwd=cwd)
     lines = test_labels.split('\n')
     labels_index = lines.index('All Labels:')
@@ -646,7 +660,7 @@ class JenkinsWrapper(object):
                           '--duration', str(duration), '--log', '-']
                 #print('Run jenkins:')
                 #print(jkn_cmd)
-                subprocess.check_call(jkn_cmd, stdin=open(zlog))
+                system_output_on_error(jkn_cmd, stdin=open(zlog))
 
 
             finally:
@@ -758,7 +772,7 @@ class JenkinsWrapper(object):
         jkn_cmd = ['java', '-jar', jenkins_cli_path, '-s',
                   configuration.general_section.jenkins_server_url,
                   'delete-builds', job_name, build_name]
-        subprocess.check_output(jkn_cmd).strip().split('\n')
+        system_output_on_error(jkn_cmd).strip().split('\n')
 
 
     def delete_build_py(self, job_name, build_name):
@@ -776,8 +790,7 @@ class JenkinsWrapper(object):
         java = distutils.spawn.find_executable('java')
         # test java version
         try:
-            java_ver = subprocess.check_output(['java', '-version'],
-                                               stderr=subprocess.STDOUT)
+            java_ver = system_output_on_error(['java', '-version'])
             ver = java_ver.split('\n')[0].strip()
             jvre = re.match('^.* version "([^"]+)"$', ver)
             if jvre:
@@ -829,7 +842,7 @@ class JenkinsWrapper(object):
         jkn_cmd = ['java', '-jar', jenkins_cli_path, '-s',
                   configuration.general_section.jenkins_server_url,
                   'list-jobs']
-        jobs = subprocess.check_output(jkn_cmd).strip().split('\n')
+        jobs = system_output_on_error(jkn_cmd).strip().split('\n')
         if job_name not in jobs:
             # create new job
             template  = '''<?xml version='1.0' encoding='UTF-8'?>
@@ -847,7 +860,7 @@ class JenkinsWrapper(object):
                       'create-job', job_name]
             #print('jkn cmd:', jkn_cmd)
             try:
-                subprocess.check_call(jkn_cmd, stdin=open(tfile[1]))
+                system_output_on_error(jkn_cmd, stdin=open(tfile[1]))
             finally:
                 os.unlink(tfile[1])
 
@@ -1939,8 +1952,8 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
         system(*cmd)
 
     def get_git_remotes(self, dest):
-        cmd_output = str(subprocess.check_output(['git', 'remote', '-v'],
-                                                   cwd=dest))
+        cmd_output = str(system_output_on_error(['git', 'remote', '-v'],
+                                                cwd=dest))
         remotes = {}
         for line in cmd_output.split('\n'):
             remotere = re.compile('^([^ ]+)[\s|\t]+([^ ]+)\s+([^ ]+)\s*$')

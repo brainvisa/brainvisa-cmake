@@ -1,20 +1,21 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import sys, os, glob
 
 toreplace = 'gtk+'
 replaced = 'kg+t'
 
 def usage( fail=False ):
-  print os.path.basename( sys.argv[0] ), '''[--replace] [-h] [--help] [<libdir>]
+  print(os.path.basename( sys.argv[0] ), '''[--replace] [-h] [--help] [<libdir>]
 Patch libQtGui to remove references to gtk+ library, to avoid system binaries incompatibilities
 options:
   -h, --help : print this help and quit
   --revert   : revert patching: set references to gtk+ as original
 
 <libdir> is the libraries dir. If not specified, libraries will be found relatively to this script, in "../lib/libQtGui.so.*"
-'''
+''')
   if fail:
     sys.exit( 1 )
   else:
@@ -41,7 +42,7 @@ elif len( sys.argv ) != 1:
 
 for f in glob.glob( os.path.join( path, 'libQtGui.so.*' ) ):
   if not os.path.islink( f ) and not f.endswith( '.debug' ):
-    print 'patching:', f
+    print('patching:', f)
     contents = open( f, 'rb' ).read().replace( toreplace, replaced )
     open( f, 'wb' ).write( contents )
 

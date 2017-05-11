@@ -33,6 +33,7 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
+from __future__ import print_function
 import sys, os
 from glob import glob
 
@@ -98,12 +99,12 @@ if len( sys.argv ) > 1:
   os.execvpe( sys.argv[1], sys.argv[ 1: ], os.environ )
 else:
   for n, v in backup_variables.iteritems():
-    print 'export BRAINVISA_UNENV_' + n + "='" + v + "'"
+    print('export BRAINVISA_UNENV_' + n + "='" + v + "'")
   for n in unset_variables:
-    print 'unset', n
+    print('unset', n)
   for n in set_variables:
-    print 'export', n + "='" + os.environ[ n ] + "'"
+    print('export', n + "='" + os.environ[ n ] + "'")
   for n in path_prepend:
     v = os.environ[ n ]
     if v:
-      print 'export', n + "='" + v + "'"
+      print('export', n + "='" + v + "'")

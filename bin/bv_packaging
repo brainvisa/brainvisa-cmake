@@ -82,15 +82,16 @@ def system_call(options, command, cwd=None, env=None, return_output=False):
     if popen.returncode:
         print('-- failed command: --')
         print('-- command:', command)
-        print('-- options:', options)
+        print('-- options:', options.__dict__)
         print('-- return code: %d, output: --' % popen.returncode)
         print(result)
         print('-- end of command outpput --')
         raise subprocess.CalledProcessError(
             popen.returncode, ' '.join((repr(i) for i in command)))
-    elif stdout is not None:
+    elif options.verbose and stdout is not None:
         print(result)
-    return result
+    if return_output:
+        return result
 
 
 def system_path(path, mode='auto2win', keepdrive=True):

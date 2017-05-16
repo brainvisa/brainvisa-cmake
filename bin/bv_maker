@@ -1600,15 +1600,17 @@ class ConfigVariableParser(object):
             return sys_env
         return default
 
-    def replace_vars(self, path_string):
+    def replace_vars(self, path_string, env=None):
         if hasattr(self, 'installer_variables'):
             vars = self.installer_variables()
         else:
             vars = global_installer_variables()
+        if env is None:
+            env = self.get_environ()
         return environmentPathVariablesSubstitution(
-            path_string, env=self.get_environ()) % vars
+            path_string, env=env) % vars
 
-    def replace_vars_if_allowed(self, variable, value):
+    def replace_vars_if_allowed(self, variable, value, env=None):
         if self.is_path(variable):
             return self.replace_vars(value)
         elif self.allow_variable_replacements(variable):
@@ -1617,7 +1619,7 @@ class ConfigVariableParser(object):
             else:
                 vars = global_installer_variables()
             return environmentVariablesSubstitution(
-                value, env=self.get_environ()) % vars
+                value, env=env) % vars
         else:
             return value
 
@@ -2626,6 +2628,20 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                (['make'] + self.make_options + ['doc']),
                env=self.get_environ())
 
+    def get_environ(self, default=None):
+        env = super(BuildDirectory, self).get_environ(default)
+        if self.test_run_data_dir:
+            if env is None:
+                env = dict(os.environ)
+            # Add directories to env
+            env["BRAINVISA_TEST_RUN_DATA_DIR"] = self.test_run_data_dir
+        if self.test_ref_data_dir:
+            if env is None:
+                env = dict(os.environ)
+            # Add directories to env
+            env["BRAINVISA_TEST_REF_DATA_DIR"] = self.test_ref_data_dir
+        return env
+
     def test(self, options, args):
         self._process_configuration_lines()
         if options.ctest_options is not None:
@@ -2640,13 +2656,9 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         if self.test_run_data_dir:
             if not os.path.exists(self.test_run_data_dir):
                 os.makedirs(self.test_run_data_dir)
-            # Add directories to env
-            env["BRAINVISA_TEST_RUN_DATA_DIR"] = self.test_run_data_dir
         if self.test_ref_data_dir:
             if not os.path.exists(self.test_ref_data_dir):
                 os.makedirs(self.test_ref_data_dir)
-            # Add directories to env
-            env["BRAINVISA_TEST_REF_DATA_DIR"] = self.test_ref_data_dir
         return run_and_log_tests(cwd=self.directory, options=ctoptions,
                                  env=env)
 
@@ -2661,10 +2673,6 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         if self.test_ref_data_dir:
             if not os.path.exists(self.test_ref_data_dir):
                 os.makedirs(self.test_ref_data_dir)
-            # Add directories to env
-            env.update({
-                "BRAINVISA_TEST_REF_DATA_DIR": self.test_ref_data_dir
-            })
         system(cwd=self.directory, env=env,
                *(['make'] + self.make_options) + ['testref'])
 
@@ -3122,26 +3130,37 @@ Controller.prototype.FinishedPageCallback = function()
         finally:
             os.unlink(install_script)
 
-    def _prepare_env_for_tests(self, install_dir, testref_mode=False):
-        # set environment to point to install dir
-        new_env = self.get_environ(dict(os.environ))
-        new_env['BRAINVISA_PACKAGE_INSTALL_PREFIX'] = install_dir
+    def get_environ(self, default=None):
+        env = super(PackageDirectory, self).get_environ(default)
+        if hasattr(self, '_recurse_get_environ'):
+            return env
+        self._recurse_get_environ = True
+        if env is None:
+            env = dict(os.environ)
+        if self.test_install_dir:
+            install_dir = self.replace_vars(self.test_install_dir)
+            env['BRAINVISA_PACKAGE_INSTALL_PREFIX'] = install_dir
         # binaries are in bin/real-bin/ (used by some python tests commands)
-        new_env['BRAINVISA_REAL_BIN'] = '/real-bin'
+        env['BRAINVISA_REAL_BIN'] = '/real-bin'
+        if self.test_run_data_dir:
+            # Add directories to env
+            env["BRAINVISA_TEST_RUN_DATA_DIR"] = self.test_run_data_dir
+        if self.test_ref_data_dir:
+            if env is None:
+                env = dict(os.environ)
+            # Add directories to env
+            env["BRAINVISA_TEST_REF_DATA_DIR"] = self.test_ref_data_dir
         if self.remote_test_host_cmd:
-            new_env['BRAINVISA_TEST_REMOTE_COMMAND'] \
+            # temporarily change os.environ since expand_shell uses
+            # os.path.expandvars(), which use os.environ variables
+            cur_env = os.environ
+            os.environ = dict(os.environ)
+            os.environ.update(env)
+            env['BRAINVISA_TEST_REMOTE_COMMAND'] \
                 = self.expand_shell(self.remote_test_host_cmd)
-        # Add test_run_data_dir and test_run_data_dir
-        if not testref_mode:
-            new_env.update({
-                "BRAINVISA_TEST_REF_DATA_DIR": self.test_ref_data_dir,
-                "BRAINVISA_TEST_RUN_DATA_DIR": self.test_run_data_dir
-            })
-        else:
-            new_env.update({
-                "BRAINVISA_TEST_REF_DATA_DIR": self.test_ref_data_dir
-            })
-        return new_env
+            os.environ = cur_env
+        del self._recurse_get_environ
+        return env
 
     def test_package(self, options, args):
         self.test_config(options, args)
@@ -3160,7 +3179,7 @@ Controller.prototype.FinishedPageCallback = function()
         print('    from build dir:', self.build_dir.directory)
         install_dir = self.replace_vars(self.test_install_dir)
         # Add directories to env
-        new_env = self._prepare_env_for_tests(install_dir)
+        new_env = self.get_environ(dict(os.environ))
         repos_dir = self.replace_vars(self.directory)
         report_file = os.path.join(repos_dir, 'tests_report.txt')
         if options.ctest_options is not None:
@@ -3195,7 +3214,7 @@ Controller.prototype.FinishedPageCallback = function()
         print('    from build dir:', self.build_dir.directory)
         install_dir = self.replace_vars(self.test_install_dir)
         # Add directories to env
-        new_env = self._prepare_env_for_tests(install_dir, testref_mode=True)
+        new_env = self.get_environ(dict(os.environ))
         system(cwd=self.build_dir.directory, env=new_env,
                *(['make', 'testref']))
 

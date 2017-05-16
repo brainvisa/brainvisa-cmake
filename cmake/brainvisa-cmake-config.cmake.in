@@ -1829,6 +1829,15 @@ function( BRAINVISA_ADD_TEST )
     math(EXPR _arg_index "${_arg_index} + 1")
   endforeach()
 
+  # If the test is not marked testref we don't pass options for run mode
+  # (so this test don't have to bother about options)
+  if(testref)
+    set(_run_testmode_opt "--test_mode=run")
+  else()
+    set(_run_testmode_opt)
+  endif()
+  set( _command_args ${_command_args} ${_run_testmode_opt} )
+
   if(CMAKE_CROSSCOMPILING)
     # Replaces python interpreter with target python interpreter
     # in test command arguments
@@ -1870,21 +1879,14 @@ function( BRAINVISA_ADD_TEST )
   #message("====== NAME ${_name_args} =======")
   #message("====== COMMAND ${_command_args} =======")
 
-  # If the test is not marked testref we don't pass options for run mode
-  # (so this test don't have to bother about options)
-  if(testref)
-    set(_run_testmode_opt "--test_mode=run")
-  else()
-    set(_run_testmode_opt "")
-  endif()
   if(_form EQUAL 1)
     # Add the test in the first manner
     add_test(${_name_args}
-             ${_command_args} ${_run_testmode_opt})
+             ${_command_args})
   else()
     # Add the test in the second manner
     add_test(NAME ${_name_args}
-             COMMAND ${_command_args} ${_run_testmode_opt})
+             COMMAND ${_command_args})
   endif()
   # Add the command in ref mode to the testref target
   if(testref)

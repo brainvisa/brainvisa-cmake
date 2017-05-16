@@ -1829,15 +1829,6 @@ function( BRAINVISA_ADD_TEST )
     math(EXPR _arg_index "${_arg_index} + 1")
   endforeach()
 
-  # If the test is not marked testref we don't pass options for run mode
-  # (so this test don't have to bother about options)
-  if(testref)
-    set(_run_testmode_opt "--test_mode=run")
-  else()
-    set(_run_testmode_opt)
-  endif()
-  set( _command_args ${_command_args} ${_run_testmode_opt} )
-
   if(CMAKE_CROSSCOMPILING)
     # Replaces python interpreter with target python interpreter
     # in test command arguments
@@ -1863,18 +1854,34 @@ function( BRAINVISA_ADD_TEST )
 
     unset(_python_test)
     unset(_python_executable)
+  endif()
 
+  # If the test is not marked testref we don't pass options for run mode
+  # (so this test don't have to bother about options)
+  if(testref)
+    set( _command_args_run ${_command_args} "--test_mode=run" )
+    set( _command_args_ref ${_command_args} "--test_mode=ref" )
+  else()
+    set( _command_args_run ${_command_args} )
+    set( _command_args_ref ${_command_args} )
+  endif()
+
+  if(CMAKE_CROSSCOMPILING)
     if(WIN32)
       # For cross compilation on windows it is necessary to start commands
       # using a command interpreter (cmd) to get an environment
-      BRAINVISA_GET_SPACED_QUOTED_LIST( _command_args _command_args )
-      set( _command_args "cmd" "/c" "${_command_args}" )
+      BRAINVISA_GET_SPACED_QUOTED_LIST( _command_args_run _command_args_run )
+      BRAINVISA_GET_SPACED_QUOTED_LIST( _command_args_ref _command_args_ref )
+      set( _command_args_run "cmd" "/c" "${_command_args_run}" )
+      set( _command_args_ref "cmd" "/c" "${_command_args_ref}" )
     endif()
   endif()
 
   # Add bv_env_test encapsulation
-  set(_command_args "${CMAKE_BINARY_DIR}/bin/bv_env_test"
-                    "${_command_args}")
+  set(_command_args_run "${CMAKE_BINARY_DIR}/bin/bv_env_test"
+                        "${_command_args_run}")
+  set(_command_args_ref "${CMAKE_BINARY_DIR}/bin/bv_env_test"
+                        "${_command_args_ref}")
 
   #message("====== NAME ${_name_args} =======")
   #message("====== COMMAND ${_command_args} =======")
@@ -1882,16 +1889,16 @@ function( BRAINVISA_ADD_TEST )
   if(_form EQUAL 1)
     # Add the test in the first manner
     add_test(${_name_args}
-             ${_command_args})
+             ${_command_args_run})
   else()
     # Add the test in the second manner
     add_test(NAME ${_name_args}
-             COMMAND ${_command_args})
+             COMMAND ${_command_args_run})
   endif()
   # Add the command in ref mode to the testref target
   if(testref)
     add_custom_target(${_name_args}-testref
-                      COMMAND ${_command_args} --test_mode=ref)
+                      COMMAND ${_command_args_ref})
     add_dependencies(testref ${_name_args}-testref)
   endif()
   # set project as test label
@@ -1906,6 +1913,8 @@ function( BRAINVISA_ADD_TEST )
   unset(_arg_index)
   unset(_current_arg)
   unset(_name_args)
+  unset(_command_args_run)
+  unset(_command_args_ref)
   unset(_command_args)
   unset(testref)
 

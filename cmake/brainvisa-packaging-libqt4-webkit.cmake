@@ -22,7 +22,9 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO cmake package_name package_maintain
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN
                                      DEPENDS libgstreamer RUN )
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS liborc RUN )
-    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libxslt RUN )
+    if( LSB_DISTRIB_RELEASE VERSION_GREATER "14.0" )
+      BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libxslt RUN )
+    endif()
   endif()
 endfunction()
 

@@ -10,15 +10,26 @@ if( SPHINX_VERSION )
   # Sphinx is already found, do nothing
   set(SPHINX_FOUND TRUE)
 else()
-  find_package( PythonInterp )
-  if( PYTHON_SHORT_VERSION VERSION_LESS "3.0" )
+  find_package( python )
+  if( PYTHON_HOST_SHORT_VERSION VERSION_LESS "3.0" )
     set(sphinxbuild_cmd sphinx-build)
   else()
     set(sphinxbuild_cmd sphinx-build3)
   endif()
-  find_program( SPHINXBUILD_EXECUTABLE
+  find_program( SPHINXBUILD_HOST_EXECUTABLE
     NAMES ${sphinxbuild_cmd}
     DOC "Path to sphinx-build executable" )
+    
+  # Also set sphinx target variable
+  if(CMAKE_CROSSCOMPILING)
+    # Uses target python interpreter
+    set(SPHINXBUILD_EXECUTABLE "${CROSSCOMPILING_SPHINXBUILD_EXECUTABLE}" CACHE FILEPATH "Target sphinx executable path")
+    get_filename_component(SPHINXBUILD_EXECUTABLE_NAME "${CROSSCOMPILING_SPHINXBUILD_EXECUTABLE}" NAME CACHE)
+  else()
+    # Uses host python interpreter
+    set(SPHINXBUILD_EXECUTABLE "${SPHINXBUILD_HOST_EXECUTABLE}" CACHE FILEPATH "Target sphinx executable path")
+    get_filename_component(SPHINXBUILD_EXECUTABLE_NAME "${SPHINXBUILD_EXECUTABLE}" NAME CACHE)
+  endif()
 
   find_package( python REQUIRED )
 

@@ -9,7 +9,7 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  execute_process( COMMAND ${PYTHON_EXECUTABLE} -c "import spur, os; print os.path.dirname(spur.__file__)" OUTPUT_VARIABLE spur_directory OUTPUT_STRIP_TRAILING_WHITESPACE )
+  execute_process( COMMAND ${PYTHON_HOST_EXECUTABLE} -c "import spur, os; print os.path.dirname(spur.__file__)" OUTPUT_VARIABLE spur_directory OUTPUT_STRIP_TRAILING_WHITESPACE )
   if( spur_directory )
     BRAINVISA_INSTALL_DIRECTORY( "${spur_directory}" "lib/python${PYTHON_SHORT_VERSION}/dist-packages/spur" ${component} )
     set(${component}_PACKAGED TRUE PARENT_SCOPE)

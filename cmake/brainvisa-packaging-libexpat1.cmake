@@ -31,7 +31,13 @@ function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
     if( EXISTS "${EXPAT_INCLUDE_DIR}/expat_config.h" )
       list( APPEND _files "${EXPAT_INCLUDE_DIR}/expat_config.h" )
     endif()
-    BRAINVISA_INSTALL( FILES ${_files}
+    # Resolve symbolic links to get real files
+    set(_real_files)
+    foreach(f ${_files})
+        get_filename_component(f "${f}" REALPATH)
+        list(APPEND _real_files "${f}")
+    endforeach()
+    BRAINVISA_INSTALL( FILES ${_real_files}
       DESTINATION include
       COMPONENT ${component}-dev )
     set(${component}_PACKAGED TRUE PARENT_SCOPE)

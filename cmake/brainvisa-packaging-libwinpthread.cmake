@@ -8,9 +8,14 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   # Find version
   set( ${package_version} "0.0.0" PARENT_SCOPE )
   get_filename_component( real "${LIBWINPTHREAD_LIBRARIES}" REALPATH )
-  string( REGEX MATCH "^.*libwinpthread[-](.*)${CMAKE_SHARED_LIBRARY_SUFFIX}.*$" match "${real}" )
-  if( match )
-    set( ${package_version} "${CMAKE_MATCH_1}" PARENT_SCOPE )
+  
+  if(LIBWINPTHREAD_VERSION)
+    set( ${package_version} "${LIBWINPTHREAD_VERSION}" PARENT_SCOPE )
+  else()
+    string( REGEX MATCH "^.*libwinpthread[-](.*)${CMAKE_SHARED_LIBRARY_SUFFIX}.*$" match "${real}" )
+    if( match )
+      set( ${package_version} "${CMAKE_MATCH_1}" PARENT_SCOPE )
+    endif()
   endif()
 endfunction()
 

@@ -21,7 +21,7 @@
 #=============================================================================
 # (To distributed this file outside of CMake, substitute the full
 #  License text for the above reference.)
-FIND_PROGRAM(PYTHON_EXECUTABLE
+FIND_PROGRAM(PYTHON_HOST_EXECUTABLE
   NAMES python2.7 python2.6 python2 python
   python3 python3.6 python3.5 python3.4 python3.3 python3.2 python3.1 python3.0
   PATHS
@@ -39,7 +39,7 @@ FIND_PROGRAM(PYTHON_EXECUTABLE
 # handle the QUIETLY and REQUIRED arguments and set PYTHONINTERP_FOUND to TRUE if
 # all listed variables are TRUE
 INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(PythonInterp DEFAULT_MSG PYTHON_EXECUTABLE)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(PythonInterp DEFAULT_MSG PYTHON_HOST_EXECUTABLE)
 
-MARK_AS_ADVANCED(PYTHON_EXECUTABLE)
+MARK_AS_ADVANCED(PYTHON_HOST_EXECUTABLE)
 

@@ -17,7 +17,7 @@ else( PYQT3_VERSION )
 
   set( PYQT3_FOUND false )
   if( PYTHON_EXECUTABLE )
-    execute_process( COMMAND ${PYTHON_EXECUTABLE}
+    execute_process( COMMAND ${PYTHON_HOST_EXECUTABLE}
       -c "import pyqtconfig;cfg=pyqtconfig.Configuration();print cfg.pyqt_version_str+\";\"+cfg.pyqt_sip_dir+\";\""
       OUTPUT_VARIABLE _pyqtConfig
       ERROR_VARIABLE _error

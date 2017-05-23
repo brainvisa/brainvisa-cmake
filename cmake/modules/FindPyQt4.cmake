@@ -64,7 +64,7 @@ ELSE(PYQT4_VERSION)
   set(_find_pyqt_py ${_tmp})
   unset(_tmp)
 
-  SET(_python_executable ${PYTHON_EXECUTABLE})
+  SET(_python_executable ${PYTHON_HOST_EXECUTABLE})
   IF(CMAKE_CROSSCOMPILING)
     IF(CROSSCOMPILING_PYTHON_EXECUTABLE)
       # Some cross compilation platforms authorize to run target executables

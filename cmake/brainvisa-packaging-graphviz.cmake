@@ -19,7 +19,7 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  if(Dot_FOUND)
+  if(Dot_FOUND AND NOT CMAKE_CROSSCOMPILING)
     set(${component}_PACKAGED TRUE PARENT_SCOPE)
     if( DOT_EXECUTABLE )
       get_filename_component(realdot ${DOT_EXECUTABLE} REALPATH)

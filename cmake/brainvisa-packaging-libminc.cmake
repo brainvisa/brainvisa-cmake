@@ -45,14 +45,23 @@ function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
   if(MINC_FOUND)
     foreach ( MINC_INCLUDE_DIR ${LIBMINC_INCLUDE_DIRS} )
       file( GLOB _files "${MINC_INCLUDE_DIR}/ParseArgs.h" "${MINC_INCLUDE_DIR}/acr_*.h" "${MINC_INCLUDE_DIR}/minc*.h" "${MINC_INCLUDE_DIR}/nd_loop.h" "${MINC_INCLUDE_DIR}/time_stamp.h" "${MINC_INCLUDE_DIR}/volume_io.h" "${MINC_INCLUDE_DIR}/voxel_loop.h" )
+      
       if(_files)
-        BRAINVISA_INSTALL( FILES ${_files}
-                          DESTINATION "include"
-                          COMPONENT "${component}-dev" )
-      endif()
-      if( EXISTS "${MINC_INCLUDE_DIR}/volume_io" )
-        BRAINVISA_INSTALL_DIRECTORY( "${MINC_INCLUDE_DIR}/volume_io"
-          include/volume_io ${component}-dev )
+        # Resolve symbolic links to get real files
+        set(_real_files)
+        foreach(f ${_files})
+            get_filename_component(f "${f}" REALPATH)
+            list(APPEND _real_files "${f}")
+        endforeach()
+
+        BRAINVISA_INSTALL( FILES ${_real_files}
+                            DESTINATION "include"
+                            COMPONENT "${component}-dev" )
+
+        if( EXISTS "${MINC_INCLUDE_DIR}/volume_io" )
+            BRAINVISA_INSTALL_DIRECTORY( "${MINC_INCLUDE_DIR}/volume_io"
+            include/volume_io ${component}-dev )
+        endif()
       endif()
     endforeach()
     set(${component}-dev_PACKAGED TRUE PARENT_SCOPE)

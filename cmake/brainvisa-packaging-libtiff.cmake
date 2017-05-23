@@ -26,11 +26,19 @@ set( libtiff-dev-installrule TRUE )
 
 function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
   if(TIFF_FOUND)
-    BRAINVISA_INSTALL( FILES "${TIFF_INCLUDE_DIR}/tiff.h"
-      "${TIFF_INCLUDE_DIR}/tiffio.h"
-      "${TIFF_INCLUDE_DIR}/tiffconf.h"
-      "${TIFF_INCLUDE_DIR}/tiffvers.h"
-      "${TIFF_INCLUDE_DIR}/tiffio.hxx"
+    set(_files
+        "${TIFF_INCLUDE_DIR}/tiff.h"
+        "${TIFF_INCLUDE_DIR}/tiffio.h"
+        "${TIFF_INCLUDE_DIR}/tiffconf.h"
+        "${TIFF_INCLUDE_DIR}/tiffvers.h"
+        "${TIFF_INCLUDE_DIR}/tiffio.hxx")
+    # Resolve symbolic links to get real files
+    set(_real_files)
+    foreach(f ${_files})
+        get_filename_component(f "${f}" REALPATH)
+        list(APPEND _real_files "${f}")
+    endforeach()
+    BRAINVISA_INSTALL( FILES ${_real_files}
       DESTINATION include 
       COMPONENT ${component}-dev )
     set(${component}-dev_PACKAGED TRUE PARENT_SCOPE)

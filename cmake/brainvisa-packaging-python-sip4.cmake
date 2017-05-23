@@ -17,11 +17,11 @@ endfunction()
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   if( WIN32 )
     if(SIP_FOUND)
-      BRAINVISA_INSTALL( FILES ${SIP_EXECUTABLE}
-                         DESTINATION "bin"
-                         COMPONENT "${component}"
-                         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
-                         
+#       BRAINVISA_INSTALL( FILES ${SIP_EXECUTABLE}
+#                          DESTINATION "bin"
+#                          COMPONENT "${component}"
+#                          PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
+#                          
       set(${component}_PACKAGED TRUE PARENT_SCOPE)
     else()
       set(${component}_PACKAGED FALSE PARENT_SCOPE)

@@ -106,7 +106,7 @@ ex:
 
 .. code-block:: cmake
 
-    brainvisa_add_test( axon-tests "${TARGET_PYTHON_EXECUTABLE_NAME}"
+    brainvisa_add_test( axon-tests "${PYTHON_EXECUTABLE_NAME}"
                         -m brainvisa.tests.test_axon )
 
 

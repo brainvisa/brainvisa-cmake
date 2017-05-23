@@ -42,8 +42,12 @@ print( "sphinx_package_dir:%s" % sphinx.package_dir )
 pths = os.getenv( 'PATH' ).split( os.pathsep )
 altbindir = None
 bindir = None
+binext = ''
+if sys.platform.startswith('win'):
+    binext='.exe'
+    
 for p in pths:
-  if os.path.exists( os.path.join( p, 'sphinx-build' ) ):
+  if os.path.exists( os.path.join( p, 'sphinx-build' + binext ) ):
     if sphinx.package_dir.startswith( os.path.dirname( p ) ):
       bindir = p
       break

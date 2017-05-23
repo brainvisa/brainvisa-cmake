@@ -8,6 +8,8 @@ if (WIN32)
     # Already found  
     set( LIBWINPTHREAD_FOUND TRUE )
   else()
+    # We use gcc version to get the winpthread version
+    find_package(LIBGCC)
     find_library( LIBWINPTHREAD_LIBRARIES NAMES winpthread )
     
     if( NOT LIBWINPTHREAD_LIBRARIES )
@@ -21,6 +23,7 @@ if (WIN32)
     if( LIBWINPTHREAD_LIBRARIES )
       set( LIBWINPTHREAD_FOUND TRUE )
       set( LIBWINPTHREAD_LIBRARIES "${LIBWINPTHREAD_LIBRARIES}" CACHE PATH "Pthread library for windows" FORCE )
+      set( LIBWINPTHREAD_VERSION "${GCC_VERSION}" CACHE PATH "Pthread library version" FORCE )
     else()
       set( LIBWINPTHREAD_FOUND FALSE )
         

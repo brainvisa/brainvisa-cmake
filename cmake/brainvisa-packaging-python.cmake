@@ -144,18 +144,21 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     # all python modules are copied in install directory but in theory, we
     # should not copy site-packages subdirectory
     # the content of site-packages should be described in different packages.
-    if(WIN32 AND NOT CMAKE_CROSSCOMPILING)
+    if(WIN32)
       find_program(IPYTHON_SCRIPT ipython-script.py HINTS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts)
       find_program(PYCOLOR_SCRIPT pycolor-script.py HINTS ${PYTHON_BIN_DIR} ${PYTHON_BIN_DIR}/Scripts)
 
       set(PYTHON_DLLS "${PYTHON_BIN_DIR}/DLLs")
       set(PYTHON_DOC "${PYTHON_BIN_DIR}/Doc")
-      #set(PYTHON_SCRIPTS "${PYTHON_BIN_DIR}/Scripts")
+      set(PYTHON_LIB "${PYTHON_BIN_DIR}/Lib")
+      set(PYTHON_SCRIPTS "${PYTHON_BIN_DIR}/Scripts")
       set(PYTHON_SIP "${PYTHON_BIN_DIR}/sip")
       set(PYTHON_TCL "${PYTHON_BIN_DIR}/tcl")
-      set(PYTHON_TOOLS "${PYTHON_BIN_DIR}/tools")
-      set(PYTHON_XMLDOC "${PYTHON_BIN_DIR}/xmldoc")
-      set(PYTHON_SUBDIRS ${PYTHON_MODULES_PATH} "${PYTHON_DLLS}" "${PYTHON_DOC}" "${PYTHON_SIP}" "${PYTHON_TCL}" "${PYTHON_TOOLS}" "${PYTHON_XMLDOC}")
+      set(PYTHON_TOOLS "${PYTHON_BIN_DIR}/Tools")
+      #set(PYTHON_XMLDOC "${PYTHON_BIN_DIR}/xmldoc")
+      set(PYTHON_SUBDIRS "${PYTHON_DLLS}" "${PYTHON_LIB}" "${PYTHON_DOC}" 
+                         "${PYTHON_SCRIPTS}" "${PYTHON_SIP}" "${PYTHON_TCL}"
+                         "${PYTHON_TOOLS}")
 
       # copy python2 / python3 exe
       BRAINVISA_INSTALL( FILES "${REAL_PYTHON_EXECUTABLE}"
@@ -197,7 +200,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
 #           add_custom_command( TARGET install-${component} PRE_BUILD
 #             COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\; then ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" -e "${_pypath}/dist-packages" "${_pypath}" "$(BRAINVISA_INSTALL_PREFIX)/lib" \; else ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" -e "${_pypath}/dist-packages" "${_pypath}"  "${CMAKE_INSTALL_PREFIX}/lib" \; fi )
           add_custom_command( TARGET install-${component} PRE_BUILD
-            COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\; then ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "${_pypath}" "$(BRAINVISA_INSTALL_PREFIX)/lib" \; else ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "${_pypath}"  "${CMAKE_INSTALL_PREFIX}/lib" \; fi )
+            COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\; then ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "${_pypath}" "$(BRAINVISA_INSTALL_PREFIX)/lib" \; else ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "${_pypath}"  "${CMAKE_INSTALL_PREFIX}/lib" \; fi )
         endforeach()
 
         # fix wrong _get_default_scheme() in sysconfig.py on Ubuntu 12.04
@@ -247,7 +250,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           endif()
         endforeach()
         add_custom_command( TARGET install-${component} PRE_BUILD
-          COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${CMAKE_COMMAND} -E make_directory "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${_exclude} ${_toinstall} "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \;else ${CMAKE_COMMAND} -E make_directory "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${_exclude} ${_toinstall} "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \;fi )
+          COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${CMAKE_COMMAND} -E make_directory "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${_exclude} ${_toinstall} "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \;else ${CMAKE_COMMAND} -E make_directory "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${_exclude} ${_toinstall} "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \;fi )
 
         BRAINVISA_PYTHON_HAS_MODULE( "matplotlib" _has_mpl )
         if( _has_mpl EQUAL 0 )
@@ -257,7 +260,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           # since matplotlib.__init__.py file is installed from here in the
           # python component.
           add_custom_command( TARGET install-${component} POST_BUILD
-            COMMAND "${PYTHON_EXECUTABLE}" "${brainvisa-cmake_DIR}/brainvisa-packaging-python-matplotlib-patchinit.py" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/matplotlib/__init__.py" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/matplotlib/__init__.py" )
+            COMMAND "${PYTHON_HOST_EXECUTABLE}" "${brainvisa-cmake_DIR}/brainvisa-packaging-python-matplotlib-patchinit.py" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/matplotlib/__init__.py" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/matplotlib/__init__.py" )
         endif()
         # TODO: add additional /usr/local or /i2bm/... modules
 
@@ -269,6 +272,25 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           COMPONENT "${component}"
         )
       endif() # "${PYTHON_BIN_DIR}" STREQUAL "/usr/bin"
+      
+    
+      # Get additional site-packages directories
+      execute_process(
+        COMMAND ${REAL_PYTHON_EXECUTABLE} "${brainvisa-cmake_DIR}/findpysitepackages.py" "${PYTHON_MODULES_PATH}"
+        OUTPUT_VARIABLE _pypath_list )
+      if(CMAKE_CROSSCOMPILING AND COMMAND TARGET_TO_HOST_PATH)
+        TARGET_TO_HOST_PATH("${_pypath_list}" _pypath_list)
+      endif()
+    
+      set( _inv_pypath ${_pypath_list} )
+      if( _inv_pypath )
+        # if _inv_pypath is empty, list( REVERSE ) fails...
+        list( REVERSE _inv_pypath )
+      endif()
+      foreach( _pypath ${_inv_pypath} )
+        add_custom_command( TARGET install-${component} PRE_BUILD
+          COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\; then ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "${_pypath}" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}" \; else ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "${_pypath}"  "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}" \; fi )
+      endforeach()
     endif()
 
     # install pyconfig.h file since it may be required by some packages
@@ -280,20 +302,6 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         COMPONENT "${component}"
         PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ )
     endif()
-    
-    # Get additional site-packages directories
-    execute_process(
-      COMMAND ${REAL_PYTHON_EXECUTABLE} "${brainvisa-cmake_DIR}/findpysitepackages.py" "${PYTHON_MODULES_PATH}"
-      OUTPUT_VARIABLE _pypath_list )
-    set( _inv_pypath ${_pypath_list} )
-    if( _inv_pypath )
-      # if _inv_pypath is empty, list( REVERSE ) fails...
-      list( REVERSE _inv_pypath )
-    endif()
-    foreach( _pypath ${_inv_pypath} )
-      add_custom_command( TARGET install-${component} PRE_BUILD
-        COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\; then ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "${_pypath}" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}" \; else ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "${_pypath}"  "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}" \; fi )
-    endforeach()
 
     # virtualenv build dir should already be taken into account by
     # the site-packages (findpysitepackages.py) above

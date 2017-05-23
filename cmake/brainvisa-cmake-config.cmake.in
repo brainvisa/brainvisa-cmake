@@ -238,7 +238,7 @@ if not os.path.exists(cmake) or os.stat(cmake).st_mtime < os.stat(info).st_mtime
         raise
 sys.stdout.write(cmake)
 ")
-        execute_process(COMMAND "${PYTHON_EXECUTABLE}" "${script}" OUTPUT_VARIABLE cmake ERROR_VARIABLE error)
+        execute_process(COMMAND "${PYTHON_HOST_EXECUTABLE}" "${script}" OUTPUT_VARIABLE cmake ERROR_VARIABLE error)
         if(error)
             message(FATAL_ERROR "${error}")
         endif()
@@ -729,7 +729,7 @@ function( BRAINVISA_VERSION_CONVERT variable version )
   endif()
 
   unset(_result)
-  execute_process( COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env_host${CMAKE_HOST_EXECUTABLE_SUFFIX}" "${PYTHON_EXECUTABLE}" "${brainvisa-cmake_DIR}/../../../bin/bv_version" -v ${version} ${_opt} -B ${_bytes}
+  execute_process( COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env_host${CMAKE_HOST_EXECUTABLE_SUFFIX}" "${PYTHON_HOST_EXECUTABLE}" "${brainvisa-cmake_DIR}/../../../bin/bv_version" -v ${version} ${_opt} -B ${_bytes}
                    OUTPUT_VARIABLE ${variable} OUTPUT_STRIP_TRAILING_WHITESPACE
                    ERROR_VARIABLE _error ERROR_STRIP_TRAILING_WHITESPACE
                    RESULT_VARIABLE _result )
@@ -999,6 +999,10 @@ function( BRAINVISA_COPY_FILES component )
         list( APPEND _allOutputFiles  "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
       endif()
 
+      # resolve file if it is a link, because installation needs the file not 
+      # the link
+      get_filename_component( _absoluteFile "${_absoluteFile}" REALPATH )
+      
       # custom command attached to the custom target created for the files installation
       add_custom_command( TARGET ${installTarget} PRE_BUILD
           COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ] \; then "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "$(BRAINVISA_INSTALL_PREFIX)/${_destination}/${_file}" \; else "${CMAKE_COMMAND}" -E copy "${_absoluteFile}" "${CMAKE_INSTALL_PREFIX}/${_destination}/${_file}" \; fi )
@@ -1071,7 +1075,7 @@ function( BRAINVISA_COPY_DIRECTORY _directory _destination _component )
   while( ${i} LESS ${l} )
     list( GET _selectedFiles ${i} file )
     get_filename_component( f "${file}" NAME )
-    string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*\\.svn/.*)|(.*\\.od[tp])|(.*\\.doc)|(.*\\.s[dx]w)$" _match "${file}" )
+    string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*\\.svn/.*)|(.*\\.od[tp])|(.*\\.doc)|(.*\\.s[dx]w)|(.*\\..*swp)$" _match "${file}" )
     if( _match )
       list( REMOVE_AT _selectedFiles ${i} )
       math( EXPR l "${l} - 1" )
@@ -1150,7 +1154,7 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
   file( GLOB_RECURSE _files RELATIVE "${_pythonDirectory}" "${_pythonDirectory}/*" )
   foreach( _i ${_files} )
     get_filename_component( _f ${_i} NAME )
-    string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*\\.svn/.*)|(.*\\.pyo)|(.*\\.pyc)$" _match "${_i}" )
+    string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*\\.svn/.*)|(.*\\..*swp)|(.*\\.pyo)|(.*\\.pyc)$" _match "${_i}" )
     if( NOT _match )
       string( REGEX MATCH ".*\\.py$" _match ${_f} )
       if( _match )
@@ -1193,11 +1197,11 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
 
         # Byte compile python code (creating *.pyc and *.pyo)
         add_custom_command( OUTPUT "${_fileBuild}c"
-                            COMMAND "${PYTHON_EXECUTABLE}" -c "import py_compile;py_compile.main()" "${_fileBuild}"
+                            COMMAND "${PYTHON_HOST_EXECUTABLE}" -c "import py_compile;py_compile.main()" "${_fileBuild}"
                             DEPENDS "${_fileBuild}"
                             VERBATIM )
         add_custom_command( OUTPUT "${_fileBuild}o"
-                            COMMAND "${PYTHON_EXECUTABLE}" -O -c "import py_compile;py_compile.main()" "${_fileBuild}"
+                            COMMAND "${PYTHON_HOST_EXECUTABLE}" -O -c "import py_compile;py_compile.main()" "${_fileBuild}"
                             DEPENDS "${_fileBuild}"
                             VERBATIM )
     endif()
@@ -1380,7 +1384,7 @@ function( BRAINVISA_GENERATE_COMMANDS_HELP_INDEX )
 #     message("--BRAINVISA_ADD_COMMAND_HELP_INDEX - _dirs : ${_dirs}")
 
     add_custom_command( OUTPUT "${_output_directory}/${_index_file}"
-                        COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env_host${CMAKE_HOST_EXECUTABLE_SUFFIX}"
+                        COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
                                 "${PYTHON_EXECUTABLE}"
                                 ${CREATE_COMMANDS_DOC}
                                 -t "${_helppath}"
@@ -1489,12 +1493,12 @@ function( BRAINVISA_ADD_COMMAND_HELP name)
       set( _command "bin/${_output_command}" "-h" )
       unset(_output_command)
     else()
-      set( _command "bin/${name}" "-h" )
+      set( _command "bin/${name}${CMAKE_EXECUTABLE_SUFFIX}" "-h" )
     endif()
 
     if (${name}-command-is-script)
       # Execute command using python interpreter
-      set( _command "${PYTHON_EXECUTABLE}" ${_command})
+      set( _command "${PYTHON_HOST_EXECUTABLE}" ${_command})
     endif()
   endif()
 
@@ -1518,7 +1522,7 @@ function( BRAINVISA_ADD_COMMAND_HELP name)
     # Add help generation target
     add_custom_command( OUTPUT "${_component_help_directory}/${name}"
                         COMMAND "${CMAKE_COMMAND}" -E make_directory "${_component_help_directory}"
-                        COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env_host${CMAKE_HOST_EXECUTABLE_SUFFIX}" "${PYTHON_EXECUTABLE}" -c "import sys, subprocess; subprocess.call( ['${_command}'], stdout = sys.stdout, stderr = sys.stdout )" > ${_component_help_directory}/${name}
+                        COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env_host${CMAKE_HOST_EXECUTABLE_SUFFIX}" "${PYTHON_HOST_EXECUTABLE}" -c "import sys, subprocess; subprocess.call( ['${_command}'], stdout = sys.stdout, stderr = sys.stdout )" > ${_component_help_directory}/${name}
                         DEPENDS ${_depends}
                         COMMENT "Generating ${name} help file ..."
                         VERBATIM )
@@ -1835,7 +1839,7 @@ function( BRAINVISA_ADD_TEST )
     set(_arg_index 0)
 
     # Get host python interpreter real path
-    get_filename_component(_python_executable "${PYTHON_EXECUTABLE}" REALPATH)
+    get_filename_component(_python_executable "${PYTHON_HOST_EXECUTABLE}" REALPATH)
 
     # Get target python interpreter name
     get_filename_component(_python_test "${CROSSCOMPILING_PYTHON_EXECUTABLE}" NAME)
@@ -2187,7 +2191,7 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
     add_custom_target( ${target}
                       COMMAND "${CMAKE_COMMAND}" -E make_directory
                         "${output_directory}"
-                      COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env_host${CMAKE_HOST_EXECUTABLE_SUFFIX}"
+                      COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
                         "${SPHINXBUILD_EXECUTABLE}"
                         ${source_directory}
                         ${output_directory}
@@ -2240,14 +2244,14 @@ function( BRAINVISA_GENERATE_DOCBOOK_DOC )
         #BRAINVISA_GENERATE_TARGET_NAME( usrdoc_target )
         set(usrdoc_target ${doc_project}-usrdocbook)
         add_custom_target( ${usrdoc_target}
-          COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env_host${CMAKE_HOST_EXECUTABLE_SUFFIX}" "${PYTHON_EXECUTABLE}" "${BUILDDOC_COMMAND}" -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m m -p "${doc_project}" --total --id --doc_ver  "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" --base_dir "${documentation_SOURCE_DIR}" --xalan "${XALAN_EXECUTABLE}" --xsl_stylesheet "${DOCBOOK_XSL_STYLESHEET}" --dtd "${DOCBOOK_DTD}"
-          COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env_host${CMAKE_HOST_EXECUTABLE_SUFFIX}" "${PYTHON_EXECUTABLE}" "${BUILDDOC_COMMAND}" -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m t -p "${doc_project}" --total --id --doc_ver  "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" --base_dir "${documentation_SOURCE_DIR}" --xalan "${XALAN_EXECUTABLE}" --xsl_stylesheet "${DOCBOOK_XSL_STYLESHEET}" --dtd "${DOCBOOK_DTD}" )
+          COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env_host${CMAKE_HOST_EXECUTABLE_SUFFIX}" "${PYTHON_HOST_EXECUTABLE}" "${BUILDDOC_COMMAND}" -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m m -p "${doc_project}" --total --id --doc_ver  "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" --base_dir "${documentation_SOURCE_DIR}" --xalan "${XALAN_EXECUTABLE}" --xsl_stylesheet "${DOCBOOK_XSL_STYLESHEET}" --dtd "${DOCBOOK_DTD}"
+          COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env_host${CMAKE_HOST_EXECUTABLE_SUFFIX}" "${PYTHON_HOST_EXECUTABLE}" "${BUILDDOC_COMMAND}" -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m t -p "${doc_project}" --total --id --doc_ver  "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" --base_dir "${documentation_SOURCE_DIR}" --xalan "${XALAN_EXECUTABLE}" --xsl_stylesheet "${DOCBOOK_XSL_STYLESHEET}" --dtd "${DOCBOOK_DTD}" )
         add_dependencies(${PROJECT_NAME}-usrdoc ${usrdoc_target})
         # dev doc
         #BRAINVISA_GENERATE_TARGET_NAME( devdoc_target )
         set(devdoc_target ${doc_project}-devdocbook)
         add_custom_target( ${devdoc_target}
-          COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env_host${CMAKE_HOST_EXECUTABLE_SUFFIX}" "${PYTHON_EXECUTABLE}" "${BUILDDOC_COMMAND}" -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m p -p "${doc_project}" --total --id --doc_ver "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" --base_dir "${documentation_SOURCE_DIR}" --xalan "${XALAN_EXECUTABLE}" --xsl_stylesheet "${DOCBOOK_XSL_STYLESHEET}" --dtd "${DOCBOOK_DTD}" )
+          COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env_host${CMAKE_HOST_EXECUTABLE_SUFFIX}" "${PYTHON_HOST_EXECUTABLE}" "${BUILDDOC_COMMAND}" -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m p -p "${doc_project}" --total --id --doc_ver "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" --base_dir "${documentation_SOURCE_DIR}" --xalan "${XALAN_EXECUTABLE}" --xsl_stylesheet "${DOCBOOK_XSL_STYLESHEET}" --dtd "${DOCBOOK_DTD}" )
         add_dependencies(${PROJECT_NAME}-devdoc ${devdoc_target})
 
         list( FIND exclude ${doc_project} result )
@@ -2520,7 +2524,7 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
       "${PYQT${DESIRED_QT_VERSION}_SIP_FLAGS}" )
   endif()
   set( _sipFlags ${SIP_FLAGS} ${_sipFlags} )
-  if( $SIP4MAKE_EXECUTABLE STREQUAL $SIP_EXECUTABLE )
+  if( ${SIP4MAKE_EXECUTABLE} STREQUAL ${SIP_EXECUTABLE} )
     # use regular sip
     add_custom_command(
       OUTPUT ${_sipOutputFiles}
@@ -2650,8 +2654,7 @@ function( BRAINVISA_RESOLVE_SYMBOL_LIBRARIES output_variable )
           if( NOT CMAKE_LIBTOOL )
             find_program( CMAKE_LIBTOOL NAMES dlltool )
           endif()
-
-          if( EXISTS "${CMAKE_LIBTOOL}" )
+          if(CMAKE_LIBTOOL)
             execute_process( COMMAND "${CMAKE_LIBTOOL}" -I "${real}"
                              OUTPUT_VARIABLE _output OUTPUT_STRIP_TRAILING_WHITESPACE
                              ERROR_VARIABLE _error ERROR_STRIP_TRAILING_WHITESPACE
@@ -2734,7 +2737,7 @@ function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
       if( WIN32 )
         # On windows, in some cases, files with static extension can be symbol files
         BRAINVISA_RESOLVE_SYMBOL_LIBRARIES( real PATHS "${lib}" )
-        #message("${lib} --> ${real}")
+        #message("WIN32 resolved library: ${lib} --> ${real}")
       elseif( ext MATCHES ${CMAKE_SHARED_LIBRARY_SUFFIX} OR macFramework )
         # Recreate in the lib install directory the symlinks on the library file
         if( UNIX OR APPLE )

@@ -288,6 +288,15 @@ def create_directory_package(options, selected_packages, dependencies,
     installed_paths = {}
     current_dir = os.getcwd()
     os.chdir(build_directory)
+    
+    hasAnatomist = ("anatomist-free" in selected_packages) \
+        or (options.dependencies and ("anatomist-free" in dependencies))
+    hasBrainvisa = ("axon" in selected_packages) \
+        or (options.dependencies and ("axon" in dependencies))
+    hasMorphologistUI = ("morphologist-ui" in selected_packages) \
+        or (options.dependencies and ("morphologist-ui" in dependencies))
+    hasBVShare = "brainvisa-share" in selected_packages \
+        or (options.dependencies and "brainvisa-share" in dependencies)
 
     for package in (selected_packages + dependencies
                     if options.dependencies else selected_packages):
@@ -295,8 +304,14 @@ def create_directory_package(options, selected_packages, dependencies,
         install_cmd_name = 'install-' + packages_info[package]['component']
         if package == 'brainvisa-release' and options.installer:
             install_cmd_name = 'install-brainvisa-release_installer_doc'
-        command = ['make', 'BRAINVISA_INSTALL_PREFIX=' + system_path(
-            install_directory, 'auto2unix'), install_cmd_name]
+        command = ['make']
+        
+        if options.make_options is not None \
+            and len(options.make_options.strip()) > 0:
+            command += eval(options.make_options, None, None).split()
+        
+        command += ['BRAINVISA_INSTALL_PREFIX=' + system_path(
+                   install_directory, 'auto2unix'), install_cmd_name]
         system_call(options, command)
         if list_installed_paths:
             # List files installed by package
@@ -305,7 +320,8 @@ def create_directory_package(options, selected_packages, dependencies,
                 installed_paths[i] = package
 
     # patch linux packaged libraries to remove rpaths
-    if ((sys.platform[:3] != "win") and (sys.platform[:6] != "darwin")
+    if ((options.platform_target[:3] != "win") \
+        and (options.platform_target[:6] != "darwin")
             and options.dependencies):
         if os.path.exists(os.path.join(install_directory, "lib")):
             print("Trying to remove RPATH from packaged libraries headers")
@@ -325,12 +341,13 @@ def create_directory_package(options, selected_packages, dependencies,
         bindir = os.path.join(install_directory, 'bin')
         if not os.path.exists(bindir):
             os.mkdir(bindir)
-        if sys.platform[:3] == 'win':
+        specific_env_commands = list()
+        if options.platform_target[:3] == 'win':
             exe_ext = '.exe'
-            specific_env_commands = ['brainvisa']
+            if hasBrainvisa:
+                specific_env_commands += ['brainvisa']
         else:
             exe_ext = ''
-            specific_env_commands = list()
         env_commands = ['bv_env' + exe_ext, 'bv_env.py',
                         'bv_env.sh', 'bv_env_test', 'bv_env.bat', 'bv_unenv',
                         'bv_unenv.sh']
@@ -425,7 +442,7 @@ def create_directory_package(options, selected_packages, dependencies,
                 # files
                 ext = os.path.splitext(command)[1]
                 if not ext in config_ext:
-                    if sys.platform[:3] == 'win':
+                    if options.platform_target[:3] == 'win':
                         if ext in ('.py'):
                             launcher = '\"python.exe\" '
                             ext = ''
@@ -443,7 +460,7 @@ def create_directory_package(options, selected_packages, dependencies,
                             realcommand = "%directory:~1,-1%real-bin\\%command:~1,-1%"
                     out = open(source, 'w')
 
-                    if sys.platform[:3] == 'win':
+                    if options.platform_target[:3] == 'win':
                         out.write( '''@setlocal
 @set directory="%%~d0%%~p0"
 @set command="%%~n0%(EXT)s"
@@ -457,7 +474,7 @@ def create_directory_package(options, selected_packages, dependencies,
           'LAUNCHER': launcher,
           'REALCOM': realcommand})
 
-                    elif sys.platform[:6] == 'darwin':
+                    elif options.platform_target[:6] == 'darwin':
                         if is_shell_script(dest):
                             # avoir running a sub-shell
                             out.write( '''#!/bin/sh
@@ -512,25 +529,19 @@ def create_directory_package(options, selected_packages, dependencies,
 
     # make easy shortcuts for BV and anatomist if they are packaged
     root_shortcuts = []
-    hasAnatomist = ("anatomist-free" in selected_packages) \
-        or (options.dependencies and ("anatomist-free" in dependencies))
     ana_shortcut = os.path.join(install_directory, "anatomist")
     if hasAnatomist:
         root_shortcuts.append(
             [ana_shortcut, "anatomist", False])  # False is not script
-    hasBrainvisa = ("axon" in selected_packages) \
-        or (options.dependencies and ("axon" in dependencies))
     bv_shortcut = os.path.join(install_directory, "BrainVISA")
     if hasBrainvisa:
         root_shortcuts.append(
             [bv_shortcut, "brainvisa", True])  # True is script
-    hasMorphologistUI = ("morphologist-ui" in selected_packages) \
-        or (options.dependencies and ("morphologist-ui" in dependencies))
     morpho_shortcut = os.path.join(install_directory, "morphologist")
     if hasMorphologistUI:
         root_shortcuts.append([morpho_shortcut, "morphologist", True])
     # Windows
-    if sys.platform[:3] == 'win':
+    if options.platform_target[:3] == 'win':
         for shortcut, exe_name, is_script in root_shortcuts:
             shortcut += ".bat"
             out = open(shortcut, 'w')
@@ -542,7 +553,7 @@ def create_directory_package(options, selected_packages, dependencies,
             out.close()
 
     # Macos
-    elif sys.platform[:6] == 'darwin':
+    elif options.platform_target[:6] == 'darwin':
         # Build MacOS X clickable icons
         for shortcut, exe_name, is_script in root_shortcuts:
             if not is_script:
@@ -602,8 +613,6 @@ def create_directory_package(options, selected_packages, dependencies,
             os.symlink(os.path.join('bin', exe_name), shortcut)
 
     # Update brainvisa shared database
-    hasBVShare = "brainvisa-share" in selected_packages \
-        or (options.dependencies and "brainvisa-share" in dependencies)
     if hasBVShare:
         print("Updating BrainVISA shared database")
         try:
@@ -675,7 +684,7 @@ def create_compressed_package(options, selected_packages, dependencies):
         options.output = install_directory
         create_directory_package(options, selected_packages, dependencies)
         options.output = output
-        if sys.platform[:3] != 'win':  # compressing in tar.bz2 with tar
+        if options.platform_target[:3] != 'win':  # compressing in tar.bz2 with tar
             output = output + ".tar.bz2"
             print('Compressing %s in %s' % (repr(install_directory),
                                             repr(output)))
@@ -708,7 +717,7 @@ def create_compressed_package(options, selected_packages, dependencies):
 
 
 def create_readme_file(install_directory):
-    if sys.platform[:3] != 'win':
+    if options.platform_target[:3] != 'win':
         zipext = ".tar.bz2"
     else:
         zipext = ".zip"
@@ -931,7 +940,7 @@ Section: multiverse/science''') % package_info, file=control)
         shutil.rmtree(install_directory)
 
 commands = {
-    'list': list_selected_packages,
+  'list': list_selected_packages,
   'dot': create_graphviz_dependencies,
   'dir': create_directory_package,
   'pack': create_compressed_package,
@@ -955,6 +964,8 @@ if __name__ == '__main__':
     options.cmake = 'cmake'
     options.verbose = False
     options.installer = False
+    options.make_options = None
+    options.platform_target = sys.platform
 
     usage = '''bv_packaging [options] <package_type> [ <selection_rule> ... ]
 
@@ -1021,7 +1032,8 @@ Options:
   -v, --verbose         Show verbose information
   -o OUTPUT, --output=OUTPUT
                         File (without extension) or directory where output will be stored.
-  --no-deps             Do not include dependencies packages.
+  -m MAKE_OPTIONS, --make-options=MAKE_OPTIONS
+                        Options to pass to make during packages creation.
   --bv_env              Replace commands located in bin directory by a script that calls
                         the command through bv_env.
   --wrappers            same as --bv_env, but do not copy the executable bv_env
@@ -1036,7 +1048,10 @@ Options:
   --installer           bv_packaging is used for the bv_build_installer tool:
                         changes only the way the brainvisa-release component
                         is installed.
+  --platform-target PLATFORM
+                        platform target for cross compilation.
 ''' % { 'tmp': repr( tempfile.gettempdir() ),
+       
         'cmake': repr(options.cmake)}
 
     args = sys.argv[1:]
@@ -1055,6 +1070,13 @@ Options:
                 print('Missing output file or directory name', file=sys.stderr)
                 sys.exit(1)
             options.output = os.path.abspath(args[index])
+            del args[index]
+        elif args[index] in ('-m', '--make-options'):
+            del args[index]
+            if index == len(args):
+                print >> sys.stderr, 'Missing make options'
+                sys.exit(1)
+            options.make_options = args[index]
             del args[index]
         elif args[index] == '--no-deps':
             options.dependencies = False
@@ -1091,6 +1113,13 @@ Options:
                 print('Missing compressed pack dir', file=sys.stderr)
                 sys.exit(1)
             options.compressedpackdir = args[index]
+            del args[index]
+        elif args[index] == '--platform-target':
+            del args[index]
+            if index == len(args):
+                print('Missing platform target', file=sys.stderr)
+                sys.exit(1)
+            options.platform_target = args[index]
             del args[index]
         elif args[index] == '--installer':
             options.installer = True

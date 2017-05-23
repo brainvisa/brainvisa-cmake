@@ -23,24 +23,28 @@ else()
       endif()
     endif()
     # end of fix for CentOS7
-    if( NOT LIBGCC_LIBRARIES )
+    if(NOT GCC_VERSION OR NOT LIBGCC_LIBRARIES)
       execute_process( COMMAND "${CMAKE_CXX_COMPILER}" "-v"
         ERROR_VARIABLE _gcc_v )
       string( REGEX MATCH "gcc version (([0-9]+)(.[0-9]+)?)" _gccver "${_gcc_v}" )
       set( GCC_VERSION ${CMAKE_MATCH_1} CACHE STRING "gcc version" )
-      set( _GCCPATH
-        "/usr/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}"
-        "/usr/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${CMAKE_MATCH_2}" )
-      find_library( _LIBGCC_LIBRARIES gcc_s PATHS ${_GCCPATH} )
-      if( _LIBGCC_LIBRARIES )
-        set( LIBGCC_LIBRARIES ${_LIBGCC_LIBRARIES} )
-      endif()
-      unset( _LIBGCC_LIBRARIES CACHE )
+      
+      if( NOT LIBGCC_LIBRARIES )
+        set( _GCCPATH
+          "/usr/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}"
+          "/usr/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${CMAKE_MATCH_2}" )
+        find_library( _LIBGCC_LIBRARIES gcc_s PATHS ${_GCCPATH} )
+        if( _LIBGCC_LIBRARIES )
+          set( LIBGCC_LIBRARIES ${_LIBGCC_LIBRARIES} )
+        endif()
+        unset( _LIBGCC_LIBRARIES CACHE )
 #       if( NOT LIBGCC_LIBRARIES )
 #         file( GLOB LIBGCC_LIBRARIES "${_GCCPATH}/libgcc_s.so" )
 #       endif()
-      unset( _GCCPATH )
+        unset( _GCCPATH )
+      endif()
     endif()
+
     if( NOT LIBGCC_LIBRARIES )
       # Try to find it using MinGW
       find_package(MinGW)

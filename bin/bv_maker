@@ -53,6 +53,11 @@ import traceback
 from smtplib import SMTP
 import gzip
 try:
+    # backport of subprocess of python 3
+    import subprocess32
+except ImportError:
+    subprocess32 = None
+try:
     import jenkins
     if '_get_job_folder' not in jenkins.Jenkins.__dict__:
         def get_job_folder(self, name):
@@ -194,7 +199,14 @@ if this_script:
 
 def system(*args, **kwargs):
     print(' '.join(args))
-    popen = subprocess.Popen(args, **kwargs)
+    if subprocess32 is not None:
+        popen = subprocess32.Popen(args, **kwargs)
+    else:
+        if 'timeout' in kwargs:
+            # timeout not supported in python2.subprocess
+            kwargs = dict(kwargs)
+            del kwargs['timeout']
+        popen = subprocess.Popen(args, **kwargs)
     popen.communicate()
     if popen.returncode != 0:
         txt = 'Command failed: %s' % ' '.join((repr(i) for i in args))
@@ -205,8 +217,16 @@ def system(*args, **kwargs):
 def system_output_on_error(*args, **kwargs):
     print(' '.join([str(x) for x in args]))
     try:
-        output = subprocess.check_output(*args, stderr=subprocess.STDOUT,
-                                         **kwargs)
+        if subprocess32 is not None:
+            output = subprocess32.check_output(*args, stderr=subprocess.STDOUT,
+                                               **kwargs)
+        else:
+            if 'timeout' in kwargs:
+                # timeout not supported in python2.subprocess
+                kwargs = dict(kwargs)
+                del kwargs['timeout']
+            output = subprocess.check_output(*args, stderr=subprocess.STDOUT,
+                                             **kwargs)
     except subprocess.CalledProcessError as e:
         print('-- failed command: --')
         print('-- command:', args)
@@ -558,6 +578,7 @@ def global_installer_variables():
 class JenkinsWrapper(object):
 
     jenkins_cli = ''
+    jenkins_cli_options = ['-remoting'] # needed for recent client
 
     def __init__(self):
         pass
@@ -652,15 +673,17 @@ class JenkinsWrapper(object):
             gf.write(message)
             gf.close()
             try:
-                jkn_cmd = ['java', '-jar', jenkins_cli_path, '-s',
-                          configuration.general_section.jenkins_server_url,
-                          'set-external-build-result', '--display',
-                          job_long_name, '--job', job_name,
-                          '--result', str(int(res)),
-                          '--duration', str(duration), '--log', '-']
+                jkn_cmd = ['java', '-jar', jenkins_cli_path] \
+                    + self.jenkins_cli_options \
+                    + ['-s',
+                       configuration.general_section.jenkins_server_url,
+                       'set-external-build-result', '--display',
+                       job_long_name, '--job', job_name,
+                       '--result', str(int(res)),
+                       '--duration', str(duration), '--log', '-']
                 #print('Run jenkins:')
                 #print(jkn_cmd)
-                system_output_on_error(jkn_cmd, stdin=open(zlog))
+                system_output_on_error(jkn_cmd, stdin=open(zlog), timeout=15)
 
 
             finally:
@@ -769,10 +792,12 @@ class JenkinsWrapper(object):
         # doesn't work: always returns "ERROR: No such job"
         jenkins_cli_path = self.get_jenkins_cli()
         # check if the job exists
-        jkn_cmd = ['java', '-jar', jenkins_cli_path, '-s',
-                  configuration.general_section.jenkins_server_url,
-                  'delete-builds', job_name, build_name]
-        system_output_on_error(jkn_cmd).strip().split('\n')
+        jkn_cmd = ['java', '-jar', jenkins_cli_path] \
+            + self.jenkins_cli_options \
+            + ['-s',
+               configuration.general_section.jenkins_server_url,
+               'delete-builds', job_name, build_name]
+        system_output_on_error(jkn_cmd, timeout=15).strip().split('\n')
 
 
     def delete_build_py(self, job_name, build_name):
@@ -790,7 +815,7 @@ class JenkinsWrapper(object):
         java = distutils.spawn.find_executable('java')
         # test java version
         try:
-            java_ver = system_output_on_error(['java', '-version'])
+            java_ver = system_output_on_error(['java', '-version'], timeout=3)
             ver = java_ver.split('\n')[0].strip()
             jvre = re.match('^.* version "([^"]+)"$', ver)
             if jvre:
@@ -839,10 +864,12 @@ class JenkinsWrapper(object):
     def create_jenkins_job_cli(self, job_name):
         jenkins_cli_path = self.get_jenkins_cli()
         # check if the job exists
-        jkn_cmd = ['java', '-jar', jenkins_cli_path, '-s',
-                  configuration.general_section.jenkins_server_url,
-                  'list-jobs']
-        jobs = system_output_on_error(jkn_cmd).strip().split('\n')
+        jkn_cmd = ['java', '-jar', jenkins_cli_path] \
+            + self.jenkins_cli_options \
+            + ['-s',
+               configuration.general_section.jenkins_server_url,
+               'list-jobs']
+        jobs = system_output_on_error(jkn_cmd, timeout=15).strip().split('\n')
         if job_name not in jobs:
             # create new job
             template  = '''<?xml version='1.0' encoding='UTF-8'?>
@@ -855,12 +882,15 @@ class JenkinsWrapper(object):
                                       suffix='.xml')
             os.close(tfile[0])
             open(tfile[1], 'w').write(template)
-            jkn_cmd = ['java', '-jar', jenkins_cli_path, '-s',
-                      configuration.general_section.jenkins_server_url,
-                      'create-job', job_name]
+            jkn_cmd = ['java', '-jar', jenkins_cli_path] \
+                + self.jenkins_cli_options \
+                + ['-s',
+                   configuration.general_section.jenkins_server_url,
+                   'create-job', job_name]
             #print('jkn cmd:', jkn_cmd)
             try:
-                system_output_on_error(jkn_cmd, stdin=open(tfile[1]))
+                system_output_on_error(jkn_cmd, timeout=15,
+                                       stdin=open(tfile[1]))
             finally:
                 os.unlink(tfile[1])
 

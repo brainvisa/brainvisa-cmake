@@ -81,7 +81,7 @@ function(__GET_PYTHON_INFO __python_executable __output_prefix __translate_path)
                 ${__output_prefix}_MODULES_PATH2)
   set(_mod_paths)
   foreach(_v ${_mod_vars})
-    if("${_v}")
+    if(${_v})
       list(APPEND _mod_paths ${${_v}})
     endif()
   endforeach()
@@ -131,6 +131,8 @@ else()
         CACHE STRING "Target python short version") 
     set(PYTHON_MODULES_PATH ${PYTHON_HOST_MODULES_PATH}
         CACHE STRING "Target python modules")
+    set(PYTHON_PREFIX ${PYTHON_HOST_PREFIX}
+        CACHE FILEPATH "Target python install prefix")
   endif()
   
   # Get library and include path

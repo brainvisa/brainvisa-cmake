@@ -6,15 +6,20 @@ In order to work, the commands svn and svnadmin must be installed on your system
 
 Commands:
 
-* info: Just output info about configured components
-* sources: Create or updated selected sources directories from Subversion repository.
+* info: Just output info about configured components.
+* sources: Create or updated selected sources directories from Subversion
+  repository.
 * configure: Create and configure selected build directories with CMake.
 * build: compile all selected build directories.
-* doc: Generate documentation (sphinx, doxygen, docbook, epydoc)
+* doc: Generate documentation (sphinx, doxygen, docbook, epydoc).
+* testref: Execute tests in a special mode to generate machine-specific
+  reference files (this is needed by some tests).
 * test: Execute tests using ctest.
-* pack: Generate binary packages
-* install_pack: install binary packages
-* test_pack: run tests in installed binary packages
+* pack: Generate binary packages.
+* install_pack: Install binary packages.
+* testref_pack: Create the machine-specific reference files for tests in
+  installed binary package.
+* test_pack: Run tests in installed binary packages.
 
 To get help for a specific command, use -h option of the command. Example: "bv_maker build -h".
 
@@ -38,11 +43,12 @@ Options:
                         several times to process several directories.
   -c CONFIG, --config=CONFIG
                         specify configuration file. Default
-                        ="/home/dr144257/.brainvisa/bv_maker.cfg"
+                        ="/home/riviere/.brainvisa/bv_maker.cfg"
   -s DIR, --sources=DIR
                         directory containing sources
   -b DIR, --build=DIR   build directory
   --username=USERNAME   specify user login to use with the svn server
   -e, --email           Use email notification (if configured in the general
                         section of the configuration file)
+  --disable-jenkins     disable Jenkins server logging
   -v, --verbose         show as much information as possible

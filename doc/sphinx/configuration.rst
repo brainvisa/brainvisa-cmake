@@ -167,10 +167,12 @@ The content of the source directory section is composed of a set of rules to sel
 In the source section, it is also possible to define some option variables, delcared in the syntax ``option = value``. The following options are supported:
 
 * ``build_condition``: a condition which must be True to allow configure and build steps, otherwise they will be skipped. The condition is evaluated in **python language**, and is otherwise free: it may typically be used to restrict build to certain systems or hostnames, some dates, etc.
+* ``cross_compiling_dirs``: dictionary of directories. ``cross_compiling_dirs`` contains toolchain substitutions for source directories. This is used when execution needs different path to access sources (i.e.: in windows cross compilation, for pure python components, it is necessary to access source directories through network shares, instead of NFS mount point.
 * ``directory_id``: used in Jenkins notification
 * ``revision_control``: ``ON`` (default) or ``OFF``. If enabled, revision control systems (*svn*, *git*) will be used to update the sources. If OFF, the sources directory will be left as is as a fixed sources tree.
 * ``default_steps``: steps performed for this build directory when bv_maker is invoked without specifying steps (typically just ``bv_maker``). Defaults to: ``sources``.
 * ``env``: environment variables dictionary
+* ``revision_control``: ``ON`` (default) or ``OFF``. When ON, sources components will be updated using revision control systems (RCS) (svn, git...), and a list of valid components will be generated during the :ref:`sources step <sources_step>` and saved in a file, named ``components_sources.json`` in the main sources directory. If sources are only local, turning ``revision_control`` to OFF will avoid using RCS, but will still generate the list of components for building.
 * ``stderr_file``: file used to redirect the standard error stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If not specified, it will be mixed with standard output.
 * ``stdout_file``: file used to redirect the standard output stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If neither it nor ``stderr_file`` are specified, then a temporary file will be used, and erased when each step is finished.
 
@@ -234,6 +236,14 @@ where ``<directory>`` is the name of the directory where the compilation results
 
 This section defines the list of components that will be built and their version and the source directory where they can be found. The components and versions are defined as they were in the source directory. It is also possible to remove components from the list with a line beginning with a minus.
 
+Build directories control the following :doc:`bv_maker` steps:
+
+* :ref:`configure <configure_step>`: configure build and generate Makefiles using CMake.
+* :ref:`build <build_step>`: compile programs and libraries, install files (as symbolic links) in the build directory tree so as to be ready for local execution.
+* :ref:`doc <doc_step>`: generate documentation for the built components.
+* :ref:`testref <testref_step>`: run tests in a special mode so as to generate reference data for later tests comparisons.
+* :ref:`test <test_step>`: run tests
+
 In the build section, it is also possible to define some build options:
 
 * ``cmake_options``: passed to cmake (ex: ``-DMY_VARIABLE=dummy``)
@@ -246,9 +256,12 @@ In the build section, it is also possible to define some build options:
 * ``build_condition``: a condition which must be True to allow configure and build steps, otherwise they will be skipped. The condition is evaluated in **python language**, and is otherwise free: it may typically be used to restrict build to certain systems or hostnames, some dates, etc.
 * ``clean_build``: ``ON`` or ``OFF`` (default), if set, the build tree will be cleaned of obsolete files before the build step (using the command ``bv_clean_build_tree``)
 * ``clean_config``: ``ON`` or ``OFF`` (default), if set, the build tree will be cleaned of obsolete files before the configuration step (using the command ``bv_clean_build_tree``)
+* ``cross_compiling_prefix``: identifier of directory in cross-compilation mode. The value of ``cross_compiling_prefix`` must exist as a key in a source directory ``cross_compiling_dirs`` dictionary. *To be completed and further explained*.
 * ``default_steps``: steps performed for this build directory when bv_maker is invoked without specifying steps (typically just ``bv_maker``). Defaults to: ``configure build``, but may also include ``doc`` and ``test``.
 * ``stderr_file``: file used to redirect the standard error stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If not specified, it will be mixed with standard output.
 * ``stdout_file``: file used to redirect the standard output stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If neither it nor ``stderr_file`` are specified, then a temporary file will be used, and erased when each step is finished.
+* ``test_ref_data_dir``: directory where reference data will be written (during :ref:`testref step <testref_step>`) and read (during :ref:`test step <test_step>`) for comparison.
+* ``test_run_data_dir``: directory where data will be written during the :ref:`test step <test_step>`.
 
 **Example**
 
@@ -288,11 +301,12 @@ A package directory definition section starts with a line with the following syn
 
 where ``<directory>`` is the name of the directory where the packaging results will be written (packages repository). As the source and build directories, the package directory name can contain environment variable substitution.
 
-The package section allows 3 additional steps :doc:`bv_maker`: ``pack``, ``install_pack`` and ``test_pack``
+The package section allows 4 additional steps :doc:`bv_maker`: ``pack``, ``install_pack``, ``testref_pack`` and ``test_pack``
 
-* ``pack`` will build a packages repository and an installer program
-* ``install_pack`` will install the previously built installer, possibly on a remote machine or docker machine
-* ``test_pack`` will run tests (same as ``bv_maker test`` on the installed package, possibly on a remote or docker machine
+* :ref:`pack <pack_step>` will build a packages repository and an installer program
+* :ref:`install_pack <install_pack_step>` will install the previously built installer, possibly on a remote machine or docker machine
+* :ref:`testref_pack <testref_pack_step>` will run tests (same as ``bv_maker testref``) on the installed package, possibly on a remote or docker machine, to generate reference data for tests comparison. This step may produce slightly different data as the :ref:``testeref step <testref_step>`` because it may run on a remote or docker machine, which may behave slightly differently as the build system (floating- point arithmetics etc)
+* :ref:`test_pack <test_pack_step>` will run tests (same as ``bv_maker test``) on the installed package, possibly on a remote or docker machine
 
 The package section must define some variables which specify which build directory will be packaged and how.
 
@@ -323,6 +337,8 @@ The package section must define some variables which specify which build directo
       remote_test_host_cmd = docker run --rm -v /tests:/tests -u "$(id -u):$(id -g)" -e USER=$USER custom_test_image xvfb-run
 
 * ``test_install_dir``: Package installation directory. Mandatory if ``install_pack`` or ``test_pack`` steps are performed.
+* ``test_ref_data_dir``: directory where reference data will be written (during :ref:`testref_pack step <testref_pack_step>`) and read (during :ref:`test step <test_step>`) for comparison.
+* ``test_run_data_dir``: directory where data will be written during the :ref:`test_pack step <test_pack_step>`.
 
 In addition to variables definition, the *package* section may contain components selection definitions, in the same format as in the build section.
 

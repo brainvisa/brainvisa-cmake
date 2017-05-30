@@ -57,6 +57,14 @@ Doc step
 .. include:: bv_maker_help_doc.rst
 
 
+.. _testref_step:
+
+Testref step
+------------
+
+.. include:: bv_maker_help_testref.rst
+
+
 .. _test_step:
 
 Test step
@@ -79,6 +87,14 @@ Install_pack step
 -----------------
 
 .. include:: bv_maker_help_install_pack.rst
+
+
+.. _testref_pack_step:
+
+Testref_pack step
+-----------------
+
+.. include:: bv_maker_help_testref_pack.rst
 
 
 .. _test_pack_step:

@@ -60,10 +60,45 @@ Here again, options are allowed to restrict to specific package directories, par
     Contrarily to build directories tests, the ``test_pack`` step cannot be run through a ``ctest`` or ``make`` command equivalent, because ``bv_maker`` has to setup tesing into the installed package before running tests, in a way that is not recorded in cmake/make configuration.
 
 
+Managing test data
+------------------
+
+Some tests will work fine using internal tests or by generating tempory synthetic data to test its processing. But in some other cases, additional data will be needed. Typically:
+
+* input data may be needed to feed processing tests which should run with "real" data. Such data may be quite large, so the test system may download data from a remote URL or get it from a given read-only directory.
+
+* reference data: many tests will generate output (processed) data from input data. To check if the output data are OK, some reference data must be compared to tests results. Reference data can be generated through bv_maker by running tests in a special mode: :ref:`testref <testref_step>` or :ref:`testref_pack <testref_pack_step>` for package tests.
+
+* test data: these data will be produced during regular tests. Normally they could be just temporary files which can be deleted after testing, but it is useful to store them for manual checking and debugging when tests fail.
+
+Hence two additional :doc:`bv_maker` steps can be used to generate reference data:
+
+* :ref:`testref <testref_step>` will run tests and write reference results for later comparison during :ref:`test <test_step>` steps
+* :ref:`testref_pack <testref_pack_step>` will run tests from installed packages and write reference results for later comparison during :ref:`test_pack <test_pack_step>` steps
+
+Data directoryes are passed to test programs through environment variables, with values that can be specified in :doc:`configuration` variables:
+
+* input data: *Not done yet*
+* reference data: the ``bv_maker.cfg`` config file may contain in its build and package directories sections a ``test_ref_data_dir`` variable, which will specify where reference data will be written (in :ref:`testref <testref_step>`  and :ref:`test_pack <test_pack_step>` steps). The value here may contain environment variables and "python-style" variables substitution to differentiate data directories across configurations or systems. When tests are actually running, the value here will be passed to test programs through the ``BRAINVISA_TEST_REF_DATA_DIR`` environment variable.
+* run test data: the ``bv_maker.cfg`` config file may contain in its build and package directories sections a ``test_run_data_dir`` variable, which will specify where reference data will be written (in :ref:`test <test_step>`  and :ref:`test_pack <test_pack_step>` steps). The value here may contain environment variables and "python-style" variables substitution to differentiate data directories across configurations or systems. When tests are actually running, the value here will be passed to test programs through the ``BRAINVISA_TEST_RUN_DATA_DIR`` environment variable. If this variable is not defined, then a temporary directory may be used for tests.
+
+
 Notifying build and test executions
 ===================================
 
-``bv_maker`` may send email notifications when its different steps finish, or when they fail. Additionally it can also maintain a file of past ``bv_maker`` executions and the status of all steps. These tools are useful for automatic build and testing, continuous integration etc.
+``bv_maker`` may use several kinds of notification  when its different steps finish, or when they fail.
+
+
+Basic bv_maker output and command retuern code
+----------------------------------------------
+
+If any step fails, the :doc:`bv_maker` commend will exit with a non-null exit code, and print a summary of steps status for each build or package directory.
+
+
+Email notification
+------------------
+
+Emails can be sent when a bv_maker step finishes, or only in case of failure.
 
 Such notification and logging have to be setup in the :doc:`bv_maker.cfg configuration file <configuration>`, more precisely in the :ref:`general section <general_section>` of it:
 
@@ -81,6 +116,38 @@ Note that if ``email_notification_by_default`` is not set to ``ON``, bv_maker wi
 
 If ``success_email`` is not filled, notificatioon will only occur upon error.
 
+
+Log file
+--------
+
+Additionally it can also maintain a file of past ``bv_maker`` executions and the status of all steps. These tools are useful for automatic build and testing, continuous integration etc.
+
+This is setup in the :doc:`configuration` option ``global_status_file`` in the :ref:`general section <general_section>`:
+
+
+.. code-block:: bash
+
+    [ general ]
+    global_status_file = /home/tests/bv_maker_log.log
+
+See :ref:`displaying_build_status` below for how to use the log file.
+
+
+Notification to a Jenkins server
+--------------------------------
+
+:doc:`bv_maker` can connect to a `Jenkins <https://jenkins.io/>`_ server to log step results, so as to allow displaying them on a server. This is not the usual way to use Jenkins, which normally operates builds and tests from the server, but here bv_maker runs in its own (typically from a unix crontab), and connects to the Jenkins server to store jobs results (using "external jobs" in Jenkins dialect). This way, builds and tests running on a private network can still log results to a server visible from the internet.
+
+.. code-block:: bash
+
+    [ general ]
+    jenkins_build_name = brainvisa-$HOSTNAME-%(version)s-%(directory_id)s-%(project)s-%(step)s
+    jenkins_server_url = http://myserver.org/builds
+    jenkins_token = something_to_get_from_jenkins_server
+    jenkins_username = test_login
+
+
+.. _displaying_build_status:
 
 Displaying build status
 =======================

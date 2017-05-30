@@ -42,13 +42,13 @@ if( NOT HDF5_FOUND )
     )
 
     IF( HDF5_INCLUDE_DIR )
-    IF( HDF5_LIBRARIES )
+      IF( HDF5_LIBRARIES )
 
-      SET( HDF5_FOUND "YES" )
-      set( HDF5_DEFINITIONS )
-      set( HDF5_INCLUDE_DIRS ${HDF5_INCLUDE_DIR} )
+        SET( HDF5_FOUND "YES" CACHE BOOL "specify that HDF5 library was found")
+        set( HDF5_DEFINITIONS )
+        set( HDF5_INCLUDE_DIRS ${HDF5_INCLUDE_DIR} )
 
-    ENDIF( HDF5_LIBRARIES )
+      ENDIF( HDF5_LIBRARIES )
     ENDIF( HDF5_INCLUDE_DIR )
 
     IF( NOT HDF5_FOUND )

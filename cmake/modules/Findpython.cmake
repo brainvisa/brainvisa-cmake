@@ -97,7 +97,7 @@ function(__GET_PYTHON_INFO __python_executable __output_prefix __translate_path)
 endfunction()
 
 if ( PYTHON_VERSION AND PYTHON_EXECUTABLE 
-    AND PYTHON_VERSION AND PYTHON_EXECUTABLE)
+    AND PYTHON_HOST_VERSION AND PYTHON_HOST_EXECUTABLE)
   # Python already found, do nothing
   set( PYTHON_FOUND TRUE )
 else()

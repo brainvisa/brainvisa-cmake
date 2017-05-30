@@ -16,7 +16,7 @@ else( PYQT3_VERSION )
   endif( NOT PYTHON_EXECUTABLE )
 
   set( PYQT3_FOUND false )
-  if( PYTHON_EXECUTABLE )
+  if( PYTHON_HOST_EXECUTABLE )
     execute_process( COMMAND ${PYTHON_HOST_EXECUTABLE}
       -c "import pyqtconfig;cfg=pyqtconfig.Configuration();print cfg.pyqt_version_str+\";\"+cfg.pyqt_sip_dir+\";\""
       OUTPUT_VARIABLE _pyqtConfig
@@ -31,7 +31,7 @@ else( PYQT3_VERSION )
           message( SEND_ERROR "Python code to find PyQt configuration produced an error:\n${_error}" )
         endif( NOT PyQt_FIND_QUIETLY )
       endif( ${_result} EQUAL 0 )
-  endif( PYTHON_EXECUTABLE )
+  endif( PYTHON_HOST_EXECUTABLE )
 
   if( PYQT3_FOUND )
     if( NOT PyQt_FIND_QUIETLY )

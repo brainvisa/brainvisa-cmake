@@ -6,11 +6,13 @@
 #  PYTHON_FOUND - Was Python found
 #  PYTHON_HOST_EXECUTABLE  - path to the Python interpreter
 #  PYTHON_HOST_EXECUTABLE_NAME - name of the python interpreter
+#  PYTHON_HOST_PREFIX - path to the install directory of the python interpreter
 #  PYTHON_HOST_MODULES_PATH - path to main Python modules
 #  PYTHON_HOST_VERSION - Python full version (e.g. "2.6.2")
 #  PYTHON_HOST_SHORT_VERSION - Python short version (e.g. "2.6")
 #  PYTHON_EXECUTABLE - path to the target python interpreter
 #  PYTHON_EXECUTABLE_NAME - name of the target python interpreter
+#  PYTHON_PREFIX - path to the install directory of the target python interpreter
 #  PYTHON_MODULES_PATH - path to main Python modules
 #  PYTHON_VERSION - Python target full version (e.g. "2.6.2")
 #  PYTHON_SHORT_VERSION - Python target short version (e.g. "2.6")
@@ -96,8 +98,8 @@ function(__GET_PYTHON_INFO __python_executable __output_prefix __translate_path)
 
 endfunction()
 
-if ( PYTHON_VERSION AND PYTHON_EXECUTABLE 
-    AND PYTHON_HOST_VERSION AND PYTHON_HOST_EXECUTABLE)
+if ( PYTHON_VERSION AND PYTHON_EXECUTABLE AND PYTHON_PREFIX
+    AND PYTHON_HOST_VERSION AND PYTHON_HOST_EXECUTABLE AND PYTHON_HOST_PREFIX)
   # Python already found, do nothing
   set( PYTHON_FOUND TRUE )
 else()
@@ -110,19 +112,12 @@ else()
   __GET_PYTHON_INFO("${PYTHON_HOST_EXECUTABLE}" PYTHON_HOST NO)
   
   # Also get target python interpreter information if possible
-  if(CMAKE_CROSSCOMPILING)
-    # Get target python interpreter information
-    set(PYTHON_EXECUTABLE "${CROSSCOMPILING_PYTHON_EXECUTABLE}" 
-        CACHE FILEPATH "Target python executable path")
-    
+  if(CMAKE_CROSSCOMPILING)   
     if(CMAKE_CROSSCOMPILING_RUNNABLE)
         # Get python information for the target Python interpreter
         __GET_PYTHON_INFO("${PYTHON_EXECUTABLE}" PYTHON YES)
     endif()
   else()
-    # Duplicates host python interpreter information
-    set(PYTHON_EXECUTABLE "${PYTHON_HOST_EXECUTABLE}" 
-        CACHE FILEPATH "Target python executable path")
     set(PYTHON_EXECUTABLE_NAME "${PYTHON_HOST_EXECUTABLE_NAME}" 
         CACHE STRING "Target python name")
     set(PYTHON_VERSION ${PYTHON_HOST_VERSION}

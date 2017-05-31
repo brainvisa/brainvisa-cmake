@@ -253,7 +253,7 @@ Configuring installed packages tests
 Config options
 --------------
 
-``bv_maker`` can run tests of installed packages (after successful ``pack`` and ``install_pack`` steps), within the ``test_pack`` step. Such tests can make use of remote or virtual machines to perform tests in a "clean", controlled, test environment, different from the build machine. Actually, to be precise, the ``install_pack`` step also uses the same mechanism and can also take place on a remote or virtual machine, in the same manner as running the tests themselves.
+``bv_maker`` can run tests of installed packages (after successful ``pack`` and ``install_pack`` steps), within the ``testref_pack`` and ``test_pack`` steps. Such tests can make use of remote or virtual machines to perform tests in a "clean", controlled, test environment, different from the build machine. Actually, to be precise, the ``install_pack`` step also uses the same mechanism and can also take place on a remote or virtual machine, in the same manner as running the tests themselves.
 
 However tests are always triggered from the build machine, which will in turn, connect to remote or virtual test machines.
 
@@ -266,7 +266,9 @@ Tests configuration is part of a :ref:`package directory <package_directory>` sp
     installer_filename = /home/brutus/tests/brainvisa_installer
     data_repos_dir = /home/brutus/tests/data/packages
     test_install_dir = /home/brutus/tests/test_install
-    remote_test_host_cmd = ssh -t -X test_machine
+    remote_test_host_cmd = ssh -t -X test_machine BRAINVISA_TEST_RUN_DATA_DIR="$BRAINVISA_TEST_RUN_DATA_DIR" BRAINVISA_TEST_REF_DATA_DIR="$BRAINVISA_TEST_REF_DATA_DIR"
+
+Note that test data directories have to be handled manually in remote machines access: bv_maker will setup **locally** the environment variables ``BRAINVISA_TEST_RUN_DATA_DIR`` and ``$BRAINVISA_TEST_REF_DATA_DIR``, but passing them through a ssh connection or to a docker machine is the responsibility of the ``remote_test_host_cmd`` configuration.
 
 
 Testing through SSH
@@ -282,7 +284,7 @@ Another example using `docker <http://docker.com>`_ would look the following:
 
 .. code-block:: bash
 
-    remote_test_host_cmd = docker run --rm -u "$(id -u):$(id -g)" -e USER=$USER -e TMPDIR=/home/brutus/tmp:/home/brutus/tmp -v "$HOME":"$HOME" -e HOME="$HOME" -v /tmp/.X11-unix:/tmp/.X11-unix --net=host -e DISPLAY=$DISPLAY cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
+    remote_test_host_cmd = docker run --rm -u "$(id -u):$(id -g)" -e USER=$USER -e TMPDIR=/home/brutus/tmp:/home/brutus/tmp -v "$HOME":"$HOME" -e HOME="$HOME" -v /tmp/.X11-unix:/tmp/.X11-unix --net=host -e DISPLAY=$DISPLAY -e BRAINVISA_TEST_REF_DATA_DIR="$BRAINVISA_TEST_REF_DATA_DIR" -e BRAINVISA_TEST_RUN_DATA_DIR="$BRAINVISA_TEST_RUN_DATA_DIR" -v "$BRAINVISA_TEST_REF_DATA_DIR":"$BRAINVISA_TEST_REF_DATA_DIR" -v "$BRAINVISA_TEST_RUN_DATA_DIR":"$BRAINVISA_TEST_RUN_DATA_DIR" cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
 
 Thus the appropriate docker command will be prepended to all tests.
 
@@ -307,7 +309,7 @@ To fix this situation, we can mix the ``ssh`` and ``docker`` approaches, to make
 
 .. code-block:: bash
 
-    remote_test_host_cmd = ssh -t -X test_machine docker run --rm -u "$(id -u):$(id -g)" -e USER=$USER -e TMPDIR=/home/brutus/tmp:/home/brutus/tmp -v "$HOME":"$HOME" -e HOME="$HOME" -v /tmp/.X11-unix:/tmp/.X11-unix --net=host -e DISPLAY=$DISPLAY cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
+    remote_test_host_cmd = ssh -t -X test_machine docker run --rm -u "$(id -u):$(id -g)" -e USER=$USER -e TMPDIR=/home/brutus/tmp:/home/brutus/tmp -v "$HOME":"$HOME" -e HOME="$HOME" -v /tmp/.X11-unix:/tmp/.X11-unix --net=host -e DISPLAY=$DISPLAY -e BRAINVISA_TEST_REF_DATA_DIR="$BRAINVISA_TEST_REF_DATA_DIR" -e BRAINVISA_TEST_RUN_DATA_DIR="$BRAINVISA_TEST_RUN_DATA_DIR" -v "$BRAINVISA_TEST_REF_DATA_DIR":"$BRAINVISA_TEST_REF_DATA_DIR" -v "$BRAINVISA_TEST_RUN_DATA_DIR":"$BRAINVISA_TEST_RUN_DATA_DIR" cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
 
 which essentially concatenates the config lines of the ssh and the docker variants.
 
@@ -380,30 +382,40 @@ Here is a more complete example of a full ``bv_maker.cfg`` file from our build s
       data_repos_dir = /neurospin/tmp/brainvisa/tests/repositories/public/%(version)s-%(date)s/data-%(os)s/packages
       test_install_dir = /neurospin/tmp/brainvisa/tests/repositories/public/%(version)s-%(date)s/%(os)s/test_install
       # build every 5 days, and not on michael (Qt installer is not installed on michael)
+    #  build_condition = gethostname() != 'michael' and (time.localtime()[2] % 5 == 1 or os.environ.get('BRAINVISA_FORCE_PACKAGING', 'OFF') == 'ON')
       build_condition = gethostname() != 'michael'
       default_steps = pack install_pack test_pack
-      [ if gethostname() in ('is208611.intra.cea.fr', 'is220756', 'i2bm-ub1204') ]
+      [ if gethostname() in ('is208611.intra.cea.fr', 'is220756') ]
         # tests need fixing
         default_steps = pack install_pack
       [ endif ]
       [ if gethostname() == 'i2bm-fdr4-32' ]
         # needs fixing
-        default_steps = pack
+        default_steps = pack install_pack
       [ endif ]
       [ if gethostname() in ('is208611.intra.cea.fr', 'is220756') ]
         # run in docker, on same host
-        remote_test_host_cmd = docker run --rm -v /neurospin/brainvisa:/neurospin/brainvisa -v /neurospin/tmp/brainvisa:/neurospin/tmp/brainvisa -u "$(id -u):$(id -g)" -e USER=$USER -v /volatile/a-sac-ns-brainvisa:/volatile/a-sac-ns-brainvisa -e TMPDIR=/volatile/a-sac-ns-brainvisa/tmp -v "$HOME":"$HOME" -e HOME="$HOME" -v /tmp/.X11-unix:/tmp/.X11-unix --net=host -e DISPLAY=$DISPLAY -e BRAINVISA_TESTS_DIR="$BRAINVISA_TESTS_DIR" cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
+        remote_test_host_cmd = docker run --rm -v /neurospin/brainvisa:/neurospin/brainvisa -v /neurospin/tmp/brainvisa:/neurospin/tmp/brainvisa -u "$(id -u):$(id -g)" -e USER=$USER -v /volatile/a-sac-ns-brainvisa:/volatile/a-sac-ns-brainvisa -e TMPDIR=/volatile/a-sac-ns-brainvisa/tmp -v "$HOME":"$HOME" -e HOME="$HOME" -v /tmp/.X11-unix:/tmp/.X11-unix --net=host -e DISPLAY=$DISPLAY -e BRAINVISA_TESTS_DIR="$BRAINVISA_TESTS_DIR" -e BRAINVISA_TEST_REF_DATA_DIR="$BRAINVISA_TEST_REF_DATA_DIR" -e BRAINVISA_TEST_RUN_DATA_DIR="$BRAINVISA_TEST_RUN_DATA_DIR" -e QT_X11_NO_MITSHM=1 --privileged cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
       [ endif ]
-      [ if gethostname() in ('i2bm-mdv-64', 'i2bm-fdr4-32', 'michael', 'i2bm-ub1204') ]
+      [ if gethostname() in ('i2bm-mdv-64', ) ]
         # run in docker, through a ssh connection to is220756,
         # reference for tests: ubuntu 14 (host machine)
-        remote_test_host_cmd = ssh -t -X is220756 docker run --rm -v /neurospin/brainvisa:/neurospin/brainvisa -v /neurospin/tmp/brainvisa:/neurospin/tmp/brainvisa -u "$(id -u):$(id -g)" -e USER=$USER -v /volatile/a-sac-ns-brainvisa:/volatile/a-sac-ns-brainvisa -e TMPDIR=/volatile/a-sac-ns-brainvisa/tmp -v "$HOME":"$HOME" -e HOME="$HOME" -v /tmp/.X11-unix:/tmp/.X11-unix -e BRAINVISA_TESTS_DIR="$BRAINVISA_TESTS_DIR"-test_pack --net=host -e DISPLAY=$DISPLAY cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
+        remote_test_host_cmd = ssh -t -X is220756 docker run --rm -v /neurospin/brainvisa:/neurospin/brainvisa -v /neurospin/tmp/brainvisa:/neurospin/tmp/brainvisa -u "$(id -u):$(id -g)" -e USER=$USER -v /volatile/a-sac-ns-brainvisa:/volatile/a-sac-ns-brainvisa -e TMPDIR=/volatile/a-sac-ns-brainvisa/tmp -v "$HOME":"$HOME" -e HOME="$HOME" -v /tmp/.X11-unix:/tmp/.X11-unix -e BRAINVISA_TESTS_DIR="$BRAINVISA_TESTS_DIR"-test_pack -e BRAINVISA_TEST_REF_DATA_DIR="$BRAINVISA_TEST_REF_DATA_DIR" -e BRAINVISA_TEST_RUN_DATA_DIR="$BRAINVISA_TEST_RUN_DATA_DIR" --net=host -e DISPLAY=$DISPLAY -e QT_X11_NO_MITSHM=1 --privileged cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
       [ endif ]
+      [ if gethostname() in ('michael', 'i2bm-ub1204') ]
+        # run in docker, through a ssh connection to is220756,
+        # reference for tests: ubuntu 14 (host machine)
+        remote_test_host_cmd = ssh -t -X is220756 docker run --rm -v /neurospin/brainvisa:/neurospin/brainvisa -v /neurospin/tmp/brainvisa:/neurospin/tmp/brainvisa -u "$(id -u):$(id -g)" -e USER=$USER -v /tmp/a-sac-ns-brainvisa:/tmp/a-sac-ns-brainvisa -e TMPDIR=/tmp/a-sac-ns-brainvisa/tmp -v "$HOME":"$HOME" -e HOME="$HOME" -v /tmp/.X11-unix:/tmp/.X11-unix -e BRAINVISA_TESTS_DIR="$BRAINVISA_TESTS_DIR"-test_pack -e BRAINVISA_TEST_REF_DATA_DIR="$BRAINVISA_TEST_REF_DATA_DIR" -e BRAINVISA_TEST_RUN_DATA_DIR="$BRAINVISA_TEST_RUN_DATA_DIR" --net=host -e DISPLAY=$DISPLAY -e QT_X11_NO_MITSHM=1 --privileged cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
+      [ endif ]
+      # remaining hosts (i2bm-fdr4-32) insall/test on themselves
       [ if gethostname() == 'is144451' ]
-        # run via ssh on the other Mac
-        remote_test_host_cmd = ssh -t -X is229812
+        # run via ssh on the other Mac: wake the VM and ssh to the VM inside the mac
+      #  remote_test_host_cmd = ssh -t is229812 /i2bm/brainvisa/wake_vm && ssh -t -X macvm BRAINVISA_TESTS_DIR="$BRAINVISA_TESTS_DIR"-test_pack
+      remote_test_host_cmd = ssh -t -X is229812 BRAINVISA_TESTS_DIR="$BRAINVISA_TESTS_DIR"-test_pack BRAINVISA_TEST_RUN_DATA_DIR="$BRAINVISA_TEST_RUN_DATA_DIR" BRAINVISA_TEST_REF_DATA_DIR="$BRAINVISA_TEST_REF_DATA_DIR"
       - preclinical_imaging_iam
       [ endif ]
+      test_ref_data_dir = /neurospin/brainvisa/tests/$I2BM_OSID/ref/bug_fix-test-pack
+      test_run_data_dir = /neurospin/brainvisa/tests/$I2BM_OSID/test/bug_fix-test-pack
       - sulci-data
       - communication
       - brainvisa-share

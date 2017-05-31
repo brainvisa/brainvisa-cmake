@@ -397,15 +397,10 @@ Here is a more complete example of a full ``bv_maker.cfg`` file from our build s
         # run in docker, on same host
         remote_test_host_cmd = docker run --rm -v /neurospin/brainvisa:/neurospin/brainvisa -v /neurospin/tmp/brainvisa:/neurospin/tmp/brainvisa -u "$(id -u):$(id -g)" -e USER=$USER -v /volatile/a-sac-ns-brainvisa:/volatile/a-sac-ns-brainvisa -e TMPDIR=/volatile/a-sac-ns-brainvisa/tmp -v "$HOME":"$HOME" -e HOME="$HOME" -v /tmp/.X11-unix:/tmp/.X11-unix --net=host -e DISPLAY=$DISPLAY -e BRAINVISA_TESTS_DIR="$BRAINVISA_TESTS_DIR" -e BRAINVISA_TEST_REF_DATA_DIR="$BRAINVISA_TEST_REF_DATA_DIR" -e BRAINVISA_TEST_RUN_DATA_DIR="$BRAINVISA_TEST_RUN_DATA_DIR" -e QT_X11_NO_MITSHM=1 --privileged cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
       [ endif ]
-      [ if gethostname() in ('i2bm-mdv-64', ) ]
+      [ if gethostname() in ('i2bm-mdv-64', 'michael', 'i2bm-ub1204') ]
         # run in docker, through a ssh connection to is220756,
         # reference for tests: ubuntu 14 (host machine)
         remote_test_host_cmd = ssh -t -X is220756 docker run --rm -v /neurospin/brainvisa:/neurospin/brainvisa -v /neurospin/tmp/brainvisa:/neurospin/tmp/brainvisa -u "$(id -u):$(id -g)" -e USER=$USER -v /volatile/a-sac-ns-brainvisa:/volatile/a-sac-ns-brainvisa -e TMPDIR=/volatile/a-sac-ns-brainvisa/tmp -v "$HOME":"$HOME" -e HOME="$HOME" -v /tmp/.X11-unix:/tmp/.X11-unix -e BRAINVISA_TESTS_DIR="$BRAINVISA_TESTS_DIR"-test_pack -e BRAINVISA_TEST_REF_DATA_DIR="$BRAINVISA_TEST_REF_DATA_DIR" -e BRAINVISA_TEST_RUN_DATA_DIR="$BRAINVISA_TEST_RUN_DATA_DIR" --net=host -e DISPLAY=$DISPLAY -e QT_X11_NO_MITSHM=1 --privileged cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
-      [ endif ]
-      [ if gethostname() in ('michael', 'i2bm-ub1204') ]
-        # run in docker, through a ssh connection to is220756,
-        # reference for tests: ubuntu 14 (host machine)
-        remote_test_host_cmd = ssh -t -X is220756 docker run --rm -v /neurospin/brainvisa:/neurospin/brainvisa -v /neurospin/tmp/brainvisa:/neurospin/tmp/brainvisa -u "$(id -u):$(id -g)" -e USER=$USER -v /tmp/a-sac-ns-brainvisa:/tmp/a-sac-ns-brainvisa -e TMPDIR=/tmp/a-sac-ns-brainvisa/tmp -v "$HOME":"$HOME" -e HOME="$HOME" -v /tmp/.X11-unix:/tmp/.X11-unix -e BRAINVISA_TESTS_DIR="$BRAINVISA_TESTS_DIR"-test_pack -e BRAINVISA_TEST_REF_DATA_DIR="$BRAINVISA_TEST_REF_DATA_DIR" -e BRAINVISA_TEST_RUN_DATA_DIR="$BRAINVISA_TEST_RUN_DATA_DIR" --net=host -e DISPLAY=$DISPLAY -e QT_X11_NO_MITSHM=1 --privileged cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
       [ endif ]
       # remaining hosts (i2bm-fdr4-32) insall/test on themselves
       [ if gethostname() == 'is144451' ]

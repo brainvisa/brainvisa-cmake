@@ -47,7 +47,7 @@ def reload_data():
         #pass
 
     r = re.compile('([^ ]+) - build started ([^,]+), stopped (.+) on ([^,]+)')
-    r2 = re.compile('^([^ ]+) +step ([^ :]+)(:([^ ]+))?: ([^ ,]+), started: ([^,]+), stopped: (.+) on (.+)$')
+    r2 = re.compile('^([^ ]+) +step ([^ :]+)(:([^ ]*))?: ([^ ,]+), started: ([^,]+), stopped: (.+) on (.+)$')
     r3 = re.compile('^UNMET DEP.*')
 
     tv.setSortingEnabled(False)
@@ -63,8 +63,9 @@ def reload_data():
                     if r3.match(l): # unmet dep
                         continue # skip this line
                     else:
-                        raise SyntaxError('in file %s, line %d :\n%s'
-                                          % (logfile, i, l))
+                        print(SyntaxError('in file %s, line %d :\n%s'
+                                          % (logfile, i, l)))
+                        continue
                 new_style = True
             if new_style:
                 project = ''

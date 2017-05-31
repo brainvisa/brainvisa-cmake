@@ -7,9 +7,10 @@
 #
 # Need to look for Netcdf and hdf5 as well
 if(LIBMINC_INCLUDE_DIRS AND LIBMINC_LIBRARIES AND LIBMINC_DEFINITIONS)
+    set( MINC_FOUND "YES" )
     if( MINC_INCLUDE_DIR )
         set(HAVE_MINC1    ON)
-        
+
         if( MINC2_INCLUDE_DIR )
             set(HAVE_MINC2    1)
             set(MINC2 "1")

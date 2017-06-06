@@ -1554,6 +1554,7 @@ class ConfigVariableParser(object):
             else:
                 option = line[:i].strip()
             value = line[i + 1:].strip()
+            orig_value = value
             if option not in self._validOptions:
                 raise SyntaxError('Invalid option: %s' % option)
             var_type = str
@@ -1561,6 +1562,8 @@ class ConfigVariableParser(object):
                 var_type = type(getattr(self, option))
                 if var_type in (list, tuple):
                     value = shlex.split(value)
+                    if self.allow_variable_replacements(option):
+                        orig_value = value
                     value = type(value)(
                         [self.replace_vars_if_allowed(option, x)
                          for x in value])
@@ -1582,34 +1585,63 @@ class ConfigVariableParser(object):
                                     for x in value])
                             except:
                                 raise SyntaxError()
+                    if self.allow_variable_replacements(option):
+                        orig_value = value
                     value = dict([(x, self.replace_vars_if_allowed(option, y))
                                   for x, y in six.iteritems(value)])
                 else:
+                    if self.allow_variable_replacements(option):
+                        orig_value = value
                     value = self.replace_vars_if_allowed(option, value)
             else:
+                if self.allow_variable_replacements(option):
+                    orig_value = value
                 value = self.replace_vars_if_allowed(option, value)
 
             if oper == '':
                 setattr(self, option, value)
+                if self.allow_variable_replacements(option):
+                    setattr(self, '_orig_%s' % option, orig_value)
             elif oper == '+':
                 old_value = getattr(self, option)
+                if self.allow_variable_replacements(option):
+                    orig_old_value = getattr(self, '_orig_%s' % option)
                 if var_type in (dict, set):
                     old_value.update(value)
+                    if self.allow_variable_replacements(option):
+                        orig_old_value.update(orig_value)
                 else:
                     old_value += value
+                    if self.allow_variable_replacements(option):
+                        orig_old_value += orig_old_value
             elif oper == '-':
                 old_value = getattr(self, option)
+                if self.allow_variable_replacements(option):
+                    orig_old_value = getattr(self, '_orig_%s' % option)
                 if var_type is dict:
                     for k in value:
                         if k in old_value:
                             del old_value[k]
+                    if self.allow_variable_replacements(option):
+                        for k in orig_value:
+                            if k in orig_old_value:
+                                del orig_old_value[k]
                 elif var_type is set:
                     old_value.difference_update(value)
+                    if self.allow_variable_replacements(option):
+                        orig_old_value.difference_update(orig_value)
                 elif var_type is list:
                     old_value = [x for x in old_value if x not in value]
+                    setattr(self, option, old_value)
+                    if self.allow_variable_replacements(option):
+                        orig_old_value = [x for x in orig_old_value
+                                          if x not in orig_value]
+                        setattr(self, '_orig_%s' % option, orig_old_value)
                 else:
                     try:
                         old_value -= value
+                        if self.allow_variable_replacements(option):
+                            orig_old_value -= orig_value
                     except:
                         raise SyntaxError()
             return True # parsed
@@ -3074,7 +3106,7 @@ Controller.prototype.FinishedPageCallback = function()
                 # find associated installer
                 if self.installer_filename:
                     installer = environmentPathVariablesSubstitution(
-                        self.installer_filename,
+                        self._orig_installer_filename,
                         env=self.get_environ()) % vars
                     if os.path.exists(installer):
                         print('removing:', installer)
@@ -3097,7 +3129,7 @@ Controller.prototype.FinishedPageCallback = function()
                 # find associated install
                 if self.test_install_dir:
                     install_dir = environmentPathVariablesSubstitution(
-                        self.test_install_dir,
+                        self._orig_test_install_dir,
                         env=self.get_environ()) % vars
                     if os.path.exists(install_dir):
                         print('removing', install_dir)

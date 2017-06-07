@@ -1825,6 +1825,7 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
         if ConfigVariableParser.addConfigurationLine(self, line):
             pass
         else:
+            line = os.path.expandvars(line)
             l = line.split()
             sign = l[0]
             if sign == 'git':
@@ -2418,13 +2419,11 @@ if len(old_file) == 0:
         #    <component_pattern> <version_pattern> <source_directory>
         if ConfigVariableParser.addConfigurationLine(self, line):
             pass
-        elif line[0] == '+':
-            if '*' in line:
-                raise SyntaxError()
-        elif line[0] == '-':
-            pass
         else:
-            l = line.split(None, 2)
+            line = os.path.expandvars(line)
+            if line[0] == '+':
+                if '*' in line:
+                    raise SyntaxError()
         self.configurationLines.append(line)
 
     def set_dependencies(self):

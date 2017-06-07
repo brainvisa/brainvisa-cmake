@@ -305,7 +305,7 @@ The package section allows 4 additional steps :doc:`bv_maker`: ``pack``, ``insta
 
 * :ref:`pack <pack_step>` will build a packages repository and an installer program
 * :ref:`install_pack <install_pack_step>` will install the previously built installer, possibly on a remote machine or docker machine
-* :ref:`testref_pack <testref_pack_step>` will run tests (same as ``bv_maker testref``) on the installed package, possibly on a remote or docker machine, to generate reference data for tests comparison. This step may produce slightly different data as the :ref:``testeref step <testref_step>`` because it may run on a remote or docker machine, which may behave slightly differently as the build system (floating- point arithmetics etc)
+* :ref:`testref_pack <testref_pack_step>` will run tests (same as ``bv_maker testref``) on the installed package, possibly on a remote or docker machine, to generate reference data for tests comparison. This step may produce slightly different data as the :ref:`testeref step <testref_step>` because it may run on a remote or docker machine, which may behave slightly differently as the build system (floating- point arithmetics etc)
 * :ref:`test_pack <test_pack_step>` will run tests (same as ``bv_maker test``) on the installed package, possibly on a remote or docker machine
 
 The package section must define some variables which specify which build directory will be packaged and how.

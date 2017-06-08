@@ -422,7 +422,7 @@ def find_components(componentsPattern):
             #groups = component_dict.pop('groups')
             #print "                'groups': %s," % repr(groups)
             #print "                'branches': {"
-            #for branch in ('trunk', 'bug_fix', 'tag'):
+            #for branch in ('trunk', 'bug_fix', 'latest_release'):
                 #url = component_dict['branches'].get(branch)
                 #if url:
                   #url, dest_directory = url

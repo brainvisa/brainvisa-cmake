@@ -1605,7 +1605,8 @@ class ConfigVariableParser(object):
             elif oper == '+':
                 old_value = getattr(self, option)
                 if self.allow_variable_replacements(option):
-                    orig_old_value = getattr(self, '_orig_%s' % option)
+                    orig_old_value = getattr(self, '_orig_%s' % option,
+                                             type(old_value)())
                 if var_type in (dict, set):
                     old_value.update(value)
                     if self.allow_variable_replacements(option):
@@ -1617,7 +1618,8 @@ class ConfigVariableParser(object):
             elif oper == '-':
                 old_value = getattr(self, option)
                 if self.allow_variable_replacements(option):
-                    orig_old_value = getattr(self, '_orig_%s' % option)
+                    orig_old_value = getattr(self, '_orig_%s' % option,
+                                             type(old_value)())
                 if var_type is dict:
                     for k in value:
                         if k in old_value:

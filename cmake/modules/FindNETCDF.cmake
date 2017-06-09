@@ -4,6 +4,7 @@
 # NETCDF_FOUND        - system has minc and it can be used
 # NETCDF_INCLUDE_DIR  - directory where the header file can be found
 # NETCDF_LIBRARIES    - the minc libraries
+# NETCDF_NEEDS_MPI    - TRUE if NetCDF is built using MPI library
 #
 # Need to look for Netcdf and hdf5 as well
 
@@ -27,10 +28,19 @@ else()
 
 
     IF( NETCDF_INCLUDE_DIR )
+        # check dependance on mpi
+        file(READ "${NETCDF_INCLUDE_DIR}/netcdf.h" _netcdf_h )
+        string(REGEX MATCH "#include <mpi.h>" _mpi_inc ${_netcdf_h} )
+        if( _mpi_inc )
+            find_package( MPI )
+            set( NETCDF_INCLUDE_DIR ${NETCDF_INCLUDE_DIR} ${MPI_C_INCLUDE_PATH}
+                 CACHE PATH "NetCDF include path" FORCE )
+            set( NETCDF_NEEDS_MPI "TRUE"
+                 CACHE STRING "if NetCDF is built using MPI library" )
+        endif()
+
         IF( NETCDF_LIBRARY )
-
             SET( NETCDF_FOUND "YES" )
-
         ENDIF( NETCDF_LIBRARY )
     ENDIF( NETCDF_INCLUDE_DIR )
 

@@ -12,6 +12,15 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
       set( ${package_version} "${CMAKE_MATCH_1}" PARENT_SCOPE )
     endif()
   endif()
+  if( NETCDF_NEEDS_MPI ) # set by find_package( NETCDF )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libmpi RUN )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" DEV DEPENDS libmpi DEV )
+  endif()
+#   if( LSB_DISTRIB STREQUAL ubuntu
+#       AND LSB_DISTRIB_RELEASE VERSION_GREATER 12.0 )
+#     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libcurl RUN )
+#   endif()
+
 endfunction()
 
 

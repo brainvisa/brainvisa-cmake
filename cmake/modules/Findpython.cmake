@@ -133,7 +133,7 @@ else()
   # Get library and include path
   set( PYTHON_FRAMEWORK_INCLUDES )
   set( PYTHON_FRAMEWORK_LIBRARIES )
-  if( Python_FRAMEWORKS AND NOT "PYTHON_INCLUDE_PATH" )
+  if( Python_FRAMEWORKS AND NOT PYTHON_INCLUDE_PATH )
     foreach( _dir ${Python_FRAMEWORKS} )
       set( PYTHON_FRAMEWORK_INCLUDES ${PYTHON_FRAMEWORK_INCLUDES}
           "${_dir}/Versions/${PYTHON_SHORT_VERSION}/include/python${PYTHON_SHORT_VERSION}" )

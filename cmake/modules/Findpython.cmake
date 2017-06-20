@@ -88,9 +88,13 @@ function(__GET_PYTHON_INFO __python_executable __output_prefix __translate_path)
     endif()
   endforeach()
 
-  list( REMOVE_DUPLICATES _mod_paths )
-  set( "${__output_prefix}_MODULES_PATH" ${_mod_paths}
-       CACHE PATH "Python main modules paths" )
+  # in case of cross compilation it is possible that _mod_paths is empty
+  # for python host modules search. So it is necessary to check.
+  if (_mod_paths)
+    list( REMOVE_DUPLICATES _mod_paths )
+    set( "${__output_prefix}_MODULES_PATH" ${_mod_paths}
+        CACHE PATH "Python main modules paths" )
+  endif()
   mark_as_advanced( "${__output_prefix}_MODULES_PATH" )
   unset( "${__output_prefix}_MODULES_PATH1" CACHE )
   unset( "${__output_prefix}_MODULES_PATH2" CACHE )

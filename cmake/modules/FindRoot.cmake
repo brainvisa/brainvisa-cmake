@@ -9,7 +9,7 @@
 # Root_VERSION      - version of the library
 # Root_PATH         - path to the root rootdir
 
-set(Root_PATH /shfj/local/root/)
+set(Root_PATH /shfj/local/root-5.34.36)
 
 IF(EXISTS Root_INCLUDE_DIR)
   # already found  

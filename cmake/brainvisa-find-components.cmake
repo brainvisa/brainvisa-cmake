@@ -86,8 +86,6 @@ if( NOT BRAINVISA_SOURCES )
   message( FATAL_ERROR "BRAINVISA_SOURCES has not been defined, brainvsisa-cmake will not be able to find the projects source directories." )
 endif()
 
-include( "${brainvisa-cmake_DIR}/brainvisa-projects.cmake" )
-
 set( stop NO )
 set( reset_projects )
 if( NOT DEFINED BRAINVISA_PROJECTS )

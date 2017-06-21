@@ -16,14 +16,6 @@ components_definition = [
                     'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/branches/bug_fix','development/brainvisa-cmake/latest_release'),
                 },
             }],
-            ['brainvisa-svn', {
-                'groups': ['all', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-svn/trunk','development/brainvisa-svn/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-svn/branches/bug_fix','development/brainvisa-svn/bug_fix'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-svn/tags/latest_release','development/brainvisa-svn/latest_release'),
-                },
-            }],
         ],
     }),
     ('communication', {

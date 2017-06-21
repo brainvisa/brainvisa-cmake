@@ -1,0 +1,149 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+#  This software and supporting documentation are distributed by
+#      Institut Federatif de Recherche 49
+#      CEA/NeuroSpin, Batiment 145,
+#      91191 Gif-sur-Yvette cedex
+#      France
+#
+# This software is governed by the CeCILL-B license under
+# French law and abiding by the rules of distribution of free software.
+# You can  use, modify and/or redistribute the software under the 
+# terms of the CeCILL-B license as circulated by CEA, CNRS
+# and INRIA at the following URL "http://www.cecill.info". 
+#
+# As a counterpart to the access to the source code and  rights to copy,
+# modify and redistribute granted by the license, users are provided only
+# with a limited warranty  and the software's author,  the holder of the
+# economic rights,  and the successive licensors  have only  limited
+# liability.
+#
+# In this respect, the user's attention is drawn to the risks associated
+# with loading,  using,  modifying and/or developing or reproducing the
+# software by the user in light of its specific status of free software,
+# that may mean  that it is complicated to manipulate,  and  that  also
+# therefore means  that it is reserved for developers  and  experienced
+# professionals having in-depth computer knowledge. Users are therefore
+# encouraged to load and test the software's suitability as regards their
+# requirements in conditions enabling the security of their systems and/or 
+# data to be ensured and,  more generally, to use and operate it in the 
+# same conditions as regards security.
+#
+# The fact that you are presently reading this means that you have had
+# knowledge of the CeCILL-B license and that you accept its terms.
+import os, sys
+from optparse import OptionParser
+from subprocess import Popen, PIPE, STDOUT
+try:
+    import xml.etree.ElementTree as ElementTree
+except:
+    import cElementTree as ElementTree # for 2.4
+
+from brainvisa.maker.bioproj_parser import SVN_URL, BRAINVISA_SVN_URL
+from brainvisa.maker.brainvisa_projects import brainvisaBranchesPerComponent, brainvisaURLPerComponent, brainvisaComponentsPerGroup, brainvisaProjectPerComponent
+
+def system( *command ):
+  cmd = Popen( command, stdout=PIPE, stderr=PIPE )
+  output = cmd.stdout.read()
+  cmd.wait()
+  if cmd.returncode != 0:
+    raise SystemError( 'System command exited with error code ' + repr( cmd.returncode ) + ': ' + ' '.join( ('"'+i+'"' for i in command) ) )
+  return output
+  
+  
+usage = '''%prog [options] 
+
+Check integrations that have to be done between last stable branch and trunk 
+on https://bioproj.extra.cea.fr/neurosvn/brainvisa. It is not necessary to
+have a client to use this script. However, to use the commands that are
+displayed, a client is mandatory. One can indicate the appropriate directory
+for the client with --client option.'''
+parser = OptionParser(usage=usage)
+parser.add_option( '-n', '--no-revs', dest='revisions', default=True, action='store_false',
+                   help='Do not display detailed revisions information.' )
+parser.add_option( '-c', '--client', dest='client', default='$SVN/brainvisa', action='store', metavar='CLIENT',
+                   help='Name of the client directory corresponding to https://bioproj.extra.cea.fr/neurosvn/brainvisa.\nDefault value = "$SVN/brainvisa".' )
+(options, args) = parser.parse_args()
+if len( args ) != 0:
+  parser.error( 'Too many options' )
+
+def xml_to_dict(s):
+  def _parse_node(node):
+      node_tree = {}
+      # Save attrs and text, hope there will not be a child with same name
+      if node.text:
+          node_tree[ 'value' ] = node.text
+      for (k,v) in node.attrib.items():
+          node_tree[k] = {'value':v}
+      #Save childrens
+      for child in node.getchildren():
+          tag, tree = child.tag, _parse_node(child)
+          if  tag not in node_tree: # the first time, so store it in dict
+              node_tree[tag] = tree
+              continue
+          old = node_tree[tag]
+          if not isinstance(old, list):
+              node_tree.pop(tag)
+              node_tree[tag] = [old] # multi times, so change old dict to a list       
+          node_tree[tag].append(tree) # add the new one      
+      return  node_tree
+  
+  t = ElementTree.fromstring(s)
+  root_tag, root_tree = t.tag, _parse_node(t)
+  return {root_tag: root_tree}
+
+
+def cleanrev( revision ):
+  if revision.startswith( 'r' ):
+    revision = revision[1:]
+  if revision.endswith( '*' ):
+    revision = revision[:-1]
+  return revision
+
+def revisions_info( *revisions ):
+  command = [ 'svn', 'log', '--xml' ] + reduce( lambda i,j: i + j, (['-c',cleanrev(k)] for k in revisions), [] ) + [ SVN_URL ]
+  log_entries = xml_to_dict( system( *command ) )[ 'log' ][ 'logentry' ]
+  if not isinstance( log_entries, list ):
+    log_entries = [ log_entries ]
+  for r in log_entries:
+    yield dict( ( i, j[ 'value' ] ) for i,j in r.iteritems() if isinstance( j, dict ) )
+
+
+previous_project = None
+commit = []
+branches = []
+for component in  brainvisaComponentsPerGroup.get("standard", []):
+  url = brainvisaURLPerComponent.get(component)
+  project = brainvisaProjectPerComponent.get(component)
+  versions = brainvisaBranchesPerComponent.get(component)
+  if url and versions:
+    branches.append( (project, component, url, versions ) )
+    
+for project, component, url, versions in branches:
+  if versions:
+    trunk_url = url + '/' + 'trunk'
+    branch_url = url + '/branches/' + versions[ -1 ]
+    command = ( 'svn', 'mergeinfo', '--show-revs', 'eligible', branch_url, trunk_url )
+    revisions = system( *command ).split()
+    if revisions:
+      if project != previous_project:
+        if previous_project:
+          for c, client_component_dir in commit:
+            print 'svn commit ' + client_component_dir + " -m 'merge " + c + " from stable to trunk'"
+          print
+          commit = []
+        previous_project = project
+        print '-----', project, '-----'
+        print 'cd "' + options.client + '"'
+      client_component_dir = trunk_url[ len( BRAINVISA_SVN_URL) + 1: ]
+      print 'svn merge -r 0:HEAD "' + branch_url + '" "' + client_component_dir +'"'
+      commit.append( ( ( component if component else project ), client_component_dir ) )
+      if options.revisions:
+        for info in revisions_info( *revisions ):
+          print ' ', info[ 'revision' ], info[ 'author' ], info[ 'date' ], info[ 'msg' ].strip()
+      else:
+        print ' ', '\n  '.join( revisions )
+if previous_project:
+  for c, client_component_dir in commit:
+    print 'svn commit ' + client_component_dir + " -m 'merge " + c + " from stable to trunk'"

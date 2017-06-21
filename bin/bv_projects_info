@@ -1,0 +1,102 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+#  This software and supporting documentation are distributed by
+#      Institut Federatif de Recherche 49
+#      CEA/NeuroSpin, Batiment 145,
+#      91191 Gif-sur-Yvette cedex
+#      France
+#
+# This software is governed by the CeCILL-B license under
+# French law and abiding by the rules of distribution of free software.
+# You can  use, modify and/or redistribute the software under the 
+# terms of the CeCILL-B license as circulated by CEA, CNRS
+# and INRIA at the following URL "http://www.cecill.info". 
+#
+# As a counterpart to the access to the source code and  rights to copy,
+# modify and redistribute granted by the license, users are provided only
+# with a limited warranty  and the software's author,  the holder of the
+# economic rights,  and the successive licensors  have only  limited
+# liability.
+#
+# In this respect, the user's attention is drawn to the risks associated
+# with loading,  using,  modifying and/or developing or reproducing the
+# software by the user in light of its specific status of free software,
+# that may mean  that it is complicated to manipulate,  and  that  also
+# therefore means  that it is reserved for developers  and  experienced
+# professionals having in-depth computer knowledge. Users are therefore
+# encouraged to load and test the software's suitability as regards their
+# requirements in conditions enabling the security of their systems and/or 
+# data to be ensured and,  more generally, to use and operate it in the 
+# same conditions as regards security.
+#
+# The fact that you are presently reading this means that you have had
+# knowledge of the CeCILL-B license and that you accept its terms.
+import os, sys, string, re, time, types, urlparse, posixpath, fnmatch, lxml.objectify
+
+from optparse import OptionParser
+
+from brainvisa.maker.brainvisa_projects import url_per_component, \
+                                               project_per_component, \
+                                               components_per_project, \
+                                               find_components
+                                               
+from brainvisa.maker.brainvisa_client_components import \
+                                                get_version_control_component, \
+                                                BranchType
+
+usage = '''%prog <projects> [options] 
+
+Display information about brainvisa projects.
+
+'''
+parser = OptionParser(usage=usage)
+parser.add_option( '--no-trunk', dest="trunk", default=True, action='store_false', help='Do not display trunk.' )
+parser.add_option( '--no-release', dest="release", default=True, action='store_false', help='Do not display releases.' )
+parser.add_option( '--no-bug_fix', dest="bug_fix", default=True, action='store_false', help='Do not display bug_fixes.' )
+#parser.add_option( '--no-project_info', dest="project_info", default=True, action='store_false', help='Do not display project_info file location.' )
+(options, args) = parser.parse_args()
+projects = set()
+components = set()
+branches = set()
+
+if options.trunk:
+    branches.add(BranchType.TRUNK)
+if options.bug_fix:
+    branches.add(BranchType.BUG_FIX)
+if options.release:
+    branches.add(BranchType.RELEASE)
+    
+for arg in args[0:]:
+  found_components = find_components(arg)
+  components.update(found_components)
+  
+  for c in found_components:
+    projects.add( project_per_component[c] )
+
+print "Selected projects : ", projects
+print "Selected components : ", components
+
+for c in components:
+  
+    # As we only have client information for trunk, 
+    # latest_bug_fix and latest_release
+    # we always use the trunk client information
+    p = project_per_component[ c ]
+    trunk_client_info = url_per_component[ c ][ 'trunk' ]
+    client_comp = get_version_control_component(
+                      p,
+                      c,
+                      trunk_client_info
+                  )
+    #print 'client_type:', client_type, ', url:', url
+    if client_comp.client_type().key() == 'svn':
+      for b in branches:
+        v, d = client_comp.branch_version_max(b)
+        u = client_comp.branch_url(b, d)
+        if v:
+            print 'project: %s, component: %s, branch: %s, url: %s => type: %s, version: %s' % (p, c, b, client_comp.client_type().key(), u, v)
+        else:
+            print 'project: %s, component: %s, branch: %s => type: %s - Unable to find a valid project info file.' \
+                'Please check that either project_info.cmake or info.py exists).' \
+                    % (p, c, b, client_comp.client_type().key(), u)

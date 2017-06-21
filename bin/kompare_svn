@@ -1,0 +1,2 @@
+#!/bin/sh
+exec kompare "$6" "$7" 2> /dev/null

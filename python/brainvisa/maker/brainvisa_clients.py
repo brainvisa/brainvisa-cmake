@@ -205,28 +205,3 @@ def read_remote_project_info( client,
     
     else:
         return None
-
-def get_client( client_key ):
-    """ Get a client instance from client plugins using a key.
-    
-        @type client_key: string
-        @param client_key: The key associated to the plugin..
-       
-        @rtype: Client
-        @return: an instance of the Client corresponding to the key.
-    """
-    import brainvisa.maker.plugins
-    from brainvisa.maker.brainvisa_plugins_registry import plugins
-
-    client_class = None
-    # Try to find in clients plugins the matching key
-    for c in plugins().get( 'clients', [] ):
-        if c.key() == client_key:
-            client_class = c
-            
-    if client_class is not None :
-        return client_class()
-        
-    else:
-        raise RuntimeError( '%s client key is not available.'
-                            % client_key )

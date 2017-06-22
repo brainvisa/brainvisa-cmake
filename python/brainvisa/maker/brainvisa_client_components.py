@@ -84,29 +84,21 @@ def get_version_control_component( project,
                             i.e: svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-gpl/branches/4.4
                               or git https://github.com/neurospin/soma-workflow.git master
     """
-    import brainvisa.maker.plugins
-    from brainvisa.maker.brainvisa_plugins_registry import plugins
-
+    from brainvisa.maker.svn import SvnComponent
+    
     client_key, client_url, client_params = parse_versioning_client_info(
                                                 client_info[0]
                                             )
     client_path = client_info[1]
                     
-    version_control_component_class = None
-    # Try to find in version control components plugins the matching key
-    for c in plugins().get( 'version_control_components', [] ):
-        if c.client_type().key() == client_key:
-            version_control_component_class = c
-            
-    if version_control_component_class is not None:
-        return version_control_component_class( project, name,
-                                                client_path,
-                                                client_url, client_params )
+    if client_key != 'svn':
+        raise RuntimeError('Found invalid source management type: "%s". Only "svn" is implemented.' % client_key)
+    
+    version_control_component_class = SvnComponent
+    return version_control_component_class( project, name,
+                                            client_path,
+                                            client_url, client_params )
         
-    else:
-        raise RuntimeError( 'Component: %s:%s uses unsupported client key %s.'
-                          % ( project, name, client_key ) )
-
 class VersionControlComponent(object):
     """ Base abstract class that is used to get component informations
         independently of its version control type (svn, ...)

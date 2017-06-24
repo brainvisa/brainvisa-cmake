@@ -49,7 +49,7 @@ For Windows:
     cmake -G 'MSYS Makefiles' -DCMAKE_INSTALL_PREFIX=. .
     make install
 
-You can now use /tmp/brainvisa-cmake/bin/bv_env_host bv_maker to setup your environement (**you must edit the configuration file first**). You will always have a copy of brainvisa-cmake installed in a build directory at configuration time. Therefore, you may delete this temporary brainvisa-cmake version and use the one in your build directory.
+You can now use :code:`/tmp/brainvisa-cmake/bin/bv_env_host bv_maker` to setup your environement (**you must edit the configuration file first**). You will always have a copy of brainvisa-cmake installed in a build directory at configuration time. Therefore, you may delete this temporary brainvisa-cmake version and use the one in your build directory.
 
 .. note::
     The svn address here, https://bioproj.extra.cea.fr/neurosvn/brainvisa/branches/bug_fix/brainvisa-cmake is the address of the **bug_fix** branch in our development tree, which corresponds to the "stable, usable" version, not the released version as found in https://bioproj.extra.cea.fr/neurosvn/brainvisa/source_views/brainvisa_cmake. As new features have been added sonce the last release, such as support for **git** projects and svn project hosted on a separate repository (such as capsul), this newer version is needed to build projects on the current repository.

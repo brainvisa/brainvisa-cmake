@@ -44,8 +44,8 @@ function(__GET_PYTHON_INFO __python_executable __output_prefix __translate_path)
     TARGET_TO_HOST_PATH( "${_pythonpath}" _pythonpath ) 
   endif()
 
-  set( "${__output_prefix}_VERSION" "${_fullVersion}" CACHE STRING "Python full version (e.g. \"2.6.2\")" )
-  set( "${__output_prefix}_SHORT_VERSION" "${_version}" CACHE STRING "Python short version (e.g. \"2.6\")" )
+  set( "${__output_prefix}_VERSION" "${_fullVersion}" CACHE STRING "Python full version (e.g. \"2.6.2\")" FORCE)
+  set( "${__output_prefix}_SHORT_VERSION" "${_version}" CACHE STRING "Python short version (e.g. \"2.6\")" FORCE)
 
   find_path( "${__output_prefix}_MODULES_PATH2"
     NAMES platform.py
@@ -93,7 +93,7 @@ function(__GET_PYTHON_INFO __python_executable __output_prefix __translate_path)
   if (_mod_paths)
     list( REMOVE_DUPLICATES _mod_paths )
     set( "${__output_prefix}_MODULES_PATH" ${_mod_paths}
-        CACHE PATH "Python main modules paths" )
+        CACHE PATH "Python main modules paths" FORCE)
   endif()
   mark_as_advanced( "${__output_prefix}_MODULES_PATH" )
   unset( "${__output_prefix}_MODULES_PATH1" CACHE )

@@ -116,7 +116,7 @@ components_definition = [
                 'groups': ['all', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/neurospin/soma-workflow.git branch:master','soma/soma-workflow/trunk'),
-                    'bug_fix': ('git https://github.com/neurospin/soma-workflow.git branch:bug_fix','soma/soma-workflow/bug_fix'),
+                    'bug_fix': ('git https://github.com/neurospin/soma-workflow.git tag:bug_fix','soma/soma-workflow/bug_fix'),
                     'latest_release': ('git https://github.com/neurospin/soma-workflow.git tag:latest_release','soma/soma-workflow/latest_release'),
                 },
             }],

@@ -139,7 +139,7 @@ def find_remote_project_info( client,
     for pattern in ( project_info_cmake_url,
                     project_info_python_url_pattern,
                     project_info_python_fallback_url_pattern ):
-            project_info_python_url = client.glob( pattern )
+            project_info_python_url = client.vcs_glob( pattern )
             
             if project_info_python_url:
                 return project_info_python_url[0]
@@ -182,7 +182,7 @@ def read_remote_project_info( client,
     
         if project_info_url.endswith( '.cmake' ):
             # Read the content of project_info.cmake file
-            client.export( project_info_url, path )
+            client.vcs_export( project_info_url, path )
             project_info = parse_project_info_cmake(
                                 path,
                                 version_format
@@ -191,7 +191,7 @@ def read_remote_project_info( client,
         
         elif project_info_url.endswith( '.py' ):
             # Read the content of info.py file
-            client.export( project_info_url, path )
+            client.vcs_export( project_info_url, path )
             project_info = parse_project_info_python(
                                 path,
                                 version_format

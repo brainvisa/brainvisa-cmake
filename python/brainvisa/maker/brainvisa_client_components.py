@@ -84,6 +84,7 @@ def get_version_control_component( project,
                             i.e: svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-gpl/branches/4.4
                               or git https://github.com/neurospin/soma-workflow.git master
     """
+    from brainvisa.maker import svn
     from brainvisa.maker.svn import SvnComponent
     
     client_key, client_url, client_params = parse_versioning_client_info(
@@ -94,10 +95,9 @@ def get_version_control_component( project,
     if client_key != 'svn':
         raise RuntimeError('Found invalid source management type: "%s". Only "svn" is implemented.' % client_key)
     
-    version_control_component_class = SvnComponent
-    return version_control_component_class( project, name,
-                                            client_path,
-                                            client_url, client_params )
+    return SvnComponent( project, name,
+                         client_path,
+                         client_url, client_params )
         
 class VersionControlComponent(object):
     """ Base abstract class that is used to get component informations
@@ -133,7 +133,7 @@ class VersionControlComponent(object):
         self._path = path
         self._url = normurl( url )
         self._params = params
-        self._client = self.client_type()()
+        self._client = self.get_client()
         self._version_format = version_format_release           # Version format
 
     def client( self ) :
@@ -146,8 +146,8 @@ class VersionControlComponent(object):
         return self._client
 
     @classmethod
-    def client_type( cls ) :
-        """ Class method that returns a Client class associated to the
+    def get_client( cls ) :
+        """ Class method that returns a Client object associated to the
             VersionControlComponent.
             This method must be implemented by subclasses.
         

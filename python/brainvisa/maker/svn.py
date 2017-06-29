@@ -9,9 +9,9 @@
 #
 # This software is governed by the CeCILL-B license under
 # French law and abiding by the rules of distribution of free software.
-# You can  use, modify and/or redistribute the software under the 
+# You can  use, modify and/or redistribute the software under the
 # terms of the CeCILL-B license as circulated by CEA, CNRS
-# and INRIA at the following URL "http://www.cecill.info". 
+# and INRIA at the following URL "http://www.cecill.info".
 #
 # As a counterpart to the access to the source code and  rights to copy,
 # modify and redistribute granted by the license, users are provided only
@@ -26,136 +26,136 @@
 # therefore means  that it is reserved for developers  and  experienced
 # professionals having in-depth computer knowledge. Users are therefore
 # encouraged to load and test the software's suitability as regards their
-# requirements in conditions enabling the security of their systems and/or 
-# data to be ensured and,  more generally, to use and operate it in the 
+# requirements in conditions enabling the security of their systems and/or
+# data to be ensured and,  more generally, to use and operate it in the
 # same conditions as regards security.
 #
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
-import os, string, re, types, urlparse, fnmatch, posixpath
-import lxml.objectify, tempfile
+from __future__ import print_function
+import os
+import string
+import re
+import types
+import urlparse
+import fnmatch
+import posixpath
+import lxml.objectify
+import tempfile
 
-from brainvisa.maker.brainvisa_clients      import system, normurl
+from brainvisa.maker.brainvisa_clients import system, normurl
 from brainvisa.maker.brainvisa_projects     import parse_project_info_cmake, \
-                                                   parse_project_info_python
+    parse_project_info_python
 from brainvisa.maker.brainvisa_client_components import BranchType, \
                                                         VersionControlComponent
-                                               
+from brainvisa.maker.version_number import VersionNumber, \
+                                            version_format_release
+# Glob special char
+svn_glob_regexp = re.compile('[\[\]\*\?]')
 svn_revision_regexp = re.compile(r'<\s*logentry\s+revision\s*=\s*"(\d+)"\s*>')
-def get_latest_revision(svn_url):
+
+def svn_get_latest_revision(svn_url):
     """Get the latest revision done in a Subversion directory given its URL
-    
+
     @type url: string
     @param url: The url of the Subversion directory
 
     @rtype: string or None
     @return: the revision number (as a string) or None if it cannot be retrieved.
     """
-    
+
     xml = system(['svn', 'log', '--limit', '1', '--xml', svn_url])
     match = svn_revision_regexp.search(xml)
     if match:
         return match.group(1)
 
 
-class SvnClient(object):
-  """SvnClient based upon command line.
-  """
-  
-  def __init__( self ):
-    """SvnClient constructor.
-    """
-    self.__glob_special_chars = '[\[\]\*\?]'
-    self.__glob_regex = re.compile( self.__glob_special_chars )
-  
-  @classmethod
-  def key( cls ):
-    return 'svn'
-  
-  def cat( self,
-           url,
-           simulate = False,
-           verbose = False ):
+def svn_cat(url,
+        simulate=False,
+        verbose=False):
     """Get text content of the specified url.
-    
+
     @type url: string
     @param url: The url to check
-    
+
     @rtype: string
     @return: The content of the specified url
     """
     try:
-      cmd = [ 'svn', 'cat', url ]
-      
-      return system( cmd, 
-                     simulate = simulate,
-                     verbose = verbose )
-      
-    except SystemError, e:
-      raise RuntimeError( 'SVN error: Unable to cat from ' + url )
+        cmd = ['svn', 'cat', url]
 
-  def checkout( self,
-                url,
-                path,
-                depth = None,
-                ignore_externals = False,
-                simulate = False,
-                verbose = False ):
+        return system(cmd,
+                        simulate=simulate,
+                        verbose=verbose)
+
+    except SystemError, e:
+        raise RuntimeError('SVN error: Unable to cat from ' + url)
+
+
+def svn_checkout(url,
+            path,
+            depth=None,
+            ignore_externals=False,
+            simulate=False,
+            verbose=False):
     """Checkout the content of the specified url to a path.
-    
+
     @type url: string
     @param url: The url of the directory to check out
-    
+
     @type path: string
     @param path: The destination path
-    
+
     @type depth: string
-    @param depth: Optional depth to limit checkout. 
-                  Valid values are empty/files/immediates/infinity.
-                  [Default: None].
-    
+    @param depth: Optional depth to limit checkout.
+                    Valid values are empty/files/immediates/infinity.
+                    [Default: None].
+
     @type depth: bool
-    @param depth: Specify that externals svn references must be ignored. 
-                  [Default: False].
-                  
+    @param depth: Specify that externals svn references must be ignored.
+                    [Default: False].
+
     @rtype: string
     @return: The standard output of the 'svn checkout' command
     """
     try:
-      
-      cmd = [ 'svn', 'checkout', url, path ]
-      
-      if depth is not None:
-        if depth not in ( 'empty',
-                          'files',
-                          'immediates',
-                          'infinity' ):
-          raise RuntimeError( 'SVN error: Depth ' + depth
-                            + ' is not a valid value for checkout' )
-        
-        cmd += [ '--depth', depth ]
-      
-      if ignore_externals:
-          cmd += [ '--ignore-externals' ]
-      
-      return system( cmd,
-                     simulate = simulate,
-                     verbose = verbose )
-      
-    except SystemError, e:
-      raise RuntimeError( 'SVN error: Unable to export from '
-                        + url + ' to ' + path )
 
-  def commit( self,
-              path,
-              message = '',
-              simulate = False,
-              verbose = False ):
+        cmd = ['svn', 'checkout', url, path]
+
+        if depth is not None:
+            if depth not in ('empty',
+                                'files',
+                                'immediates',
+                                'infinity'):
+                raise RuntimeError('SVN error: Depth ' + depth
+                                + ' is not a valid value for checkout')
+
+        cmd += ['--depth', depth]
+
+        if ignore_externals:
+            cmd += ['--ignore-externals']
+
+        return system(cmd,
+                        simulate=simulate,
+                        verbose=verbose)
+
+    except SystemError, e:
+        raise RuntimeError('SVN error: Unable to export from '
+                        + url + ' to ' + path)
+
+
+def svn_commit(path,
+            message='',
+            simulate=False,
+            verbose=False):
     """Commit the changes of the specified local path
-       to the repository.
-    
+        to the repository.
+
     @type path: string
     @param path: The path to commit
+    
+    @type url: string
+    @param url: The destination to commit to
     
     @type message: string
     @param message: The message to commit
@@ -164,164 +164,160 @@ class SvnClient(object):
     @return: The standard output of the 'svn commit' command
     """
     try:
-      cmd = [ 'svn', 'commit', path, '-m', message ]
-      
-      return system( cmd,
-                     simulate = simulate,
-                     verbose = verbose )
-      
-    except SystemError, e:
-      raise RuntimeError( 'SVN error: Unable to commit changes from ' + path )
+        cmd = ['svn', 'commit', path, '-m', message]
 
-  def copy( self,
-            source,
+        return system(cmd,
+                        simulate=simulate,
+                        verbose=verbose)
+
+    except SystemError, e:
+        raise RuntimeError('SVN error: Unable to commit changes from ' + path)
+
+
+def svn_copy(source,
             dest,
-            parents = False,
-            message = '',
-            simulate = False,
-            verbose = False ):
+            parents=False,
+            message='',
+            simulate=False,
+            verbose=False):
     """Copy the source url to the destination url keeping the history.
-    
+
     @type source: string
     @param source: The source url to copy from
-    
+
     @type dest: string
     @param dest: The destination url to copy to
-    
+
     @type parents: bool
     @param parents: Specify that intermediates directory should be created
                     if they do not exists [Default: False]
-    
+
     @type message: string
     @param message: The message to log changes in history
 
     @rtype: string
     @return: The standard output of the 'svn copy' command
     """
-    cmd = [ 'svn', 'copy', source, dest, '-m', message ]
+    cmd = ['svn', 'copy', source, dest, '-m', message]
     if parents:
-      cmd.append( '--parents' )
-    
-    #print 'SvnClient.copy:', cmd
-    #print 'SvnClient.simulate:', simulate
-    #print 'SvnClient.verbose:', verbose
-    return system( cmd,
-                   simulate = simulate,
-                   verbose = verbose )
-    
-  def exists( self,
-              url ):
+        cmd.append('--parents')
+
+    return system(cmd,
+                    simulate=simulate,
+                    verbose=verbose)
+
+
+def svn_exists(url):
     """Check that the url exists
-    
+
     @type url: string
     @param url: The url to check
-    
+
     @rtype: bool
     @return: True if the url exists, False otherwise
     """
     try:
-      self.info( url )
-      return True
-      
+        svn_info(url)
+        return True
+
     except RuntimeError, e:
-      return False
-    
-  def export( self,
-              url,
+        return False
+
+
+def svn_export(url,
               path,
-              simulate = False,
-              verbose = False ):
+              simulate=False,
+              verbose=False):
     """Export the content of the specified url to a path.
-    
+
     @type url: string
     @param url: The url to check out
-    
+
     @type path: string
     @param path: The destination path
-    
+
     @rtype: string
     @return: The standard output of the 'svn export' command
     """
     try:
-      
-      cmd = [ 'svn', 'export', url, path ]
-      
-      return system( cmd,
-                     simulate = simulate,
-                     verbose = verbose )
-      
-    except SystemError, e:
-      raise RuntimeError( 'SVN error: Unable to export from '
-                        + url + ' to ' + path )
 
-  def info( self,
-            url,
-            xml = True,
-            simulate = False,
-            verbose = False ):
+        cmd = ['svn', 'export', url, path]
+
+        return system(cmd,
+                        simulate=simulate,
+                        verbose=verbose)
+
+    except SystemError, e:
+        raise RuntimeError('SVN error: Unable to export from '
+                        + url + ' to ' + path)
+
+
+def svn_info(url,
+        xml=True,
+        simulate=False,
+        verbose=False):
     """Retrieve information for the url
-    
+
     @type url: string
     @param url: The url to get info for
-    
+
     @type xml: bool
     @param xml: specify that the command must return xml message.
                 [Default: True].
-    
+
     @rtype: string
     @return: The standard output of the 'svn info' command
     """
     try:
-      cmd = [ 'svn', 'info', url ]
-      
-      if xml:
-        cmd.append( '--xml' )
-        
-      return system( cmd,
-                     simulate = simulate,
-                     verbose = verbose )
-      
+        cmd = ['svn', 'info', url]
+
+        if xml:
+            cmd.append('--xml')
+
+        return system(cmd,
+                        simulate=simulate,
+                        verbose=verbose)
+
     except SystemError, e:
-      raise RuntimeError( 'SVN error: Unable to get info for ' + url )
-    
-  def list( self,
-            url,
-            xml = True,
-            simulate = False,
-            verbose = False ):
+        raise RuntimeError('SVN error: Unable to get info for ' + url)
+
+
+def svn_list(url,
+        xml=True,
+        simulate=False,
+        verbose=False):
     """List content of a specified url if it is a directory
-    
+
     @type url: string
     @param url: The url to get list from
-    
+
     @type xml: bool
     @param xml: specify that the command must return xml message.
                 [Default: True].
-    
+
     @rtype: string
     @return: The standard output of the 'svn list' command
     """
     try:
-      cmd = [ 'svn', 'list', url ]
-      
-      if xml:
-        cmd.append( '--xml' )
-        
-      return system( cmd,
-                     simulate = simulate,
-                     verbose = verbose )
-      
+        cmd = ['svn', 'list', url]
+
+        if xml:
+            cmd.append('--xml')
+
+        return system(cmd,
+                        simulate=simulate,
+                        verbose=verbose)
+
     except SystemError, e:
-      raise RuntimeError( 'SVN error: Unable to list content of ' + url )
-    
-  def merge( self,
-             source,
-             dest,
-             revision_range = None,
-             accept = None,
-             record_only = False,
-             simulate = False,
-             verbose = False ):
+        raise RuntimeError('SVN error: Unable to list content of ' + url)
+
+def svn_merge( source,
+            dest,
+            revision_range = None,
+            accept = None,
+            record_only = False,
+            simulate = False,
+            verbose = False ):
     """List content of a specified url if it is a directory
     
     @type source: string
@@ -347,12 +343,12 @@ class SvnClient(object):
       if revision_range is not None:
         if len(revision_range) != 2:
           raise RuntimeError( 'SVN error: Revision range list must contains 2 '
-                            + 'revisions, not ' + len(revision_range) )
+                            + 'revisions, not ' + str(len(revision_range)) )
       else:
         revision_range = ( 0, 'HEAD' )
         
       cmd += [ '-r', string.join(
-                        [ str(r) for r in revision_range ],
+               [ str(r) for r in revision_range ],
                         ':'
                      ) ]
         
@@ -385,9 +381,8 @@ class SvnClient(object):
       raise RuntimeError( 'SVN error: Unable to merge ' + source
                         + ' and ' + dest )
     
-  
-  def mkdir( self,
-             url,
+
+def svn_mkdir( url,
              parents = False,
              simulate = False,
              verbose = False ):
@@ -415,8 +410,7 @@ class SvnClient(object):
     except SystemError, e:
       raise RuntimeError( 'SVN error: Unable to mkdir at ' + url )
 
-  def move( self,
-            source,
+def svn_move( source,
             dest,
             parents = False,
             message = '',
@@ -447,9 +441,33 @@ class SvnClient(object):
     return system( cmd,
                    simulate = simulate,
                    verbose = verbose )
+
+def svn_rename( source,
+                dest,
+                message = '',
+                simulate = False,
+                verbose = False ):
+    """Rename the source url to the destination url keeping the history.
     
-  def propset( self,
-               path,
+    @type source: string
+    @param source: The source url to move from
+    
+    @type dest: string
+    @param dest: The destination url to move to
+
+    @type message: string
+    @param message: The message to log changes in history
+
+    @rtype: string
+    @return: The standard output of the 'svn move' command
+    """
+    cmd = [ 'svn', 'rename', source, dest, '-m', message ]
+
+    return system( cmd,
+                   simulate = simulate,
+                   verbose = verbose )
+
+def svn_propset( path,
                name,
                value,
                simulate = False,
@@ -479,8 +497,7 @@ class SvnClient(object):
       raise RuntimeError( 'SVN error: Unable to set property ' + name
                         + ' value: ' + value + ' for path: ' + path )
 
-  def propget( self,
-               path,
+def svn_propget( path,
                name,
                verbose = False  ):
     """ Get a property value of a file or directory
@@ -504,8 +521,7 @@ class SvnClient(object):
       raise RuntimeError( 'SVN error: Unable to get property ' + name
                         + ' value for path: ' + path )
                         
-  def update( self,
-              path,
+def svn_update( path,
               simulate = False,
               verbose = False  ):
     """ Update a working copy file or directory
@@ -526,8 +542,7 @@ class SvnClient(object):
     except SystemError, e:
       raise RuntimeError( 'SVN error: Unable to update ' + path )
     
-  def glob( self,
-            *urlpatterns ):
+def svn_glob( *urlpatterns ):
     """ Process a search of matching svn entries using url patterns.
     
         @type urlpatterns: list of string
@@ -541,8 +556,8 @@ class SvnClient(object):
     url_checked = set() # Contains url that have been checked for existance
                         # Used for optimization purpose
     
-    #if type(urlpatterns) not in ( types.ListType, types.TupleType ):
-      #urlpatterns = ( str(urlpatterns), )
+    # if type(urlpatterns) not in ( types.ListType, types.TupleType ):
+      # urlpatterns = ( str(urlpatterns), )
     
     for url_pattern in urlpatterns:
       # Split url pattern
@@ -551,17 +566,17 @@ class SvnClient(object):
       # Create stack to solve pattern
       url_path_pattern_stack = list()
       url_path_pattern_stack.append(
-                                tuple(
+          tuple(
                                   string.split(
-                                    url_pattern_splitted.path,
-                                    posixpath.sep ) ) )
+                                      url_pattern_splitted.path,
+                                      posixpath.sep ) ) )
       
       while( len(url_path_pattern_stack) ):
         url_path_pattern_splitted = url_path_pattern_stack.pop()
 
         for i in xrange(len(url_path_pattern_splitted)):
           # Find first path component that contains special characters
-          if ( len(self.__glob_regex.findall(
+          if ( len(svn_glob_regexp.findall(
                                   url_path_pattern_splitted[i])) > 0 ):
             # Search matching entries from server
             url = urlparse.urlunsplit(
@@ -569,12 +584,12 @@ class SvnClient(object):
                         + ( string.join( url_path_pattern_splitted[ 0:i ],
                                          posixpath.sep ), )
                         + url_pattern_splitted[ 3: ]
-                  )
+            )
                   
             # Check that url exists
             url_exists = False
             if ( url not in url_checked ) :
-              if self.exists( url ):
+              if svn_exists( url ):
                 url_exists = url_checked.add( url )
                 url_exists = True
             
@@ -585,7 +600,7 @@ class SvnClient(object):
 
             # Check that url is a directory
             # to avoid listings
-            url_info = self.info( url, xml = True )
+            url_info = svn_info( url, xml = True )
             
             # Parses xml result
             l = lxml.objectify.fromstring( url_info )
@@ -593,33 +608,33 @@ class SvnClient(object):
             if l.xpath( 'entry/@kind' )[ 0 ] != 'dir' :
                 continue
             
-            url_list = self.list( url, xml = True )
+            url_list = svn_list( url, xml = True )
           
             # Parses xml result
             l = lxml.objectify.fromstring( url_list )
           
             # Get found entries
             for e in l.xpath( '*/entry' ):
-              #print 'Entry', url_path_pattern_splitted[ 0:i ] \
+              # print('Entry', url_path_pattern_splitted[ 0:i ] \
                           #+ ( str(e.name), ) \
-                          #+ url_path_pattern_splitted[ i + 1: ],
+                          #+ url_path_pattern_splitted[ i + 1: ])
               if fnmatch.fnmatch( str(e.name), url_path_pattern_splitted[i]):
                 # Stacking the found entry matching pattern
                 url_path_pattern_stack.append(
                                         url_path_pattern_splitted[ 0:i ]
-                                      + ( str(e.name), )
-                                      + url_path_pattern_splitted[ i + 1: ] )
+                    + ( str(e.name), )
+                    + url_path_pattern_splitted[ i + 1: ] )
                 url_checked.add(
-                  urlparse.urlunsplit( 
+                    urlparse.urlunsplit( 
                     url_pattern_splitted[ 0:2 ]
                     + ( string.join( url_path_pattern_splitted[ 0:i ]
                                    + ( str(e.name), ),
                                       posixpath.sep ), )
                     + url_pattern_splitted[ 3: ] ) )
-                #print 'matches'
+                # print('matches')
                   
-              #else:
-                #print 'not matches'
+              # else:
+                # print('not matches')
             break
             
           elif( i == (len(url_path_pattern_splitted) - 1) ):
@@ -628,11 +643,11 @@ class SvnClient(object):
                         + ( string.join( url_path_pattern_splitted, 
                                          posixpath.sep ), )
                         + url_pattern_splitted[ 3: ]
-                  )
+            )
 
             if ( url not in url_checked ) :
               # Check that the element exists
-              if self.exists( url ):
+              if svn_exists( url ):
                 url_matches.append( url )
                 url_checked.add( url )
                 
@@ -641,6 +656,124 @@ class SvnClient(object):
           
     return url_matches
 
+def svn_update_version_info( version_file_url,
+                             version = None,
+                             version_format = version_format_release,
+                             message = '',
+                             simulate = False,
+                             verbose = False ):
+        """ Update the project info file for component branch version.
+        
+            @type: string
+            @param version_file_url: The url of version file to update
+                                [Default: None].
+            
+            @type: string
+            @param version: The version to set in the project info file
+                            [Default: None].
+                                
+            @type: string
+            @param message: The message used to log the version info update in
+                            svn. [Default: ''].
+                            
+            @rtype: bool
+            @return: True if the project info version was updated, False 
+                     otherwise.
+        """
+        import os, posixpath
+        
+        from brainvisa.maker.brainvisa_clients import find_remote_project_info
+        
+        version = VersionNumber(
+            version,
+            format = version_format
+        )
+        tmp_dir = tempfile.mkdtemp()
+        
+        version_file_url_dir = posixpath.dirname(
+            version_file_url
+        )
+        version_file_url_basename = posixpath.basename(
+                                        version_file_url
+                                    )
+        
+        version_file_local_dir = tmp_dir
+                                
+        svn_checkout(
+            version_file_url_dir,
+            version_file_local_dir,
+            depth = 'files',
+            verbose = verbose
+        )
+        
+        version_file_path = os.path.join( version_file_local_dir,
+                                          version_file_url_basename )
+        if not os.path.exists( version_file_path ):
+            return False
+        
+        version_file_content = open( version_file_path ).read()
+        
+        # Set version in project info file
+        # It needs to have a version with at least 3
+        # numbers
+        if len(version) < 3:
+            version.resize(3)
+        
+        if version_file_path.endswith( '.cmake' ):
+            pattern = re.compile(
+                'BRAINVISA_PACKAGE_VERSION_MAJOR.+'
+                + 'BRAINVISA_PACKAGE_VERSION_PATCH \d+',
+                re.DOTALL
+            )
+            
+            version_file_content_new = pattern.sub(
+                'BRAINVISA_PACKAGE_VERSION_MAJOR '
+                + str(version[0]) + ' )\n'
+                + 'set( BRAINVISA_PACKAGE_VERSION_MINOR '
+                + str(version[1]) + ' )\n'
+                + 'set( BRAINVISA_PACKAGE_VERSION_PATCH '
+                + str(version[2]),
+                version_file_content
+            )
+                                      
+        elif version_file_path.endswith( '.py' ):
+            pattern = re.compile(
+                'version_major.+\nversion_micro\s*=\s*\d+',
+                re.DOTALL
+            )
+      
+            version_file_content_new = pattern.sub(
+                'version_major = ' + str(version[0]) + '\n'
+                + 'version_minor = ' + str(version[1]) + '\n'
+                + 'version_micro = ' + str(version[2]),
+                version_file_content
+            )
+    
+        if version_file_content != version_file_content_new:
+            # Write new project info content to file
+            # and commit local changes to the branch
+            f = open( version_file_path, "w" )
+            f.write( version_file_content_new )
+            f.close()
+            
+            
+            svn_commit(
+                version_file_path,
+                message = message,
+                simulate = simulate,
+                verbose = verbose
+            )
+            
+        else:
+            return False
+
+        return True
+
+
+# Define API functions
+vcs_export = svn_export
+vcs_glob = svn_glob
+vcs_update_version_info = svn_update_version_info
 
 class SvnComponent( VersionControlComponent ):
 
@@ -690,11 +823,11 @@ class SvnComponent( VersionControlComponent ):
         # Find tags, branches, trunk in url to get a base url
         client_url_branch_type, client_url_base_path = self.branch_path_parse(
                                                             parsed_url.path
-                                                       )
+        )
               
         client_local_branch_type, client_local_base_path = \
                                                        self.branch_path_parse(
-                                                            self.path()
+                                                           self.path()
                                                        )
         
         if not client_url_branch_type :
@@ -703,8 +836,8 @@ class SvnComponent( VersionControlComponent ):
                               + 'components. It must contain a directory '
                               + 'among : trunk, branches, tags)' )
                                 
-        #if client_url_branch_type != client_local_branch_type:
-            #raise RuntimeWarning( 'Url ' + self.url() + ' refers to a branch '
+        # if client_url_branch_type != client_local_branch_type:
+            # raise RuntimeWarning( 'Url ' + self.url() + ' refers to a branch '
                                 #+ 'type ' + client_url_branch_type + ' whereas '
                                 #+ 'the local directory ' + self.path()
                                 #+ ' refers to a different branch type '
@@ -764,7 +897,7 @@ class SvnComponent( VersionControlComponent ):
                  posixpath.join( *base_path ), )
                  
     @classmethod
-    def client_type( cls ) :
+    def get_client( cls ) :
         """ Class method to get the Client class associated to the current
             VersionControlComponent class
         
@@ -772,9 +905,9 @@ class SvnComponent( VersionControlComponent ):
             @return: The Client class associated to the current
                      VersionControlComponent class
         """
-        from brainvisa.maker.svn import SvnClient
+        import brainvisa.maker.svn
         
-        return SvnClient
+        return brainvisa.maker.svn
 
     def __str__( self ) :
         """ SvnComponent string conversion
@@ -784,7 +917,7 @@ class SvnComponent( VersionControlComponent ):
         """
         return string.join(
                     [ 'component: ' + self.project() + ':' + self.name(),
-                      '- client_type: ' + self.client_type().__name__,
+                      '- client_type: ' + self.get_client().__name__,
                       '- url: ' +  self.url(),
                       '- params: ' + str(self.params()),
                       '- url_branch_type: ' + self._url_branch_type,
@@ -878,7 +1011,7 @@ class SvnComponent( VersionControlComponent ):
         
         # Parses xml result
         l = lxml.objectify.fromstring(
-                self.client().list( branch_url )
+                self.client().svn_list( branch_url )
             )
         
         for e in l.xpath( '*/entry' ):
@@ -930,7 +1063,7 @@ class SvnComponent( VersionControlComponent ):
             branch_url = self.branch_url( branch_type )
             # Parses xml result
             l = lxml.objectify.fromstring(
-                    self.client().list( branch_url )
+                    self.client().svn_list( branch_url )
                 )
             
             for e in l.xpath( '*/entry' ):
@@ -1046,7 +1179,7 @@ class SvnComponent( VersionControlComponent ):
             if use_alias:
                 # When a branch named using the given version already exists
                 # we do not use the alias
-                if not self.client().exists(
+                if not self.client().svn_exists(
                     self.branch_url(
                             branch_type,
                             name
@@ -1090,7 +1223,7 @@ class SvnComponent( VersionControlComponent ):
                     self.branch_url( branch_type,
                                      branch_name ),
                     version_format = self._version_format
-               )
+        )
                
         if info is None:
             return (self.project(), self.name(), None)
@@ -1115,7 +1248,7 @@ class SvnComponent( VersionControlComponent ):
             @return: True if the branch exists for the specified name,
                      False otherwise.
         """
-        return self.client().exists(
+        return self.client().svn_exists(
                     self.branch_url( branch_type,
                                      branch_name ) )
     
@@ -1159,13 +1292,13 @@ class SvnComponent( VersionControlComponent ):
            or \
            ( ( dest_branch_type == BranchType.RELEASE ) \
                and ( dest_branch_name == self.LATEST_RELEASE_ALIAS ) ):
-            if self.client().exists( dest_branch_url ):
+            if self.client().svn_exists( dest_branch_url ):
                 # It is necessary to first move the latest branch to its version
                 # branch
                 dest_version = self.branch_version(
-                                   dest_branch_type,
-                                   dest_branch_name
-                               )
+                    dest_branch_type,
+                    dest_branch_name
+                )
                 
                 # Get the branch_name without aliases to rename:
                 # bug_fix => X.Y
@@ -1174,12 +1307,12 @@ class SvnComponent( VersionControlComponent ):
                                                 dest_branch_type,
                                                 dest_version,
                                                 use_alias = False
-                                           )
+                )
                 dest_version_branch_url = self.branch_url(
-                                              dest_branch_type,
-                                              dest_version_branch_name
-                                          )
-                self.client().move(
+                    dest_branch_type,
+                    dest_version_branch_name
+                )
+                self.client().svn_move(
                     dest_branch_url,
                     dest_version_branch_url,
                     parents = True,
@@ -1194,7 +1327,7 @@ class SvnComponent( VersionControlComponent ):
                       dest_version_branch_name )
                 ] = dest_version
         
-        self.client().copy(
+        self.client().svn_copy(
             src_branch_url,
             dest_branch_url,
             parents = True,
@@ -1269,9 +1402,9 @@ class SvnComponent( VersionControlComponent ):
         from brainvisa.maker.brainvisa_clients import find_remote_project_info
         
         version = VersionNumber(
-                      version,
-                      format = self._version_format
-                  )
+            version,
+            format = self._version_format
+        )
         
         # Checkout the branch files to a local directory
         branch_local = self.branch_local_temporary( branch_type,
@@ -1290,17 +1423,17 @@ class SvnComponent( VersionControlComponent ):
         project_info_url_rel = project_info_url[ len(branch_url) + 1: ]
         
         project_info_url_dir = posixpath.dirname(
-                                   project_info_url
-                               )
+            project_info_url
+        )
         
         project_info_local_dir = os.path.dirname(
                                     os.path.join(
                                         branch_local,
                                         project_info_url_rel
                                     )
-                                 )
+        )
                                 
-        self.client().checkout(
+        self.client().svn_checkout(
             project_info_url_dir,
             project_info_local_dir,
             depth = 'files',
@@ -1323,17 +1456,17 @@ class SvnComponent( VersionControlComponent ):
         if project_info_path.endswith( '.cmake' ):
             pattern = re.compile(
                 'BRAINVISA_PACKAGE_VERSION_MAJOR.+'
-              + 'BRAINVISA_PACKAGE_VERSION_PATCH \d+',
+                + 'BRAINVISA_PACKAGE_VERSION_PATCH \d+',
                 re.DOTALL
             )
             
             project_info_content_new = pattern.sub(
                 'BRAINVISA_PACKAGE_VERSION_MAJOR '
-              + str(version[0]) + ' )\n'
-              + 'set( BRAINVISA_PACKAGE_VERSION_MINOR '
-              + str(version[1]) + ' )\n'
-              + 'set( BRAINVISA_PACKAGE_VERSION_PATCH '
-              + str(version[2]),
+                + str(version[0]) + ' )\n'
+                + 'set( BRAINVISA_PACKAGE_VERSION_MINOR '
+                + str(version[1]) + ' )\n'
+                + 'set( BRAINVISA_PACKAGE_VERSION_PATCH '
+                + str(version[2]),
                 project_info_content
             )
                                       
@@ -1345,8 +1478,8 @@ class SvnComponent( VersionControlComponent ):
       
             project_info_content_new = pattern.sub(
                 'version_major = ' + str(version[0]) + '\n'
-              + 'version_minor = ' + str(version[1]) + '\n'
-              + 'version_micro = ' + str(version[2]),
+                + 'version_minor = ' + str(version[1]) + '\n'
+                + 'version_micro = ' + str(version[2]),
                 project_info_content
             )
     
@@ -1357,14 +1490,14 @@ class SvnComponent( VersionControlComponent ):
             f.write( project_info_content_new )
             f.close()
             
-            self.client().commit(
+            self.client().svn_commit(
                 project_info_path,
                 message = message,
                 simulate = simulate,
                 verbose = verbose
             )
 
-            self.client().update(
+            self.client().svn_update(
                 project_info_local_dir,
                 verbose = verbose
             )
@@ -1431,13 +1564,13 @@ class SvnComponent( VersionControlComponent ):
                                            dest_branch_name )
                                         
         src_project_info_url = find_remote_project_info(
-                                   self.client(),
-                                   src_branch_url
-                               )
+            self.client(),
+            src_branch_url
+        )
                                         
         dest_project_info_url = find_remote_project_info(
-                                   self.client(),
-                                   dest_branch_url
+            self.client(),
+            dest_branch_url
                                 )
                                
         if src_project_info_url is None or dest_project_info_url is None:
@@ -1447,36 +1580,36 @@ class SvnComponent( VersionControlComponent ):
         dest_project_info_url_rel = dest_project_info_url[ len(dest_branch_url) + 1: ]
         
         src_project_info_url_dir = posixpath.dirname(
-                                       src_project_info_url
-                                   )
+            src_project_info_url
+        )
         
         dest_project_info_url_dir = posixpath.dirname(
                                         dest_project_info_url
                                     )
         
         src_project_info_local_dir = os.path.dirname(
-                                         os.path.join(
-                                             src_branch_local,
-                                             src_project_info_url_rel
-                                         )
-                                     )
+            os.path.join(
+                src_branch_local,
+                src_project_info_url_rel
+            )
+        )
         
         dest_project_info_local_dir = os.path.dirname(
-                                         os.path.join(
-                                             dest_branch_local,
-                                             dest_project_info_url_rel
-                                         )
-                                     )
+            os.path.join(
+                dest_branch_local,
+                dest_project_info_url_rel
+            )
+        )
                                          
         # Checkout directory of project info file
-        self.client().checkout(
+        self.client().svn_checkout(
             src_project_info_url_dir,
             src_project_info_local_dir,
             depth = 'files',
             verbose = verbose
         )
 
-        self.client().checkout(
+        self.client().svn_checkout(
             dest_project_info_url_dir,
             dest_project_info_local_dir,
             depth = 'files',
@@ -1485,7 +1618,7 @@ class SvnComponent( VersionControlComponent ):
         
         time.sleep(1)
         
-        self.client().merge(
+        self.client().svn_merge(
             src_project_info_local_dir,
             dest_project_info_local_dir,
             accept = 'mine-full',
@@ -1493,7 +1626,7 @@ class SvnComponent( VersionControlComponent ):
             verbose = verbose
         )
     
-        self.client().commit(
+        self.client().svn_commit(
             dest_project_info_local_dir,
             message = message,
             simulate = simulate,

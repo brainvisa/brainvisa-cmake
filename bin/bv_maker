@@ -2842,7 +2842,10 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
         if ConfigVariableParser.addConfigurationLine(self, line):
             pass
         else:
-            l = line.split(None, 2)
+            line = os.path.expandvars(line)
+            if line[0] == '+':
+                if '*' in line:
+                    raise SyntaxError()
         self.configurationLines.append(line)
 
     def set_dependencies(self):

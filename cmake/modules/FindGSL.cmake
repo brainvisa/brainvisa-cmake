@@ -64,7 +64,11 @@ IF(WIN32)
 
 ELSE(WIN32)
   
-  IF(UNIX) 
+  IF(UNIX)
+    #configuration SHFJ
+    #SET (GSL_DIR "/shfj/local/gsl-2.3_Ubuntu-16.04-x86_64") #Ubuntu 16.04
+    #SET (GSL_DIR "/shfj/local/gsl-2.3_Ubuntu-14.04-x86_64") #Ubuntu 14.04
+
     SET(GSL_CONFIG_PREFER_PATH 
       "$ENV{GSL_DIR}/bin"
       "$ENV{GSL_DIR}"

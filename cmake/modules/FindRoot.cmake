@@ -9,7 +9,9 @@
 # Root_VERSION      - version of the library
 # Root_PATH         - path to the root rootdir
 
-set(Root_PATH /shfj/local/root-5.34.36)
+#configuration SHFJ
+#set(Root_PATH /shfj/local/root-5.34.36) #Ubuntu 16.04
+#set(Root_PATH /shfj/local/root-5.34.14) #Ubuntu 14.04
 
 IF(EXISTS Root_INCLUDE_DIR)
   # already found  

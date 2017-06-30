@@ -115,7 +115,7 @@ components_definition = [
             ['soma-workflow', {
                 'groups': ['all', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/neurospin/soma-workflow.git branch:master','soma/soma-workflow/trunk'),
+                    'trunk': ('git https://github.com/neurospin/soma-workflow.git default:master','soma/soma-workflow/trunk'),
                     'bug_fix': ('git https://github.com/neurospin/soma-workflow.git tag:bug_fix','soma/soma-workflow/bug_fix'),
                     'latest_release': ('git https://github.com/neurospin/soma-workflow.git tag:latest_release','soma/soma-workflow/latest_release'),
                 },
@@ -286,7 +286,7 @@ components_definition = [
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/neurospin/morphologist.git branch:integration', 'morphologist/morphologist-ui/trunk'),
-                    'bug_fix': ('git https://github.com/neurospin/morphologist.git branch:master', 'morphologist/morphologist-ui/bug_fix'),
+                    'bug_fix': ('git https://github.com/neurospin/morphologist.git default:master', 'morphologist/morphologist-ui/bug_fix'),
                     'latest_release': ('git https://github.com/neurospin/morphologist.git tag:latest_release', 'morphologist/morphologist-ui/latest_release'),
                 },
             }],

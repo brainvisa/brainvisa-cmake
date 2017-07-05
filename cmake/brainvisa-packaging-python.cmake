@@ -54,7 +54,11 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     endif()
 
     set( _find_exe ipython pycolor pip easy_install activate
-          activate.csh activate.fish activate_this.py )
+          activate.csh activate.fish activate_this.py jupyter jupyter-run
+          jupyter-bundlerextension jupyter-console jupyter-kernelspec
+          jupyter-migrate jupyter-nbconvert jupyter-nbextension
+          jupyter-notebook jupyter-qtconsole jupyter-serverextension
+          jupyter-troubleshoot jupyter-trust )
     set( _instfiles )
     foreach( _exe ${_find_exe} )
       unset( _exe_path CACHE )
@@ -186,7 +190,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
                           COMPONENT "${component}"
                           PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
       endif()
-    else()
+    else() # not WIN32
 
       if( "${PYTHON_BIN_DIR}" STREQUAL "/usr/bin"
           OR "${PYTHON_BIN_DIR}" STREQUAL "${CMAKE_BINARY_DIR}/bin" )
@@ -195,46 +199,69 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           # if _inv_pypath is empty, list( REVERSE ) fails...
           list( REVERSE _inv_pypath )
         endif()
-        # Ubuntu typical system install
-        foreach( _pypath ${_inv_pypath} )
-#           add_custom_command( TARGET install-${component} PRE_BUILD
-#             COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\; then ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" -e "${_pypath}/dist-packages" "${_pypath}" "$(BRAINVISA_INSTALL_PREFIX)/lib" \; else ${PYTHON_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" -e "${_pypath}/dist-packages" "${_pypath}"  "${CMAKE_INSTALL_PREFIX}/lib" \; fi )
-          add_custom_command( TARGET install-${component} PRE_BUILD
-            COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\; then ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "${_pypath}" "$(BRAINVISA_INSTALL_PREFIX)/lib" \; else ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "${_pypath}"  "${CMAKE_INSTALL_PREFIX}/lib" \; fi )
-        endforeach()
-
-        # fix wrong _get_default_scheme() in sysconfig.py on Ubuntu 12.04
-        # and remove replacement from /usr/local to /usr
-        add_custom_command( TARGET install-${component} POST_BUILD
-          COMMAND "${CMAKE_COMMAND}" -E touch "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig.py"
-          COMMAND "sed" "\"s/        return 'posix_local'.*/        return 'posix_prefix'/\"" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig.py" ">$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig_temp.py"
-          COMMAND "sed" "s/\\.replace\\(\\\"\"\\/usr\\/local\\\",\\\"\\/usr\\\",1\"\\)//" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig_temp.py" ">$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig.py"
-          COMMAND "${CMAKE_COMMAND}" -E "remove" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig_temp.py" )
 
         set( _toinstall )
         set( _uicpdir )
         set( _pyside1 )
         set( _pyside2 )
         set( _pyside3 )
+        set( _dirs )
         foreach( _pypath ${_inv_pypath} )
-          if( EXISTS "${_pypath}/dist-packages" )
-            list( APPEND _toinstall "${_pypath}/dist-packages/*" )
-            if( EXISTS "${_pypath}/dist-packages/PyQt4/uic/widget-plugins" )
-              list( APPEND _uicpdir
-                "${_pypath}/dist-packages/PyQt4/uic/widget-plugins" )
+          set( _already_done )
+          foreach( _done_path ${_toinstall} )
+            string( FIND "${_pypath}" "${_done_path}/" _done )
+            if( _done EQUAL 0 )
+              set( _already_done TRUE )
+              break()
             endif()
-            if( EXISTS "${_pypath}/dist-packages/PySide" )
-              list( APPEND _pyside1 "${_pypath}/dist-packages/PySide" )
+          endforeach()
+          if( NOT _already_done )
+            list( APPEND _toinstall "${_pypath}" )
+            list( APPEND _dirs "lib" )
+            if( EXISTS "${_pypath}/dist-packages" )
+                if( EXISTS "${_pypath}/dist-packages/PyQt4/uic/widget-plugins" )
+                  list( APPEND _uicpdir
+                    "${_pypath}/dist-packages/PyQt4/uic/widget-plugins" )
+                endif()
+                if( EXISTS "${_pypath}/dist-packages/PySide" )
+                  list( APPEND _pyside1 "${_pypath}/dist-packages/PySide" )
+                endif()
+  #             endif()
+                if( "${_pypath}" STREQUAL
+                    "/usr/lib/python${PYTHON_SHORT_VERSION}" )
+                  # Ubuntu install
+                  if( EXISTS "/usr/lib/pymodules/python${PYTHON_SHORT_VERSION}" )
+                    list( APPEND _toinstall
+                      "/usr/lib/pymodules/python${PYTHON_SHORT_VERSION}/*" )
+                    list( APPEND _dirs
+                      "lib/python${PYTHON_SHORT_VERSION}/dist-packages" )
+                  endif()
+                  if( EXISTS "/usr/lib/pyshared/python${PYTHON_SHORT_VERSION}" )
+                    list( APPEND _toinstall
+                      "/usr/lib/pyshared/python${PYTHON_SHORT_VERSION}/*" )
+                    list( APPEND _dirs
+                      "lib/python${PYTHON_SHORT_VERSION}/dist-packages" )
+                  endif()
+                  if( EXISTS "/usr/share/pyshared" )
+                    list( APPEND _toinstall
+                      "/usr/share/pyshared/*" )
+                    list( APPEND _dirs
+                      "lib/python${PYTHON_SHORT_VERSION}/dist-packages" )
+                  endif()
+                  set( _pyside2
+                    "/usr/lib/pyshared/python${PYTHON_SHORT_VERSION}/PySide" )
+                  set( _pyside3 "/usr/share/pyshared/PySide" )
+                endif()
             endif()
           endif()
         endforeach()
-        set( _toinstall ${_toinstall}
-          "/usr/lib/pymodules/python${PYTHON_SHORT_VERSION}/*"
-          "/usr/lib/pyshared/python${PYTHON_SHORT_VERSION}/*"
-          "/usr/share/pyshared/*"
-        )
-        set( _pyside2 "/usr/lib/pyshared/python${PYTHON_SHORT_VERSION}/PySide" )
-        set( _pyside3 "/usr/share/pyshared/PySide" )
+#         set( _toinstall ${_toinstall}
+#           "/usr/lib/pymodules/python${PYTHON_SHORT_VERSION}/*"
+#           "/usr/lib/pyshared/python${PYTHON_SHORT_VERSION}/*"
+#           "/usr/share/pyshared/*"
+#         )
+#         set( _pyside2 "/usr/lib/pyshared/python${PYTHON_SHORT_VERSION}/PySide" )
+#         set( _pyside3 "/usr/share/pyshared/PySide" )
 
         set( _exclude )
         set( _uicpdir_excl "kde4.py" "kde4.pyc" "qaxcontainer.py" "qaxcontainer.pyc" "qscintilla.py" "qscintilla.pyc" )
@@ -249,8 +276,21 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
             list( APPEND _exclude "-e" "${_excl}" )
           endif()
         endforeach()
-        add_custom_command( TARGET install-${component} PRE_BUILD
-          COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${CMAKE_COMMAND} -E make_directory "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${_exclude} ${_toinstall} "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \;else ${CMAKE_COMMAND} -E make_directory "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${_exclude} ${_toinstall} "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \;fi )
+        set( i 0 )
+        foreach( _pypath ${_toinstall} )
+          list( GET _dirs ${i} _dir )
+          add_custom_command( TARGET install-${component} PRE_BUILD
+            COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${CMAKE_COMMAND} -E make_directory "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${_exclude} ${_pypath} "$(BRAINVISA_INSTALL_PREFIX)/${_dir}" \;else ${CMAKE_COMMAND} -E make_directory "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${_exclude} ${_pypath} "${CMAKE_INSTALL_PREFIX}/${_dir}" \;fi )
+          math( EXPR i "${i} + 1" )
+        endforeach()
+
+        # fix wrong _get_default_scheme() in sysconfig.py on Ubuntu 12.04
+        # and remove replacement from /usr/local to /usr
+        add_custom_command( TARGET install-${component} POST_BUILD
+          COMMAND "${CMAKE_COMMAND}" -E touch "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig.py"
+          COMMAND "sed" "\"s/        return 'posix_local'.*/        return 'posix_prefix'/\"" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig.py" ">$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig_temp.py"
+          COMMAND "sed" "s/\\.replace\\(\\\"\"\\/usr\\/local\\\",\\\"\\/usr\\\",1\"\\)//" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig_temp.py" ">$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig.py"
+          COMMAND "${CMAKE_COMMAND}" -E "remove" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/sysconfig_temp.py" )
 
         BRAINVISA_PYTHON_HAS_MODULE( "matplotlib" _has_mpl )
         if( _has_mpl EQUAL 0 )
@@ -282,16 +322,16 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         TARGET_TO_HOST_PATH("${_pypath_list}" _pypath_list)
       endif()
     
-      set( _inv_pypath ${_pypath_list} )
-      if( _inv_pypath )
-        # if _inv_pypath is empty, list( REVERSE ) fails...
-        list( REVERSE _inv_pypath )
-      endif()
-      foreach( _pypath ${_inv_pypath} )
-        add_custom_command( TARGET install-${component} PRE_BUILD
-          COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\; then ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "${_pypath}" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}" \; else ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "${_pypath}"  "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}" \; fi )
-      endforeach()
-    endif()
+#       set( _inv_pypath ${_pypath_list} )
+#       if( _inv_pypath )
+#         # if _inv_pypath is empty, list( REVERSE ) fails...
+#         list( REVERSE _inv_pypath )
+#       endif()
+#       foreach( _pypath ${_inv_pypath} )
+#         add_custom_command( TARGET install-${component} PRE_BUILD
+#           COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\; then ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "${_pypath}" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}" \; else ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "${_pypath}"  "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}" \; fi )
+#       endforeach()
+    endif() # if WIN32 .. else
 
     # install pyconfig.h file since it may be required by some packages
     # using distutils (like matplotlib)

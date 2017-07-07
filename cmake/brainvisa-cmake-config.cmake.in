@@ -648,13 +648,21 @@ function( BRAINVISA_DECLARE_THIRDPARTY_COMPONENT component )
       include( "${_cmakefile}" )
 
       # Get component information
+      # if package_name will be different from component
+      if( custom_package_name )
+        # the packaging rule file should set this variable if package_name is different from component, then we call the appropriate function
+        BRAINVISA_PACKAGING_COMPONENT_PACKAGE_NAME( ${component} package_name )
+      else()
+        set( package_name ${component} )
+      endif()
+
+      set( BRAINVISA_PACKAGE_NAME_${component} "${package_name}" CACHE INTERNAL "" )
+
       BRAINVISA_PACKAGING_COMPONENT_INFO( ${component} package_name package_maintainer package_version )
 
       if( BRAINVISA_COMPILATION_INFO )
         file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${package_name}' ] = {\n  'name': '${package_name}',\n  'component' : '${component}',\n  'type': 'thirdparty',\n  'version': '${package_version}',\n  'project': 'thirdparty',\n  'maintainer': '${package_maintainer}',\n}\n" )
       endif()
-
-      set( BRAINVISA_PACKAGE_NAME_${component} "${package_name}" CACHE INTERNAL "" )
 
       # Package type specific initialization for component
       BRAINVISA_ADD_COMPONENT( "${component}"

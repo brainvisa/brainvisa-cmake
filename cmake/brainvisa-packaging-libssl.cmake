@@ -1,4 +1,6 @@
-find_package( LibSSL ) 
+find_package( LibSSL )
+
+set( custom_package_name TRUE )
 
 function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )
   # Find version
@@ -40,6 +42,14 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   endif()
   set( ${package_maintainer} "IFR 49" PARENT_SCOPE )
 endfunction()
+
+
+function( BRAINVISA_PACKAGING_COMPONENT_PACKAGE_NAME component package_name )
+  BRAINVISA_PACKAGING_COMPONENT_INFO( component c_package_name
+    package_maintainer package_version )
+  set( ${package_name} ${c_package_name} PARENT_SCOPE )
+endfunction()
+
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   if(NOT APPLE AND NOT WIN32 ) # packaged only on linux

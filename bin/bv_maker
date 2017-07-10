@@ -327,6 +327,34 @@ def run_and_log_tests(cwd=None, env=None, options=None):
     return logs
 
 
+def run_and_log_testref(cwd=None, env=None, options=None):
+    logs = {}
+    logfile = tempfile.mkstemp(prefix='bv_test_%s' % label, suffix='.log')
+    os.close(logfile[0])
+    start_time = time.localtime()
+    try:
+        output = system_output_on_error(cwd=cwd, env=env,
+            *(['make'] + options + ['testref']))
+    except Exception as e:
+        open(logfile[1], 'w').write(output)
+        logitem = {}
+        logitem['log_file'] = logfile[1]
+        logitem['exception'] = e
+        logitem['start_time'] = start_time
+        logitem['stop_time'] = time.localtime()
+        logs['testref'] = logitem
+    else:
+        open(logfile[1], 'w').write(output)
+        logitem = {}
+        logitem['log_file'] = logfile[1]
+        logitem['exception'] = None
+        logitem['start_time'] = start_time
+        logitem['stop_time'] = time.localtime()
+        logs['testref'] = logitem
+        #os.unlink(logfile[1])
+    return logs
+
+
 class GlobalConfiguration(object):
 
     def __init__(self, argv):
@@ -2734,6 +2762,10 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 
     def testref(self, options, args):
         self._process_configuration_lines()
+        if options.make_options is not None:
+            ctoptions = shlex.split(options.make_options)
+        else:
+            ctoptions = self.make_options
         print('Creating test reference data for directory:', self.directory)
         if not self.test_ref_data_dir:
             print("Warning: test_ref_data_dir should be defined to create "
@@ -2743,8 +2775,8 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         if self.test_ref_data_dir:
             if not os.path.exists(self.test_ref_data_dir):
                 os.makedirs(self.test_ref_data_dir)
-        system(cwd=self.directory, env=env,
-               *(['make'] + self.make_options) + ['testref'])
+        return run_and_log_testref(cwd=self.directory, options=ctoptions,
+                                   env=env)
 
     def info(self):
         self._process_configuration_lines()
@@ -3283,13 +3315,17 @@ Controller.prototype.FinishedPageCallback = function()
         if self.test_ref_data_dir \
                 and not os.path.exists(self.test_ref_data_dir):
             os.makedirs(self.test_ref_data_dir)
+        if options.make_options is not None:
+            ctoptions = shlex.split(options.make_options)
+        else:
+            ctoptions = self.make_options
         print('Creating test reference files for package:', self.directory)
         print('    from build dir:', self.build_dir.directory)
         install_dir = self.replace_vars(self.test_install_dir)
         # Add directories to env
         new_env = self.get_environ(dict(os.environ))
-        system(cwd=self.build_dir.directory, env=new_env,
-               *(['make', 'testref']))
+        return run_and_log_testref(cwd=self.build_dir.directory,
+                                   env=new_env, options=ctoptions)
 
     def expand_shell(self, line):
         ''' Allow shell commands expressions $(command arg) in string

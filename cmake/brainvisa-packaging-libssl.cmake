@@ -45,7 +45,7 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_PACKAGE_NAME component package_name )
-  BRAINVISA_PACKAGING_COMPONENT_INFO( component c_package_name
+  BRAINVISA_PACKAGING_COMPONENT_INFO( ${component} c_package_name
     package_maintainer package_version )
   set( ${package_name} ${c_package_name} PARENT_SCOPE )
 endfunction()

@@ -628,7 +628,7 @@ components_definition = [
         'description': 'CATI and BrainVISA DevOps platform',
         'components': [
             ['casa-distro', {
-                'groups': ['all', 'cati_platform'],
+                'groups': ['all', 'cati_platform', 'opensource'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/casa/casa-distro/branches/bug_fix','casa-distro/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/casa/casa-distro/branches/bug_fix','casa-distro/bug_fix'),

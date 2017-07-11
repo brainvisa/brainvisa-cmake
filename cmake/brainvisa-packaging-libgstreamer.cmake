@@ -18,7 +18,9 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
                                          ${GSTBASE_LIBRARIES}
                                          ${GSTINTERFACES_LIBRARIES}
                                          ${GSTPBUTILS_LIBRARIES}
-                                         ${GSTVIDEO_LIBRARIES} )
+                                         ${GSTVIDEO_LIBRARIES}
+                                         ${GSTAUDIO_LIBRARIES}
+                                         ${GSTTAG_LIBRARIES} )
     set(${component}_PACKAGED TRUE PARENT_SCOPE)
   else()
     set(${component}_PACKAGED FALSE PARENT_SCOPE)

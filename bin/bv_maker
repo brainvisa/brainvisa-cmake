@@ -282,8 +282,17 @@ def environmentVariablesSubstitution(path, env=None):
 
 
 def environmentPathVariablesSubstitution(path, env=None):
-    return os.path.normpath(os.path.realpath(os.path.abspath(
-        environmentVariablesSubstitution(path, env))))
+    
+    p = environmentVariablesSubstitution(path, env)
+    
+    # Try to detect windows pathes starting with drive letters
+    # for cross compilation.
+    # TODO: check only for cross compiling mode
+    if len(path) > 1 and path[1] == ':':
+        # return 
+        return p
+        
+    return os.path.normpath(os.path.realpath(os.path.abspath(p)))
 
 
 def run_and_log_tests(cwd=None, env=None, options=None):

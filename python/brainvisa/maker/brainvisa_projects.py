@@ -241,18 +241,13 @@ def find_project_info( directory ):
   """
   project_info_cmake_path = os.path.join( directory,
                                           'project_info.cmake' )
-  project_info_python_pattern = os.path.join( directory,
-                                              'python',
-                                              '*',
-                                              'info.py' )
-  project_info_python_fallback_pattern = os.path.join( directory,
-                                                       '*',
-                                                       'info.py' )
+  project_info_python_patterns = (
+      os.path.join( directory, 'python', '*', 'info.py' ),
+      os.path.join( directory, '*', 'info.py' ),
+      os.path.join( directory, 'info.py' ))
 
   # Searches for project_info.cmake and info.py file
-  for pattern in ( project_info_cmake_path,
-                    project_info_python_pattern,
-                    project_info_python_fallback_pattern ):
+  for pattern in ( project_info_cmake_path, ) + project_info_python_patterns:
     project_info_python_path = glob.glob( pattern )
   
     if project_info_python_path:

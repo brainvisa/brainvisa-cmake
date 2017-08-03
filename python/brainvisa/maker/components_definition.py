@@ -198,6 +198,19 @@ components_definition = [
             }],
         ],
     }),
+    ('spm', {
+        'description': 'Python module and Axon toolbox for SPM.',
+        'components': [
+            ['spm', {
+                'groups': ['all', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
+                'branches': {
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/spm/trunk','spm/trunk'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/spm/branches/bug_fix','spm/bug_fix'),
+                    #'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/spm/tags/latest_release','axon/latest_release'),
+                },
+            }],
+        ],
+    }),
     ('axon_web', {
         'components': [
             ['axon_web', {

@@ -1147,16 +1147,22 @@ class StepCommand(object):
             env = o.get_environ(os.environ)
         else:
             env = os.environ
+        start_time = '%04d/%02d/%02d %02d:%02d' % o.start_time[step][:5]
+        stop_time = '%04d/%02d/%02d %02d:%02d' % o.stop_time[step][:5]
         message = '''========================================='
 == directory: %s%s ==
 == step:      %s%s ==
 == status:    %s%s ==
+== started:   %s%s ==
+== stopped:   %s%s ==
 =========================================
 
 --- environment: ---
 ''' % (real_dir, ' ' * (dlen - len(real_dir)),
             step, ' ' * (dlen - len(step)),
-            status, ' ' * (dlen - len(status)))
+            status, ' ' * (dlen - len(status)),
+            start_time, ' ' * (dlen - len(start_time)),
+            stop_time, ' ' * (dlen - len(stop_time)))
         message += '\n'.join(['%s=%s' % (var, env[var])
                               for var in sorted(env.keys())])
         message += '\n------------------------------------------\n\n'

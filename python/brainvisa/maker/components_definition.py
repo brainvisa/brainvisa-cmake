@@ -128,7 +128,7 @@ components_definition = [
                 'groups': ['all', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/neurospin/capsul.git branch:integration','capsul/trunk'),
-                    'bug_fix': ('git https://github.com/neurospin/capsul.git branch:v1','capsul/bug_fix'),
+                    'bug_fix': ('git https://github.com/neurospin/capsul.git branch:master','capsul/bug_fix'),
                     'latest_release': ('git https://github.com/neurospin/capsul.git tag:latest_release','capsul/latest_release'),
                 },
                 'build_model': 'pure_python',

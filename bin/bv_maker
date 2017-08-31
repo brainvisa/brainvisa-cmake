@@ -404,8 +404,10 @@ and more generally:
 
 http://brainvisa.info/brainvisa-cmake/
 '''
-        defaultConfigurationFile = os.path.join(
-            os.environ['HOME'], '.brainvisa', 'bv_maker.cfg')
+        defaultConfigurationFile = os.environ.get('BRAINVISA_BVMAKER_CFG')
+        if defaultConfigurationFile is None:
+            defaultConfigurationFile = os.path.join(
+                os.environ['HOME'], '.brainvisa', 'bv_maker.cfg')
         parser = OptionParser(usage=usage)
         parser.add_option('-d', '--directory', dest='directories',
                           help='Restrict actions to a selected directory. May be used several times to process several directories.',

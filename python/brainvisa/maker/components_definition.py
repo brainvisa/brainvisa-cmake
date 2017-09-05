@@ -128,7 +128,10 @@ components_definition = [
                 'groups': ['all', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/neurospin/capsul.git branch:integration','capsul/trunk'),
-                    'bug_fix': ('git https://github.com/neurospin/capsul.git default:master','capsul/bug_fix'),
+                    # Due to change of 2017-07-11 which deplaced the master branch, the capsul master branch 
+                    # must be accessed using branch:master, not default:master which is the normal use of other
+                    # projects
+                    'bug_fix': ('git https://github.com/neurospin/capsul.git branch:master','capsul/bug_fix'),
                     'latest_release': ('git https://github.com/neurospin/capsul.git tag:latest_release','capsul/latest_release'),
                 },
                 'build_model': 'pure_python',

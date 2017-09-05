@@ -115,6 +115,7 @@ def find_remote_project_info( client,
         1) <url>/project_info.cmake
         2) <url>/python/*/info.py
         3) <url>/*/info.py
+        4) <url>/info.py
     
     @type client: Client
     @param client: The Client instance to get access to files.
@@ -125,24 +126,24 @@ def find_remote_project_info( client,
     @rtype: string
     @return: The url of the found file containing project information
     """
-    project_info_cmake_url = posixpath.join( url,
-                                            'project_info.cmake' )
-    project_info_python_url_pattern = posixpath.join( url,
-                                                        'python',
-                                                        '*',
-                                                        'info.py' )
-    project_info_python_fallback_url_pattern = posixpath.join( url,
-                                                                '*',
-                                                             'info.py' )
-  
+    
+    project_info_patterns = ( posixpath.join( url,
+                                              'project_info.cmake' ),
+                              posixpath.join( url,
+                                              'python',
+                                              '*',
+                                              'info.py' ),
+                              posixpath.join( url,
+                                              '*',
+                                              'info.py' ),
+                              posixpath.join( url,
+                                              'info.py' ))
     # Searches for project_info.cmake and info.py file
-    for pattern in ( project_info_cmake_url,
-                    project_info_python_url_pattern,
-                    project_info_python_fallback_url_pattern ):
-            project_info_python_url = client.vcs_glob( pattern )
+    for pattern in project_info_patterns:
+            project_info_url = client.vcs_glob( pattern )
             
-            if project_info_python_url:
-                return project_info_python_url[0]
+            if project_info_url:
+                return project_info_url[0]
   
     return None
   

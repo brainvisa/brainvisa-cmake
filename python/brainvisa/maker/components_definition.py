@@ -115,7 +115,7 @@ components_definition = [
             ['soma-workflow', {
                 'groups': ['all', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/neurospin/soma-workflow.git default:integration','soma/soma-workflow/trunk'),
+                    'trunk': ('git https://github.com/neurospin/soma-workflow.git branch:integration','soma/soma-workflow/trunk'),
                     'bug_fix': ('git https://github.com/neurospin/soma-workflow.git default:master','soma/soma-workflow/bug_fix'),
                     'latest_release': ('git https://github.com/neurospin/soma-workflow.git tag:latest_release','soma/soma-workflow/latest_release'),
                 },
@@ -128,7 +128,7 @@ components_definition = [
                 'groups': ['all', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/neurospin/capsul.git branch:integration','capsul/trunk'),
-                    'bug_fix': ('git https://github.com/neurospin/capsul.git branch:master','capsul/bug_fix'),
+                    'bug_fix': ('git https://github.com/neurospin/capsul.git default:master','capsul/bug_fix'),
                     'latest_release': ('git https://github.com/neurospin/capsul.git tag:latest_release','capsul/latest_release'),
                 },
                 'build_model': 'pure_python',

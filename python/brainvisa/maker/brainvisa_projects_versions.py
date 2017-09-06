@@ -74,12 +74,12 @@ def is_private_component( component ):
         return True
     return False
 
-def is_default_project( projectname ):
+def is_default_project(projectname):
     '''Default projects are selected by default in the installer. They are important components.
     '''
-    if projectname in ( 'aims', 'anatomist', 'axon', 'brainrat', 
-            'cortical_surface', 'datamind', 'morphologist', 
-            'morphologist_ui', 'snapbase' ):
+    if projectname in ('aims', 'anatomist', 'axon', 'brainrat',
+            'cortical_surface', 'datamind', 'morphologist', 'morphologist_ui',
+            'primatologist', 'snapbase'):
         return True
     return False
 

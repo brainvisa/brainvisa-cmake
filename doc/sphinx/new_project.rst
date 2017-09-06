@@ -59,6 +59,25 @@ The following file is in ``axon/trunk/project_info.cmake``.
     set( BRAINVISA_PACKAGE_VERSION_PATCH 0 )
     set( BRAINVISA_PACKAGE_LICENCES "CeCill-V2" )
 
+Variables
+---------
+A few additional optional variables may be set in project_info.cmake:
+
+BRAINVISA_PACKAGE_DEFAULT_INSTALL
++++++++++++++++++++++++++++++++++
+
+.. code-block:: cmake
+
+    set( BRAINVISA_PACKAGE_DEFAULT_INSTALL "run" "usrdoc" )
+
+Specifies that the package should be pre-selectionned for installation in the installer, for its "run" and "usrdoc" categories components.
+Packages components are divided into several categories:
+
+* "run" is the runtime files, used when using the software
+* "dev" is the development files, used when developing software using this component as a library
+* "test" is the test files, used to test the component (generally only useful for developers)
+* "usrdoc" is the user documentation files
+* "devdoc" is the development documentation files
 
 Info.py alternative
 -------------------

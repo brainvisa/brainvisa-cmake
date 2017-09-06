@@ -376,6 +376,10 @@ components_definition = [
                     'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/old_connectomist-private/tags/latest_release','connectomist/old_connectomist-private/latest_release'),
                 },
             }],
+        ],
+    }),
+    ('constellation', {
+        'components': [
             ['constellation-gpl', {
                 'groups': ['all'],
                 'branches': {

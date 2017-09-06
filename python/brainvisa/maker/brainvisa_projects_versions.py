@@ -68,8 +68,8 @@ def is_private_component( component ):
     if component not in components_per_group['all']:
         return False
     additional_private_components = (
-        'baby', 'tms', 'sulci-data', 'constellation-private',
-        'constellation-gpl', 'bioprocessing', 'preclinical-imaging-iam', )
+        'baby', 'tms', 'sulci-data', 'disco',
+        'bioprocessing', 'preclinical-imaging-iam', )
     if component in additional_private_components:
         return True
     return False

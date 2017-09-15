@@ -16,6 +16,23 @@ components_definition = [
                     'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/branches/bug_fix','development/brainvisa-cmake/latest_release'),
                 },
             }],
+            ['brainvisa-installer', {
+                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
+                'branches': {
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-installer/trunk','brainvisa-installer/trunk'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-installer/branches/bug_fix','brainvisa-installer/bug_fix'),
+                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-installer/tags/latest_release','brainvisa-installer/latest_release'),
+                },
+            }],
+            ['casa-distro', {
+                'groups': ['all', 'cati_platform', 'opensource'],
+                'branches': {
+                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/casa-distro/branches/bug_fix','casa-distro/trunk'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/casa-distro/branches/bug_fix','casa-distro/bug_fix'),
+                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/casa-distro/branches/bug_fix','casa-distro/latest_release'),
+                },
+                'build_model': 'pure_python',
+            }],
         ],
     }),
     ('communication', {
@@ -48,21 +65,9 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/web/trunk','communication/web/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/web/branches/bug_fix','communication/web/bug_fix'),
-                    # WARNING tag points to bug_fix (to allow site evolve with
+                    # WARNING latest_release points to bug_fix (to allow site evolve with
                     # fixed versions of projects)
                     'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/web/branches/bug_fix','communication/web/latest_release'),
-                },
-            }],
-        ],
-    }),
-    ('brainvisa-installer', {
-        'components': [
-            ['brainvisa-installer', {
-                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-installer/trunk','brainvisa-installer/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-installer/branches/bug_fix','brainvisa-installer/bug_fix'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-installer/tags/latest_release','brainvisa-installer/latest_release'),
                 },
             }],
         ],
@@ -636,19 +641,6 @@ components_definition = [
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/fmri/rsfmri/trunk','rsfmri/trunk'),
                     #'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/fmri/rsfmri/branches/bug_fix','rsfmri/bug_fix'),
                     #'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/fmri/rsfmri/tags/latest_release','rsfmri/latest_release'),
-                },
-                'build_model': 'pure_python',
-            }],
-        ],
-    }),
-    ('casa', {
-        'description': 'CATI and BrainVISA DevOps platform',
-        'components': [
-            ['casa-distro', {
-                'groups': ['all', 'cati_platform', 'opensource'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/casa/casa-distro/branches/bug_fix','casa-distro/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/casa/casa-distro/branches/bug_fix','casa-distro/bug_fix'),
                 },
                 'build_model': 'pure_python',
             }],

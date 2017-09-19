@@ -215,6 +215,11 @@ def system(*args, **kwargs):
         raise OSError(txt)
 
 def system_output_on_error(*args, **kwargs):
+    # system_output_on_error is a bit strange currently:
+    # on error an exception is raised and the output value is not passed
+    # to the caller. Only stdout is used in this case, when the output
+    # strings is actally useful in this situation.
+    # However it should be in the exception e.output
     print(' '.join([str(x) for x in args]))
     try:
         if subprocess32 is not None:
@@ -345,7 +350,7 @@ def run_and_log_testref(cwd=None, env=None, options=None):
         output = system_output_on_error(cwd=cwd, env=env,
             *(['make'] + options + ['testref']))
     except Exception as e:
-        open(logfile[1], 'w').write(output)
+        open(logfile[1], 'w').write(e.output)
         logitem = {}
         logitem['log_file'] = logfile[1]
         logitem['exception'] = e

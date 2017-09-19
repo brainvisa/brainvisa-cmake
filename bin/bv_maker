@@ -1465,6 +1465,13 @@ class TestrefCommand(StepCommand):
                           'of bv_maker.cfg config file. Default steps are '
                           'normally "sources" for source sections, and '
                           '"configure build" for build sections')
+        parser.add_option('-m', '--make_options',
+                          default=None,
+                          help='options passed to make (ex: "-j8") during test '
+                          'reference generation. '
+                          'Same as the configuration option make_options but '
+                          'specified at runtime. The commandline option here '
+                          'overrides the bv_maker.cfg options.')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
@@ -1575,6 +1582,13 @@ class TestrefPackCommand(StepCommand):
                           'of bv_maker.cfg config file. Default steps are '
                           'normally "sources" for source sections, '
                           '"configure build" for build sections.')
+        parser.add_option('-m', '--make_options',
+                          default=None,
+                          help='options passed to make (ex: "-j8") during test '
+                          'reference generation. '
+                          'Same as the configuration option make_options but '
+                          'specified at runtime. The commandline option here '
+                          'overrides the bv_maker.cfg options.')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])

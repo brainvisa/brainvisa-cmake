@@ -338,7 +338,7 @@ def run_and_log_tests(cwd=None, env=None, options=None):
 
 def run_and_log_testref(cwd=None, env=None, options=None):
     logs = {}
-    logfile = tempfile.mkstemp(prefix='bv_test_%s' % label, suffix='.log')
+    logfile = tempfile.mkstemp(prefix='bv_testref', suffix='.log')
     os.close(logfile[0])
     start_time = time.localtime()
     try:

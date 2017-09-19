@@ -347,10 +347,11 @@ def run_and_log_testref(cwd=None, env=None, options=None):
     os.close(logfile[0])
     start_time = time.localtime()
     try:
-        output = system_output_on_error(cwd=cwd, env=env,
-            *(['make'] + options + ['testref']))
+        output = system_output_on_error(['make'] + options + ['testref'],
+                                        cwd=cwd, env=env)
     except Exception as e:
-        open(logfile[1], 'w').write(e.output)
+        if hasattr(e, 'output'):
+            open(logfile[1], 'w').write(e.output)
         logitem = {}
         logitem['log_file'] = logfile[1]
         logitem['exception'] = e

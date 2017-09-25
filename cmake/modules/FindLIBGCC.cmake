@@ -44,7 +44,14 @@ else()
         unset( _GCCPATH )
       endif()
     endif()
-
+    
+    if(NOT LIBGCC_LIBRARIES AND COMPILER_PREFIX AND CMAKE_CROSSCOMPILING)
+        if(WIN32)
+            file( GLOB LIBGCC_LIBRARIES "/usr/lib/gcc/${COMPILER_PREFIX}/${GCC_VERSION}/libgcc_s*.dll*" )
+            #message("==== Found gcc libraries ${LIBGCC_LIBRARIES}")
+        endif()
+    endif()
+    
     if( NOT LIBGCC_LIBRARIES )
       # Try to find it using MinGW
       find_package(MinGW)

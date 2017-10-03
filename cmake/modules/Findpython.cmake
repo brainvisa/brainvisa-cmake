@@ -18,7 +18,7 @@
 #  PYTHON_SHORT_VERSION - Python target short version (e.g. "2.6")
 #  PYTHON_INCLUDE_PATH - path to target python header files
 #  PYTHON_LIBRARY - path to target python dynamic library
-
+#  PYTHON_FLAGS - flags used to compile target python dynamic library
 function(__GET_PYTHON_INFO __python_executable __output_prefix __translate_path)
 
   get_filename_component("${__output_prefix}_EXECUTABLE_NAME" 
@@ -106,7 +106,7 @@ endfunction()
 if ( PYTHON_VERSION AND PYTHON_EXECUTABLE AND PYTHON_PREFIX
     AND PYTHON_HOST_VERSION AND PYTHON_HOST_EXECUTABLE AND PYTHON_HOST_PREFIX)
   # Python already found, do nothing
-  set( PYTHON_FOUND TRUE )
+  set( PYTHON_FOUND TRUE PARENT_SCOPE)
 else()
   find_package( PythonInterp REQUIRED )
   include( CMakeFindFrameworks )
@@ -188,6 +188,10 @@ else()
   #  NO_SYSTEM_ENVIRONMENT_PATH
   )
   mark_as_advanced( PYTHON_LIBRARY )
+  
+  if( WIN64 )
+    set( PYTHON_FLAGS MS_WIN64 CACHE STRING "Flags used to compile target python interpreter" )
+  endif()
   
 #   message("==== Python host interpreter")
 #   message("PYTHON_HOST_EXECUTABLE: ${PYTHON_HOST_EXECUTABLE}") 

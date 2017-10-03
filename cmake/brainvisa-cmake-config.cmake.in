@@ -2582,9 +2582,9 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
   if( WIN32 )
     set_target_properties( ${_moduleName} PROPERTIES SUFFIX ".pyd" )
   endif( WIN32 )
-  if( WIN64 )
-    #message("===== ADD win64 definitions for ${_moduleName} =====")
-    set_target_properties( ${_moduleName} PROPERTIES COMPILE_DEFINITIONS MS_WIN64)
+  if( PYTHON_FLAGS )
+    #message("===== ADD python flags definitions for ${_moduleName} =====")
+    set_target_properties( ${_moduleName} PROPERTIES COMPILE_DEFINITIONS ${PYTHON_FLAGS} )
   endif()
   BRAINVISA_INSTALL( TARGETS ${_moduleName}
                      DESTINATION "python/${_modulePath}"

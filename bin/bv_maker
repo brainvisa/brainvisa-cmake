@@ -636,13 +636,13 @@ class JenkinsWrapper(object):
         # (configuration is global)
         if configuration.general_section.jenkins_username \
                 and configuration.general_section.jenkins_token:
-            jenkins_cli_options = [
+            self.jenkins_cli_options = [
                 '-http', '-auth',
                 '%s:%s' % (configuration.general_section.jenkins_username,
                           configuration.general_section.jenkins_token)]
         else:
             # try using a ssh key
-            jenkins_cli_options = ['-remoting'] # needed for recent client
+            self.jenkins_cli_options = ['-remoting'] # needed for recent client
 
 
     def __del__(self):

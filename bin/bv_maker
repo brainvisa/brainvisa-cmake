@@ -873,6 +873,11 @@ class JenkinsWrapper(object):
     def get_jenkins_cli(cls):
         if cls.jenkins_cli is None or cls.jenkins_cli:
             return cls.jenkins_cli
+        if jenkins is not None:
+            #if the python module is here, use it.
+            cls.jenkins_cli = None
+            return None
+
         java = distutils.spawn.find_executable('java')
         # test java version
         try:

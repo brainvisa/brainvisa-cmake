@@ -630,17 +630,19 @@ def global_installer_variables():
 class JenkinsWrapper(object):
 
     jenkins_cli = ''
-    if configuration.general_section.jenkins_username \
-            and configuration.general_section.jenkins_token:
-        jenkins_cli_options = [
-            '-http', '-auth',
-            '%s:%s' % (configuration.general_section.jenkins_username,
-                       configuration.general_section.jenkins_token)]
-    else:
-        jenkins_cli_options = ['-remoting'] # needed for recent client
+    jenkins_cli_options = ''
 
     def __init__(self):
-        pass
+        # (configuration is global)
+        if configuration.general_section.jenkins_username \
+                and configuration.general_section.jenkins_token:
+            jenkins_cli_options = [
+                '-http', '-auth',
+                '%s:%s' % (configuration.general_section.jenkins_username,
+                          configuration.general_section.jenkins_token)]
+        else:
+            # try using a ssh key
+            jenkins_cli_options = ['-remoting'] # needed for recent client
 
 
     def __del__(self):

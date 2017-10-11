@@ -3089,6 +3089,11 @@ Controller.prototype.LicenseAgreementPageCallback = function()
     gui.clickButton(buttons.NextButton);
 }
 
+Controller.prototype.StartMenuDirectoryPageCallback = function()
+{
+    gui.clickButton(buttons.NextButton);
+}
+
 Controller.prototype.ReadyForInstallationPageCallback = function()
 {
     gui.clickButton(buttons.CommitButton);

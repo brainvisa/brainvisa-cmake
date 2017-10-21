@@ -1292,3 +1292,8 @@ DOT_CLEANUP            = @DOXYFILE_DOT_CLEANUP@
 # used. If set to NO the values of all tags below this one will be ignored.
 
 SEARCHENGINE           = @DOXYFILE_SEARCHENGINE@
+
+PROJECT_LOGO = @DOXYFILE_PROJECT_LOGO@
+
+PROJECT_BRIEF = @DOXYFILE_PROJECT_BRIEF@
+

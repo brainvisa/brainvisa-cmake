@@ -2739,7 +2739,6 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                             qt_opt = l.split('=')[1].strip()
                             bvcmake_options.append(
                                 '-DDESIRED_QT_VERSION=%s' %qt_opt)
-            print('*** call bv_maker config with options:', bvcmake_options)
             system(cwd=bvcmake_dir,
                    *(command_base
                      + [self.components['brainvisa-cmake'][0],

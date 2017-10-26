@@ -122,6 +122,9 @@ else()
   # system after install.
   set( bv_env_exe "bv_env_host" )
 endif()
+if( DESIRED_QT_VERSION )
+  add_definitions( -DDESIRED_QT_VERSION=${DESIRED_QT_VERSION} )
+endif()
 add_executable( ${bv_env_exe} src/bv_env.cc )
 
 # Enable static linking if available. We cannot use CheckCXXAcceptsFlag since

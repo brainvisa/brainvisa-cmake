@@ -529,9 +529,21 @@ int main( int argc, char *argv[] )
   // use PyQt rather than Pyside if not already specified in QT_API envar
   // because if PySide is used while not installed on the binary package python
   // it can cause crashes.
+#ifdef DESIRED_QT_VERSION
+  // may be specified by the build system configuration
+  // if this is given this way, we force QT_ENV variable to force it match
+  // the build.
+#if DESIRED_QT_VERSION == 5
+  set_variables[ "QT_API" ] = "pyqt5";
+#else
+  set_variables[ "QT_API" ] = "pyqt";
+#endif
+#else
+  // DESIRED_QT_VERSION is not specified: the env variable has priority.
   char *qtapi = getenv( "QT_API" );
   if( !qtapi )
     set_variables[ "QT_API" ] = "pyqt";
+#endif
 
   map< string, string > backup_variables;
   for( vector< string >::const_iterator it = unset_variables.begin(); it != unset_variables.end(); ++it ) {

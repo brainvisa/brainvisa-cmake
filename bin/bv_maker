@@ -2725,19 +2725,35 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
             bvcmake_dir = os.path.join(self.directory, 'brainvisa-cmake')
             if not os.path.exists(bvcmake_dir):
                 os.makedirs(bvcmake_dir)
+            # pass it Qt version if we have any info
+            bvcmake_options = []
+            qt_opt = [x for x in self.cmake_options
+                      if x.startswith('DESIRED_QT_VERSION')]
+            if qt_opt:
+                qt_opt = qt_opt[0].split('=')[1].strip()
+                bvcmake_options.append('-DDESIRED_QT_VERSION=%s' %qt_opt)
+            elif os.path.exists(os.path.join(self.directory, 'CMakeCache.txt')):
+                with open(os.path.join(self.directory, 'CMakeCache.txt')) as f:
+                    for l in f.readlines():
+                        if l.startswith('DESIRED_QT_VERSION:'):
+                            qt_opt = l.split('=')[1].strip()
+                            bvcmake_options.append(
+                                '-DDESIRED_QT_VERSION=%s' %qt_opt)
+            print('*** call bv_maker config with options:', bvcmake_options)
             system(cwd=bvcmake_dir,
                    *(command_base
                      + [self.components['brainvisa-cmake'][0],
                         '-DBRAINVISA_CMAKE_BUILD_TYPE=brainvisa-cmake-only',
-                        '-DCMAKE_INSTALL_PREFIX=%s' % self.directory]),
+                        '-DCMAKE_INSTALL_PREFIX=%s' % self.directory]
+                     + bvcmake_options),
                      env=self.get_environ())
             system(cwd=bvcmake_dir, *['make', 'install'],
                    env=self.get_environ())
             print('=== now configuring all other projects ===')
             # run with this local bv-cmake environment
             system(cwd=self.directory,
-                   *( [ os.path.join(self.directory, 'bin',
-                                     'bv_env_host%s' % exe_suffix) ]
+                   *( [os.path.join(self.directory, 'bin',
+                                    'bv_env_host%s' % exe_suffix)]
                      + command_base
                      + command_options
                      + cross_compiling_options

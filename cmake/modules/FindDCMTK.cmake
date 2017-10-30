@@ -347,8 +347,8 @@ if( DCMTK_config_INCLUDE_DIR AND
      ${DCMTK_ijg12_LIBRARY}
      ${DCMTK_ijg16_LIBRARY}
      ${DCMTK_ijg8_LIBRARY}
-     ${DCMTK_ofstd_LIBRARY}
      ${DCMTK_oflog_LIBRARY}
+     ${DCMTK_ofstd_LIBRARY}
    )
   ELSE(DCMTK_oflog_LIBRARY)
     IF(DCMTK_PRE_353)

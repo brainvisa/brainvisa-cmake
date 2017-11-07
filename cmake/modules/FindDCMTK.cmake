@@ -274,6 +274,12 @@ find_library(DCMTK_ijg16_LIBRARY ijg16
   PATH_SUFFIXES ${_librarySuffixes}
 )
 
+# find library dcmdsig
+find_library(DCMTK_dcmdsig_LIBRARY dcmdsig
+  PATHS ${_directories}
+  PATH_SUFFIXES ${_librarySuffixes}
+)
+
 find_file( DCMTK_dict dicom.dic
     PATHS ${_directories} ${CMAKE_LIBRARY_PATH} ${CMAKE_FRAMEWORK_PATH}
     PATH_SUFFIXES ${_librarySuffixes} ${_shareSuffixes}
@@ -349,6 +355,7 @@ if( DCMTK_config_INCLUDE_DIR AND
      ${DCMTK_ijg8_LIBRARY}
      ${DCMTK_oflog_LIBRARY}
      ${DCMTK_ofstd_LIBRARY}
+     ${DCMTK_dcmdsig_LIBRARY}
    )
   ELSE(DCMTK_oflog_LIBRARY)
     IF(DCMTK_PRE_353)

@@ -32,6 +32,16 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
       BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libpgm RUN )
     endif()
   endif()
+  
+  BRAINVISA_PYTHON_HAS_MODULE( "yaml" _res )
+  if( _res EQUAL 0 )
+    find_package( LibYaml )
+    
+    if( YAML_FOUND )
+      BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libyaml RUN )
+    endif()
+  endif()
+  
   if(WIN32 OR APPLE)
     find_package( Freetype )
     # dependency due to matplotlib: some backends are linked to freetype

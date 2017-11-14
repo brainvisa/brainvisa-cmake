@@ -14,6 +14,23 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
         set( ${package_version} "${CMAKE_MATCH_1}" PARENT_SCOPE )
     endif()
   endif()
+
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libpixman1 RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libpng12 RUN )
+  
+  if(WIN32)
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libfreetype6 RUN )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libfontconfig1 RUN )
+  else()
+    # ship libfontconfig only on Mandriva 2008 packages
+    execute_process( COMMAND "${CMAKE_BINARY_DIR}/bin/bv_system_info" RESULT_VARIABLE result OUTPUT_VARIABLE output OUTPUT_STRIP_TRAILING_WHITESPACE )
+    if( result EQUAL 0 )
+        string( REGEX MATCH "Mandriva-2008.*" mdv ${output} )
+        if( mdv )
+        BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libfontconfig1 RUN )
+        endif()
+    endif()
+  endif()
 endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )

@@ -5,12 +5,16 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   set( ${package_maintainer} "IFR 49" PARENT_SCOPE )
   # Find version
   set( ${package_version} ${GLIB_VERSION} PARENT_SCOPE )
+  if(WIN32)
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libintl RUN )
+  endif()
 endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   if(GLIB_FOUND)
-    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${GLIB_LIBRARIES}
+    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component}
+                                         ${GLIB_LIBRARIES}
                                          ${GTHREAD_LIBRARIES}
                                          ${GMODULE_LIBRARIES} )
     set(${component}_PACKAGED TRUE PARENT_SCOPE)

@@ -1,7 +1,5 @@
 # A CMake find module for GObject-2.0.
 #
-# http://openslide.org
-#
 # Once done, this module will define
 # GOBJECT_FOUND - system has GObject
 # GOBJECT_INCLUDE_DIRS - the GObject include directory

@@ -9,6 +9,9 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   else()
     set( ${package_version} "0.0.0" PARENT_SCOPE )
   endif()
+  if(WIN32)
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS   libexpat1 RUN )
+  endif()
 endfunction()
 
 

@@ -15,7 +15,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
     endif()
   endif()
 
-  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libpixman1 RUN )
+  if(NOT CAIRO_VERSION VERSION_LESS "1.6.0")
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libpixman1 RUN )
+  endif()
+  
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libpng12 RUN )
   
   if(WIN32)

@@ -15,7 +15,9 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
     endif()
   endif()
 
-  if(NOT CAIRO_VERSION VERSION_LESS "1.6.0")
+  find_package( LibXCB QUIET )
+
+  if(NOT LIBCAIRO_VERSION VERSION_LESS "1.6.0")
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libpixman1 RUN )
   endif()
   
@@ -33,6 +35,9 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
         BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libfontconfig1 RUN )
         endif()
     endif()
+  endif()
+  if( LIBXCB_FOUND )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libxcb RUN )
   endif()
 endfunction()
 

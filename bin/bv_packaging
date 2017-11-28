@@ -616,8 +616,15 @@ def create_directory_package(options, selected_packages, dependencies,
     if hasBVShare:
         print("Updating BrainVISA shared database")
         try:
-            cmd = [os.path.join(brainvisacmake_directory, 'bin', 'bv_env'),
-                   'brainvisa', '-b', '--setup']
+            if options.platform_target[:3] == 'win':
+                cmd = [os.path.join(brainvisacmake_directory, 
+                                    'bin', 'bv_env.exe'),
+                       os.path.join(brainvisacmake_directory, 
+                                    'brainvisa', 'neuro.py'), 
+                       '-b', '--setup']
+            else:
+                cmd = [os.path.join(brainvisacmake_directory, 'bin', 'bv_env'),
+                       'brainvisa', '-b', '--setup']
             print('running:', ' '.join(cmd))
             subprocess.check_call(cmd)
             print('update done.')

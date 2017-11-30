@@ -7,6 +7,12 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO cmake package_name package_maintain
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqtcore4 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libgcc1 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libstdc++6 RUN )
+  if(EXISTS "${QT_PLUGINS_DIR}/sqldrivers")
+    if(WIN32)
+      # SQL driver plugin is linked with libsqlite3.0 on Windows
+      BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libsqlite3-0 RUN )
+    endif()
+  endif()
 endfunction()
 
 

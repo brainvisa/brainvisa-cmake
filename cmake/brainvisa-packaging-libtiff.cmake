@@ -9,6 +9,16 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   if( match )
     set( ${package_version} "${CMAKE_MATCH_1}" PARENT_SCOPE )
   endif()
+  # libtiff5 (Ubuntu 14-16) depends on libjbig, liblzma, jpeg8
+  find_package( LibJbig QUIET )
+  if( LIBJBIG_FOUND )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libjbig RUN )
+  endif()
+  find_package( LibLZMA QUIET )
+  if( LIBLZMA_FOUND )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS liblzma RUN )
+  endif()
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libjpeg62 RUN )
 endfunction()
 
 

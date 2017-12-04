@@ -10,7 +10,6 @@ ELSE()
 
   # First try to search cairo through pkg_config.
   find_package(PkgConfig)
-  message("**** FindLibXCB ****")
   if(PKG_CONFIG_FOUND)
     pkg_search_module(_LIBXCB xcb)
     if(_LIBXCB_FOUND)

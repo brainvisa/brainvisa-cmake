@@ -454,18 +454,18 @@ components_definition = [
             #}],
         #],
     #}),
-    ('highres-cortex', {
-        'description': 'Sub-millimetric scale 3D brain image analysis',
-        'components': [
-            ['highres-cortex', {
-                'groups': ['all', 'opensource', 'standard'],
-                'branches': {
-                    'trunk': ('git https://github.com/neurospin/highres-cortex.git default:master', 'highres-cortex/trunk'),
-                    'bug_fix': ('git https://github.com/neurospin/highres-cortex.git default:master', 'highres-cortex/bug_fix'),
-                },
-            }],
-        ],
-    }),
+    #('highres-cortex', {
+        #'description': 'Sub-millimetric scale 3D brain image analysis',
+        #'components': [
+            #['highres-cortex', {
+                #'groups': ['all', 'opensource', 'standard'],
+                #'branches': {
+                    #'trunk': ('git https://github.com/neurospin/highres-cortex.git default:master', 'highres-cortex/trunk'),
+                    #'bug_fix': ('git https://github.com/neurospin/highres-cortex.git default:master', 'highres-cortex/bug_fix'),
+                #},
+            #}],
+        #],
+    #}),
     ('nuclear_imaging', {
         'components': [
             ['nuclear_imaging-gpl', {

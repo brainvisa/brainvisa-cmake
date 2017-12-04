@@ -9,7 +9,7 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  if( NUMPY_FOUND AND EXISTS "/usr/share/matplotlib" )
+  if( NUMPY_FOUND AND EXISTS "/usr/share/matplotlib" AND NOT(WIN32))
     BRAINVISA_INSTALL_DIRECTORY( "/usr/share/matplotlib" "lib/python${PYTHON_SHORT_VERSION}/dist-packages/matplotlib" ${component} )
     if( EXISTS "/etc/matplotlibrc" )
       BRAINVISA_INSTALL( FILES "/etc/matplotlibrc"

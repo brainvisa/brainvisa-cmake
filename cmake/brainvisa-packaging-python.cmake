@@ -112,7 +112,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       if( NOT name STREQUAL "python" )
         if(WIN32)
           add_custom_command( TARGET install-${component} POST_BUILD
-            COMMAND "${CMAKE_COMMAND}" -E "copy_if_different" "$(BRAINVISA_INSTALL_PREFIX)/bin/${name}" "$(BRAINVISA_INSTALL_PREFIX)/bin/python" )
+            COMMAND "${CMAKE_COMMAND}" -E "copy_if_different" "$(BRAINVISA_INSTALL_PREFIX)/bin/${name}" "$(BRAINVISA_INSTALL_PREFIX)/bin/python${CMAKE_EXECUTABLE_SUFFIX}" )
         else()
           add_custom_command( TARGET install-${component} POST_BUILD
             COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "${name}" "$(BRAINVISA_INSTALL_PREFIX)/bin/python" )
@@ -124,7 +124,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       if( NOT name STREQUAL ${_pythonv} )
         if(WIN32)
           add_custom_command( TARGET install-${component} POST_BUILD
-            COMMAND "${CMAKE_COMMAND}" -E "copy_if_different" "$(BRAINVISA_INSTALL_PREFIX)/bin/${name}" "$(BRAINVISA_INSTALL_PREFIX)/bin/${_pythonv}" )
+            COMMAND "${CMAKE_COMMAND}" -E "copy_if_different" "$(BRAINVISA_INSTALL_PREFIX)/bin/${name}" "$(BRAINVISA_INSTALL_PREFIX)/bin/${_pythonv}${CMAKE_EXECUTABLE_SUFFIX}" )
         else()
           add_custom_command( TARGET install-${component} POST_BUILD
             COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "${name}" "$(BRAINVISA_INSTALL_PREFIX)/bin/${_pythonv}" )

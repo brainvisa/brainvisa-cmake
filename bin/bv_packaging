@@ -619,6 +619,7 @@ def create_directory_package(options, selected_packages, dependencies,
             if options.platform_target[:3] == 'win':
                 cmd = [os.path.join(brainvisacmake_directory, 
                                     'bin', 'bv_env.exe'),
+                       'python.exe',
                        os.path.join(brainvisacmake_directory, 
                                     'brainvisa', 'neuro.py'), 
                        '-b', '--setup']

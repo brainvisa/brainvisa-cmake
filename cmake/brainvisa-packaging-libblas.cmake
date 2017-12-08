@@ -16,13 +16,8 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
       break()
     endif()
   endforeach()
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libgfortran2 RUN )
   set( ${package_version} ${_version} PARENT_SCOPE )
-  string( REGEX MATCH Ubuntu _systemname "${BRAINVISA_SYSTEM_IDENTIFICATION}" )
-  if( _systemname )
-    if ( "${BRAINVISA_SYSTEM_VERSION}" VERSION_GREATER "12.0")
-      BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libquadmath RUN )
-    endif()
-  endif()
 endfunction()
 
 

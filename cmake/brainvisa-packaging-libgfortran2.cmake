@@ -14,7 +14,8 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
     endif()
   endforeach()
   
-  if (WIN32)
+  string( REGEX MATCH Ubuntu _systemname "${BRAINVISA_SYSTEM_IDENTIFICATION}" )
+  if((_systemname AND ("${BRAINVISA_SYSTEM_VERSION}" VERSION_GREATER "12.0")) OR WIN32)
     # Add dependency to the quadmath library
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libquadmath RUN )
   endif()

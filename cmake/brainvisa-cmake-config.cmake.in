@@ -1894,9 +1894,9 @@ function( BRAINVISA_ADD_TEST )
   endif()
 
   # Add bv_env_test encapsulation
-  set(_command_args_run "${CMAKE_BINARY_DIR}/bin/bv_env_test"
+  set(_command_args_run "${brainvisa-cmake_DIR}/../../../bin/bv_env_test"
                         "${_command_args_run}")
-  set(_command_args_ref "${CMAKE_BINARY_DIR}/bin/bv_env_test"
+  set(_command_args_ref "${brainvisa-cmake_DIR}/../../../bin/bv_env_test"
                         "${_command_args_ref}")
 
   #message("====== NAME ${_name_args} =======")

@@ -39,20 +39,16 @@ if [ -z "${BRAINVISA_ENV}" ]; then
   exit 1
 fi
 
-CMD=`basename $1`
+CMD=$(basename "$1")
 shift
 
 # get variables substitution inside arguments
 i=0
 for var_value in "$@"
 do
-  # not in -something options
-  if [[ ${var_value:0:1} == "-" ]]; then
-    exp[$i]=$var_value
-  else
-    exp[$i]=$(eval echo $var_value)
-  fi
+  exp[$i]=$(eval printf '%s ' $var_value)
   i=$(($i+1))
 done
+
 echo ${BRAINVISA_TEST_REMOTE_COMMAND} "${BRAINVISA_ENV}" "$CMD" "${exp[@]}"
 exec ${BRAINVISA_TEST_REMOTE_COMMAND} "${BRAINVISA_ENV}" "$CMD" "${exp[@]}"

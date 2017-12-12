@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include <fstream>
+#include <algorithm>
 #include <cstdlib>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -12,16 +13,19 @@
 using namespace std;
 
 // It is necessary to first redefine getenv function
-string getenv( const string &variable )
+string getenv( const string &variable, 
+               const string &defaultval = string() )
 {
   char *env = std::getenv( variable.c_str() );
   if ( env ) return env;
-  return string();
+  return defaultval;
 }
 
 enum system_conversion {
-  WindowsToUnix,
-  UnixToWindows
+  WindowsToMsys,
+  WineToUnix,
+  UnixToWine,
+  MsysToWindows
 };
 
 #define UNIX_PATH_SEP "/"
@@ -43,7 +47,7 @@ enum system_conversion {
   #define ENV_SEP WIN_ENV_SEP
     
   #define LD_LIBRARY_PATH \
-    ( is_msys() ? UNIX_LD_LIBRARY_PATH : WIN_LD_LIBRARY_PATH )
+    ( is_msys_term() ? UNIX_LD_LIBRARY_PATH : WIN_LD_LIBRARY_PATH )
 
 string get_term()
 {
@@ -52,9 +56,21 @@ string get_term()
   return osterm;
 }
 
-bool is_msys()
+bool is_dos_term()
 {
-  return ((get_term() == "msys") || (get_term() == "cygwin"));
+  return (get_term() == "");
+}
+
+bool is_msys_term()
+{
+  return ((get_term() == "msys") || 
+          (get_term() == "cygwin"));
+}
+
+bool is_wine_term()
+{
+  return ((get_term() != "") 
+        && !is_msys_term());
 }
 
 #else
@@ -150,46 +166,86 @@ string join_path( const vector< string > &splitted, const string &sep = PATH_SEP
   return result;
 }
 
-string convert_path( const string &str, const system_conversion mode = WindowsToUnix )
+string get_wineprefix()
+{
+  static string wineprefixkey = "WINEPREFIX";
+  static string wineprefix = getenv(wineprefixkey, "~/.wine");
+  return wineprefix;
+}
+
+string convert_path( const string &str, const system_conversion mode = WindowsToMsys )
 {
   vector <string> v;
   string r = str;
   
   switch(mode) {
-    case WindowsToUnix:
+    case WineToUnix:
+    case WindowsToMsys:
       v = split_path( str, string(WIN_PATH_SEP) + string(WIN_ALTERNATE_PATH_SEP) );
-      if ((v.size() > 0) && (v[0].size() > 1) && (v[0][1] == ':')) {
-        // Drive letter found
-        // Remove ":" from drive letter
-        v[0] = UNIX_PATH_SEP + v[0].replace( 1, 1, "" );
+      if ((v.size() > 0) && (v[0].size() == 2) && (v[0][1] == ':')) {
+        if(mode == WindowsToMsys) {
+          // Drive letter found
+          // Remove ":" from drive letter
+          v[0] = UNIX_PATH_SEP + v[0].replace( 1, 1, "" );
+
+        }
+        else {
+            // Convert from wine path to unix, especially replaces
+            // drives with maching 
+            v[0][0] = std::tolower(v[0][0]);
+            vector<string> w = split_path(get_wineprefix());
+            w.push_back("dosdevices");
+            v.insert(v.begin(), w.begin(), w.end());
+        }
       }
       r = join_path( v, UNIX_PATH_SEP );
       break;
 
-    case UnixToWindows:
+    case UnixToWine:
+    case MsysToWindows:
       v = split_path( str, UNIX_PATH_SEP );
-      if ((v.size() > 1) && (v[0].size() == 0) && (v[1].size() == 1)) {
+      if ((mode == MsysToWindows) && ((v.size() > 1) && (v[0].size() == 0) && (v[1].size() == 1))) {
         // Drive letter probably found
         // Add ":" to drive letter
         v[1] += ":";
         r = join_path( v, WIN_PATH_SEP ).substr(1); // Join removing root path separator
       }
-      else {
-        r = join_path( v, WIN_PATH_SEP );
+      else if (mode == UnixToWine) {
+        // Check that path does not already begin with wine
+        // dosdevices path (linux path to the drive letters) 
+        // before prepending it. This should avoid to prepend
+        // wine dosdevices path many times.
+        vector<string> w = split_path(get_wineprefix());
+        w.push_back("dosdevices");
+        vector<string> s(w.size());
+        copy(v.begin(), v.begin() + w.size(), s.begin());
+        
+        if (w != s) {
+          // Found a path that does not begin with wine dosdevices path  
+          if ((v.size() > 0) && (v[0].size() == 0)) {
+            // Found absolute path add "z:" drive letter
+            v[0] = "z:";
+          }
+          else {
+            // Insert wine dosdevices path at the begin of path
+            v.insert(v.begin(), w.begin(), w.end());
+          }
+        }
       }
+      r = join_path( v, WIN_PATH_SEP );
       break;
   }
-  
   return r;
 }
 
-string convert_env( const string &str, const system_conversion mode = WindowsToUnix )
+string convert_env( const string &str, const system_conversion mode = WindowsToMsys )
 {
   vector <string> v;
   string sep1 = WIN_ENV_SEP, sep2 = UNIX_ENV_SEP;
   
   switch(mode) {
-    case UnixToWindows:
+    case UnixToWine:
+    case MsysToWindows:
       sep1 = UNIX_ENV_SEP;
       sep2 = WIN_ENV_SEP;
       break;
@@ -668,21 +724,27 @@ int main( int argc, char *argv[] )
 #endif
   } else {
   
-  bool win = false;
-  bool msys = false;
+  bool dos_term = false;
+  bool msys_term = false;
+  bool wine_term = false;
   
 #ifdef WIN32
   // We only use windows format in dos shell
-  msys = is_msys();
-  win = !msys;
+  msys_term = is_msys_term();
+  dos_term = is_dos_term();
+  wine_term = is_wine_term();
 #endif
 
 #define CONVERT_ENV(env) \
-( msys ? convert_env(env, WindowsToUnix) : env )
+( msys_term \
+  ? convert_env(env, WindowsToMsys) \
+  : ( wine_term \
+      ? convert_env(env, WineToUnix) \
+      : env ) )
   
     string value;
     for( map< string, string>::const_iterator it = backup_variables.begin(); it != backup_variables.end(); ++it ) {
-      if( win )
+      if( !msys_term )
       {
         cout <<  "set " << unenv_prefix << it->first << "=" << it->second << endl;
       }
@@ -692,7 +754,7 @@ int main( int argc, char *argv[] )
       }
     }
     for( vector< string >::const_iterator it = unset_variables.begin(); it != unset_variables.end(); ++it ) {
-      if( win )
+      if( !msys_term )
       {
         cout <<  "set " << *it << "=" << endl;
       }
@@ -702,7 +764,7 @@ int main( int argc, char *argv[] )
       }
     }
     for( map< string, string>::const_iterator it = set_variables.begin(); it != set_variables.end(); ++it ) {
-      if( win )
+      if( !msys_term )
       {
         cout <<  "set " << it->first << "=" << getenv( it->first ) << endl;
       }
@@ -714,7 +776,7 @@ int main( int argc, char *argv[] )
     for( map< string, vector<string> >::const_iterator it = path_prepend.begin(); it != path_prepend.end(); ++it ) {
       string v = getenv( it->first );
       if ( ! v.empty() ) {
-        if( win )
+        if( !msys_term )
         {
           cout <<  "set " << it->first << "=" << v << endl;
         }

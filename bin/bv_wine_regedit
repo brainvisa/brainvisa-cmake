@@ -186,7 +186,7 @@ def get_registry_file(registry_root):
     else:
         raise RuntimeError('%s registry root is unknown' % registry_root)
 
-def add_to_list(lst, value, prepend = True, unique = True):
+def add_to_list(lst, value, prepend = True, unique = True):    
     if prepend:
         lst = [value] + lst
     else:
@@ -321,7 +321,8 @@ if __name__ == '__main__':
         try:
             registry_list = parser.get_value_list(section, '"%s"' % value)
         except NoOptionError:
-            registry_list = '**not defined**'
+            # Option was not defined, create it
+            registry_list = []
             
         new_registry_list = add_to_list(registry_list, 
                                         args.value,

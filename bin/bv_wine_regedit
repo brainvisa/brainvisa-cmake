@@ -1,0 +1,338 @@
+#!/usr/bin/env python
+from __future__                 import print_function
+import os
+
+try:
+    from configparser               import RawConfigParser, NoOptionError
+except:
+    from ConfigParser               import RawConfigParser, NoOptionError
+    
+def get_section(line):
+   e = line.index(']')
+   
+   return (line[line.index('[')+1:e], line[e+1:])
+
+class RegistryFileReader(object):
+    def __init__(self, fp):
+        self.fp = fp
+        self.head = None
+        self.comments = dict()
+        self.tags = dict()
+        self.__initialized_section = False
+        self.__cur_section = 'global'
+    
+    def __start_section(self, line):
+        k, t = get_section(line)
+        #print('__start_section, k', k, 't', t)
+        self.__cur_section = k
+        self.tags[k] = t
+    
+    def __add_comment(self, line):
+        #print('__add_comment', line, 'for section', self.__cur_section)
+        self.comments.setdefault(self.__cur_section, []).append(line)
+        
+    def readline(self):
+        
+        if not self.__initialized_section:
+            self.__initialized_section = True
+            return '[%s]\n' % self.__cur_section
+        
+        line = self.fp.readline()
+        if not self.head:
+            self.head = line
+            return ';;'
+            
+        l = line.strip()
+        
+        if l.startswith('['):
+            self.__start_section(line)
+        
+        elif l.startswith('#') or l.startswith(';;'):
+            self.__add_comment(line)
+            
+        else:
+            line.replace(':', ':')
+        
+        return line
+
+class RegistryFileWriter(object):
+    def __init__(self, fp, head, tags = dict(), comments = dict()):
+        self.fp = fp
+        self.head = head
+        self.tags = tags
+        self.comments = comments
+        
+    def write(self, line):
+        l = line.strip()
+        
+        if l.startswith('['):
+            k, t = get_section(line)
+            
+            if len(t.strip()) == 0:
+                t = self.tags.get(k)
+                
+            if k == 'global':
+                line = self.head + '\n'
+            else:
+                if len(t.strip()) > 0:
+                    line = line[:-1] + t + line[-1]
+            self.fp.write(line[:-1])
+                
+            # Write comment lines for section
+            for c in self.comments.get(k, []):
+                self.fp.write(c)
+        else:
+            line = line.replace(" = ", "=", 1)
+            if line.strip().endswith("="):
+                line = line[:-1] + "\"\"" + line[-1]
+                
+            self.fp.write(line)
+
+class RegistryFileParser(RawConfigParser):
+    import re
+    
+    OPTCRE = re.compile(
+    r'(?P<option>[^=\s][^=]*)'              # very permissive!
+    r'\s*(?P<vi>[:=])\s*'                   # any number of space/tab,
+                                            # followed by separator
+                                            # (either : or =), followed
+                                            # by any # space/tab
+    r'(?P<value>.*)$'                       # everything up to eol
+    )
+    OPTCRE_NV = re.compile(
+        r'(?P<option>[^=\s][^=]*)'            # very permissive!
+        r'\s*(?:'                             # any number of space/tab,
+        r'(?P<vi>[:=])\s*'                    # optionally followed by
+                                              # separator (either : or
+                                              # =), followed by any #
+                                              # space/tab
+        r'(?P<value>.*))?$'                   # everything up to eol
+        )
+    
+    def __init__(self):
+        RawConfigParser.__init__(self)
+        self.optionxform = str
+        self.__head = None
+        self.__comments = dict()
+        self.__tags = dict()
+    
+    def read(self, f):
+        registry_reader = RegistryFileReader(open(f))
+        self.readfp(registry_reader)
+        self.__head = registry_reader.head
+        self.__comments = registry_reader.comments
+        self.__tags = registry_reader.tags
+  
+    def write(self, f):
+        RawConfigParser.write(self, RegistryFileWriter(f,
+                                                       self.__head,
+                                                       self.__tags, 
+                                                       self.__comments))
+        
+    def get_value_list(self, section, value):
+        v = self.get(section, value)
+        # Find starting and ending double quotes
+        s = v.find('"')
+        e = v.find('"', s + 1)
+        
+        if s == -1:
+            s = v.find(':')
+            t, v = (v[:s - 1], v[s + 1:])
+        
+        elif s == 0:
+            t = None
+            
+        else:
+            t, v = (v[:s - 1], v[s:])
+            
+        if t == 'str(2)' or t is None:
+            return eval(v).split(';')
+        
+        else:
+            raise RuntimeError('Registry value with type %s [section: %s, value: %s] is '
+                               'not supported yet' % (t, section, value))
+        
+    def set_value_list(self, key, value, data):
+        
+        d = '"' + string.join(data, ';') + '"'
+        return self.set(key, value, d)
+
+def split_value_path(value_path, parse_root = True):
+    l = value_path.split('\\')
+    
+    offset = 0 if parse_root else 1
+    registry_root = l[0] if parse_root else None
+    section = l[1 - offset:-1] if len(l) > (2 - offset) else ''
+    
+    # Remove leading and trailing \
+    if len(section) > 0 and section[0] == '':
+      section = section[1:]
+    if section[-1] == '':
+      section = section[:-1]
+    value = l[-1] if len(l) > (1 - offset) else None
+    
+    return (registry_root, '\\'.join(section), value)
+
+def get_registry_file(registry_root):
+    if registry_root in ('HKLM', 'HKEY_LOCAL_MACHINE', 
+                         'HKCR', 'HKEY_CLASSES_ROOT'):
+        return 'system.reg'
+    elif registry_root in ('HKCU', 'HKEY_CURRENT_USER',
+                           'HKU', 'HKEY_USERS'):
+        return 'user.reg'
+    elif registry_root in ('HKCC', 'HKEY_CURRENT_CONFIG'):
+        raise RuntimeError('HKEY_CURRENT_CONFIG is only stored in memory' \
+                           'no file is associated')
+    else:
+        raise RuntimeError('%s registry root is unknown' % registry_root)
+
+def add_to_list(lst, value, prepend = True, unique = True):
+    if prepend:
+        lst = [value] + lst
+    else:
+        lst = lst + [value]
+        
+    unique_values = set()
+    result = []
+    
+    for v in lst:
+        if not unique or v not in unique_values:
+            unique_values.add(v)
+            result.append(v)
+            
+    return result
+
+def registry_normalize(value):
+    return value.replace('\\', r'\\')
+    
+#---------------------------------------------------------------------------
+# Default values
+#---------------------------------------------------------------------------
+wine_prefix = os.environ.get('WINEPREFIX')
+casa_deps = os.environ.get('CASA_DEPS')
+crossbuild_install_prefix = os.environ.get('CROSSBUILD_INSTALL_PREFIX')
+wine_dir = wine_prefix if wine_prefix \
+           else os.path.join(os.environ.get('HOME'), '.wine')               
+prefix_default = casa_deps if casa_deps else crossbuild_install_prefix
+registry_file_default = None
+registry_action_default = 'set'
+value_path_default = None
+value_default = ''
+
+#---------------------------------------------------------------------------
+# Main
+#---------------------------------------------------------------------------
+if __name__ == '__main__':
+    import string
+    from argparse                   import ArgumentParser                             
+    
+    #---------------------------------------------------------------------------
+    # Argument parser initialization
+    #---------------------------------------------------------------------------
+    description = '''
+    Update registry with missing pathes.
+    '''
+    
+    parser = ArgumentParser( description = description )
+
+    parser.add_argument(
+        '-f', '--registry-file',
+        dest = 'registry_file',
+        help = 'Wine registry file to update\n'
+            '[default: %s].' % registry_file_default,
+        metavar = 'REGISTRY_FILE',
+        default = registry_file_default
+    )
+    
+    parser.add_argument(
+        '-p', '--prefix',
+        dest = 'prefix',
+        help = 'Install prefix to use\n'
+            '[default: %s].' % prefix_default,
+        metavar = 'PREFIX',
+        default = prefix_default
+    )
+    
+    parser.add_argument(
+        '-r', '--registry-action',
+        dest = 'registry_action',
+        help = 'action to do in registry\n'
+            '[default: %s].' % registry_action_default,
+        metavar = 'REGISTRY_ACTION',
+        default = registry_action_default
+    )
+    
+    parser.add_argument(
+        '--value-path',
+        dest = 'value_path',
+        help = 'path of the value to set in registry\n'
+            '[default: %s].' % value_path_default,
+        metavar = 'VALUE_PATH',
+        default = value_path_default
+    )
+        
+    parser.add_argument(
+        '--value',
+        dest = 'value',
+        help = 'the value to set in registry\n'
+            '[default: %s].' % value_default,
+        metavar = 'VALUE',
+        default = value_default
+    )
+    
+    args = parser.parse_args()
+    
+    if args.registry_action not in ('set', 'append', 'prepend'):
+        raise RuntimeError('Registry action %s is not supported. Only set, ' \
+                           'append and prepend are currently available ' \
+                           'actions' % args.registry_action)
+    
+    if not args.value_path or not len(args.value_path.strip()) > 0:
+        raise RuntimeError('Value path to edit must be given')        
+    
+    registry_root, section, value = split_value_path(args.value_path.strip())
+    #print('==== info from ', args.value_path.strip(), 
+    #      'root', registry_root, 'section', section, 'value', value)
+    section = registry_normalize(section)
+    if not args.registry_file:
+        registry_file = get_registry_file(registry_root)
+        registry_file = os.path.join(wine_dir, registry_file)
+    else:
+        registry_file = args.registry_file
+    
+    
+    parser = RegistryFileParser()
+    parser.read(registry_file)
+    
+    if args.registry_action == 'set':
+        try:
+            registry_value = parser.get(section, '"%s"' % value)
+        except NoOptionError:
+            registry_value = '**not defined**'
+            
+        #print('==== read value', registry_value, 'from', args.value_path, 'in', 
+        #      registry_file)
+        parser.set(section, 
+                   '"' + value + '"',
+                   '"' + registry_normalize(args.value) + '"')
+        print('Wine registry updated,', value, 'set to', args.value)
+              
+    elif args.registry_action in ('prepend', 'append'):
+        try:
+            registry_list = parser.get_value_list(section, '"%s"' % value)
+        except NoOptionError:
+            registry_list = '**not defined**'
+            
+        new_registry_list = add_to_list(registry_list, 
+                                        args.value,
+                                        prepend = (args.registry_action 
+                                                   == 'prepend'))
+        #print('==== setting value', new_registry_list, 'to',
+        #      args.value_path, 'in', registry_file)
+        parser.set(section, 
+                   '"' + value + '"',
+                   '"' + registry_normalize(';'.join(new_registry_list)) + '"')
+        print('Wine registry updated,', value, 'set to', 
+              ';'.join(new_registry_list))
+    parser.write(open(registry_file, 'wb'))
+    

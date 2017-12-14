@@ -744,46 +744,62 @@ int main( int argc, char *argv[] )
   
     string value;
     for( map< string, string>::const_iterator it = backup_variables.begin(); it != backup_variables.end(); ++it ) {
+#ifdef WIN32
       if( !msys_term )
       {
         cout <<  "set " << unenv_prefix << it->first << "=" << it->second << endl;
       }
       else
-      {
+      {    
+#endif
         cout <<  "export " << unenv_prefix << it->first << "='" << CONVERT_ENV(it->second) << "'" << endl;
+#ifdef WIN32
       }
+#endif
     }
     for( vector< string >::const_iterator it = unset_variables.begin(); it != unset_variables.end(); ++it ) {
+#ifdef WIN32
       if( !msys_term )
       {
         cout <<  "set " << *it << "=" << endl;
       }
       else
       {
+#endif
         cout << "unset " << *it << endl;
+#ifdef WIN32
       }
+#endif
     }
     for( map< string, string>::const_iterator it = set_variables.begin(); it != set_variables.end(); ++it ) {
+#ifdef WIN32
       if( !msys_term )
       {
         cout <<  "set " << it->first << "=" << getenv( it->first ) << endl;
       }
       else
       {
+#endif
         cout << "export " << it->first << "='" << CONVERT_ENV(getenv( it->first )) << "'" << endl;
+#ifdef WIN32
       }
+#endif
     }
     for( map< string, vector<string> >::const_iterator it = path_prepend.begin(); it != path_prepend.end(); ++it ) {
       string v = getenv( it->first );
       if ( ! v.empty() ) {
+#ifdef WIN32
         if( !msys_term )
         {
           cout <<  "set " << it->first << "=" << v << endl;
         }
         else
         {
+#endif
           cout << "export " << it->first << "='" << CONVERT_ENV(v) << "'" << endl;
+#ifdef WIN32
         }
+#endif
       }
     }
   }

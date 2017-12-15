@@ -2910,7 +2910,10 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
     _path_variables = set(('build_directory', 'installer_filename',
                            'data_repos_dir', 'test_install_dir',
                            'stdout_file', 'stderr_file', 'test_ref_data_dir',
-                           'test_run_data_dir'))
+                           'test_run_data_dir', 'remote_installer_filename',
+                           'remote_repos_dir', 'remote_data_repos_dir',
+                           'remote_test_install_dir', 'remote_test_ref_data_dir',
+                           'remote_test_run_data_dir'))
     _variables_with_replacements = set(('pack_version', 'directory_id',
                                         'env', 'packaging_options'))
     _validAdditiveOptions = set(('packaging_options', 'default_steps',
@@ -2932,7 +2935,6 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
         self.installer_filename = None
         self.data_repos_dir = ''
         self.test_install_dir = ''
-        self.remote_test_host_cmd = None
         self.init_components_from_build_dir = 'ON'
         self.pack_version = None
         self.pathvars = None
@@ -2943,6 +2945,13 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
         self.env = {}
         self.test_ref_data_dir = ''
         self.test_run_data_dir = tempfile.gettempdir()
+        self.remote_installer_filename = None
+        self.remote_repos_dir = None
+        self.remote_data_repos_dir = None
+        self.remote_test_install_dir = None
+        self.remote_test_host_cmd = None
+        self.remote_test_ref_data_dir = None
+        self.remote_test_run_data_dir = None
 
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ pack ... ]:
@@ -3064,14 +3073,20 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
 
         fd, script_fname = tempfile.mkstemp(prefix='install_script',
                                             dir=temp_dir)
+        if not repos_dir.startswith('file://'):
+            repos_dir = 'file://' + repos_dir
+ 
         if data_repos_dir:
-            data_repos_dir_url = ', "file://%s"' % data_repos_dir
+            if not data_repos_dir.startswith('file://'):
+                data_repos_dir = 'file://' + data_repos_dir
+           
+            data_repos_dir_url = ', "%s"' % data_repos_dir
         else:
             data_repos_dir_url = ""
         os.close(fd)
         f = open(script_fname, 'w')
         f.write('''var install_dir = "%s";
-var repositories = ["file://%s"%s];
+var repositories = ["%s"%s];
 
 function Controller()
 {
@@ -3262,43 +3277,87 @@ Controller.prototype.FinishedPageCallback = function()
     def install_package(self, options, args):
         self.test_config(options, args)
         directory = self.replace_vars(self.directory)
+        
         if not self.test_install_dir:
             return IGNORED_STEP
+        
+        remote_test_install = True if self.remote_test_host_cmd else False
+
+        # Test install directory
+        test_install_dir = self.replace_vars(self.test_install_dir)
+        if remote_test_install and self.remote_test_install_dir:
+            remote_test_install_dir = self.replace_vars(self.remote_test_install_dir)
+        else:    
+            remote_test_install_dir = test_install_dir
+        
         print('Installing package:', directory)
         print('    from build dir:', self.build_dir.directory)
-        test_install_dir = self.replace_vars(self.test_install_dir)
         print('    to:', test_install_dir)
-        tmp_dir = None
-        if self.remote_test_host_cmd:
+        if remote_test_install:
             print('    remote:', self.remote_test_host_cmd)
-            tmp_dir = os.path.join(os.path.dirname(test_install_dir), 'tmp')
-            if not os.path.exists(tmp_dir):
-                os.makedirs(tmp_dir)
+
+        # Temporary directory
+        tmp_dir = os.path.join(os.path.dirname(test_install_dir), 'tmp')
+        
+        # Repository directory
         repos_dir = directory
-        if self.data_repos_dir:
-            data_repos_dir = self.replace_vars(self.data_repos_dir)
+        if remote_test_install and self.remote_repos_dir:
+            remote_repos_dir = self.replace_vars(self.remote_repos_dir)
         else:
-            data_repos_dir = None
-        install_dir = test_install_dir
+            remote_repos_dir = repos_dir
+        
+        # Data repository directory
+        data_repos_dir = self.replace_vars(self.data_repos_dir)
+        if remote_test_install and self.remote_data_repos_dir:
+            remote_data_repos_dir = self.replace_vars(self.remote_data_repos_dir)
+        elif self.data_repos_dir:
+            remote_data_repos_dir = data_repos_dir
+        else:
+            remote_data_repos_dir = None
+            
         installer_filename = self.replace_vars(self.installer_filename)
-        if os.path.isdir(install_dir):
+        if remote_test_install and self.remote_installer_filename:
+            remote_installer_filename = self.replace_vars(self.remote_installer_filename)
+        else:
+            remote_installer_filename = installer_filename
+        
+        if os.path.isdir(test_install_dir):
             print('removing previous test installation...')
-            shutil.rmtree(install_dir)
+            shutil.rmtree(test_install_dir)
+        
+        if os.path.isdir(tmp_dir):
+            print('removing previous temporary directory...')
+            shutil.rmtree(tmp_dir)
+        
+        if not os.path.exists(test_install_dir):
+            print('creating test directcory...')
+            os.makedirs(test_install_dir)
+            
+        if not os.path.exists(tmp_dir):
+            print('creating temporary directory...')
+            os.makedirs(tmp_dir)
+     
         if not os.path.isdir(repos_dir) \
-                or (data_repos_dir is not None
-                    and not os.path.isdir(data_repos_dir)):
+            or (data_repos_dir is not None \
+            and not os.path.isdir(data_repos_dir)):
             raise RuntimeError('Some repositories are missing (%s, %s)'
-                               % (repos_dir, data_repos_dir))
-        install_script = self.make_install_script(
-            install_dir, repos_dir, data_repos_dir, temp_dir=tmp_dir)
+                        % (repos_dir, data_repos_dir))
+        
+        install_script = self.make_install_script( 
+            remote_test_install_dir, 
+            remote_repos_dir, 
+            remote_data_repos_dir, 
+            temp_dir=tmp_dir)
+        
         cmd = []
-        if self.remote_test_host_cmd:
+        if remote_test_install:
             cmd = shlex.split(self.remote_test_host_cmd)
+            
         if sys.platform == 'darwin':
             # on Mac, the installer is a .app
             installer_filename += '.app/Contents/MacOS/%s' \
                 % os.path.basename(installer_filename)
-        cmd += [installer_filename, '--script', install_script]
+        cmd += [remote_installer_filename, '--script', install_script]
         try:
             print('installing...')
             cmd = '"' + '" "'.join(cmd) + '"'
@@ -3307,7 +3366,7 @@ Controller.prototype.FinishedPageCallback = function()
             print('done.')
         finally:
             os.unlink(install_script)
-
+            
     def get_environ(self, default=None):
         env = super(PackageDirectory, self).get_environ(default)
         if hasattr(self, '_recurse_get_environ'):
@@ -3315,19 +3374,31 @@ Controller.prototype.FinishedPageCallback = function()
         self._recurse_get_environ = True
         if env is None:
             env = dict(os.environ)
-        if self.test_install_dir:
+        
+        if self.remote_test_host_cmd and self.remote_test_install_dir:
+            install_dir = self.replace_vars(self.remote_test_install_dir)
+            env['BRAINVISA_PACKAGE_INSTALL_PREFIX'] = install_dir            
+        elif self.test_install_dir:
             install_dir = self.replace_vars(self.test_install_dir)
             env['BRAINVISA_PACKAGE_INSTALL_PREFIX'] = install_dir
+        
         # binaries are in bin/real-bin/ (used by some python tests commands)
         env['BRAINVISA_REAL_BIN'] = '/real-bin'
-        if self.test_run_data_dir:
+        
+        if self.remote_test_host_cmd and self.remote_test_run_data_dir:
+            # Add directories to env
+            env["BRAINVISA_TEST_RUN_DATA_DIR"] = self.remote_test_run_data_dir
+        elif self.test_run_data_dir:
             # Add directories to env
             env["BRAINVISA_TEST_RUN_DATA_DIR"] = self.test_run_data_dir
-        if self.test_ref_data_dir:
-            if env is None:
-                env = dict(os.environ)
+        
+        if self.remote_test_host_cmd and self.remote_test_ref_data_dir:
+            # Add directories to env
+            env["BRAINVISA_TEST_REF_DATA_DIR"] = self.remote_test_ref_data_dir
+        elif self.test_ref_data_dir:
             # Add directories to env
             env["BRAINVISA_TEST_REF_DATA_DIR"] = self.test_ref_data_dir
+        
         if self.remote_test_host_cmd:
             # temporarily change os.environ since expand_shell uses
             # os.path.expandvars(), which use os.environ variables

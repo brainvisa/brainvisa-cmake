@@ -3324,10 +3324,10 @@ Controller.prototype.FinishedPageCallback = function()
         if os.path.isdir(test_install_dir):
             print('removing previous test installation...')
             shutil.rmtree(test_install_dir)
-        
-        if os.path.isdir(tmp_dir):
-            print('removing previous temporary directory...')
-            shutil.rmtree(tmp_dir)
+
+        #if os.path.isdir(tmp_dir):
+            #print('removing previous temporary directory...')
+            #shutil.rmtree(tmp_dir)
         
         if not os.path.exists(test_install_dir):
             print('creating test directcory...')

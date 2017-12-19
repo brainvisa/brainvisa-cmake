@@ -289,16 +289,25 @@ def environmentVariablesSubstitution(path, env=None):
 def environmentPathVariablesSubstitution(path, env=None):
     
     p = environmentVariablesSubstitution(path, env)
-    
+
+    file_scheme = 'file://'
+    has_file_scheme = path.startswith(file_scheme)
+    if has_file_scheme:
+        # Remove file scheme
+        p = p[len(file_scheme):]
+        
     # Try to detect windows pathes starting with drive letters
     # for cross compilation.
     # TODO: check only for cross compiling mode
-    if len(path) > 1 and path[1] == ':':
-        # return 
-        return p
+    if not (len(p) > 1 and p[1] == ':'):
+        p = os.path.normpath(os.path.realpath(os.path.abspath(p)))
+    
+    if has_file_scheme:
+        # Add file scheme
+        p = file_scheme + p
+    
+    return p
         
-    return os.path.normpath(os.path.realpath(os.path.abspath(p)))
-
 
 def run_and_log_tests(cwd=None, env=None, options=None):
     # get test labels to assign them to projects
@@ -451,7 +460,7 @@ http://brainvisa.info/brainvisa-cmake/
         self.buildDirectories = {}
         self.packageDirectories = {}
         self.general_section = GeneralSection(self)
-        currentFilterSection = False
+        condition_stack = []
 
         directories = [os.path.normpath(os.path.realpath(os.path.abspath(d)))
                        for d in options.directories]
@@ -487,6 +496,7 @@ http://brainvisa.info/brainvisa-cmake/
             options.configuration_file = defaultConfigurationFile
 
         if options.configuration_file:
+            
             # Read configuration file
             for line in open(options.configuration_file):
                 lineCount += 1
@@ -499,7 +509,7 @@ http://brainvisa.info/brainvisa-cmake/
                         if line[-1] != ']':
                             raise SyntaxError()
                         l = line[1:-1].split(None, 1)
-                        if len(l) != 2 and l[0] not in ('if', 'endif', 'else',
+                        if len(l) != 2 and l[0] not in ('if', 'endif', 'else', 
                                                         'general'):
                             raise SyntaxError()
 
@@ -511,7 +521,7 @@ http://brainvisa.info/brainvisa-cmake/
                             self.sourcesDirectories[
                                 currentDirectoryObject.directory] \
                                     = currentDirectoryObject
-                            currentFilterSection = None
+                            condition_stack = []
                         elif l[0] == 'build':
                             currentDirectoryObject = BuildDirectory(
                                 environmentPathVariablesSubstitution(
@@ -520,7 +530,7 @@ http://brainvisa.info/brainvisa-cmake/
                             self.buildDirectories[
                                 currentDirectoryObject.directory] \
                                     = currentDirectoryObject
-                            currentFilterSection = None
+                            condition_stack = []
                         elif l[0] == 'virtualenv':
                             currentDirectoryObject = VirtualenvDirectory(
                                 environmentPathVariablesSubstitution(
@@ -529,7 +539,7 @@ http://brainvisa.info/brainvisa-cmake/
                             self.buildDirectories[
                                 currentDirectoryObject.directory] \
                                     = currentDirectoryObject
-                            currentFilterSection = None
+                            condition_stack = []
                         elif l[0] == 'package':
                             currentDirectoryObject = PackageDirectory(
                                 environmentPathVariablesSubstitution(
@@ -538,26 +548,33 @@ http://brainvisa.info/brainvisa-cmake/
                             self.packageDirectories[
                                 currentDirectoryObject.directory] \
                                     = currentDirectoryObject
-                            currentFilterSection = None
+                            condition_stack = []
                         elif l[0] == 'if' \
                                 and currentDirectoryObject is not None \
                                 and len(l) >= 2:
-                            currentFilterSection \
-                                = check_filter_condition(l[1:])
-                        elif l[0] == 'endif' and len(l) == 1 \
-                                and currentFilterSection is not None:
-                            # ends the filtered section
-                            currentFilterSection = None
-                        elif l[0] == 'else' and len(l) == 1 \
-                                and currentFilterSection is not None:
-                            # inverts the filtered section
-                            currentFilterSection = not currentFilterSection
+                            condition_stack.append(
+                                check_filter_condition(l[1:]))
+                        elif l[0] == 'endif' and len(l) == 1:
+                            if len(condition_stack) > 0:
+                                # ends the filtered section
+                                condition_stack.pop()
+                            else:
+                                RuntimeError('[endif] clause is not preceded by '
+                                             '[if] clause.')
+                        elif l[0] == 'else' and len(l) == 1:
+                            if len(condition_stack) > 0:
+                                # inverts the filtered section
+                                condition_stack[-1] = not condition_stack[-1]
+                            else:
+                                RuntimeError('[else] clause is not preceded by '
+                                             '[if] clause.')
                         elif l[0] == 'general' and len(l) == 1:
                             currentDirectoryObject = self.general_section
-                            currentFilterSection = None
+                            condition_stack = []
                         else:
                             raise SyntaxError()
-                    elif currentFilterSection in (None, True):
+                    elif len(condition_stack) == 0 \
+                        or False not in condition_stack:
                         if currentDirectoryObject is None:
                             raise SyntaxError()
                         if self.verbose:
@@ -571,6 +588,9 @@ http://brainvisa.info/brainvisa-cmake/
                         options.configuration_file) + ' on line '
                         + str(lineCount))
 
+        if len(condition_stack) > 0:
+            RuntimeError('some [if] clause remain unclosed by [endif].')
+            
         # store options and args
         self.options = options
         self.args = args

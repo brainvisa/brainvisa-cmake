@@ -8,6 +8,7 @@ if( LIBGFORTRAN_LIBRARIES )
   set( LIBGFORTRAN_FOUND TRUE )
 else()
   find_library( LIBGFORTRAN gfortran gfortran-3 )
+  
   if( NOT LIBGFORTRAN )
     # On Mandriva-2008 libgfortran is in /usr/lib/libgfortran.so.2 and CMake cannot find it
     # because there is no /usr/lib/libgfortran.so
@@ -42,6 +43,14 @@ else()
     set( LIBGFORTRAN_LIBRARIES ${LIBGFORTRAN_LIBRARIES} "${LIBG2C}" )
     unset(LIBG2C CACHE)
   endif()
+  
+  if(NOT GFORTRAN_VERSION)
+    execute_process( COMMAND "${CMAKE_Fortran_COMPILER}" "-v"
+                     ERROR_VARIABLE _gfortran_v )
+    string( REGEX MATCH "gcc version (([0-9]+)(.[0-9]+)?)" _gfortranver "${_gfortran_v}" )
+    set( GFORTRAN_VERSION ${CMAKE_MATCH_1} CACHE STRING "gfortran version" )
+  endif()
+  
   if( LIBGFORTRAN_LIBRARIES )
     set( LIBGFORTRAN_FOUND TRUE )
     set( LIBGFORTRAN_LIBRARIES "${LIBGFORTRAN_LIBRARIES}" CACHE PATH "gfortran libraries" FORCE )

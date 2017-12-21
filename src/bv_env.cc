@@ -486,8 +486,21 @@ int main( int argc, char *argv[] )
   string install_directory;
   vector< string > argv0 = split_path( argv[0] );
 
-  if ( argv0.size() > 1 ) {
-    if ( ( ! argv0[ 0 ].empty() ) 
+  if( argc >= 2 &&
+      ( string( argv[1] ) == "-h" || string( argv[1] ) == "--help" ) )
+  {
+    cout << "bv_env [command [command_arg [...]]]\n\n";
+    cout << "run a command in brainvisa-cmake paths environment.\n\n";
+    cout << "Without arguments, print the runtime environment to be used "
+            "on the standard output\n",
+    cout << "With arguments, set the runtime environment, and run the "
+            "command passed in arguments in this environment.\n";
+    exit(0);
+  }
+
+  if ( argv0.size() > 1 )
+  {
+    if ( ( ! argv0[ 0 ].empty() )
 #if WIN32
         // Windows has a letter for drives, so we must add conditions to know if path is relative
         && ( argv0[0][1] != ':' )

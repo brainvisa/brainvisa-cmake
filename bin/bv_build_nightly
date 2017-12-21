@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [ "$1" = "-h" -o "$1" = "--help" ]; then
+  echo "run bv_maker for nightly builds in I2BM/NeuroSpin."
+  echo "This specific command should not be used in a different environment, it contains hard-coded paths"
+  exit 0
+fi
+
 if [ -f /etc/profile ]; then
   # Load global profile to have minimal environment variables
   . /etc/profile

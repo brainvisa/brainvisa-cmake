@@ -1,2 +1,6 @@
 #!/bin/sh
-exec kompare "$6" "$7" 2> /dev/null
+if [ "$1" = "-h" -o "$1" = "--help" ]; then
+  exec kompare --help
+else
+  exec kompare "$6" "$7" 2> /dev/null
+fi

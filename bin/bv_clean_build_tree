@@ -34,9 +34,17 @@ def clean_lib_dir(directory):
         if m:
           if liblink:
               link_f = os.path.join(directory, liblink % m.group(1))
-              if os.path.islink(link_f) and os.readlink(link_f) != f:
-                  print('obsolete lib:', f)
-                  os.unlink(os.path.join(directory, f))
+              if os.path.islink(link_f):
+                  f2 = os.path.join(directory, f)
+                  while os.path.islink(f2):
+                      f2 = os.path.normpath(os.path.join(directory,
+                                                         os.readlink(f2)))
+                  while os.path.islink(link_f):
+                      link_f = os.path.normpath(os.path.join(
+                          directory, os.readlink(link_f)))
+                  if os.path.abspath(link_f) != os.path.abspath(f2):
+                      print('obsolete lib:', f)
+                      os.unlink(os.path.join(directory, f))
           else:
               libs.setdefault(m.group(1), []).append((f, m.group(2)))
     #if liblink is None: # windows: sort DLL versions
@@ -200,15 +208,17 @@ if options.binaries:
                 all_cmds = parse_cmake_executables(d)
                 for f in os.listdir(bindir):
                     if not os.path.islink(os.path.join(bindir, f)):
-                        if f.startswith('bv_'):
-                            sk = skipped.setdefault(bindir, [])
-                            sk.append(f)
-                            #print('skipping', f, '(may be part of bv_cmake)')
-                        else:
-                            if f not in all_cmds:
-                                print('rm obsolete command', f)
-                                if not options.list :
-                                    os.unlink(os.path.join(bindir, f))
+                        if f not in all_cmds:
+                            # the following exceptions are not needed any
+                            # longer since bv_* commands are now part of
+                            # the regular components
+                            #if f.startswith('bv_'):
+                                #sk = skipped.setdefault(bindir, [])
+                                #sk.append(f)
+                            #else:
+                            print('rm obsolete command', f)
+                            if not options.list :
+                                os.unlink(os.path.join(bindir, f))
             except RuntimeError as e:
                 print(e)
     for d, items in six.iteritems(skipped):

@@ -2,6 +2,10 @@
 
 # echo "kdiff3_svn" "$@"
 
+if [ "$1" = "-h" -o "$1" = "--help" ]; then
+  exec kdiff3 --help
+fi
+
 if [ "$#" -ge 11 ]; then
   outfile=`mktemp`
   res=0

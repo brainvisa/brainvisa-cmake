@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ "$1" = "-h" -o "$1" = "--help" ]; then
+  exec meld --help
+fi
+
 base=${1?1st argument is 'base' file}
 theirs=${2?2nd argument is 'theirs' file}
 mine=${3?3rd argument is 'mine' file}

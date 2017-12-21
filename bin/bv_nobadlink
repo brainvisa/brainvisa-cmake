@@ -1,5 +1,6 @@
-#! /usr/bin/env python2
+#! /usr/bin/env python
 
+from __future__ import print_function
 import os, sys
 
 def nobadlink( dir ):
@@ -12,16 +13,22 @@ def nobadlink( dir ):
             except:
                 pass
         elif os.path.islink( f ) and not os.path.exists( f ):
-            print 'rm', f
+            print('rm', f)
             try:
                 os.unlink( f )
-            except Exception,e:
-                print e
+            except Exception as e:
+                print(e)
 
 
 args = [ '.' ]
 if len( sys.argv ) > 1:
     args = sys.argv[1:]
+    if args >= 1 and args[0] in ('-h', '--help'):
+        print(sys.argv[0], '[directory1 [directory2 [...]]]:')
+        print('recursively remove dead links in the given directories '
+              '(default: current directory)')
+        sys.exit(0)
+
 
 for dir in args:
     nobadlink( dir )

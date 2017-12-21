@@ -1,5 +1,13 @@
 #! /bin/sh
 
+echo $1
+if [ "$1" = "-h" -o "$1" = "--help" ]; then
+  echo $0
+  echo Builds anatomist in home directory, and builds a package with it.
+  echo This command is certainly obsolete, I don\'t remember what it was meant for.
+  exit 0
+fi
+
 project=anatomist
 version=trunk
 

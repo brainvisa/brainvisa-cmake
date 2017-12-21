@@ -1,1 +1,2 @@
+#!/bin/sh
 grep -R --color --include='*.c' --include='*.cc' --include='*.cpp' --include='*.C' --include='*.h' --include='*.hh' --include='*.hpp' --include='*.H' --include='*.sip' --include='*.tpl' "$@"

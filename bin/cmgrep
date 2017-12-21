@@ -1,1 +1,2 @@
+#!/bin/sh
 grep -R --color --include='CMakeLists.txt' --include='*.cmake' --include='*.cmake.in' "$@"

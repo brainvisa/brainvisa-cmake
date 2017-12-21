@@ -10,7 +10,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libpng12 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libgcc1 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libstdc++6 RUN )
-  if( LIBAUDIO_FOUND )
+  if( LIBAUDIO_FOUND AND NOT(CMAKE_CROSSCOMPILING AND WIN32))
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libaudio RUN )
   endif()
   # ship libfontconfig only on Mandriva 2008 packages

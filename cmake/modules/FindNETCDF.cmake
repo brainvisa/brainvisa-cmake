@@ -72,6 +72,33 @@ else()
     if( NETCDF_FOUND )
 
         IF( NETCDF_INCLUDE_DIR )
+            if(NOT NETCDF_VERSION)
+                # Try to get version
+                if( EXISTS "${NETCDF_INCLUDE_DIR}/netcdf_meta.h" )
+                    file( READ "${NETCDF_INCLUDE_DIR}/netcdf_meta.h" header )
+                    string( REGEX MATCH "#define[ \\t]+NC_VERSION[ \\t]+\"([^\"]+)\"" match "${header}" )
+                    if( match )
+                        set( NETCDF_VERSION "${CMAKE_MATCH_1}" 
+                            CACHE STRING "Netcdf library version")
+                    endif()
+                endif()
+                
+                if(NOT NETCDF_VERSION)
+                    find_program(__nc_config nc-config
+                                 PATHS "/i2bm/brainvisa/Windows-7-x86_64/netcdf-4.1.3/bin")
+                    message("Found nc-config: ${__nc_config}")
+                    if(__nc_config)
+                        execute_process(COMMAND ${__nc_config} --version
+                                        OUTPUT_VARIABLE __result)
+                        string( REGEX MATCH "netCDF[ \\t]+([0-9.]+)" match "${__result}" )
+                        if( match )
+                            set( NETCDF_VERSION "${CMAKE_MATCH_1}" 
+                                CACHE STRING "Netcdf library version")
+                        endif()
+                    endif()
+                endif()
+            endif()
+            
             # check dependance on mpi
             list( GET NETCDF_INCLUDE_DIR 0 incdir )
             file(READ "${incdir}/netcdf.h" _netcdf_h )

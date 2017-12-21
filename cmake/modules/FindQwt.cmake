@@ -60,6 +60,36 @@ if( NOT QWT_FOUND )
 
   SET(QWT_FOUND FALSE)
   IF(QWT_INCLUDE_DIR AND QWT_LIBRARY)
+    
+    if(NOT QWT_VERSION)
+      # Try to find qwt version
+      if( EXISTS "${QWT_INCLUDE_DIR}/qwt_global.h" )
+        include("${CMAKE_CURRENT_LIST_DIR}/UseHexConvert.cmake")
+        file( READ "${QWT_INCLUDE_DIR}/qwt_global.h" header )
+        string( REGEX MATCH "#define[ \\t]+QWT_VERSION[ \\t]+0x([0-9a-fA-F][0-9a-fA-F])([0-9a-fA-F][0-9a-fA-F])([0-9a-fA-F][0-9a-fA-F]).*" match "${header}" )
+
+        if( match )
+          # Convert hexadecimal values
+          set(__major_hex_version "${CMAKE_MATCH_1}")
+          set(__minor_hex_version "${CMAKE_MATCH_2}")
+          set(__micro_hex_version "${CMAKE_MATCH_3}")
+          HEX2DEC(__major_version "${__major_hex_version}")
+          HEX2DEC(__minor_version "${__minor_hex_version}")
+          HEX2DEC(__micro_version "${__micro_hex_version}")
+            
+          set(QWT_VERSION 
+              "${__major_version}.${__minor_version}.${__micro_version}" 
+              CACHE STRING "Qwt library version")
+          unset(__major_hex_version)
+          unset(__minor_hex_version)
+          unset(__micro_hex_version)
+          unset(__major_version)
+          unset(__minor_version)
+          unset(__micro_version)
+        endif()
+      endif()
+    endif()
+    
     SET(QWT_FOUND TRUE)
   ENDIF(QWT_INCLUDE_DIR AND QWT_LIBRARY)
 

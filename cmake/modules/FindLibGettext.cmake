@@ -38,7 +38,64 @@ ELSE()
     endforeach()
     unset(__library)
     
+    # Find specific include directories
+    FIND_PATH(LIBGETTEXT_INCLUDE_DIR NAMES gettext-po.h)
+
     if(LIBGETTEXT_LIBRARIES)
+        include("${CMAKE_CURRENT_LIST_DIR}/UseHexConvert.cmake")
+        
+        # Try to find gettext version
+        if( EXISTS "${LIBGETTEXT_INCLUDE_DIR}/gettext-po.h" )
+            file( READ "${LIBGETTEXT_INCLUDE_DIR}/gettext-po.h" header )
+            string( REGEX MATCH "#define[ \\t]+LIBGETTEXTPO_VERSION[ \\t]+0x([0-9a-fA-F][0-9a-fA-F])([0-9a-fA-F][0-9a-fA-F])([0-9a-fA-F][0-9a-fA-F]).*" match "${header}" )
+
+            if( match )
+                # Convert hexadecimal values
+                set(__major_hex_version "${CMAKE_MATCH_1}")
+                set(__minor_hex_version "${CMAKE_MATCH_2}")
+                set(__micro_hex_version "${CMAKE_MATCH_3}")
+                HEX2DEC(__major_version "${__major_hex_version}")
+                HEX2DEC(__minor_version "${__minor_hex_version}")
+                HEX2DEC(__micro_version "${__micro_hex_version}")
+                
+                set(LIBGETTEXT_VERSION 
+                    "${__major_version}.${__minor_version}.${__micro_version}" 
+                    CACHE STRING "Gettext library version")
+                unset(__major_hex_version)
+                unset(__minor_hex_version)
+                unset(__micro_hex_version)
+                unset(__major_version)
+                unset(__minor_version)
+                unset(__micro_version)
+            endif()
+        endif()
+        
+        # Try to find libintl version
+        if( EXISTS "${LIBGETTEXT_INCLUDE_DIR}/libintl.h" )
+            file( READ "${LIBGETTEXT_INCLUDE_DIR}/libintl.h" header )
+            string( REGEX MATCH "#define[ \\t]+LIBINTL_VERSION[ \\t]+0x([0-9a-fA-F][0-9a-fA-F])([0-9a-fA-F][0-9a-fA-F])([0-9a-fA-F][0-9a-fA-F]).*" match "${header}" )
+
+            if( match )
+                # Convert hexadecimal values
+                set(__major_hex_version "${CMAKE_MATCH_1}")
+                set(__minor_hex_version "${CMAKE_MATCH_2}")
+                set(__micro_hex_version "${CMAKE_MATCH_3}")
+                HEX2DEC(__major_version "${__major_hex_version}")
+                HEX2DEC(__minor_version "${__minor_hex_version}")
+                HEX2DEC(__micro_version "${__micro_hex_version}")
+                
+                set(LIBGETTEXT_LIBINTL_VERSION 
+                    "${__major_version}.${__minor_version}.${__micro_version}" 
+                    CACHE STRING "Gettext Intl library version")
+                unset(__major_hex_version)
+                unset(__minor_hex_version)
+                unset(__micro_hex_version)
+                unset(__major_version)
+                unset(__minor_version)
+                unset(__micro_version)
+            endif()
+        endif()
+    
         set(LIBGETTEXT_LIBRARIES ${LIBGETTEXT_LIBRARIES}
             CACHE PATH "Gettext libraries" FORCE)
         set(LIBGETTEXT_FOUND TRUE)

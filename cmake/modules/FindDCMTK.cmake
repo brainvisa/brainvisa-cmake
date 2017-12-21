@@ -5,6 +5,7 @@
 #  DCMTK_LIBRARIES     - Files to link against to use DCMTK
 #  DCMTK_FOUND         - If false, don't try to use DCMTK
 #  DCMTK_DIR           - (optional) Source directory for DCMTK
+#  DCMTK_VERSION       - (optional) Version for DCMTK
 #
 # DCMTK_DIR can be used to make it simpler to find the various include
 # directories and compiled libraries if you've just compiled it in the
@@ -474,6 +475,44 @@ if( DCMTK_config_INCLUDE_DIR AND
     endif( ZLIB_FOUND )
   ENDIF( UNIX )
 
+  if(NOT DCMTK_VERSION)
+    # Try to find version
+    list(INSERT __dcmtk_version_files 
+          "dcmtk/dcmdata/dcuid.h"
+          "dcmtk/config/cfunix.h"
+          "dcmtk/config/osconfig.h")
+        
+    list(INSERT __dcmtk_version_regex
+          "#define[ \\t]*OFFIS_DCMTK_VERSION_STRING[ \\t]*\"([^\"]*)\""
+          "#define[ \\t]*PACKAGE_VERSION[ \\t]*\"([^\"]*)\"")
+  
+    foreach(__include_dir ${DCMTK_INCLUDE_DIR})
+      foreach(__vf ${__dcmtk_version_files})
+        set(__vf "${__include_dir}/${__vf}")
+        if( EXISTS "${__vf}" )
+          foreach(__re ${__dcmtk_version_regex})
+            file( READ "${__vf}" header )
+            string( REGEX MATCH "${__re}" match "${header}" )
+            if( match )
+              set( DCMTK_VERSION "${CMAKE_MATCH_1}" CACHE STRING "Dicom toolkit version" )
+              break()
+            endif()
+          endforeach()
+          unset(__re)
+        endif()
+        if(DCMTK_VERSION)
+          break()
+        endif()
+      endforeach()
+      unset(__vf)
+      if(DCMTK_VERSION)
+        break()
+      endif()
+    endforeach()
+    unset(__include_dir)
+    unset(__dcmtk_version_files)
+    unset(__dcmtk_version_regex)
+  endif()
 endif()
 
 

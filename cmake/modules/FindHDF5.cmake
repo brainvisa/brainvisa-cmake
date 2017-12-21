@@ -42,6 +42,10 @@ if( NOT HDF5_FOUND )
     )
 
     IF( HDF5_INCLUDE_DIR )
+      IF(NOT(HDF5_C_INCLUDE_DIR))
+        set(HDF5_C_INCLUDE_DIR "${HDF5_INCLUDE_DIR}")
+      ENDIF()
+      
       IF( HDF5_LIBRARIES )
 
         SET( HDF5_FOUND "YES" CACHE BOOL "specify that HDF5 library was found")
@@ -59,6 +63,15 @@ if( NOT HDF5_FOUND )
 
   # For compatibility with our older code
   if( HDF5_FOUND )
+    # Try to find HDF5 version
+    if( EXISTS "${HDF5_C_INCLUDE_DIR}/H5pubconf.h" )
+      file( READ "${HDF5_C_INCLUDE_DIR}/H5pubconf.h" header )
+      string( REGEX MATCH "#define[ \\t]+(H5_)?VERSION[ \\t]+\"([^\"]+)\"" match "${header}" )
+      if( match )
+        set(HDF5_VERSION "${CMAKE_MATCH_2}" CACHE STRING "HDF5 library version")
+      endif()
+    endif()
+      
     set( HDF5_LIBRARY ${HDF5_LIBRARIES} CACHE FILEPATH "HDF5 library" )
     if( NOT HDF5_INCLUDE_DIR )
       set( HDF5_INCLUDE_DIR ${HDF5_C_INCLUDE_DIR} )

@@ -12,16 +12,11 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libhdf5 RUN )
   endif()
   # Find version
-  set( ${package_version} "0.0.0" PARENT_SCOPE )
-  foreach ( MINC_INCLUDE_DIR ${LIBMINC_INCLUDE_DIRS} )
-    if( EXISTS "${MINC_INCLUDE_DIR}/minc.h" )
-      file( READ "${MINC_INCLUDE_DIR}/minc.h" header )
-      string( REGEX MATCH "#define[ \\t]*MI_VERSION[0-9_]*[ \\t]*\"MINC Version[ \\t]*([^\"]*)\"" match "${header}" )
-      if( match )
-        set( ${package_version} "${CMAKE_MATCH_1}" PARENT_SCOPE )
-      endif()
-    endif()
-  endforeach()
+  if(MINC_VERSION)
+    set( ${package_version} "${MINC_VERSION}" PARENT_SCOPE )
+  else()
+    set( ${package_version} "0.0.0" PARENT_SCOPE )
+  endif()
 endfunction()
 
 

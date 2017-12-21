@@ -8,11 +8,14 @@ if( LIBQUADMATH_LIBRARIES )
   set( LIBQUADMATH_FOUND TRUE )
 else()
   find_library( LIBQUADMATH_LIBRARIES NAMES quadmath quadmath-0 )
-  if( NOT LIBQUADMATH_LIBRARIES )
+  if(NOT GCC_VERSION)
     execute_process( COMMAND "${CMAKE_CXX_COMPILER}" "-v"
                      ERROR_VARIABLE _gcc_v )
     string( REGEX MATCH "gcc version (([0-9]+)(.[0-9]+)?)" _gccver "${_gcc_v}" )
     set( GCC_VERSION ${CMAKE_MATCH_1} CACHE STRING "gcc version" )
+  endif()
+  
+  if( NOT LIBQUADMATH_LIBRARIES )
     set( _GCCPATH
       "/usr/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}"
       "/usr/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${CMAKE_MATCH_2}"
@@ -21,13 +24,9 @@ else()
     if( NOT LIBQUADMATH_LIBRARIES )
       file( GLOB LIBQUADMATH_LIBRARIES "${_GCCPATH}/libquadmath.so" )
     endif()
-    if(LIBQUADMATH_LIBRARIES)
-        # Version is the same than GCC one
-        set(LIBQUADMATH_VERSION "${GCC_VERSION}" 
-            CACHE STRING "quadmath library version")
-    endif()
     unset( _GCCPATH )
   endif()
+  
   if( NOT LIBQUADMATH_LIBRARIES )
     # Try to find it using MinGW
     find_package(MinGW)
@@ -42,6 +41,11 @@ else()
          CACHE PATH "LIBQUADMATH library" FORCE )
   endif()
   if( LIBQUADMATH_LIBRARIES )
+    if(GCC_VERSION)
+        # Version is the same than GCC one
+        set(LIBQUADMATH_VERSION "${GCC_VERSION}" 
+            CACHE STRING "quadmath library version")
+    endif()
     set( LIBQUADMATH_FOUND TRUE )
   else()
     set( LIBQUADMATH_FOUND FALSE )

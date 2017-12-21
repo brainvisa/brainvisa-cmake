@@ -4,14 +4,12 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   set( ${package_name} ${component} PARENT_SCOPE )
   set( ${package_maintainer} "IFR 49" PARENT_SCOPE )
   # Find version
-  set( ${package_version} "0.0.0" PARENT_SCOPE )
-  if( EXISTS "${HDF5_C_INCLUDE_DIR}/H5pubconf.h" )
-    file( READ "${HDF5_C_INCLUDE_DIR}/H5pubconf.h" header )
-    string( REGEX MATCH "#define[ \\t]+H5_VERSION[ \\t]+\"([^\"]+)\"" match "${header}" )
-    if( match )
-      set( ${package_version} "${CMAKE_MATCH_1}" PARENT_SCOPE )
-    endif()
+  if(HDF5_VERSION)
+    set( ${package_version} "${HDF5_VERSION}" PARENT_SCOPE )
+  else()
+    set( ${package_version} "0.0.0" PARENT_SCOPE )
   endif()
+  
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS zlib RUN )
   if( LSB_DISTRIB STREQUAL ubuntu
       AND LSB_DISTRIB_RELEASE VERSION_GREATER 16.0 )

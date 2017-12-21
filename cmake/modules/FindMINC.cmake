@@ -152,7 +152,23 @@ else()
 
                 ENDIF( MINC_volumeio_LIBRARY )
             ENDIF( MINC_minc_LIBRARY )
+            
         ENDIF( MINC_INCLUDE_DIR )
+        
+        if(NOT(MINC_VERSION))
+            # Try to find minc version
+            foreach ( __include_dir ${LIBMINC_INCLUDE_DIRS} )
+                if( EXISTS "${__include_dir}/minc.h" )
+                    file( READ "${__include_dir}/minc.h" header )
+                    string( REGEX MATCH "#define[ \\t]*MI_VERSION[0-9_]*[ \\t]*\"MINC Version[ \\t]*([^\"]*)\"" match "${header}" )
+                    if( match )
+                        set(MINC_VERSION "${CMAKE_MATCH_1}" 
+                            CACHE STRING "Minc library version")
+                        break()
+                    endif()
+                endif()
+            endforeach()
+        endif()
 
         IF( NOT MINC_FOUND )
             SET( MINC_DIR "" CACHE PATH "Root of MINC source tree (optional)." )

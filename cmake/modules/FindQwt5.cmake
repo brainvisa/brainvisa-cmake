@@ -47,10 +47,10 @@ IF( QT4_FOUND )
 	IF( Qwt5_INCLUDE_DIR )
 		FILE( READ ${Qwt5_INCLUDE_DIR}/qwt_global.h QWT_GLOBAL_H )
 		STRING( REGEX MATCH "#define *QWT_VERSION *(0x05*)" QWT_IS_VERSION_5 ${QWT_GLOBAL_H})
-		
 		IF( QWT_IS_VERSION_5 )
-		STRING(REGEX REPLACE ".*#define[\\t\\ ]+QWT_VERSION_STR[\\t\\ ]+\"([0-9]+\\.[0-9]+\\.[0-9]+)\".*" "\\1" Qwt_VERSION "${QWT_GLOBAL_H}")
-
+		STRING(REGEX REPLACE ".*#define[ \\t]+QWT_VERSION_STR[ \\t]+\"([0-9]+\\.[0-9]+\\.[0-9]+)\".*" "\\1" __qwt_VERSION "${QWT_GLOBAL_H}")
+        set(Qwt_VERSION ${__qwt_VERSION} CACHE STRING "Qwt5 library version")
+        
 		# Find Qwt5 library linked to Qt4
 		FIND_LIBRARY( Qwt5_Qt4_TENTATIVE_LIBRARY NAMES qwt5-qt4 qwt-qt4 qwt5 qwt PATHS /usr/local/qwt/lib /usr/local/lib /usr/lib )
 		IF( UNIX AND NOT CYGWIN)

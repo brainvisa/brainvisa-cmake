@@ -1375,16 +1375,30 @@ function( BRAINVISA_GENERATE_COMMANDS_HELP_INDEX )
   if(NOT TARGET bv_commands_doc)
     set(_depends "")
     set(_dirs "")
+    set(_cmd_options)
     foreach(_component ${_components})
+      set(_comp_cmds)
       foreach(_command ${${_component}-commands})
         if((NOT DEFINED ${_command}-help-generate) OR ${_command}-help-generate)
           list( APPEND _depends "${_output_directory}/commands-help/${_component}-${${_component}_VERSION}/${_command}" )
+          if( NOT _comp_cmds )
+            set( _comp_cmds "${_command}" )
+          else()
+            set( _comp_cmds "${_comp_cmds},${_command}" )
+          endif()
         endif()
       endforeach()
+      if( _comp_cmds )
+        list( APPEND _cmd_options "-c" "${_component}:${_comp_cmds}" )
+      endif()
       unset(_command)
 
       list( APPEND _dirs "${_output_directory}/commands-help/${_component}-${${_component}_VERSION}" )
     endforeach()
+
+    if( _cmd_options )
+      list( INSERT _cmd_options 0 "--no-default" )
+    endif()
 
     file(TO_NATIVE_PATH "${_dirs}" _helppath)
     if (NOT WIN32)
@@ -1401,6 +1415,7 @@ function( BRAINVISA_GENERATE_COMMANDS_HELP_INDEX )
                                 ${CREATE_COMMANDS_DOC}
                                 -t "${_helppath}"
                                 -v 0
+                                ${_cmd_options}
                                 "${_output_directory}/${_index_file}"
                         DEPENDS ${_depends}
                         COMMENT "Generating documentation commands help index ..."
@@ -1815,6 +1830,7 @@ function( BRAINVISA_ADD_TEST )
   unset(_command_args)
   set(_form 1)
   set(testref OFF)
+  set(_working_dir)
 
   foreach( _arg ${_argn} )
     if( ${_arg_index} EQUAL 0 )
@@ -1839,6 +1855,11 @@ function( BRAINVISA_ADD_TEST )
       else()
         # Add argument to list of arguments
         set("${_current_arg}" ${${_current_arg}} "${result}" )
+      endif()
+      if( _working_dir STREQUAL "*set_workdir*" )
+        set( _working_dir "${_arg}" )
+      elseif( _arg STREQUAL "WORKING_DIRECTORY" )
+        set( _working_dir "*set_workdir*" )
       endif()
     endif()
 

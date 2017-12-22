@@ -116,7 +116,6 @@ try:
 
 except ImportError:
     # jenkins module is not here
-    print('Warning: jenkins module is not available')
     jenkins = None
 try:
     from urllib.request import urlopen
@@ -652,6 +651,7 @@ class JenkinsWrapper(object):
     jenkins_cli = ''
     # for use with using a ssh key
     jenkins_cli_options = ['-remoting'] # needed for recent client
+    jenkins_unavailable_warned = False
 
     def __init__(self):
         # the following does not work on our server, it really needs ssh key
@@ -722,6 +722,12 @@ class JenkinsWrapper(object):
         if not configuration.general_section.jenkins_server_url \
                 or configuration.options.disable_jenkins:
             return # don't notify
+
+        if jenkins is None and not JenkinsWrapper.jenkins_unavailable_warned:
+            # jenkins module is not here
+            JenkinsWrapper.jenkins_unavailable_warned = True
+            print('Warning: jenkins module is not available')
+
         #Status = status[0].upper() + status[1:]
         if o.status[step] not in ('interrupted', 'failed'):
             res = 0

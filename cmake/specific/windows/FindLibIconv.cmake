@@ -13,25 +13,17 @@ if(NOT LIBICONV_FOUND)
 
     # Try to find libiconv version
     if( EXISTS "${LIBICONV_INCLUDE_DIR}/iconv.h" )
-      file( READ "${LIBICONV_INCLUDE_DIR}/iconv.h" header )
-      string( REGEX MATCH "#define[ \\t]+_LIBICONV_VERSION[ \\t]+0x([0-9a-fA-F][0-9a-fA-F])([0-9a-fA-F][0-9a-fA-F]).*" match "${header}" )
+        file( READ "${LIBICONV_INCLUDE_DIR}/iconv.h" header )
+        string( REGEX MATCH "#define[ \\t]+_LIBICONV_VERSION[ \\t]+(0x[0-9a-fA-F]+)" match "${header}" )
 
-      if( match )
-        # Convert hexadecimal values
-        include("${CMAKE_CURRENT_LIST_DIR}/../../modules/UseHexConvert.cmake")
-        set(__major_hex_version "${CMAKE_MATCH_1}")
-        set(__minor_hex_version "${CMAKE_MATCH_2}")
-        HEX2DEC(__major_version "${__major_hex_version}")
-        HEX2DEC(__minor_version "${__minor_hex_version}")
-        
-        set(LIBICONV_VERSION 
-            "${__major_version}.${__minor_version}" 
-            CACHE STRING "Iconv library version")
-         unset(__major_hex_version)
-         unset(__minor_hex_version)
-         unset(__major_version)
-         unset(__minor_version)
-      endif()
+        if( match )
+            # Convert hexadecimal values
+            include(UseVersionConvert)
+            version_convert(__version ${CMAKE_MATCH_1} STR)
+            set(LIBICONV_VERSION "${__version}" 
+                CACHE STRING "Iconv library version")
+            unset(__version)
+        endif()
     endif()
     
     # handle the QUIETLY and REQUIRED arguments and set LIBICONV_FOUND to TRUE if 

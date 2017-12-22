@@ -829,7 +829,7 @@ brainvisa directory (with 'rm -rf ''' + packname + '''')
 # PROBLEMS OR QUESTIONS
 
 
-- Visit http://www.anatomist.info or http://www.brainvisa.info web sites.
+- Visit http://www.brainvisa.info web site.
 
 - If you have 3D rendering problems on Linux in Anatomist, there may be an
   alternative OpenGL library in the present package. You have to copy it to the

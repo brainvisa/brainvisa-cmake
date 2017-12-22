@@ -21,7 +21,7 @@
 # use only basename of main executable
 # (to avoid hard-coded /usr/bin/python for instance)
 if [ -z ${BRAINVISA_PACKAGE_INSTALL_PREFIX} ]; then
-  BRAINVISA_PACKAGE_INSTALL_PREFIX=$(dirname $(dirname $0))
+  BRAINVISA_PACKAGE_INSTALL_PREFIX=$(dirname -- "$(dirname -- "$0")")
 fi
 
 # check if we test windows binary tree
@@ -39,7 +39,7 @@ if [ -z "${BRAINVISA_ENV}" ]; then
   exit 1
 fi
 
-CMD=$(basename "$1")
+CMD=$(basename -- "$1")
 shift
 
 # get variables substitution inside arguments

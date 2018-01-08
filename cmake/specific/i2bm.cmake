@@ -22,7 +22,7 @@ if( IS_DIRECTORY /i2bm )
       file( GLOB BOOST_INC "/i2bm/brainvisa/${output}/boost/include" )
       if( BOOST_INC )
         # not automatically set on CentOS 5.11
-        set( Boost_INCLUDE_DIR "/i2bm/brainvisa/${output}/boost/include"
+        set( BOOST_ROOT "/i2bm/brainvisa/${output}/boost"
              CACHE PATH "Boost include directory" )
       endif()
       unset( BOOST_INC )

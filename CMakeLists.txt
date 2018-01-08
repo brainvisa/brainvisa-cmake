@@ -224,7 +224,7 @@ if( BRAINVISA_BVMAKER )
   set( brainvisa-cmake-commands ${cmds}
        CACHE INTERNAL "Commands list for component brainvisa-cmake" FORCE )
   # disable help for some internal or undocumented commands
-  foreach( _command bv_build_installer_i2bm;bv_build_nightly;bv_check_svn_merge;bv_env.bat;bv_env.py;bv_env.sh;bv_packaging_i2bm;bv_patch_libs.sh;bv_patch_qtgui_gtk.py;bv_sendmail;bv_set_project_versions;bv_sources_copyright;bv_tar_source_distribution;bv_unenv.sh;meld_svn;kompare_svn;kdiff3_svn )
+  foreach( _command bv_build_installer_i2bm;bv_build_nightly;bv_check_svn_merge;bv_env.bat;bv_env.py;bv_env.sh;bv_packaging_i2bm;bv_patch_libs.sh;bv_patch_qtgui_gtk.py;bv_sendmail;bv_set_project_versions;bv_sources_copyright;bv_tar_source_distribution;bv_unenv.sh;cgrep;cmgrep;pygrep;meld_svn;kompare_svn;kdiff3_svn )
     set( ${_command}-help-generate FALSE CACHE INTERNAL
         "${_command} help must be generated")
   endforeach()

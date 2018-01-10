@@ -224,9 +224,59 @@ if( BRAINVISA_BVMAKER )
   set( brainvisa-cmake-commands ${cmds}
        CACHE INTERNAL "Commands list for component brainvisa-cmake" FORCE )
   # disable help for some internal or undocumented commands
-  foreach( _command bv_build_installer_i2bm;bv_build_nightly;bv_check_svn_merge;bv_env.bat;bv_env.py;bv_env.sh;bv_packaging_i2bm;bv_patch_libs.sh;bv_patch_qtgui_gtk.py;bv_sendmail;bv_set_project_versions;bv_sources_copyright;bv_tar_source_distribution;bv_unenv.sh;cgrep;cmgrep;pygrep;meld_svn;kompare_svn;kdiff3_svn )
+  set(__excluded_commands 
+      bv_build_installer_i2bm
+      bv_build_nightly
+      bv_check_svn_merge
+      bv_env.bat
+      bv_env.py
+      bv_env.sh
+      bv_packaging_i2bm
+      bv_patch_libs.sh
+      bv_patch_qtgui_gtk.py
+      bv_sendmail
+      bv_set_project_versions
+      bv_sources_copyright
+      bv_tar_source_distribution
+      bv_unenv.sh)
+  
+  if(WIN32)
+    # disable help for some shell commands not runnable on windows
+    list(APPEND __excluded_commands
+         bv_env_host
+         bv_env_test
+         cgrep
+         cmgrep
+         pygrep
+         meld_svn
+         kompare_svn
+         kdiff3_svn)
+  endif()
+  
+  foreach( _command ${__excluded_commands} )
     set( ${_command}-help-generate FALSE CACHE INTERNAL
         "${_command} help must be generated")
+  endforeach()
+  
+  # set script commands to be run using a python interpreter (for windows)
+  foreach( _command
+           bv_clean_build_tree
+           bv_copy_tree
+           bv_maker
+           bv_nobadlink
+           bv_packaging
+           bv_projects_info
+           bv_release
+           bv_show_build_logs
+           bv_sip4make
+           bv_system_info
+           bv_unenv
+           bv_unit_test
+           bv_which
+           bv_wine_regedit
+           svnclient )
+        set(${_command}-command-is-script TRUE CACHE INTERNAL 
+            "${_command} command is script")
   endforeach()
 endif()
 

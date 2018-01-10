@@ -21,7 +21,7 @@ def getWindowsRelease():
     from win32api import RegQueryValueEx,RegOpenKeyEx,RegCloseKey,GetVersionEx
     from win32con import HKEY_LOCAL_MACHINE,VER_PLATFORM_WIN32_NT
   except ImportError:
-    pass
+    return platform.win32_ver()[0]
 
   # Initialize default result
   result = None

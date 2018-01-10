@@ -1471,12 +1471,16 @@ function( BRAINVISA_ADD_COMMAND_HELP name)
       set( _command "bin/${_output_command}" "-h" )
       unset(_output_command)
     else()
-      set( _command "bin/${name}${CMAKE_EXECUTABLE_SUFFIX}" "-h" )
+      if (${name}-command-is-script)
+        set( _command "bin/${name}" "-h" )
+      else()
+        set( _command "bin/${name}${CMAKE_EXECUTABLE_SUFFIX}" "-h" )
+      endif()
     endif()
 
     if (${name}-command-is-script)
       # Execute command using python interpreter
-      set( _command "${PYTHON_HOST_EXECUTABLE}" ${_command})
+      set( _command "${PYTHON_EXECUTABLE}" ${_command})
     endif()
   endif()
 
@@ -1500,7 +1504,7 @@ function( BRAINVISA_ADD_COMMAND_HELP name)
     # Add help generation target
     add_custom_command( OUTPUT "${_component_help_directory}/${name}"
                         COMMAND "${CMAKE_COMMAND}" -E make_directory "${_component_help_directory}"
-                        COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env_host${CMAKE_HOST_EXECUTABLE_SUFFIX}" "${PYTHON_HOST_EXECUTABLE}" -c "import sys, subprocess; subprocess.call( ['${_command}'], stdout = sys.stdout, stderr = sys.stdout )" > ${_component_help_directory}/${name}
+                        COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}" "${PYTHON_EXECUTABLE}" -c "import sys, subprocess; subprocess.call( ['${_command}'], stdout = sys.stdout, stderr = sys.stdout )" > ${_component_help_directory}/${name}
                         DEPENDS ${_depends}
                         COMMENT "Generating ${name} help file ..."
                         VERBATIM )

@@ -106,7 +106,7 @@ endfunction()
 if ( PYTHON_VERSION AND PYTHON_EXECUTABLE AND PYTHON_PREFIX
     AND PYTHON_HOST_VERSION AND PYTHON_HOST_EXECUTABLE AND PYTHON_HOST_PREFIX)
   # Python already found, do nothing
-  set( PYTHON_FOUND TRUE PARENT_SCOPE)
+  set( PYTHON_FOUND TRUE )
 else()
   find_package( PythonInterp REQUIRED )
   include( CMakeFindFrameworks )

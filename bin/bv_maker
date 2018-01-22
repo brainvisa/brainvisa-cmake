@@ -536,6 +536,7 @@ http://brainvisa.info/brainvisa-cmake/
                             or False not in condition_stack:
                             if self.verbose:
                                 print('  processing line:', repr(line))
+                                sys.stdout.flush()
                                 
                             if l[0] == 'source':
                                 currentDirectoryObject = SourceDirectory(
@@ -584,6 +585,8 @@ http://brainvisa.info/brainvisa-cmake/
                             raise SyntaxError()
                         if self.verbose:
                             print('  processing line:', repr(line))
+                            sys.stdout.flush()
+                            
                         currentDirectoryObject.addConfigurationLine(line)
                 except SyntaxError as e:
                     msg = e.message

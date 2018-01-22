@@ -512,44 +512,8 @@ http://brainvisa.info/brainvisa-cmake/
                         if len(l) != 2 and l[0] not in ('if', 'endif', 'else', 
                                                         'general'):
                             raise SyntaxError()
-
-                        if l[0] == 'source':
-                            currentDirectoryObject = SourceDirectory(
-                                environmentPathVariablesSubstitution(
-                                    l[1].strip()),
-                                self)
-                            self.sourcesDirectories[
-                                currentDirectoryObject.directory] \
-                                    = currentDirectoryObject
-                            #condition_stack = []
-                        elif l[0] == 'build':
-                            currentDirectoryObject = BuildDirectory(
-                                environmentPathVariablesSubstitution(
-                                    l[1].strip()),
-                                self)
-                            self.buildDirectories[
-                                currentDirectoryObject.directory] \
-                                    = currentDirectoryObject
-                            #condition_stack = []
-                        elif l[0] == 'virtualenv':
-                            currentDirectoryObject = VirtualenvDirectory(
-                                environmentPathVariablesSubstitution(
-                                    l[1].strip()),
-                                self)
-                            self.buildDirectories[
-                                currentDirectoryObject.directory] \
-                                    = currentDirectoryObject
-                            #condition_stack = []
-                        elif l[0] == 'package':
-                            currentDirectoryObject = PackageDirectory(
-                                environmentPathVariablesSubstitution(
-                                    l[1].strip()),
-                                self)
-                            self.packageDirectories[
-                                currentDirectoryObject.directory] \
-                                    = currentDirectoryObject
-                            #condition_stack = []
-                        elif l[0] == 'if' \
+                        
+                        if l[0] == 'if' \
                                 and currentDirectoryObject is not None \
                                 and len(l) >= 2:
                             condition_stack.append(
@@ -559,20 +523,61 @@ http://brainvisa.info/brainvisa-cmake/
                                 # ends the filtered section
                                 condition_stack.pop()
                             else:
-                                RuntimeError('[endif] clause is not preceded by '
-                                             '[if] clause.')
+                                SyntaxError('[endif] clause is not preceded by '
+                                            '[if] clause.')
                         elif l[0] == 'else' and len(l) == 1:
                             if len(condition_stack) > 0:
                                 # inverts the filtered section
                                 condition_stack[-1] = not condition_stack[-1]
                             else:
-                                RuntimeError('[else] clause is not preceded by '
-                                             '[if] clause.')
-                        elif l[0] == 'general' and len(l) == 1:
-                            currentDirectoryObject = self.general_section
-                            #condition_stack = []
-                        else:
-                            raise SyntaxError()
+                                SyntaxError('[else] clause is not preceded by '
+                                            '[if] clause.')
+                        elif len(condition_stack) == 0 \
+                            or False not in condition_stack:
+                            if self.verbose:
+                                print('  processing line:', repr(line))
+                                
+                            if l[0] == 'source':
+                                currentDirectoryObject = SourceDirectory(
+                                    environmentPathVariablesSubstitution(
+                                        l[1].strip()),
+                                    self)
+                                self.sourcesDirectories[
+                                    currentDirectoryObject.directory] \
+                                        = currentDirectoryObject
+                                #condition_stack = []
+                            elif l[0] == 'build':
+                                currentDirectoryObject = BuildDirectory(
+                                    environmentPathVariablesSubstitution(
+                                        l[1].strip()),
+                                    self)
+                                self.buildDirectories[
+                                    currentDirectoryObject.directory] \
+                                        = currentDirectoryObject
+                                #condition_stack = []
+                            elif l[0] == 'virtualenv':
+                                currentDirectoryObject = VirtualenvDirectory(
+                                    environmentPathVariablesSubstitution(
+                                        l[1].strip()),
+                                    self)
+                                self.buildDirectories[
+                                    currentDirectoryObject.directory] \
+                                        = currentDirectoryObject
+                                #condition_stack = []
+                            elif l[0] == 'package':
+                                currentDirectoryObject = PackageDirectory(
+                                    environmentPathVariablesSubstitution(
+                                        l[1].strip()),
+                                    self)
+                                self.packageDirectories[
+                                    currentDirectoryObject.directory] \
+                                        = currentDirectoryObject
+                                #condition_stack = []
+                            elif l[0] == 'general' and len(l) == 1:
+                                currentDirectoryObject = self.general_section
+                                #condition_stack = []
+                            else:
+                                raise SyntaxError()
                     elif len(condition_stack) == 0 \
                         or False not in condition_stack:
                         if currentDirectoryObject is None:

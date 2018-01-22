@@ -1655,6 +1655,7 @@ class ConfigVariableParser(object):
     _validAdditiveOptions = set()
     _path_variables = set()
     _variables_with_replacements = set()
+    _variables_with_env_only_replacements = set()
 
     def addConfigurationLine(self, line):
         i = line.find('=')
@@ -1771,6 +1772,10 @@ class ConfigVariableParser(object):
         return self.is_path(variable) \
             or variable in getattr(self, '_variables_with_replacements')
 
+    def allow_variable_env_replacements(self, variable):
+        return self.is_path(variable) \
+            or variable in getattr(self, '_variables_with_env_only_replacements')
+
     def get_environ(self, default=None):
         env = getattr(self, 'env', None)
         if env:
@@ -1799,12 +1804,16 @@ class ConfigVariableParser(object):
                 vars = global_installer_variables()
             return environmentVariablesSubstitution(
                 value, env=env) % vars
+        elif self.allow_variable_env_replacements(variable):
+            # Replaces only environment variables
+            return environmentVariablesSubstitution(value, env=env)
         else:
             return value
 
 
 class GeneralSection(ConfigVariableParser):
-    _variables_with_replacements = set(('jenkins_server_url', ))
+    _variables_with_replacements = set(('jenkins_server_url',))
+    _variables_with_env_only_replacements = set(('jenkins_build_name',))
     _path_variables = set(('global_status_file', ))
     _validOptions = set(('failure_email', 'success_email', 'smtp_server',
                          'from_email', 'reply_to_email',

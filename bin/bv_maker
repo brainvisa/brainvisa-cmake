@@ -521,7 +521,7 @@ http://brainvisa.info/brainvisa-cmake/
                             self.sourcesDirectories[
                                 currentDirectoryObject.directory] \
                                     = currentDirectoryObject
-                            condition_stack = []
+                            #condition_stack = []
                         elif l[0] == 'build':
                             currentDirectoryObject = BuildDirectory(
                                 environmentPathVariablesSubstitution(
@@ -530,7 +530,7 @@ http://brainvisa.info/brainvisa-cmake/
                             self.buildDirectories[
                                 currentDirectoryObject.directory] \
                                     = currentDirectoryObject
-                            condition_stack = []
+                            #condition_stack = []
                         elif l[0] == 'virtualenv':
                             currentDirectoryObject = VirtualenvDirectory(
                                 environmentPathVariablesSubstitution(
@@ -539,7 +539,7 @@ http://brainvisa.info/brainvisa-cmake/
                             self.buildDirectories[
                                 currentDirectoryObject.directory] \
                                     = currentDirectoryObject
-                            condition_stack = []
+                            #condition_stack = []
                         elif l[0] == 'package':
                             currentDirectoryObject = PackageDirectory(
                                 environmentPathVariablesSubstitution(
@@ -548,7 +548,7 @@ http://brainvisa.info/brainvisa-cmake/
                             self.packageDirectories[
                                 currentDirectoryObject.directory] \
                                     = currentDirectoryObject
-                            condition_stack = []
+                            #condition_stack = []
                         elif l[0] == 'if' \
                                 and currentDirectoryObject is not None \
                                 and len(l) >= 2:
@@ -570,7 +570,7 @@ http://brainvisa.info/brainvisa-cmake/
                                              '[if] clause.')
                         elif l[0] == 'general' and len(l) == 1:
                             currentDirectoryObject = self.general_section
-                            condition_stack = []
+                            #condition_stack = []
                         else:
                             raise SyntaxError()
                     elif len(condition_stack) == 0 \

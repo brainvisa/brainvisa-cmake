@@ -687,6 +687,9 @@ class JenkinsWrapper(object):
         vars = dict(global_installer_variables())
         if o.directory_id:
             vars['directory_id'] = o.directory_id
+        elif configuration.general_section.directory_id_by_default:
+            vars['directory_id'] = configuration.general_section \
+                                                .directory_id_by_default        
         else:
             vars['directory_id'] = os.path.basename(o.directory)
         project = ''
@@ -701,8 +704,19 @@ class JenkinsWrapper(object):
 
     def jenkins_global_job_name(self):
         vars = dict(global_installer_variables())
-        vars['directory_id'] = 'all'
-        vars['step'] = ''
+        if configuration.general_section.directory_id_by_default:
+            vars['directory_id'] = configuration.general_section \
+                                                .directory_id_by_default        
+        else:
+            vars['directory_id'] = 'all'
+        
+        if configuration.general_section. \
+                         jenkins_global_job_name_step_by_default:
+            vars['step'] = configuration.general_section \
+                                        .jenkins_global_job_name_step_by_default
+        else:
+            vars['step'] = 'status'
+            
         vars['project'] = ''
         job_name = configuration.general_section.jenkins_build_name % vars
         return job_name
@@ -712,6 +726,9 @@ class JenkinsWrapper(object):
         vars = dict(global_installer_variables())
         if o.directory_id:
             vars['directory_id'] = o.directory_id
+        elif configuration.general_section.directory_id_by_default:
+            vars['directory_id'] = configuration.general_section \
+                                                .directory_id_by_default
         else:
             vars['directory_id'] = os.path.basename(o.directory)
         project = ''
@@ -1820,10 +1837,15 @@ class ConfigVariableParser(object):
 
 
 class GeneralSection(ConfigVariableParser):
-    _variables_with_replacements = set(('jenkins_server_url',))
+    _variables_with_replacements = \
+        set(('directory_id_by_default',
+             'jenkins_global_job_name_step_by_default',
+             'jenkins_server_url'))
     _variables_with_env_only_replacements = set(('jenkins_build_name',))
     _path_variables = set(('global_status_file', ))
-    _validOptions = set(('failure_email', 'success_email', 'smtp_server',
+    _validOptions = set(('directory_id_by_default',
+                         'jenkins_global_job_name_step_by_default',
+                         'failure_email', 'success_email', 'smtp_server',
                          'from_email', 'reply_to_email',
                          'email_notification_by_default',
                          'failure_email_by_project',
@@ -1846,8 +1868,10 @@ class GeneralSection(ConfigVariableParser):
         self.email_notification_by_default = 'OFF'
         self.jenkins_server_url = ''
         self.jenkins_build_name = ''
+        self.jenkins_global_job_name_step_by_default = ''
         self.jenkins_username = None
         self.jenkins_token = None
+        self.directory_id_by_default = ''
 
     def addConfigurationLine(self, line):
         if ConfigVariableParser.addConfigurationLine(self, line):

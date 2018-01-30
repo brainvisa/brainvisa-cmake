@@ -116,7 +116,7 @@ def get_host_path_system():
         if os.environ.get('TERM') == 'msys':
             return 'msys'
         
-        return 'windows_alt' 
+        return 'windows' 
         
     else:
         return 'linux'

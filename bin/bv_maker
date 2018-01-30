@@ -52,6 +52,7 @@ import time
 import traceback
 from smtplib import SMTP
 import gzip
+
 try:
     # backport of subprocess of python 3
     import subprocess32
@@ -177,6 +178,10 @@ if this_script:
 
 import brainvisa.maker.components_definition
 import brainvisa.maker.brainvisa_projects as brainvisa_projects
+
+from brainvisa.maker.path import DefaultPathConverterRegistry, \
+                                 Path, SystemPathConverter, \
+                                 get_host_path_system
 from brainvisa.maker.version import version as brainvisa_cmake_version
 
 from brainvisa.maker.version_number import VersionNumber
@@ -195,6 +200,15 @@ if this_script:
                               'cmake')
     #print('cmake_root:', cmake_root)
 
+
+def get_target_path_system(platform):
+    if platform.startswith('win'):
+        # We prefer alternative windows path i.e. pathes separated 
+        # with slaches instead of back slaches
+        return 'windows_alt'
+    
+    else:
+        return 'linux'
 
 def system(*args, **kwargs):
     print(' '.join(args))
@@ -222,6 +236,12 @@ def system_output_on_error(*args, **kwargs):
     print(' '.join([str(x) for x in args]))
     try:
         if subprocess32 is not None:
+            # !!! Redirecting STDERR to STDOUT is a burden on Windows OS and 
+            # lead to enormous processing times using "wine" (x80) ... I do not
+            # know why.
+            # The issue can be reproduced using commands:
+            # time python -c 'import subprocess;print subprocess.check_output(["winepath", "-u", "c:\\"]).strip()'
+            # time python -c 'import subprocess;print subprocess.check_output(["winepath", "-u", "c:\\"], stderr=subprocess.STDOUT).strip()'
             output = subprocess32.check_output(*args, stderr=subprocess.STDOUT,
                                                **kwargs)
         else:
@@ -243,10 +263,9 @@ def system_output_on_error(*args, **kwargs):
 
 def cmake_path(path):
     if sys.platform == 'win32':
-        return path.replace('\\', '/')
+        return Path(path, 'windows').to_system('windows_alt')
     else:
         return path
-
 
 def copy_brainvisa_cmake(installDir):
     global this_script
@@ -2503,7 +2522,10 @@ class BuildDirectory(ComponentsConfigParser, ConfigVariableParser):
 
     _path_variables = set(('stdout_file', 'stderr_file',
                            'test_ref_data_dir', 'test_run_data_dir'))
-    _variables_with_replacements = set(('cross_compiling_prefix', 'env',
+    _variables_with_replacements = set(('cross_compiling_prefix', 
+                                        'cross_compiling_target_system',
+                                        'cross_compiling_to_target_path_cmd',
+                                        'env',
                                         'make_options', 'cmake_options',
                                         'ctest_options', 'directory_id', ))
     _validAdditiveOptions = set(('make_options', 'cmake_options', 'env',
@@ -2556,6 +2578,8 @@ if len(old_file) == 0:
         self.cmake_options = []
         self.packaging_thirdparty = ''
         self.cross_compiling_prefix = ''
+        self.cross_compiling_target_system = ''
+        self.cross_compiling_to_target_path_cmd = ''
         self.clean_commands = True
         self.default_steps = ['configure', 'build']
         self.clean_config = 'OFF'
@@ -2594,6 +2618,39 @@ if len(old_file) == 0:
             'test': [(self, 'build')],
             'testref': [(self, 'build')],
         }
+    
+    def target_system(self):
+        if self.cross_compiling_target_system:
+            return self.cross_compiling_target_system
+        elif self.cross_compiling_prefix:
+            if 'mingw' in self.cross_compiling_prefix:
+                return 'win32'
+            else:
+                raise RuntimeError('Unable to determine target cross '
+                                   'compilation system. Please set '
+                                   'cross_compiling_target_system option in '
+                                   ' build section of your configuration file.')
+        else:
+            # Target system is the host system
+            return sys.platform
+        
+    def to_target_path(self, path):
+        '''
+            Get target system path from path
+        '''
+        target_path_system = get_target_path_system(self.target_system())
+        host_path_system = get_host_path_system()
+        if host_path_system != target_path_system:
+            if not DefaultPathConverterRegistry().get((host_path_system, 
+                                                       target_path_system)):
+                if self.cross_compiling_to_target_path_cmd:
+                    # Register host to target conversion command
+                    cmd = shlex.split(self.cross_compiling_to_target_path_cmd)
+                    SystemPathConverter(host_path_system, 
+                                        target_path_system, 
+                                        cmd)
+        # Copy path with conversion                    
+        return Path(path, target_path_system)
 
     def configure(self, options, args):
         self._process_configuration_lines()
@@ -3141,17 +3198,25 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
 
         fd, script_fname = tempfile.mkstemp(prefix='install_script',
                                             dir=temp_dir)
+        os.close(fd)
+        
+        install_dir = self.build_dir.to_target_path(install_dir)
+        
         if not repos_dir.startswith('file://'):
-            repos_dir = 'file://' + repos_dir
+            repos_dir = self.build_dir.to_target_path(repos_dir) \
+                        .to_system('uri')
  
         if data_repos_dir:
             if not data_repos_dir.startswith('file://'):
-                data_repos_dir = 'file://' + data_repos_dir
+                data_repos_dir = self.build_dir.to_target_path(data_repos_dir) \
+                                 .to_system('uri')
            
             data_repos_dir_url = ', "%s"' % data_repos_dir
         else:
             data_repos_dir_url = ""
-        os.close(fd)
+            
+        
+
         f = open(script_fname, 'w')
         f.write('''var install_dir = "%s";
 var repositories = ["%s"%s];
@@ -3425,7 +3490,8 @@ Controller.prototype.FinishedPageCallback = function()
             # on Mac, the installer is a .app
             installer_filename += '.app/Contents/MacOS/%s' \
                 % os.path.basename(installer_filename)
-        cmd += [remote_installer_filename, '--script', install_script]
+        cmd += [remote_installer_filename, '--script', 
+                self.build_dir.to_target_path(install_script)]
         try:
             print('installing...')
             cmd = '"' + '" "'.join(cmd) + '"'
@@ -3443,6 +3509,8 @@ Controller.prototype.FinishedPageCallback = function()
         if env is None:
             env = dict(os.environ)
         
+        build_dir = self.configuration.buildDirectories.get(self.build_directory)
+
         if self.remote_test_host_cmd and self.remote_test_install_dir:
             install_dir = self.replace_vars(self.remote_test_install_dir)
             env['BRAINVISA_PACKAGE_INSTALL_PREFIX'] = install_dir            
@@ -3453,19 +3521,25 @@ Controller.prototype.FinishedPageCallback = function()
         # binaries are in bin/real-bin/ (used by some python tests commands)
         env['BRAINVISA_REAL_BIN'] = '/real-bin'
         
-        if self.remote_test_host_cmd and self.remote_test_run_data_dir:
-            # Add directories to env
-            env["BRAINVISA_TEST_RUN_DATA_DIR"] = self.remote_test_run_data_dir
-        elif self.test_run_data_dir:
-            # Add directories to env
-            env["BRAINVISA_TEST_RUN_DATA_DIR"] = self.test_run_data_dir
-        
-        if self.remote_test_host_cmd and self.remote_test_ref_data_dir:
-            # Add directories to env
-            env["BRAINVISA_TEST_REF_DATA_DIR"] = self.remote_test_ref_data_dir
-        elif self.test_ref_data_dir:
-            # Add directories to env
-            env["BRAINVISA_TEST_REF_DATA_DIR"] = self.test_ref_data_dir
+        if build_dir:
+            if self.remote_test_host_cmd \
+                and self.remote_test_run_data_dir:
+                # Add directories to env
+                env["BRAINVISA_TEST_RUN_DATA_DIR"] = \
+                    build_dir.to_target_path(self.remote_test_run_data_dir)
+            elif self.test_run_data_dir:
+                # Add directories to env
+                env["BRAINVISA_TEST_RUN_DATA_DIR"] = \
+                    build_dir.to_target_path(self.test_run_data_dir)
+            
+            if self.remote_test_host_cmd and self.remote_test_ref_data_dir:
+                # Add directories to env
+                env["BRAINVISA_TEST_REF_DATA_DIR"] = \
+                    build_dir.to_target_path(self.remote_test_ref_data_dir)
+            elif self.test_ref_data_dir:
+                # Add directories to env
+                env["BRAINVISA_TEST_REF_DATA_DIR"] = \
+                    build_dir.to_target_path(self.test_ref_data_dir)
         
         if self.remote_test_host_cmd:
             # temporarily change os.environ since expand_shell uses

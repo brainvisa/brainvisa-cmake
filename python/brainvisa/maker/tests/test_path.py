@@ -3,7 +3,7 @@ from __future__ import print_function
 import unittest
 import sys
 
-from brainvisa.maker.path import Path
+from brainvisa.maker.path import Path, SystemPathConverter
 
 #-------------------------------------------------------------------------------
 # Main functions
@@ -204,44 +204,44 @@ class PathTestCases(unittest.TestCase):
         SystemPathConverter('linux', 'windows', [w, '-w'])
         
         # Get root path wine installation prefix
-        wine_z = str(Path('z:\\','windows').convert('linux'))
-        wine_c = str(Path('c:\\','windows').convert('linux'))
+        wine_z = str(Path('z:\\','windows').to_system('linux'))
+        wine_c = str(Path('c:\\','windows').to_system('linux'))
 
         self.assertEqual(
-            Path('/dir1/dir2/file','linux').convert('msys'), 
+            Path('/dir1/dir2/file','linux').to_system('msys'), 
             Path('/Z/dir1/dir2/file', 'msys'))
         self.assertEqual(
-            Path('/dir1/dir2/file','linux').convert('windows_alt'), 
+            Path('/dir1/dir2/file','linux').to_system('windows_alt'), 
             Path('Z:/dir1/dir2/file', 'windows_alt'))
         self.assertEqual(
-            Path('/dir1/dir2/file','linux').convert('windows'), 
+            Path('/dir1/dir2/file','linux').to_system('windows'), 
             Path('Z:\\dir1\\dir2\\file', 'windows'))
         self.assertEqual(
-            Path('/c/dir1/dir2/file','linux').convert('msys'), 
+            Path('/c/dir1/dir2/file','linux').to_system('msys'), 
             Path('/Z/c/dir1/dir2/file', 'msys'))
         self.assertEqual(
-            Path('/c/dir1/dir2/file','linux').convert('windows_alt'), 
+            Path('/c/dir1/dir2/file','linux').to_system('windows_alt'), 
             Path('Z:/c/dir1/dir2/file', 'windows_alt'))
         self.assertEqual(
-            Path('/c/dir1/dir2/file','linux').convert('windows'), 
+            Path('/c/dir1/dir2/file','linux').to_system('windows'), 
             Path('Z:\\c\\dir1\\dir2\\file', 'windows'))
         self.assertEqual(
-            Path('/dir1/dir2/file','msys').convert('linux'),
+            Path('/dir1/dir2/file','msys').to_system('linux'),
             Path('%sdir1/dir2/file' % wine_z, 'linux'))
         self.assertEqual(
-            Path('/c/dir1/dir2/file','msys').convert('linux'), 
+            Path('/c/dir1/dir2/file','msys').to_system('linux'), 
             Path('%sdir1/dir2/file' % wine_c, 'linux'))
         self.assertEqual(
-            Path('/dir1/dir2/file','windows_alt').convert('linux'),
+            Path('/dir1/dir2/file','windows_alt').to_system('linux'),
             Path('%sdir1/dir2/file' % wine_z, 'linux'))
         self.assertEqual(
-            Path('c:/dir1/dir2/file','windows_alt').convert('linux'), 
+            Path('c:/dir1/dir2/file','windows_alt').to_system('linux'), 
             Path('%sdir1/dir2/file' % wine_c, 'linux'))
         self.assertEqual(
-            Path('\\dir1\\dir2\\file','windows').convert('linux'),
+            Path('\\dir1\\dir2\\file','windows').to_system('linux'),
             Path('%sdir1/dir2/file' % wine_z, 'linux'))
         self.assertEqual(
-            Path('c:\\dir1\\dir2\\file','windows').convert('linux'),
+            Path('c:\\dir1\\dir2\\file','windows').to_system('linux'),
             Path('%sdir1/dir2/file' % wine_c, 'linux'))
 
 if __name__ == "__main__":

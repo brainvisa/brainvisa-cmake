@@ -73,11 +73,15 @@ class PathSystems:
                   ('windows_alt', WindowsAltPathSystemSyntax), \
                   ('msys', WindowsAltPathSystemSyntax)):
             self.register(s)
-    
+
+class DefaultPathConverterRegistry(Singleton, dict):
+    pass
+
 class Path(str):
     default_system = 'linux'
         
-    def __new__(cls, obj, system = None):
+    def __new__(cls, obj, system = None, 
+                converters_registry=DefaultPathConverterRegistry()):
 
         t = type(obj)
         if t in (str, unicode):
@@ -108,7 +112,7 @@ class Path(str):
             
         if system is not None and s is not None and s != system:
            # Try to convert path to the new system
-           c = PathConverterRegistry().get((s, system))
+           c = converters_registry.get((s, system))
            if c:
                o = c.convert(o)
                s = system
@@ -123,6 +127,9 @@ class Path(str):
         # Build new object
         cls = str.__new__(cls, o)
         cls.__system = s if s is not None else Path.default_system
+        cls.__converters_registry = converters_registry \
+            if converters_registry is not None \
+            else DefaultPathConverterRegistry()
                 
         return cls
         
@@ -138,7 +145,7 @@ class Path(str):
     def get_system(self):
         return self.__system
    
-    def convert(self, system):
+    def to_system(self, system):
         return Path(self, system)
     
 def autoinitsingleton(*args, **kwargs):
@@ -159,15 +166,13 @@ def autoinitsingleton(*args, **kwargs):
     
     return __update_class
 
-class PathConverterRegistry(Singleton, dict):
-    pass
-
-def get_path_converter(source_system, target_system):
+def get_path_converter(source_system, target_system,
+                       converters = DefaultPathConverterRegistry()):
     '''
         Get registered path converter for converting path from 
         source system to target system
     '''
-    c = PathConverterRegistry().get((source_system, target_system))
+    c = converters.get((source_system, target_system))
     if not c:
         raise RuntimeError('No %s to %s path converter registered. Please'
                            'register one before using it.' \
@@ -179,11 +184,13 @@ class PathConverter(object):
         Path converter base class.
         A path converter allow to convert path from one system to another
     '''
-    def __init__(self, source_system, target_system):
+    def __init__(self, source_system, target_system, 
+                 registry = DefaultPathConverterRegistry()):
         self.__source_system = source_system
         self.__target_system = target_system
+        self.__converters_registry = registry
         
-        PathConverterRegistry().setdefault((source_system, target_system), self)
+        self.__converters_registry.setdefault((source_system, target_system), self)
     
     @abstractmethod
     def convert(self, source_path):
@@ -225,34 +232,34 @@ class LinuxToUriPathConverter(Singleton, PathConverter):
     '''
         Linux path to uri converter.
     '''
-    def convert(self, path):
-        return to_uri(path)
+    def convert(self, source_path):
+        return to_uri(source_path)
 
 @autoinitsingleton('linux', 'msys')
 class LinuxToMsysPathConverter(Singleton, PathConverter):
     '''
         Linux path to msys converter.
     '''
-    def convert(self, path):
+    def convert(self, source_path):
         return get_path_converter(
                     'windows', 
                     'msys').convert(
                         get_path_converter(
                             'linux', 
-                            'windows').convert(path))
+                            'windows').convert(source_path))
 
 @autoinitsingleton('linux', 'windows_alt')
 class LinuxToWindowsAltPathConverter(Singleton, PathConverter):
     '''
         Linux path to windows alternative converter.
     '''
-    def convert(self, path):
+    def convert(self, source_path):
         return get_path_converter(
                     'windows', 
                     'windows_alt').convert(
                         get_path_converter(
                             'linux', 
-                            'windows').convert(path))
+                            'windows').convert(source_path))
 
 #-------------------------------------------------------------------------------
 # Msys path converters
@@ -262,51 +269,53 @@ class MsysToLinuxPathConverter(Singleton, PathConverter):
     '''
         Msys path to linux path converter.
     '''
-    def convert(self, path):
+    def convert(self, source_path):
         return get_path_converter(
                     'windows_alt', 
                     'linux').convert(
                         get_path_converter(
                             'msys', 
-                            'windows_alt').convert(path))
+                            'windows_alt').convert(source_path))
                         
 @autoinitsingleton('msys', 'uri')
 class MsysToUriPathConverter(Singleton, PathConverter):
     '''
         Msys path to uri path converter.
     '''
-    def convert(self, path):
+    def convert(self, source_path):
         return get_path_converter(
                     'windows_alt', 
                     'uri').convert(
                         get_path_converter(
                             'msys', 
-                            'windows_alt').convert(path))
+                            'windows_alt').convert(source_path))
 
 @autoinitsingleton('msys', 'windows')
 class MsysToWindowsPathConverter(Singleton, PathConverter):
     '''
         Msys path to windows path converter.
     '''
-    def convert(self, path):
+    def convert(self, source_path):
         return get_path_converter(
                     'windows_alt', 
                     'windows').convert(
                         get_path_converter(
                             'msys', 
-                            'windows_alt').convert(path))
+                            'windows_alt').convert(source_path))
                         
 @autoinitsingleton('msys', 'windows_alt')
 class MsysToWindowsAltPathConverter(Singleton, PathConverter):
     '''
         Msys path to windows alternative path converter.
     '''
-    def convert(self, path):
-        if len(path) > 2 and path[0] == WindowsAltPathSystemSyntax.sep \
-            and path[1].isalpha() and path[2] == WindowsAltPathSystemSyntax.sep:
-            return  path[1] + ':' + path[2:]
+    def convert(self, source_path):
+        if len(source_path) > 2 \
+            and source_path[0] == WindowsAltPathSystemSyntax.sep \
+            and source_path[1].isalpha() \
+            and source_path[2] == WindowsAltPathSystemSyntax.sep:
+            return source_path[1] + ':' + source_path[2:]
         else:
-            return path
+            return source_path
 
 #-------------------------------------------------------------------------------
 # Uri path converters
@@ -316,42 +325,42 @@ class UriToLinuxPathConverter(Singleton, PathConverter):
     '''
         Uri to linux path converter.
     '''
-    def convert(self, path):
-        return from_uri(path)
+    def convert(self, source_path):
+        return from_uri(source_path)
     
 @autoinitsingleton('uri', 'msys')
 class UriToMsysPathConverter(Singleton, PathConverter):
     '''
         Uri path to msys path converter.
     '''
-    def convert(self, path):
+    def convert(self, source_path):
         return get_path_converter(
                     'windows_alt', 
                     'msys').convert(
                         get_path_converter(
                             'uri', 
-                            'windows_alt').convert(path))
+                            'windows_alt').convert(source_path))
 
 @autoinitsingleton('uri', 'windows')
 class UriToWindowsPathConverter(Singleton, PathConverter):
     '''
         Uri to windows path converter.
     '''
-    def convert(self, path):
+    def convert(self, source_path):
         return get_path_converter(
                     'windows_alt', 
                     'windows').convert(
                         get_path_converter(
                             'uri', 
-                            'windows_alt').convert(path))
+                            'windows_alt').convert(source_path))
     
 @autoinitsingleton('uri', 'windows_alt')
 class UriToWindowsAltPathConverter(Singleton, PathConverter):
     '''
         Uri to windows alternative path converter.
     '''
-    def convert(self, path):
-        return from_uri(path)[1:]
+    def convert(self, source_path):
+        return from_uri(source_path)[1:]
 
 #-------------------------------------------------------------------------------
 # Windows path converters
@@ -361,35 +370,35 @@ class WindowsToMsysPathConverter(Singleton, PathConverter):
     '''
         Windows path to msys path converter.
     '''
-    def convert(self, path):
+    def convert(self, source_path):
         return get_path_converter(
                     'windows_alt', 
                     'msys').convert(
                         get_path_converter(
                             'windows', 
-                            'windows_alt').convert(path))
+                            'windows_alt').convert(source_path))
     
 @autoinitsingleton('windows', 'uri')
 class WindowsToUriPathConverter(Singleton, PathConverter):
     '''
         Windows to uri path converter.
     '''
-    def convert(self, path):
+    def convert(self, source_path):
         return get_path_converter(
                     'windows_alt', 
                     'uri').convert(
                         get_path_converter(
                             'windows', 
-                            'windows_alt').convert(path))
+                            'windows_alt').convert(source_path))
 
 @autoinitsingleton('windows', 'windows_alt')
 class WindowsToWindowsAltPathConverter(Singleton, PathConverter):
     '''
         Windows path to windows alternative path converter.
     '''
-    def convert(self, path):
-        return path.replace(WindowsPathSystemSyntax.sep, 
-                            WindowsAltPathSystemSyntax.sep)
+    def convert(self, source_path):
+        return source_path.replace(WindowsPathSystemSyntax.sep, 
+                                   WindowsAltPathSystemSyntax.sep)
     
 #-------------------------------------------------------------------------------
 # Windows alternative path converters
@@ -399,41 +408,43 @@ class WindowsAltToLinuxPathConverter(Singleton, PathConverter):
     '''
         Windows alternative  to linux path converter.
     '''
-    def convert(self, path):
+    def convert(self, source_path):
         return get_path_converter(
                     'windows', 
                     'linux').convert(
                         get_path_converter(
                             'windows_alt', 
-                            'windows').convert(path))
+                            'windows').convert(source_path))
                         
 @autoinitsingleton('windows_alt', 'msys')
 class WindowsAltToMsysPathConverter(Singleton, PathConverter):
     '''
         Windows alternative path to msys path converter.
     '''
-    def convert(self, path):
-        if len(path) > 2 and path[1:3] == ':' + WindowsAltPathSystemSyntax.sep:
-            return WindowsAltPathSystemSyntax.sep + path[0] + path[2:]
+    def convert(self, source_path):
+        if len(source_path) > 2 \
+            and source_path[1:3] == ':' + WindowsAltPathSystemSyntax.sep:
+            return WindowsAltPathSystemSyntax.sep + source_path[0] \
+                   + source_path[2:]
         else:
-            return path
+            return source_path
         
 @autoinitsingleton('windows_alt', 'uri')
 class WindowsAltToUriPathConverter(Singleton, PathConverter):
     '''
         Windows alternative path to uri converter.
     '''
-    def convert(self, path):
-        return to_uri(WindowsAltPathSystemSyntax.sep + path)
+    def convert(self, source_path):
+        return to_uri(WindowsAltPathSystemSyntax.sep + source_path)
 
 @autoinitsingleton('windows_alt', 'windows')
 class WindowsAltToWindowsPathConverter(Singleton, PathConverter):
     '''
         Windows alternative path to windows path converter.
     '''
-    def convert(self, path):
-        return path.replace(WindowsAltPathSystemSyntax.sep, 
-                            WindowsPathSystemSyntax.sep)
+    def convert(self, source_path):
+        return source_path.replace(WindowsAltPathSystemSyntax.sep, 
+                                   WindowsPathSystemSyntax.sep)
 
 class SystemPathConverter(PathConverter):
     '''
@@ -443,8 +454,8 @@ class SystemPathConverter(PathConverter):
         super(SystemPathConverter, self).__init__(source_system, target_system)
         self.__command = command
     
-    def convert(self, path):
-        return self.__system_check_output(self.__command + [path]).strip()
+    def convert(self, source_path):
+        return self.__system_check_output(self.__command + [source_path]).strip()
     
     @classmethod
     def __system_check_output(cls, *args, **kwargs):

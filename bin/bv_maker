@@ -331,7 +331,7 @@ def run_and_log_tests(cwd=None, env=None, options=None):
     # get test labels to assign them to projects
     test_labels = system_output_on_error(
         ['ctest', '--print-labels'] + options, cwd=cwd)
-    lines = test_labels.split('\n')
+    lines = test_labels.strip().split('\n')
     if 'All Labels:' in lines:
         labels_index = lines.index('All Labels:')
         labels = [line.strip() for line in lines[labels_index+1:]]

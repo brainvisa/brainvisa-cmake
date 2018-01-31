@@ -2649,9 +2649,11 @@ if len(old_file) == 0:
                 if self.cross_compiling_to_target_path_cmd:
                     # Register host to target conversion command
                     cmd = shlex.split(self.cross_compiling_to_target_path_cmd)
-                    SystemPathConverter(host_path_system, 
-                                        target_path_system, 
-                                        cmd)
+                elif host_path_system == 'linux' \
+                    and target_path_system == 'windows':
+                    # Default cross compilation try to use winepath command
+                    # to convert pathes
+                    cmd = ['winepath', '-w']
                 else:
                     raise RuntimeError('No known conversion between %s and %s '
                                        'path systems. Please set ' 
@@ -2659,6 +2661,10 @@ if len(old_file) == 0:
                                        'using an available command to do the '
                                        'conversion'
                                        % (host_path_system, target_path_system))
+                
+                SystemPathConverter(host_path_system, 
+                                    target_path_system, 
+                                    cmd)
             
             if target_path_system == 'windows':
                 # If target path system is windows, 

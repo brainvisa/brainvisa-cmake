@@ -2643,8 +2643,6 @@ if len(old_file) == 0:
             path = Path(path, host_path_system)
             
         target_path_system = get_target_path_system(self.target_system())
-        #print(host_path_system, '=>', target_path_system)
-        #sys.stdout.flush()
         if host_path_system != target_path_system:
             if not DefaultPathConverterRegistry().get((host_path_system, 
                                                        target_path_system)):
@@ -2654,8 +2652,18 @@ if len(old_file) == 0:
                     SystemPathConverter(host_path_system, 
                                         target_path_system, 
                                         cmd)
-
-        return path.to_system(target_path_system)
+                else:
+                    raise RuntimeError('No known conversion between %s and %s '
+                                       'path systems. Please set ' 
+                                       '\'cross_compiling_to_target_path_cmd\' '
+                                       'using available command to do the '
+                                       'conversion'
+                                       % (host_path_system, target_path_system))
+                
+            return path.to_system(target_path_system)
+        
+        else:
+            return path
 
     def configure(self, options, args):
         self._process_configuration_lines()
@@ -3206,8 +3214,6 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
         os.close(fd)
         
         install_dir = self.build_dir.to_target_path(install_dir)
-        #print('====', install_dir)
-        sys.stdout.flush()
         
         if not repos_dir.startswith('file://'):
             repos_dir = self.build_dir.to_target_path(repos_dir) \

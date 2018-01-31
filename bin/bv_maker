@@ -2939,16 +2939,19 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 
     def get_environ(self, default=None):
         env = super(BuildDirectory, self).get_environ(default)
+        
         if self.test_run_data_dir:
             if env is None:
                 env = dict(os.environ)
             # Add directories to env
-            env["BRAINVISA_TEST_RUN_DATA_DIR"] = self.test_run_data_dir
+            env["BRAINVISA_TEST_RUN_DATA_DIR"] = self.to_target_path(
+                self.test_run_data_dir)
         if self.test_ref_data_dir:
             if env is None:
                 env = dict(os.environ)
             # Add directories to env
-            env["BRAINVISA_TEST_REF_DATA_DIR"] = self.test_ref_data_dir
+            env["BRAINVISA_TEST_REF_DATA_DIR"] = self.to_target_path(
+                self.test_ref_data_dir)
         return env
 
     def test(self, options, args):

@@ -2656,9 +2656,14 @@ if len(old_file) == 0:
                     raise RuntimeError('No known conversion between %s and %s '
                                        'path systems. Please set ' 
                                        '\'cross_compiling_to_target_path_cmd\' '
-                                       'using available command to do the '
+                                       'using an available command to do the '
                                        'conversion'
                                        % (host_path_system, target_path_system))
+            
+            if target_path_system == 'windows':
+                # If target path system is windows, 
+                # we prefer to use the windows alternative with slashes
+                target_path_system = 'windows_alt'
                 
             return path.to_system(target_path_system)
         

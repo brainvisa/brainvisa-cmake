@@ -1858,16 +1858,16 @@ function( BRAINVISA_ADD_TEST )
     set( _command_args_ref ${_command_args} )
   endif()
 
-  if(CMAKE_CROSSCOMPILING)
-    if(WIN32)
-      # For cross compilation on windows it is necessary to start commands
-      # using a command interpreter (cmd) to get an environment
-      BRAINVISA_GET_SPACED_QUOTED_LIST( _command_args_run _command_args_run )
-      BRAINVISA_GET_SPACED_QUOTED_LIST( _command_args_ref _command_args_ref )
-      set( _command_args_run "cmd" "/c" "${_command_args_run}" )
-      set( _command_args_ref "cmd" "/c" "${_command_args_ref}" )
-    endif()
-  endif()
+#   if(CMAKE_CROSSCOMPILING)
+#     if(WIN32)
+#       # For cross compilation on windows it is necessary to start commands
+#       # using a command interpreter (cmd) to get an environment
+#       BRAINVISA_GET_SPACED_QUOTED_LIST( _command_args_run _command_args_run )
+#       BRAINVISA_GET_SPACED_QUOTED_LIST( _command_args_ref _command_args_ref )
+#       set( _command_args_run "cmd" "/c" "${_command_args_run}" )
+#       set( _command_args_ref "cmd" "/c" "${_command_args_ref}" )
+#     endif()
+#   endif()
 
   # Add bv_env_test encapsulation
   set(_command_args_run "${brainvisa-cmake_DIR}/../../../bin/bv_env_test"

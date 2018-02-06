@@ -46,7 +46,7 @@ shift
 i=0
 for var_value in "$@"
 do
-  exp[$i]=\"$(eval printf '%s' ${var_value// /\\ })\"
+  exp[$i]=$(eval printf '%s' ${var_value// /\\ })
   i=$(($i+1))
 done
 

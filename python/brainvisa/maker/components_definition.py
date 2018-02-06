@@ -103,12 +103,6 @@ components_definition = [
                     'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io/tags/latest_release','soma/soma-io/latest_release'),
                 },
             }],
-            ['soma-database', {
-                'groups': ['all', 'opensource', 'standard'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-database/trunk','soma/soma-database/trunk'),
-                },
-            }],
             ['soma-io-gpl', {
                 'groups': ['all', 'opensource', 'standard', 'catidb3_all', 'cati_platform'],
                 'branches': {

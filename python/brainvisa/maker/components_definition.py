@@ -53,13 +53,6 @@ components_definition = [
                     'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/bibliography/trunk','communication/bibliography/latest_release'),
                 },
             }],
-            ['latex', {
-                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/latex/trunk','communication/latex/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/latex/trunk','communication/latex/bug_fix'),
-                },
-            }],
             ['web', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {

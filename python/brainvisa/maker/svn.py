@@ -207,6 +207,28 @@ def svn_copy(source,
                     verbose=verbose)
 
 
+def svn_delete(url,
+               message='',
+               simulate=False,
+               verbose=False):
+    """Remove file or directory from repository.
+
+    @type ulr: string
+    @param source: The url to delete
+
+    @type message: string
+    @param message: The message to log changes in history
+
+    @rtype: string
+    @return: The standard output of the 'svn delete' command
+    """
+    cmd = ['svn', 'delete', url, '-m', message]
+
+    return system(cmd,
+                    simulate=simulate,
+                    verbose=verbose)
+
+
 def svn_exists(url):
     """Check that the url exists
 

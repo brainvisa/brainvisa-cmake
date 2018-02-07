@@ -3067,9 +3067,10 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                            'remote_test_install_dir', 'remote_test_ref_data_dir',
                            'remote_test_run_data_dir'))
     _variables_with_replacements = set(('pack_version', 'directory_id',
-                                        'env', 'packaging_options'))
+                                        'env', 'packaging_options',
+                                        'make_options', 'ctest_options'))
     _validAdditiveOptions = set(('packaging_options', 'default_steps',
-                                 'ctest_options', 'env'))
+                                 'make_options', 'ctest_options', 'env'))
     _validOptions = set(('build_condition',
                          'remote_test_host_cmd',
                          'init_components_from_build_dir',
@@ -3077,7 +3078,6 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
     _validOptions.update(_variables_with_replacements)
     _validOptions.update(_path_variables)
     _validOptions.update(_validAdditiveOptions)
-
 
     def __init__(self, directory, configuration):
         super(PackageDirectory, self).__init__(directory, configuration)
@@ -3093,6 +3093,7 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
         self.default_steps = []
         self.keep_n_older_repos = 1
         self.ctest_options = []
+        self.make_options = []
         self.directory_id = ''
         self.env = {}
         self.test_ref_data_dir = ''

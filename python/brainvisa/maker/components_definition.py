@@ -198,7 +198,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/spm/trunk','spm/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/spm/branches/bug_fix','spm/bug_fix'),
-                    #'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/spm/tags/latest_release','axon/latest_release'),
+                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/spm/tags/latest_release','spm/latest_release'),
                 },
             }],
         ],
@@ -337,7 +337,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/primatologist-gpl/trunk','brainrat/primatologist-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/primatologist-gpl/branches/bug_fix','brainrat/primatologist-gpl/bug_fix'),
-#                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/primatologist-gpl/tags/latest_release','brainrat/primatologist-gpl/latest_release'),
+                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/primatologist-gpl/tags/latest_release','brainrat/primatologist-gpl/latest_release'),
                 },
             }],
             ['3dns-private', {

@@ -3251,16 +3251,108 @@ var repositories = ["%s"%s];
 
 function Controller()
 {
+    console.log("controller instanciated");
+
+    installer.currentPageChanged.connect(OnCurrentPageChangedCallback);
+    installer.installationStarted.connect(OnInstallationStartedCallback);
+    installer.installationFinished.connect(OnInstallationFinishedCallback);
+    installer.installationInterrupted.connect(OnInstallationInterruptedCallback);
+
+    installer.autoRejectMessageBoxes;
+    
+    installer.setMessageBoxAutomaticAnswer("OverwriteTargetDirectory", 
+                                           QMessageBox.Yes);
+    
+    installer.setMessageBoxAutomaticAnswer("installationError", 
+                                           QMessageBox.OK);
+
+    installer.setMessageBoxAutomaticAnswer("installationErrorWithRetry", 
+                                           QMessageBox.Cancel);
+
+    installer.setMessageBoxAutomaticAnswer("AuthorizationError", 
+                                           QMessageBox.Abort);
+
+    installer.setMessageBoxAutomaticAnswer("OperationDoesNotExistError", 
+                                           QMessageBox.Abort);
+                                           
+    installer.setMessageBoxAutomaticAnswer("isAutoDependOnError", 
+                                           QMessageBox.OK);
+                                           
+    installer.setMessageBoxAutomaticAnswer("isDefaultError", 
+                                           QMessageBox.OK);
+                                           
+    installer.setMessageBoxAutomaticAnswer("isDefaultError", 
+                                           QMessageBox.OK);
+                                           
+    installer.setMessageBoxAutomaticAnswer("DownloadError", 
+                                           QMessageBox.Cancel);
+    
+    installer.setMessageBoxAutomaticAnswer("archiveDownloadError", 
+                                           QMessageBox.Cancel);
+    
+    installer.setMessageBoxAutomaticAnswer("WriteError", 
+                                           QMessageBox.OK);
+                                           
+    installer.setMessageBoxAutomaticAnswer("ElevationError", 
+                                           QMessageBox.OK);
+                                           
+    installer.setMessageBoxAutomaticAnswer("unknown", 
+                                           QMessageBox.OK);
+                                           
+    installer.setMessageBoxAutomaticAnswer("Error", 
+                                           QMessageBox.OK);
+                                                                              
+    installer.setMessageBoxAutomaticAnswer("stopProcessesForUpdates", 
+                                           QMessageBox.Ignore);
+                                           
+    installer.setMessageBoxAutomaticAnswer("Installer_Needs_To_Be_Local_Error", 
+                                           QMessageBox.OK);
+                                           
+    installer.setMessageBoxAutomaticAnswer("TargetDirectoryInUse", 
+                                           QMessageBox.No);
+                                           
+    installer.setMessageBoxAutomaticAnswer("WrongTargetDirectory", 
+                                           QMessageBox.OK);
+                                           
+    installer.setMessageBoxAutomaticAnswer("AlreadyRunning", 
+                                           QMessageBox.OK);
+                                           
+    //installer.setMessageBoxAutomaticAnswer("cancelInstallation", 
+    //                                       QMessageBox.Yes);                                   
+}
+
+OnInstallationStartedCallback = function()
+{
+    console.log("installation started");
+}
+
+OnInstallationFinishedCallback = function()
+{
+    console.log("installation ended");
+    // This is necessary for windows
+    gui.clickButton(buttons.NextButton);
+}
+
+OnInstallationInterruptedCallback = function()
+{
+    console.log("installation interrupted");
+}
+
+OnCurrentPageChangedCallback = function(page)
+{
+    console.log("page changed");
 }
 
 Controller.prototype.IntroductionPageCallback = function()
 {
+    console.log("introduction page");
     installer.setTemporaryRepositories(repositories, true);
     gui.clickButton(buttons.NextButton)
 }
 
 Controller.prototype.TargetDirectoryPageCallback = function()
 {
+    console.log("target directory page");
     var widget = gui.currentPageWidget(); // get the current wizard page
     widget.TargetDirectoryLineEdit.setText(install_dir);
     gui.clickButton(buttons.NextButton);
@@ -3268,13 +3360,18 @@ Controller.prototype.TargetDirectoryPageCallback = function()
 
 Controller.prototype.ComponentSelectionPageCallback = function()
 {
+    console.log("component selection page");
     var widget = gui.currentPageWidget();
     widget.selectAll();
+    //widget.deselectAll();
+    //widget.selectComponent("brainvisa.app.soma.run.soma_io");
     gui.clickButton(buttons.NextButton);
+    //installer.setAutomatedPageSwitchEnabled(true);
 }
 
 Controller.prototype.LicenseAgreementPageCallback = function()
 {
+    console.log("licence agreement page");
     var widget = gui.currentPageWidget();
     widget.AcceptLicenseRadioButton.setChecked(true);
     gui.clickButton(buttons.NextButton);
@@ -3282,23 +3379,29 @@ Controller.prototype.LicenseAgreementPageCallback = function()
 
 Controller.prototype.StartMenuDirectoryPageCallback = function()
 {
+    console.log("start menu directory page");
     gui.clickButton(buttons.NextButton);
 }
 
 Controller.prototype.ReadyForInstallationPageCallback = function()
 {
+    console.log("ready for installation page");
     gui.clickButton(buttons.CommitButton);
 }
 
 Controller.prototype.PerformInstallationPageCallback = function()
 {
+    console.log("perform installation page");
     gui.clickButton(buttons.CommitButton);
 }
 
 Controller.prototype.FinishedPageCallback = function()
 {
+    console.log("finished page");
     gui.clickButton(buttons.FinishButton);
 }
+
+
 ''' % (install_dir, repos_dir, data_repos_dir_url))
         f.close()
         return script_fname
@@ -3518,7 +3621,7 @@ Controller.prototype.FinishedPageCallback = function()
             # on Mac, the installer is a .app
             remote_installer_filename += '.app/Contents/MacOS/%s' \
                 % os.path.basename(remote_installer_filename)
-        cmd += [remote_installer_filename, '--script',
+        cmd += [remote_installer_filename, '-v', '--script',
                 self.build_dir.to_target_path(install_script)]
         try:
             print('installing...')

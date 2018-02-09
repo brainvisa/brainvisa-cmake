@@ -468,10 +468,18 @@ http://brainvisa.info/brainvisa-cmake/
         parser.add_option(
             '-v', '--verbose', dest='verbose', action='store_true',
             help='show as much information as possible')
+        parser.add_option(
+            '--version', dest='version', action='store_true',
+            help='show bv_maker (brainvisa-cmake) version number')
 
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
+
+        if options.version:
+            print('bv_maker version:', brainvisa_cmake_version)
+            sys.exit(0)
+
         packages = []
         lineCount = 0
         currentDirectoryObject = None
@@ -3060,6 +3068,7 @@ class VirtualenvDirectory(BuildDirectory):
 class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
 
     _path_variables = set(('build_directory', 'installer_filename',
+                           'offline_installer_filename',
                            'data_repos_dir', 'test_install_dir',
                            'stdout_file', 'stderr_file', 'test_ref_data_dir',
                            'test_run_data_dir', 'remote_installer_filename',
@@ -3068,9 +3077,11 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                            'remote_test_run_data_dir'))
     _variables_with_replacements = set(('pack_version', 'directory_id',
                                         'env', 'packaging_options',
-                                        'make_options', 'ctest_options'))
+                                        'make_options', 'ctest_options',
+                                        'installer_options'))
     _validAdditiveOptions = set(('packaging_options', 'default_steps',
-                                 'make_options', 'ctest_options', 'env'))
+                                 'make_options', 'ctest_options', 'env',
+                                 'installer_options'))
     _validOptions = set(('build_condition',
                          'remote_test_host_cmd',
                          'init_components_from_build_dir',
@@ -3085,6 +3096,7 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
         self.packaging_options = []
         #self.packaging_thirdparty = ''
         self.installer_filename = None
+        self.offline_installer_filename = None
         self.data_repos_dir = ''
         self.test_install_dir = ''
         self.init_components_from_build_dir = 'ON'
@@ -3198,6 +3210,10 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                 #'%(version)s-%(os)s-%(online)s%(public)s')
         if installer_filename:
             installer_filename = self.replace_vars(installer_filename)
+        offline_installer_filename = self.offline_installer_filename
+        if offline_installer_filename is not None:
+            offline_installer_filename = self.replace_vars(
+                offline_installer_filename)
         directory = self.directory
         directory = self.replace_vars(directory)
 
@@ -3216,7 +3232,14 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                sys.executable, bvi, '-r', directory]
         if installer_filename:
             cmd += ['-i', installer_filename]
-        else:
+        if offline_installer_filename:
+            from brainvisa.installer import version as bvi_ver
+            if [int(x) for x in bvi_ver.version.split('.')] >= [1, 2]:
+                cmd += ['-j', offline_installer_filename]
+            else:
+                print('warning: bv installer version too old to handle '
+                      'offline + online installers at the same time.')
+        if not installer_filename and not offline_installer_filename:
             cmd.append( '--repository-only' )
         cmd += pack_options + ['-p'] + projects + ['-n'] + components
         return cmd
@@ -3622,7 +3645,8 @@ Controller.prototype.FinishedPageCallback = function()
             remote_installer_filename += '.app/Contents/MacOS/%s' \
                 % os.path.basename(remote_installer_filename)
         cmd += [remote_installer_filename, '-v', '--script',
-                self.build_dir.to_target_path(install_script)]
+                self.build_dir.to_target_path(install_script)] \
+            + self.installer_options
         try:
             print('installing...')
             cmd = '"' + '" "'.join(cmd) + '"'

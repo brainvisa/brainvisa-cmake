@@ -3096,6 +3096,7 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
         self.packaging_options = []
         #self.packaging_thirdparty = ''
         self.installer_filename = None
+        self.installer_options = ''
         self.offline_installer_filename = None
         self.data_repos_dir = ''
         self.test_install_dir = ''
@@ -3644,9 +3645,9 @@ Controller.prototype.FinishedPageCallback = function()
             # on Mac, the installer is a .app
             remote_installer_filename += '.app/Contents/MacOS/%s' \
                 % os.path.basename(remote_installer_filename)
-        cmd += [remote_installer_filename, '-v', '--script',
-                self.build_dir.to_target_path(install_script)] \
-            + self.installer_options
+        cmd += [remote_installer_filename] \
+               + shlex.split(self.installer_options) \
+               + ['--script', self.build_dir.to_target_path(install_script)]
         try:
             print('installing...')
             cmd = '"' + '" "'.join(cmd) + '"'

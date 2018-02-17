@@ -287,13 +287,32 @@ def copy_brainvisa_cmake(installDir):
         shutil.copy(os.path.join(sourceDir, p, f), d)
 
 
+def normalize_path(path):
+    file_scheme = 'file://'
+    has_file_scheme = path.startswith(file_scheme)
+    if has_file_scheme:
+        # Remove file scheme
+        path = path[len(file_scheme):]
+        
+    # Try to detect windows pathes starting with drive letters
+    # for cross compilation.
+    # TODO: check only for cross compiling mode
+    if not (len(path) > 1 and path[1] == ':'):
+        path = os.path.normpath(os.path.realpath(os.path.abspath(path)))
+    
+    if has_file_scheme:
+        # Add file scheme
+        path = file_scheme + path
+    
+    return path
+    
+env_vars_regex = re.compile(r'\$([A-Za-z0-9_]*)')
 def environmentVariablesSubstitution(path, env=None):
-    result = path
-    r = re.compile(r'\$([A-Za-z0-9_]*)')
-    offset = 0
     if env is None:
         env = os.environ
-    for m in r.finditer(path):
+    result = path
+    offset = 0
+    for m in env_vars_regex.finditer(path):
         variableContent = env.get(m.group(1))
         if variableContent is not None:
             start, end = m.span()
@@ -303,29 +322,8 @@ def environmentVariablesSubstitution(path, env=None):
             result = result[:start] + variableContent + result[end:]
     return result
 
-
 def environmentPathVariablesSubstitution(path, env=None):
-    
-    p = environmentVariablesSubstitution(path, env)
-
-    file_scheme = 'file://'
-    has_file_scheme = path.startswith(file_scheme)
-    if has_file_scheme:
-        # Remove file scheme
-        p = p[len(file_scheme):]
-        
-    # Try to detect windows pathes starting with drive letters
-    # for cross compilation.
-    # TODO: check only for cross compiling mode
-    if not (len(p) > 1 and p[1] == ':'):
-        p = os.path.normpath(os.path.realpath(os.path.abspath(p)))
-    
-    if has_file_scheme:
-        # Add file scheme
-        p = file_scheme + p
-    
-    return p
-        
+    return normalize_path(environmentVariablesSubstitution(path, env))
 
 def run_and_log_tests(cwd=None, env=None, options=None):
     # get test labels to assign them to projects
@@ -562,7 +560,8 @@ http://brainvisa.info/brainvisa-cmake/
                         elif len(condition_stack) == 0 \
                             or False not in condition_stack:
                             if self.verbose:
-                                print('  processing line:', repr(line))
+                                print('  processing line %s:' % str(lineCount),
+                                      repr(line))
                                 sys.stdout.flush()
                                 
                             if l[0] == 'source':
@@ -611,7 +610,8 @@ http://brainvisa.info/brainvisa-cmake/
                         if currentDirectoryObject is None:
                             raise SyntaxError()
                         if self.verbose:
-                            print('  processing line:', repr(line))
+                            print('  processing line %s:' % str(lineCount), 
+                                  repr(line))
                             sys.stdout.flush()
                             
                         currentDirectoryObject.addConfigurationLine(line)
@@ -625,7 +625,28 @@ http://brainvisa.info/brainvisa-cmake/
 
         if len(condition_stack) > 0:
             RuntimeError('some [if] clause remain unclosed by [endif].')
+        
+        if options.verbose:
+            print('configuration file %s parsed' 
+                % repr(options.configuration_file))
+        
+        for d in [self.general_section] \
+               + self.sourcesDirectories.values() \
+               + self.buildDirectories.values() \
+               + self.packageDirectories.values():
+            # Variable initialization is done after parsing of sections
+            # because it may depends on the complete parsing of other sections
+            d.init_vars()
+            if options.verbose:
+                print(d.directory if hasattr(d, 'directory') else 'general', 
+                      'options:')
+                for o in d._validOptions:
+                    print(' ', o, '=', getattr(d, o, None))
+            #d.init_cache()
             
+        if options.verbose:
+            print('variables initialized')
+        
         # store options and args
         self.options = options
         self.args = args
@@ -1247,7 +1268,7 @@ class StepCommand(object):
         real_dir = o.replace_vars(d)
         dlen = max((len(step), len(status), len(real_dir)))
         if hasattr(o, 'get_environ'):
-            env = o.get_environ(os.environ)
+            env = o.get_environ()
         else:
             env = os.environ
         start_time = '%04d/%02d/%02d %02d:%02d' % o.start_time[step][:5]
@@ -1625,6 +1646,12 @@ class InstallPackCommand(StepCommand):
                           'of bv_maker.cfg config file. Default steps are '
                           'normally "sources" for source sections, '
                           '"configure build" for build sections.')
+        parser.add_option('--package-date', dest='package_date',
+                          default=False,
+                          help='sets the date of the pack to install. '
+                          'This is only available if a %(date)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
@@ -1657,6 +1684,12 @@ class TestPackCommand(StepCommand):
                           'Same as the configuration option ctest_options but '
                           'specified at runtime. The commandline option here '
                           'overrides the bv_maker.cfg options.')
+        parser.add_option('--package-date', dest='package_date',
+                          default=False,
+                          help='sets the date of the pack to install. '
+                          'This is only available if a %(date)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
@@ -1690,6 +1723,12 @@ class TestrefPackCommand(StepCommand):
                           'Same as the configuration option make_options but '
                           'specified at runtime. The commandline option here '
                           'overrides the bv_maker.cfg options.')
+        parser.add_option('--package-date', dest='package_date',
+                          default=False,
+                          help='sets the date of the pack to install. '
+                          'This is only available if a %(date)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
@@ -1699,8 +1738,29 @@ class TestrefPackCommand(StepCommand):
     def __call__(self):
         self.process('testref_pack', configuration.packageDirectories,
                      'testref_package', self.options, self.args)
-
-
+    
+class VarReplacementType:
+    NO = 0
+    PYTHON = 1
+    ENV = 2
+    ALL = PYTHON | ENV
+        
+def replace_vars(value, 
+                 replacement_type = VarReplacementType.ALL,
+                 python_vars = None,
+                 env_vars = None):   
+    result = value
+    
+    if python_vars and (replacement_type & VarReplacementType.PYTHON):
+        #print('replace_vars, replace_python_vars call', value, replacement_type)
+        result = result % python_vars
+    
+    if env_vars and (replacement_type & VarReplacementType.ENV):
+        #print('replace_vars, replace_env_vars call', value, replacement_type)
+        # Replaces only environment variables
+        result = environmentVariablesSubstitution(result, env = env_vars)
+    return result
+    
 class ConfigVariableParser(object):
 
     _validOptions = set()
@@ -1708,7 +1768,114 @@ class ConfigVariableParser(object):
     _path_variables = set()
     _variables_with_replacements = set()
     _variables_with_env_only_replacements = set()
+    _variables_with_python_only_replacements = set()
 
+    def __init__(self, *args):
+        super(ConfigVariableParser, self).__init__(*args)
+        
+        self._property_info = {}
+        self._property_recursivity = {}
+        for prop in self._validOptions.union(self._validAdditiveOptions):
+            ConfigVariableParser.property_init(prop)
+            self._property_info[prop] = \
+                (self.get_replacement_type(prop), 
+                 self.is_path(prop))
+                
+    @classmethod
+    def property_init(cls, name, doc = None):
+        from functools import partial
+        
+        # Declare option as a property
+        setattr(cls, name, 
+                property(partial(getattr(cls, '_property_get'), name),
+                         partial(getattr(cls, '_property_set'), name),
+                         partial(getattr(cls, '_property_del'), name),
+                         doc if doc else 'property ' + name))
+    
+    @staticmethod
+    def _property_has(name, config_parser):
+        return name in config_parser._property_info
+        
+    @staticmethod            
+    def _property_set(name, config_parser, value):
+        setattr(config_parser, '_' + name, value)
+        #print('val_type is', type(v), 'for value:', value)
+
+    @staticmethod
+    def _property_get_origin(name, config_parser):
+        getattr(config_parser, '_' + name)
+        
+    @staticmethod
+    def _property_get(name, config_parser):
+        info = config_parser._property_info.get(name, None)
+        if info is None:
+            raise RuntimeError('Property %s is not declared' % name)
+        
+        repl_type, is_path = info
+        
+        def from_config_object(value):
+            # Recursively replaces configuration patterns 
+            # using ConfigValue object
+            if isinstance(value, (list, tuple, set)):
+                value = type(value)([from_config_object(v) for v in value])
+                
+            elif isinstance(value, dict):
+                value = dict([(k, from_config_object(v)) \
+                              for k, v in six.iteritems(value)])
+                
+            elif isinstance(value, six.string_types):
+                env_vars = config_parser.get_environ()
+                python_vars = config_parser.get_python_vars()
+                value = replace_vars(value, repl_type, python_vars, env_vars)
+                if is_path and value:
+                    value = normalize_path(value)
+                   
+            return value
+
+        value = getattr(config_parser, '_' + name)
+        config_parser._property_recursivity[name] = True
+        value = from_config_object(value)
+        del config_parser._property_recursivity[name]
+        
+        #print('_property_get', name, value, type(value), repl_type, is_path);sys.stdout.flush()
+        return value
+    
+    @staticmethod
+    def _property_del(name, config_parser):   
+        delattr(config_parser, '_' + name)
+    
+    def property_append(self, name, value):
+        old_value = getattr(self, '_' + name)
+        prop_type = type(old_value)
+        
+        if prop_type in (dict, set):
+            old_value.update(value)
+        else:
+            old_value += value
+        
+        self.property_set(name, old_value)
+    
+    def property_remove(self, name, value):
+        old_value = getattr(self, '_' + name)
+        prop_type = type(old_value)
+        if prop_type is dict:
+            for k in value:
+                if k in old_value:
+                    del old_value[k]
+        elif prop_type is set:
+            old_value.difference_update(value)
+        elif prop_type is list:
+            old_value = [x for x in old_value if x not in value]
+            setattr(self, name, old_value)
+        else:
+            try:
+                old_value -= value
+            except:
+                raise SyntaxError()
+    
+    def get_valid_options(self):
+        return self._validOptions
+    
     def addConfigurationLine(self, line):
         i = line.find('=')
         if i > 0:
@@ -1722,19 +1889,14 @@ class ConfigVariableParser(object):
             else:
                 option = line[:i].strip()
             value = line[i + 1:].strip()
-            orig_value = value
             if option not in self._validOptions:
                 raise SyntaxError('Invalid option: %s' % option)
+            
             var_type = str
             if hasattr(self, option):
                 var_type = type(getattr(self, option))
                 if var_type in (list, tuple):
                     value = shlex.split(value)
-                    if self.allow_variable_replacements(option):
-                        orig_value = value
-                    value = type(value)(
-                        [self.replace_vars_if_allowed(option, x)
-                         for x in value])
                 elif var_type is dict:
                     if value.startswith('{') and value.endswith('}'):
                         try:
@@ -1753,112 +1915,118 @@ class ConfigVariableParser(object):
                                     for x in value])
                             except:
                                 raise SyntaxError()
-                    if self.allow_variable_replacements(option):
-                        orig_value = value
-                    value = dict([(x, self.replace_vars_if_allowed(option, y))
-                                  for x, y in six.iteritems(value)])
-                else:
-                    if self.allow_variable_replacements(option):
-                        orig_value = value
-                    value = self.replace_vars_if_allowed(option, value)
-            else:
-                if self.allow_variable_replacements(option):
-                    orig_value = value
-                value = self.replace_vars_if_allowed(option, value)
-
+            
             if oper == '':
                 setattr(self, option, value)
-                if self.allow_variable_replacements(option):
-                    setattr(self, '_orig_%s' % option, orig_value)
+                        
             elif oper == '+':
-                old_value = getattr(self, option)
-                if self.allow_variable_replacements(option):
-                    orig_old_value = getattr(self, '_orig_%s' % option,
-                                             type(old_value)())
-                if var_type in (dict, set):
-                    old_value.update(value)
-                    if self.allow_variable_replacements(option):
-                        orig_old_value.update(orig_value)
-                else:
-                    old_value += value
-                    if self.allow_variable_replacements(option):
-                        orig_old_value += orig_old_value
+                self.property_append(option, value)
+
             elif oper == '-':
-                old_value = getattr(self, option)
-                if self.allow_variable_replacements(option):
-                    orig_old_value = getattr(self, '_orig_%s' % option,
-                                             type(old_value)())
-                if var_type is dict:
-                    for k in value:
-                        if k in old_value:
-                            del old_value[k]
-                    if self.allow_variable_replacements(option):
-                        for k in orig_value:
-                            if k in orig_old_value:
-                                del orig_old_value[k]
-                elif var_type is set:
-                    old_value.difference_update(value)
-                    if self.allow_variable_replacements(option):
-                        orig_old_value.difference_update(orig_value)
-                elif var_type is list:
-                    old_value = [x for x in old_value if x not in value]
-                    setattr(self, option, old_value)
-                    if self.allow_variable_replacements(option):
-                        orig_old_value = [x for x in orig_old_value
-                                          if x not in orig_value]
-                        setattr(self, '_orig_%s' % option, orig_old_value)
-                else:
-                    try:
-                        old_value -= value
-                        if self.allow_variable_replacements(option):
-                            orig_old_value -= orig_value
-                    except:
-                        raise SyntaxError()
+                self.property_remove(option, value)
+                
             return True # parsed
         return False # not parsed
 
-    def is_path(self, variable):
-        return variable in getattr(self, '_path_variables', set())
+    def is_path(self, var):
+        return var in getattr(self, '_path_variables', set())
 
-    def allow_variable_replacements(self, variable):
-        return self.is_path(variable) \
-            or variable in getattr(self, '_variables_with_replacements')
+    def allows_env_replacements(self, var):
+        return (self.is_path(var) \
+                and var not in getattr(self, 
+                                   '_variables_with_python_only_replacements', 
+                                   set())) \
+            or var in getattr(self, 
+                              '_variables_with_env_only_replacements', 
+                              set()) \
+            or var in getattr(self, 
+                              '_variables_with_replacements', 
+                              set())
 
-    def allow_variable_env_replacements(self, variable):
-        return self.is_path(variable) \
-            or variable in getattr(self, '_variables_with_env_only_replacements')
+    def allows_python_replacements(self, var):
+        return (self.is_path(var) \
+                and var not in getattr(self, 
+                                   '_variables_with_env_only_replacements', 
+                                   set())) \
+            or var in getattr(self, 
+                              '_variables_with_python_only_replacements', 
+                              set()) \
+            or var in getattr(self, 
+                              '_variables_with_replacements', 
+                              set())
 
-    def get_environ(self, default=None):
-        env = getattr(self, 'env', None)
-        if env:
-            sys_env = dict(os.environ)
-            sys_env.update(env)
-            return sys_env
-        return default
+    def allows_replacements(self, var):
+        return self.allows_python_replacements(var) \
+           and self.allows_env_replacements(var)
 
-    def replace_vars(self, path_string, env=None):
-        if hasattr(self, 'installer_variables'):
-            vars = self.installer_variables()
+    def get_replacement_type(self, var):
+        if self.allows_replacements(var):
+            return VarReplacementType.ALL
+        
+        elif self.allows_env_replacements(var):
+            return VarReplacementType.ENV
+        
+        elif self.allows_python_replacements(var):
+            return VarReplacementType.PYTHON
+        
         else:
-            vars = global_installer_variables()
-        if env is None:
-            env = self.get_environ()
-        return environmentPathVariablesSubstitution(
-            path_string, env=env) % vars
+            return VarReplacementType.NO
+        
+    def init_vars(self):
+        self.__init_python_vars()
+        self.__init_environ()
+            
+    def __init_python_vars(self):
+        self._python_vars = dict(global_installer_variables())
 
-    def replace_vars_if_allowed(self, variable, value, env=None):
-        if self.is_path(variable):
-            return self.replace_vars(value)
-        elif self.allow_variable_replacements(variable):
-            if hasattr(self, 'installer_variables'):
-                vars = self.installer_variables()
-            else:
-                vars = global_installer_variables()
-            return environmentVariablesSubstitution(
-                value, env=env) % vars
-        elif self.allow_variable_env_replacements(variable):
+    def __init_environ(self):
+        self._env_vars = dict(os.environ)
+
+        if not self._property_recursivity.get('env'):
+            # Automatically add the env property of the directory 
+            # to the environment variables if it exists
+            if hasattr(self, 'env'):
+                # Add env property content
+                self.update_environ(getattr(self, 'env', {}))
+
+    def update_python_vars(self, vars):
+        '''Update python variable cache for the section'''               
+        self._python_vars.update(vars)        
+
+    def update_environ(self, vars):
+        '''Update environment variable cache for the section'''
+        self._env_vars.update(vars)
+        
+    def get_python_vars(self):
+        return getattr(self, '_python_vars', {})
+
+    def get_environ(self, env = None):
+        env_vars = getattr(self, '_env_vars', None)
+        if not env_vars:
+            return os.environ
+            #raise RuntimeError('Environment is not initialized')
+        
+        return dict(self._env_vars).update(env) if env else self._env_vars
+
+    def replace_vars(self, value, replacement_type=VarReplacementType.ALL):
+        return replace_vars(value, replacement_type, 
+                            self.get_python_vars(), 
+                            self.get_environ())
+
+    def replace_vars_if_allowed(self, var, value, env=None):
+        if self.allows_replacements(var):
+            return replace_vars(value, VarReplacementType.ALL, 
+                                self.get_python_vars(), 
+                                self.get_environ())
+        
+        elif self.allows_env_replacements(var):
             # Replaces only environment variables
-            return environmentVariablesSubstitution(value, env=env)
+           return replace_vars(value, VarReplacementType.ENV,
+                               env_vars = self.get_environ())
+        elif self.allows_python_replacements(var):
+            # Replaces only environment variables
+           return replace_vars(value, VarReplacementType.PYTHON,
+                               python_vars = self.get_python_vars())
         else:
             return value
 
@@ -1870,9 +2038,7 @@ class GeneralSection(ConfigVariableParser):
              'jenkins_server_url'))
     _variables_with_env_only_replacements = set(('jenkins_build_name',))
     _path_variables = set(('global_status_file', ))
-    _validOptions = set(('directory_id_by_default',
-                         'jenkins_global_job_name_step_by_default',
-                         'failure_email', 'success_email', 'smtp_server',
+    _validOptions = set(('failure_email', 'success_email', 'smtp_server',
                          'from_email', 'reply_to_email',
                          'email_notification_by_default',
                          'failure_email_by_project',
@@ -1881,8 +2047,12 @@ class GeneralSection(ConfigVariableParser):
                          'jenkins_token'))
     _validOptions.update(_variables_with_replacements)
     _validOptions.update(_path_variables)
+    _validOptions.update(_variables_with_env_only_replacements)
+    
 
     def __init__(self, configuration):
+        super(GeneralSection, self).__init__()
+        
         self.configuration = configuration
         self.configurationLines = []
         self.failure_email = ''
@@ -1910,6 +2080,7 @@ class GeneralSection(ConfigVariableParser):
 class DirectorySection(object):
 
     def __init__(self):
+        super(DirectorySection, self).__init__()
         self.status = {}
         self.start_time = {}
         self.stop_time = {}
@@ -1975,7 +2146,7 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
     _validOptions.update(_variables_with_replacements)
     _validOptions.update(_path_variables)
     _validOptions.update(_validAdditiveOptions)
-
+        
     def __init__(self, directory, configuration):
         super(SourceDirectory, self).__init__()
         self.configuration = configuration
@@ -2530,12 +2701,14 @@ class BuildDirectory(ComponentsConfigParser, ConfigVariableParser):
 
     _path_variables = set(('stdout_file', 'stderr_file',
                            'test_ref_data_dir', 'test_run_data_dir'))
-    _variables_with_replacements = set(('cross_compiling_prefix', 
-                                        'cross_compiling_target_system',
-                                        'cross_compiling_to_target_path_cmd',
-                                        'env',
-                                        'make_options', 'cmake_options',
+    _variables_with_replacements = set(('make_options', 'cmake_options',
                                         'ctest_options', 'directory_id', ))
+    _variables_with_env_only_replacements = set(('cross_compiling_prefix',
+                                          'cross_compiling_target_system',
+                                          'cross_compiling_to_target_path_cmd',
+                                          'env', 
+                                          'test_ref_data_dir', 
+                                          'test_run_data_dir'))
     _validAdditiveOptions = set(('make_options', 'cmake_options', 'env',
                                  'default_steps', 'ctest_options'))
     _validOptions = set(('build_type',
@@ -2544,6 +2717,7 @@ class BuildDirectory(ComponentsConfigParser, ConfigVariableParser):
                          'clean_build'))
     _validOptions.update(_validAdditiveOptions)
     _validOptions.update(_variables_with_replacements)
+    _validOptions.update(_variables_with_env_only_replacements)
     _validOptions.update(_path_variables)
 
     sitecustomize_content = '''import os, sys
@@ -2951,22 +3125,27 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                (['make'] + self.make_options + ['doc']),
                env=self.get_environ())
 
-    def get_environ(self, default=None):
-        env = super(BuildDirectory, self).get_environ(default)
+    def init_vars(self):
+        super(BuildDirectory, self).init_vars()
+        self.__init_environ()
         
-        if self.test_run_data_dir:
-            if env is None:
-                env = dict(os.environ)
+    def __init_environ(self):
+        env = {}
+        
+        # During environment initialization, we need skip property
+        # mechanims
+        if (not self._property_recursivity.get(self, 'test_run_data_dir')) \
+           and self.test_run_data_dir:
             # Add directories to env
             env["BRAINVISA_TEST_RUN_DATA_DIR"] = self.to_target_path(
                 self.test_run_data_dir)
-        if self.test_ref_data_dir:
-            if env is None:
-                env = dict(os.environ)
+        if (not self._property_recursivity.get(self, 'test_ref_data_dir')) \
+           and self.test_ref_data_dir:
             # Add directories to env
             env["BRAINVISA_TEST_REF_DATA_DIR"] = self.to_target_path(
                 self.test_ref_data_dir)
-        return env
+            
+        self.update_environ(env)
 
     def test(self, options, args):
         self._process_configuration_lines()
@@ -2977,7 +3156,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         print('Testing directory:', self.directory)
         if not self.test_ref_data_dir:
             print("Warning: test_ref_data_dir is not defined; tests may fail.")
-        env = self.get_environ(dict(os.environ))
+        env = self.get_environ()
         # Create test_run_data_dir and test_ref_data_dir
         if self.test_run_data_dir:
             if not os.path.exists(self.test_run_data_dir):
@@ -2998,7 +3177,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         if not self.test_ref_data_dir:
             print("Warning: test_ref_data_dir should be defined to create "
                   "reference files.")
-        env = self.get_environ(dict(os.environ))
+        env = self.get_environ()
         # Create test_ref_data_dir
         if self.test_ref_data_dir:
             if not os.path.exists(self.test_ref_data_dir):
@@ -3076,9 +3255,15 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                            'remote_test_install_dir', 'remote_test_ref_data_dir',
                            'remote_test_run_data_dir'))
     _variables_with_replacements = set(('pack_version', 'directory_id',
-                                        'env', 'packaging_options',
+                                        'packaging_options',
                                         'make_options', 'ctest_options',
                                         'installer_options'))
+    _variables_with_env_only_replacements = set(('build_directory',
+                                                 'env',
+                                                 'test_ref_data_dir',
+                                                 'test_run_data_dir',
+                                                 'remote_test_ref_data_dir',
+                                                 'remote_test_run_data_dir'))
     _validAdditiveOptions = set(('packaging_options', 'default_steps',
                                  'make_options', 'ctest_options', 'env',
                                  'installer_options'))
@@ -3087,6 +3272,7 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                          'init_components_from_build_dir',
                          'keep_n_older_repos'))
     _validOptions.update(_variables_with_replacements)
+    _validOptions.update(_variables_with_env_only_replacements)
     _validOptions.update(_path_variables)
     _validOptions.update(_validAdditiveOptions)
 
@@ -3169,36 +3355,47 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                 = directory_version_model
             print('  %s (%s) <- %s' % (component, version, directory))
 
-    def installer_variables(self):
-        i2bm_str = 'public'
-        public = ''
+    def __init_python_vars(self):
         online = 'online'
+        
+        if not self._property_recursivity.get('packaging_options'):
+            # Add i2bm and public vars
+            i2bm_str = 'public'
+            public = ''
 
-        if '--i2bm' in self.packaging_options:
-            i2bm_str = 'i2bm'
-            public = '-i2bm'
+            if '--i2bm' in self.packaging_options:
+                i2bm_str = 'i2bm'
+                public = '-i2bm'
+            self.update_python_vars({'i2bm': i2bm_str, 
+                                     'public': public})
 
-        if self.pack_version:
-            fullVersion = self.pack_version
-        else:
-            fullVersion = '1.0.0'
-            bvconf = os.path.join(self.build_directory, 'python', 'brainvisa',
-                                  'config.py')
-            if os.path.exists(bvconf):
-                ver = {}
-                try:
-                    with open(bvconf) as f:
-                        code = compile(f.read(), bvconf, 'exec')
-                        exec(code, ver, ver)
-                    fullVersion = ver.get('fullVersion', fullVersion)
-                except ImportError:
-                    pass
+        if not self._property_recursivity.get('pack_version'):
+            # Add version var
+            if self.pack_version:
+                fullVersion = self.pack_version
+            else:
+                fullVersion = '1.0.0'
 
-        pathvars = dict(global_installer_variables())
-        pathvars.update({'i2bm': i2bm_str, 'version': fullVersion,
-                         'public': public, 'online': online})
-        return pathvars
+                if not self._property_recursivity.get('build_directory'):
+                    bvconf = os.path.join(self.build_directory, 
+                                          'python', 'brainvisa', 'config.py')
+                    if os.path.exists(bvconf):
+                        ver = {}
+                        try:
+                            with open(bvconf) as f:
+                                code = compile(f.read(), bvconf, 'exec')
+                                exec(code, ver, ver)
+                            fullVersion = ver.get('fullVersion', fullVersion)
+                        except ImportError:
+                            pass
+            self.update_python_vars({'version': fullVersion})
 
+        # Add online var and local variables
+        self.update_python_vars({'online': online})
+    
+    def installer_variables(self):
+        return self.get_python_vars()
+    
     def installer_cmdline(self):
         components = self.components.keys()
         projects = list(self.projects)
@@ -3209,14 +3406,9 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                 #os.path.dirname(self.directory),
                 #'brainvisa-installer/brainvisa_installer-'
                 #'%(version)s-%(os)s-%(online)s%(public)s')
-        if installer_filename:
-            installer_filename = self.replace_vars(installer_filename)
+      
         offline_installer_filename = self.offline_installer_filename
-        if offline_installer_filename is not None:
-            offline_installer_filename = self.replace_vars(
-                offline_installer_filename)
-        directory = self.directory
-        directory = self.replace_vars(directory)
+        directory = self.replace_vars(self.directory)
 
         exe_suffix = ''
         if sys.platform == 'win32':
@@ -3561,7 +3753,11 @@ Controller.prototype.FinishedPageCallback = function()
                         self.rm_with_empty_dirs(tmp_dir)
 
 
-    def install_package(self, options, args):
+    def install_package(self, options, args):        
+        if (options.package_date) :
+            self.update_python_vars({'date': options.package_date})
+        
+        
         self.test_config(options, args)
         directory = self.replace_vars(self.directory)
         
@@ -3571,17 +3767,11 @@ Controller.prototype.FinishedPageCallback = function()
         remote_test_install = True if self.remote_test_host_cmd else False
 
         # Test install directory
-        test_install_dir = self.replace_vars(self.test_install_dir)
+        test_install_dir = self.test_install_dir
         if remote_test_install and self.remote_test_install_dir:
-            remote_test_install_dir = self.replace_vars(self.remote_test_install_dir)
+            remote_test_install_dir = self.remote_test_install_dir
         else:    
             remote_test_install_dir = test_install_dir
-        
-        print('Installing package:', directory)
-        print('    from build dir:', self.build_dir.directory)
-        print('    to:', test_install_dir)
-        if remote_test_install:
-            print('    remote:', self.remote_test_host_cmd)
 
         # Temporary directory
         tmp_dir = os.path.join(os.path.dirname(test_install_dir), 'tmp')
@@ -3589,24 +3779,32 @@ Controller.prototype.FinishedPageCallback = function()
         # Repository directory
         repos_dir = directory
         if remote_test_install and self.remote_repos_dir:
-            remote_repos_dir = self.replace_vars(self.remote_repos_dir)
+            remote_repos_dir = self.remote_repos_dir
         else:
             remote_repos_dir = repos_dir
         
         # Data repository directory
-        data_repos_dir = self.replace_vars(self.data_repos_dir)
+        data_repos_dir = self.data_repos_dir
         if remote_test_install and self.remote_data_repos_dir:
-            remote_data_repos_dir = self.replace_vars(self.remote_data_repos_dir)
+            remote_data_repos_dir = self.remote_data_repos_dir
         elif self.data_repos_dir:
             remote_data_repos_dir = data_repos_dir
         else:
             remote_data_repos_dir = None
 
-        installer_filename = self.replace_vars(self.installer_filename)
+        installer_filename = self.installer_filename
         if remote_test_install and self.remote_installer_filename:
-            remote_installer_filename = self.replace_vars(self.remote_installer_filename)
+            remote_installer_filename = self.remote_installer_filename
         else:
             remote_installer_filename = installer_filename
+
+        print('Installing package:', directory)
+        if(data_repos_dir):
+            print('    using data package:', data_repos_dir)
+        print('    from build dir:', self.build_dir.directory)
+        print('    to:', test_install_dir)
+        if remote_test_install:
+            print('    remote:', self.remote_test_host_cmd)
 
         if os.path.isdir(test_install_dir):
             print('removing previous test installation...')
@@ -3617,7 +3815,7 @@ Controller.prototype.FinishedPageCallback = function()
             #shutil.rmtree(tmp_dir)
 
         if not os.path.exists(test_install_dir):
-            print('creating test directcory...')
+            print('creating test directory...')
             os.makedirs(test_install_dir)
 
         if not os.path.exists(tmp_dir):
@@ -3656,59 +3854,81 @@ Controller.prototype.FinishedPageCallback = function()
         finally:
             os.unlink(install_script)
 
-    def get_environ(self, default=None):
-        env = super(PackageDirectory, self).get_environ(default)
-        if hasattr(self, '_recurse_get_environ'):
-            return env
-        self._recurse_get_environ = True
-        if env is None:
-            env = dict(os.environ)
-
-        build_dir = self.configuration.buildDirectories.get(self.build_directory)
-
-        if self.remote_test_host_cmd and self.remote_test_install_dir:
-            install_dir = self.replace_vars(self.remote_test_install_dir)
-            env['BRAINVISA_PACKAGE_INSTALL_PREFIX'] = install_dir            
-        elif self.test_install_dir:
-            install_dir = self.replace_vars(self.test_install_dir)
-            env['BRAINVISA_PACKAGE_INSTALL_PREFIX'] = install_dir
+    def init_vars(self):        
+        super(PackageDirectory, self).init_vars()
         
+        
+        self.__init_python_vars()        
+        self.__init_environ()
+        
+    def __init_environ(self):
+        env = {}
         # binaries are in bin/real-bin/ (used by some python tests commands)
         env['BRAINVISA_REAL_BIN'] = '/real-bin'
         
-        if build_dir:
+        if not self._property_recursivity.get('remote_test_host_cmd'):
             if self.remote_test_host_cmd \
-                and self.remote_test_run_data_dir:
-                # Add directories to env
-                env["BRAINVISA_TEST_RUN_DATA_DIR"] = \
-                    build_dir.to_target_path(self.remote_test_run_data_dir)
-            elif self.test_run_data_dir:
-                # Add directories to env
-                env["BRAINVISA_TEST_RUN_DATA_DIR"] = \
-                    build_dir.to_target_path(self.test_run_data_dir)
+                and (not self._property_recursivity.get(
+                    'remote_test_install_dir')) \
+                and self.remote_test_install_dir:
+                install_dir = self.remote_test_install_dir
+                env['BRAINVISA_PACKAGE_INSTALL_PREFIX'] = install_dir            
+            elif (not self._property_recursivity.get('test_install_dir')) \
+                and self.test_install_dir:
+                install_dir = self.test_install_dir
+                env['BRAINVISA_PACKAGE_INSTALL_PREFIX'] = install_dir
+    
+            if (not self._property_recursivity.get('build_directory')):
+                build_dir = self.configuration.buildDirectories.get(
+                    self.build_directory)
+
+                if build_dir:
+                    if self.remote_test_host_cmd \
+                        and (not self._property_recursivity.get(
+                            'remote_test_run_data_dir')) \
+                        and self.remote_test_run_data_dir:
+                        # Add directories to env
+                        env["BRAINVISA_TEST_RUN_DATA_DIR"] = \
+                            build_dir.to_target_path(self.remote_test_run_data_dir)
+                    elif (not self._property_recursivity.get(
+                            'test_run_data_dir')) \
+                         and self.test_run_data_dir:
+                        # Add directories to env
+                        env["BRAINVISA_TEST_RUN_DATA_DIR"] = \
+                            build_dir.to_target_path(self.test_run_data_dir)
+                    
+                    if self.remote_test_host_cmd \
+                        and (not self._property_recursivity.get(
+                            'remote_test_ref_data_dir')) \
+                        and self.remote_test_ref_data_dir:
+                        # Add directories to env
+                        env["BRAINVISA_TEST_REF_DATA_DIR"] = \
+                            build_dir.to_target_path(self.remote_test_ref_data_dir)
+                    elif (not self._property_recursivity.get(
+                            'test_ref_data_dir')) \
+                        and self.test_ref_data_dir:
+                        # Add directories to env
+                        env["BRAINVISA_TEST_REF_DATA_DIR"] = \
+                            build_dir.to_target_path(self.test_ref_data_dir)
             
-            if self.remote_test_host_cmd and self.remote_test_ref_data_dir:
-                # Add directories to env
-                env["BRAINVISA_TEST_REF_DATA_DIR"] = \
-                    build_dir.to_target_path(self.remote_test_ref_data_dir)
-            elif self.test_ref_data_dir:
-                # Add directories to env
-                env["BRAINVISA_TEST_REF_DATA_DIR"] = \
-                    build_dir.to_target_path(self.test_ref_data_dir)
+            if self.remote_test_host_cmd:
+                # temporarily change os.environ since expand_shell uses
+                # os.path.expandvars(), which use os.environ variables
+                cur_env = os.environ
+                os.environ = dict(os.environ)
+                os.environ.update(env)
+                env['BRAINVISA_TEST_REMOTE_COMMAND'] \
+                    = self.expand_shell(self.remote_test_host_cmd)
+                os.environ = cur_env
+                
+        self.update_environ(env)
         
-        if self.remote_test_host_cmd:
-            # temporarily change os.environ since expand_shell uses
-            # os.path.expandvars(), which use os.environ variables
-            cur_env = os.environ
-            os.environ = dict(os.environ)
-            os.environ.update(env)
-            env['BRAINVISA_TEST_REMOTE_COMMAND'] \
-                = self.expand_shell(self.remote_test_host_cmd)
-            os.environ = cur_env
-        del self._recurse_get_environ
         return env
 
     def test_package(self, options, args):
+        if (options.package_date) :
+            self.update_python_vars({'date': options.package_date})
+            
         self.test_config(options, args)
         if not self.test_install_dir:
             return IGNORED_STEP
@@ -3723,7 +3943,7 @@ Controller.prototype.FinishedPageCallback = function()
             os.makedirs(self.test_ref_data_dir)
         print('Testing package:', self.directory)
         print('    from build dir:', self.build_dir.directory)
-        install_dir = self.replace_vars(self.test_install_dir)
+        install_dir = self.test_install_dir
         # Add directories to env
         new_env = self.get_environ(dict(os.environ))
         repos_dir = self.replace_vars(self.directory)
@@ -3746,7 +3966,11 @@ Controller.prototype.FinishedPageCallback = function()
         return test_res
 
     def testref_package(self, options, args):
+        if (options.package_date) :
+            self.update_python_vars({'date': options.package_date})
+            
         self.test_config(options, args)
+        
         if not self.test_install_dir:
             return IGNORED_STEP
         if not self.test_ref_data_dir:
@@ -3762,7 +3986,7 @@ Controller.prototype.FinishedPageCallback = function()
             ctoptions = self.make_options
         print('Creating test reference files for package:', self.directory)
         print('    from build dir:', self.build_dir.directory)
-        install_dir = self.replace_vars(self.test_install_dir)
+        install_dir = self.test_install_dir
         # Add directories to env
         new_env = self.get_environ(dict(os.environ))
         return run_and_log_testref(cwd=self.build_dir.directory,

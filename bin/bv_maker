@@ -3134,12 +3134,12 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         
         # During environment initialization, we need skip property
         # mechanims
-        if (not self._property_recursivity.get(self, 'test_run_data_dir')) \
+        if (not self._property_recursivity.get('test_run_data_dir')) \
            and self.test_run_data_dir:
             # Add directories to env
             env["BRAINVISA_TEST_RUN_DATA_DIR"] = self.to_target_path(
                 self.test_run_data_dir)
-        if (not self._property_recursivity.get(self, 'test_ref_data_dir')) \
+        if (not self._property_recursivity.get('test_ref_data_dir')) \
            and self.test_ref_data_dir:
             # Add directories to env
             env["BRAINVISA_TEST_REF_DATA_DIR"] = self.to_target_path(

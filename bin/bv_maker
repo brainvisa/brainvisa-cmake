@@ -2005,8 +2005,11 @@ class ConfigVariableParser(object):
         if not env_vars:
             return os.environ
             #raise RuntimeError('Environment is not initialized')
-        
-        return dict(self._env_vars).update(env) if env else self._env_vars
+
+        new_env = dict(self._env_vars)
+        if env:
+            new_env.update(env)
+        return new_env
 
     def replace_vars(self, value, replacement_type=VarReplacementType.ALL):
         return replace_vars(value, replacement_type, 

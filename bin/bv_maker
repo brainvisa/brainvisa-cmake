@@ -3719,7 +3719,7 @@ Controller.prototype.FinishedPageCallback = function()
                 # find associated installer
                 if self.installer_filename:
                     installer = environmentPathVariablesSubstitution(
-                        self._orig_installer_filename,
+                        self._installer_filename,
                         env=self.get_environ()) % vars
                     if os.path.exists(installer):
                         print('removing:', installer)
@@ -3742,7 +3742,7 @@ Controller.prototype.FinishedPageCallback = function()
                 # find associated install
                 if self.test_install_dir:
                     install_dir = environmentPathVariablesSubstitution(
-                        self._orig_test_install_dir,
+                        self._test_install_dir,
                         env=self.get_environ()) % vars
                     if os.path.exists(install_dir):
                         print('removing', install_dir)

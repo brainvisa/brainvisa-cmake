@@ -42,7 +42,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libopenjpeg RUN )
     
   find_package( JpegXR QUIET )
-  if( JpegXR_FOUND )
+  if( LIBJPEGXR_FOUND )
     # jpegXr is not always needed
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libjpegxr RUN )
   endif()

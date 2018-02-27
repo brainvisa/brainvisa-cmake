@@ -1430,6 +1430,9 @@ class SourcesCommand(StepCommand):
 
     Create or updated selected sources directories from Subversion repository.'''
         parser = OptionParser(usage=usage)
+        parser.add_option('--no-cleanup', dest='cleanup', action='store_false',
+                          default=True,
+                          help='don\'t cleanup svn sources')
         parser.add_option('--no-svn', dest='svn', action='store_false',
                           default=True,
                           help='don\'t update svn sources')
@@ -2331,6 +2334,8 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
             source_directories.append((dest_directory, bv_version))
         externalsFile.close()
         if use_rcs and options.svn:
+            if options.cleanup:
+                self.svncommand('cleanup', self.directory)
             self.svncommand('propset', 'svn:externals',
                             '--file', externalsFileName, self.directory)
             self.svncommand('commit', '-m', '', self.directory)

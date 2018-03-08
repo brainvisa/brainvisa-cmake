@@ -320,8 +320,9 @@ def create_directory_package(options, selected_packages, dependencies,
                 installed_paths[i] = package
 
     # patch linux packaged libraries to remove rpaths
-    if ((options.platform_target[:3] != "win") \
-        and (options.platform_target[:6] != "darwin")
+    if (options.platform_target[:3] != "win"
+            and options.platform_target[:6] != "darwin"
+            and options.platform_target != "osx"
             and options.dependencies):
         if os.path.exists(os.path.join(install_directory, "lib")):
             print("Trying to remove RPATH from packaged libraries headers")
@@ -474,7 +475,8 @@ def create_directory_package(options, selected_packages, dependencies,
           'LAUNCHER': launcher,
           'REALCOM': realcommand})
 
-                    elif options.platform_target[:6] == 'darwin':
+                    elif options.platform_target[:6] == 'darwin' \
+                            or options.platform_target == 'osx':
                         if is_shell_script(dest):
                             # avoir running a sub-shell
                             out.write( '''#!/bin/sh
@@ -553,7 +555,8 @@ def create_directory_package(options, selected_packages, dependencies,
             out.close()
 
     # Macos
-    elif options.platform_target[:6] == 'darwin':
+    elif options.platform_target[:6] == 'darwin' \
+          or options.platform_target == 'osx':
         # Build MacOS X clickable icons
         for shortcut, exe_name, is_script in root_shortcuts:
             if not is_script:

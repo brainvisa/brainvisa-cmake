@@ -3579,6 +3579,9 @@ Controller.prototype.TargetDirectoryPageCallback = function()
     print("target directory page");
     var widget = gui.currentPageWidget(); // get the current wizard page
     widget.TargetDirectoryLineEdit.setText(install_dir);
+    print("install directory: " + widget.TargetDirectoryLineEdit.text)
+    print("message: " + widget.MessageLabel.text)
+    print("warning: " + widget.WarningLabel.text)
     gui.clickButton(buttons.NextButton);
 }
 
@@ -3587,8 +3590,6 @@ Controller.prototype.ComponentSelectionPageCallback = function()
     print("component selection page");
     var widget = gui.currentPageWidget();
     widget.selectAll();
-    //widget.deselectAll();
-    //widget.selectComponent("brainvisa.app.soma.run.soma_io");
     gui.clickButton(buttons.NextButton);
     //installer.setAutomatedPageSwitchEnabled(true);
 }

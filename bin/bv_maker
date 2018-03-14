@@ -668,37 +668,60 @@ def check_filter_condition(filters):
 
 _installer_variables = None
 
+def get_standard_arch(arch = platform.architecture()[0]):
+    return 64 if arch in ['64', '64bit', 'x86_64'] else 32
+    
+def get_host_system_name():
+    systems = {'darwin' : 'osx', 
+               'windows': 'win'}
+    system = platform.system()
+    osname = system.lower()
+    osname = systems.get(osname, osname)
+    
+    if osname in ('linux', 'win'):
+        # Append architecture
+        arch = platform.architecture()[0]
+        osname += str(get_standard_arch(arch))
+
+    return osname
+
+def get_host_libc_version():
+    # determine libc version - using ctypes and calling C
+    # gnu_get_libc_version() function
+    # Note: plaform.libc_ver() is completely bogus.
+    import ctypes
+    libc = ctypes.cdll.LoadLibrary("libc.so.6")
+    gnu_get_libc_version = libc.gnu_get_libc_version
+    gnu_get_libc_version.restype = ctypes.c_char_p
+    
+    return gnu_get_libc_version().split('.')
+
+def get_pack_host_system_name():
+    '''
+        Get system name to use for packaging.
+        Because linux compatibility for packs depends on libc version, the
+        libc version is integrated to the system name.
+    '''
+    pack_system = get_host_system_name()
+    if pack_system == 'linux':
+        libc_version = get_host_libc_version()
+        pack_system += '-glibc-'+ '.'.join(libc_version[:2])  
+        
+    return pack_system
 
 def global_installer_variables():
     global _installer_variables
     if _installer_variables is not None:
         return _installer_variables
-    systems = {'darwin' : 'osx'}
-    osname = platform.system().lower()
-    osname = systems.get(osname, osname)
-    if osname == 'linux':
-        if platform.architecture()[0] == '64bit':
-            osname += '64'
-        else:
-            osname += '32'
-        # determine libc version - using ctypes and calling C
-        # gnu_get_libc_version() function
-        # Note: plaform.libc_ver() is completely bogus.
-        import ctypes
-        libc = ctypes.cdll.LoadLibrary("libc.so.6")
-        gnu_get_libc_version = libc.gnu_get_libc_version
-        gnu_get_libc_version.restype = ctypes.c_char_p
-        osname += '-glibc-' \
-            + '.'.join(gnu_get_libc_version().split('.')[:2])
-    elif osname == 'windows':
-        osname = 'win32'
-        # how is is for win64 ?
 
+    pack_host_system = get_pack_host_system_name()
+        
     plt = time.localtime()
     p_date = '%04d_%02d_%02d' % plt[:3]
     p_time = '%02d:%02d:%02d' % plt[3:6]
 
-    _installer_variables = {'os': osname, 'date': p_date, 'time': p_time,
+    _installer_variables = {'os': pack_host_system,
+                            'date': p_date, 'time': p_time,
                             'hostname': gethostname().split('.')[0]}
     return _installer_variables
 
@@ -2814,6 +2837,13 @@ if len(old_file) == 0:
             return self.cross_compiling_target_system
         elif self.cross_compiling_prefix:
             if 'mingw' in self.cross_compiling_prefix:
+                # Try to split target prefix
+                cross_compiling_info = self.cross_compiling_prefix.split('-')
+                
+                if len(cross_compiling_info) == 3 \
+                   and cross_compiling_info[0] == 'x86_64':
+                       return 'win64'
+                
                 return 'win32'
             else:
                 raise RuntimeError('Unable to determine target cross '
@@ -3339,13 +3369,22 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
             'test_pack': [(self, 'install_pack')],
         }
 
+    def get_build_dir(self):
+        if not hasattr(self, 'build_dir'):
+            build_dir = self.configuration.buildDirectories.get(
+                            self.build_directory)
+            if build_dir is None:
+                raise RuntimeError(
+                    'Package directory: referenced build directory: "%s" does '
+                    'not exist' % self.build_directory)
+            
+            self.build_dir = build_dir
+            
+        return self.build_dir
+
     def test_config(self, options, args):
-        build_dir = configuration.buildDirectories.get(self.build_directory)
-        if build_dir is None:
-            raise RuntimeError(
-                'Package directory: referenced build directory: "%s" does '
-                'not exist' % self.build_directory)
-        self.build_dir = build_dir
+        build_dir = self.get_build_dir()
+        
         if self.init_components_from_build_dir.upper() == 'ON':
             build_dir._process_configuration_lines()
             self.projects = build_dir.projects
@@ -3397,7 +3436,17 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                         except ImportError:
                             pass
             self.update_python_vars({'version': fullVersion})
+            
+        if not self._property_recursivity.get('build_directory'):
+            build_dir = self.get_build_dir()
+             
+            if build_dir.target_system() == sys.platform:
+                pack_system = get_pack_host_system_name()
+            else:
+                pack_system = build_dir.target_system() 
 
+            self.update_python_vars({'os': pack_system})
+             
         # Add online var and local variables
         self.update_python_vars({'online': online})
     

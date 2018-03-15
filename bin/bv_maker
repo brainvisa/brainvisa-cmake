@@ -703,7 +703,7 @@ def get_pack_host_system_name():
         libc version is integrated to the system name.
     '''
     pack_system = get_host_system_name()
-    if pack_system == 'linux':
+    if pack_system.startswith('linux'):
         libc_version = get_host_libc_version()
         pack_system += '-glibc-'+ '.'.join(libc_version[:2])  
         
@@ -3630,7 +3630,10 @@ Controller.prototype.TargetDirectoryPageCallback = function()
     widget.TargetDirectoryLineEdit.setText(install_dir);
     print("install directory: " + widget.TargetDirectoryLineEdit.text)
     print("message: " + widget.MessageLabel.text)
-    print("warning: " + widget.WarningLabel.text)
+    if (widget.WarningLabel)
+    {
+        print("warning: " + widget.WarningLabel.text)
+    }
     gui.clickButton(buttons.NextButton);
 }
 

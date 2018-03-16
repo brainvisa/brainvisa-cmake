@@ -481,15 +481,18 @@ http://brainvisa.info/brainvisa-cmake/
         packages = []
         lineCount = 0
         currentDirectoryObject = None
+        
+        source_dirs = []
+        build_dirs = []
+        package_dirs = []
+        
         self.sourcesDirectories = {}
         self.buildDirectories = {}
         self.packageDirectories = {}
         self.general_section = GeneralSection(self)
         condition_stack = []
 
-        directories = [os.path.normpath(os.path.realpath(os.path.abspath(d)))
-                       for d in options.directories]
-        self.directories = directories
+        self.directories = options.directories
 
         for i in ('configuration_file', 'username', 'verbose'):
             setattr(self, i, getattr(options, i))
@@ -505,11 +508,10 @@ http://brainvisa.info/brainvisa-cmake/
             reload(brainvisa.maker.components_definition)
             reload(brainvisa_projects)
 
-            bd = BuildDirectory(
-                environmentPathVariablesSubstitution(
-                    options.build_directory),
-                self)
-            self.buildDirectories[bd.directory] = bd
+            bd = BuildDirectory(options.build_directory, self)
+                
+            build_dirs.append(bd)
+
             for sd in options.sources_directories:
                 if os.path.exists(os.path.join(sd, 'project_info.cmake')) \
                     or glob.glob(os.path.join(sd, 'python', '*', 'info.py')) \
@@ -566,43 +568,30 @@ http://brainvisa.info/brainvisa-cmake/
                                 
                             if l[0] == 'source':
                                 currentDirectoryObject = SourceDirectory(
-                                    environmentPathVariablesSubstitution(
-                                        l[1].strip()),
+                                    l[1].strip(),
                                     self)
-                                self.sourcesDirectories[
-                                    currentDirectoryObject.directory] \
-                                        = currentDirectoryObject
-                                #condition_stack = []
+                                source_dirs.append(currentDirectoryObject)
+
                             elif l[0] == 'build':
                                 currentDirectoryObject = BuildDirectory(
-                                    environmentPathVariablesSubstitution(
-                                        l[1].strip()),
+                                    l[1].strip(),
                                     self)
-                                self.buildDirectories[
-                                    currentDirectoryObject.directory] \
-                                        = currentDirectoryObject
-                                #condition_stack = []
+                                build_dirs.append(currentDirectoryObject)
+
                             elif l[0] == 'virtualenv':
                                 currentDirectoryObject = VirtualenvDirectory(
-                                    environmentPathVariablesSubstitution(
-                                        l[1].strip()),
+                                    l[1].strip(),
                                     self)
-                                self.buildDirectories[
-                                    currentDirectoryObject.directory] \
-                                        = currentDirectoryObject
-                                #condition_stack = []
+                                build_dirs.append(currentDirectoryObject)
+                                
                             elif l[0] == 'package':
                                 currentDirectoryObject = PackageDirectory(
-                                    environmentPathVariablesSubstitution(
-                                        l[1].strip()),
+                                    l[1].strip(),
                                     self)
-                                self.packageDirectories[
-                                    currentDirectoryObject.directory] \
-                                        = currentDirectoryObject
-                                #condition_stack = []
+                                package_dirs.append(currentDirectoryObject)
+
                             elif l[0] == 'general' and len(l) == 1:
                                 currentDirectoryObject = self.general_section
-                                #condition_stack = []
                             else:
                                 raise SyntaxError()
                     elif len(condition_stack) == 0 \
@@ -630,20 +619,31 @@ http://brainvisa.info/brainvisa-cmake/
             print('configuration file %s parsed' 
                 % repr(options.configuration_file))
         
-        for d in [self.general_section] \
-               + self.sourcesDirectories.values() \
-               + self.buildDirectories.values() \
-               + self.packageDirectories.values():
-            # Variable initialization is done after parsing of sections
-            # because it may depends on the complete parsing of other sections
-            d.init_vars()
-            if options.verbose:
-                print(d.directory if hasattr(d, 'directory') else 'general', 
-                      'options:')
-                for o in d._validOptions:
-                    print(' ', o, '=', getattr(d, o, None))
-            #d.init_cache()
-            
+        for r, sections in ((None, [self.general_section]), \
+                            ('sourcesDirectories', source_dirs), \
+                            ('buildDirectories', build_dirs), \
+                            ('packageDirectories', package_dirs)):
+            for s in sections:
+                # Variable initialization is done after parsing of sections
+                # because it may depends on the complete parsing of other 
+                # sections
+                s.init_vars()
+                
+                registry = getattr(self, r, None) if r else None               
+                if registry is not None:
+                     # Register section
+                    registry[s.directory] = s
+                
+                if isinstance(s, SourceDirectory):
+                    # Parses source configuration
+                    s.parseSourceConfiguration()
+                    
+                if options.verbose:
+                    print(s.directory if hasattr(s, 'directory') else 'general', 
+                        'options:')
+                    for o in s._validOptions:
+                        print(' ', o, '=', getattr(s, o, None))
+                
         if options.verbose:
             print('variables initialized')
         
@@ -1103,13 +1103,26 @@ class JenkinsWrapper(object):
 
 
 class StepCommand(object):
+    
+    def __init__(self, argv, configuration):
+        # Initialize python variables that can override directories
+        # python variables
+        super(StepCommand, self).__init__()
+        self.python_vars = {}
 
     def process(self, step, directories_dict, method, *meth_args,
                 **meth_kwargs):
         for d, o in six.iteritems(directories_dict):
-            if (not configuration.directories
-                    or d in configuration.directories) \
-                    and o.conditional_build():
+            # Update directory python variables by those coming from the command
+            # line (package date and version)
+            o.update_python_vars(self.python_vars)
+            
+            # Resolve directories pattern using configuration directory 
+            # variables
+            conf_dirs = [normalize_path(o.replace_vars(c)) \
+                         for c in configuration.directories] \
+                        if configuration.directories else []
+            if (not conf_dirs or d in conf_dirs) and o.conditional_build():
                 if not self.options.in_config or step in o.default_steps:
                     if o.has_satisfied_dependencies(step):
                         self.redirect_stdout(d, o, step)
@@ -1435,6 +1448,8 @@ class InfoCommand(StepCommand):
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
+        
+        super(InfoCommand, self).__init__(argv, configuration)
         self.options = options
         self.args = args
 
@@ -1473,6 +1488,8 @@ class SourcesCommand(StepCommand):
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
+        
+        super(SourcesCommand, self).__init__(argv, configuration)
         self.options = options
         self.args = args
 
@@ -1503,13 +1520,14 @@ class ConfigureCommand(StepCommand):
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
+        
+        super(ConfigureCommand, self).__init__(argv, configuration)
         self.options = options
         self.args = args
 
     def __call__(self):
         self.process('configure', configuration.buildDirectories,
                      'configure', self.options, self.args)
-
 
 class BuildCommand(StepCommand):
 
@@ -1533,6 +1551,8 @@ class BuildCommand(StepCommand):
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
+        
+        super(BuildCommand, self).__init__(argv, configuration)
         self.options = options
         self.args = args
 
@@ -1559,6 +1579,8 @@ class DocCommand(StepCommand):
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
+        
+        super(DocCommand, self).__init__(argv, configuration)
         self.options = options
         self.args = args
 
@@ -1590,6 +1612,8 @@ class TestCommand(StepCommand):
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
+        
+        super(TestCommand, self).__init__(argv, configuration)
         self.options = options
         self.args = args
 
@@ -1623,6 +1647,8 @@ class TestrefCommand(StepCommand):
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
+        
+        super(TestrefCommand, self).__init__(argv, configuration)
         self.options = options
         self.args = args
 
@@ -1649,6 +1675,8 @@ class PackCommand(StepCommand):
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
+        
+        super(PackCommand, self).__init__(argv, configuration)
         self.options = options
         self.args = args
 
@@ -1678,9 +1706,19 @@ class InstallPackCommand(StepCommand):
                           'This is only available if a %(date)s pattern '
                           'has been used in the package directory sections '
                           'of bv_maker.cfg.')
+        parser.add_option('--package-version', dest='package_version',
+                          default=False,
+                          help='sets the version of the pack to install. '
+                          'This is only available if a %(version)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
+        
+        super(InstallPackCommand, self).__init__(argv, configuration)
+        self.python_vars = {'date': options.package_date,
+                            'version': options.package_version}
         self.options = options
         self.args = args
 
@@ -1716,9 +1754,19 @@ class TestPackCommand(StepCommand):
                           'This is only available if a %(date)s pattern '
                           'has been used in the package directory sections '
                           'of bv_maker.cfg.')
+        parser.add_option('--package-version', dest='package_version',
+                          default=False,
+                          help='sets the version of the pack to install. '
+                          'This is only available if a %(version)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
+        
+        super(TestPackCommand, self).__init__(argv, configuration)
+        self.python_vars = {'date': options.package_date,
+                            'version': options.package_version}
         self.options = options
         self.args = args
 
@@ -1755,9 +1803,19 @@ class TestrefPackCommand(StepCommand):
                           'This is only available if a %(date)s pattern '
                           'has been used in the package directory sections '
                           'of bv_maker.cfg.')
+        parser.add_option('--package-version', dest='package_version',
+                          default=False,
+                          help='sets the version of the pack to install. '
+                          'This is only available if a %(version)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
+        
+        super(TestrefPackCommand, self).__init__(argv, configuration)
+        self.python_vars = {'date': options.package_date,
+                            'version': options.package_version}
         self.options = options
         self.args = args
 
@@ -1796,13 +1854,19 @@ class ConfigVariableParser(object):
     _variables_with_env_only_replacements = set()
     _variables_with_python_only_replacements = set()
 
+    def __new__(cls, *args):
+        # Initialize the class properties
+        for prop in cls._validOptions.union(cls._validAdditiveOptions):
+            cls.property_init(prop)
+            
+        return super(ConfigVariableParser, cls).__new__(cls)
+        
     def __init__(self, *args):
         super(ConfigVariableParser, self).__init__(*args)
         
         self._property_info = {}
         self._property_recursivity = {}
         for prop in self._validOptions.union(self._validAdditiveOptions):
-            ConfigVariableParser.property_init(prop)
             self._property_info[prop] = \
                 (self.get_replacement_type(prop), 
                  self.is_path(prop))
@@ -1879,7 +1943,7 @@ class ConfigVariableParser(object):
         else:
             old_value += value
         
-        self.property_set(name, old_value)
+        setattr(self, name, old_value)
     
     def property_remove(self, name, value):
         old_value = getattr(self, '_' + name)
@@ -2167,7 +2231,7 @@ class DirectorySection(object):
 class SourceDirectory(DirectorySection, ConfigVariableParser):
 
     _variables_with_replacements = set(('directory_id',  'cross_compiling_dirs'))
-    _path_variables = set()
+    _path_variables = set(('directory',))
     _validAdditiveOptions = set(('default_steps', 'cross_compiling_dirs'))
     _validOptions = set(('revision_control',
                          'build_condition',
@@ -2179,8 +2243,9 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
     def __init__(self, directory, configuration):
         super(SourceDirectory, self).__init__()
         self.configuration = configuration
-        self.directory = os.path.normpath(os.path.abspath(directory))
+        self.directory = directory
         self.configurationLines = []
+        self.sourceConfigurationLines = []
         self.svnComponents = []
         self.gitComponents = []
         self.default_steps = ['sources']
@@ -2194,9 +2259,8 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
         self.cross_compiling_dirs = {}
         if self.configuration.verbose:
             print('Processing source directory %s' % self.directory)
-
-    def addConfigurationLine(self, line, virtual=False,
-                             component_version=None):
+        
+    def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ source ... ]:
         #    default_steps [info] [sources]
         #    git <url> <git_tag> [<dest_directory> [<bv_version>]]
@@ -2210,108 +2274,131 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
         if ConfigVariableParser.addConfigurationLine(self, line):
             pass
         else:
-            line = os.path.expandvars(line)
-            l = line.split()
-            sign = l[0]
-            if sign == 'git':
-                if len(l) < 3 or len(l) > 5:
+            self.sourceConfigurationLines.append(line)
+            
+    def parseSourceConfiguration(self):
+        for l in self.sourceConfigurationLines:
+            self.parseSourceConfigurationLine(l)
+        
+    def parseSourceConfigurationLine(self, line, virtual=False, 
+                                     component_version = None):
+        line = os.path.expandvars(line)
+        l = line.split()
+        sign = l[0]
+        if sign == 'git':
+            if len(l) < 3 or len(l) > 5:
+                raise SyntaxError()
+            sign, url, git_tag, dest_directory, bv_version = (
+                l + [None, None])[:5]
+            git_tag_type, git_tag = (['branch'] \
+                + git_tag.split(':',1))[-2:]
+            if self.configuration.verbose:
+                print('    adding repository: git', url, git_tag)
+                print('                   in:', \
+                    os.path.join(self.directory, dest_directory))
+                if component_version:
+                    print('                  for: %s version %s' \
+                        % component_version)
+            self.gitComponents.append(
+                (component_version, url, git_tag, dest_directory,
+                    bv_version))
+        else:
+            if len(l) < 2 or len(l) > 4:
+                raise SyntaxError()
+            sign, componentPattern, versionPattern, bv_version = (
+                l + [None, None])[:4]
+            if sign == 'svn' or (sign == '+' and '/' in componentPattern):
+                if '*' in componentPattern:
                     raise SyntaxError()
-                sign, url, git_tag, dest_directory, bv_version = (
-                    l + [None, None])[:5]
-                git_tag_type, git_tag = (['branch'] \
-                    + git_tag.split(':',1))[-2:]
+                if componentPattern.startswith('http') \
+                        or componentPattern.startswith('file'):
+                    url = componentPattern
+                    dest_directory = versionPattern
+                else:
+                    url = brainvisa_projects.SVN_URL + '/' \
+                        + componentPattern
+                    dest_directory = versionPattern
+                    if dest_directory is None:
+                        dest_directory = componentPattern
+                if dest_directory is None:
+                    raise SyntaxError()
                 if self.configuration.verbose:
-                    print('    adding repository: git', url, git_tag)
+                    print('    adding repository: svn', url,
+                            component_version)
                     print('                   in:', \
                         os.path.join(self.directory, dest_directory))
                     if component_version:
                         print('                  for: %s version %s' \
                             % component_version)
-                self.gitComponents.append(
-                    (component_version, url, git_tag, dest_directory,
-                     bv_version))
-            else:
-                if len(l) < 2 or len(l) > 4:
-                    raise SyntaxError()
-                sign, componentPattern, versionPattern, bv_version = (
-                    l + [None, None])[:4]
-                if sign == 'svn' or (sign == '+' and '/' in componentPattern):
-                    if '*' in componentPattern:
-                        raise SyntaxError()
-                    if componentPattern.startswith('http') \
-                            or componentPattern.startswith('file'):
-                        url = componentPattern
-                        dest_directory = versionPattern
-                    else:
-                        url = brainvisa_projects.SVN_URL + '/' \
-                            + componentPattern
-                        dest_directory = versionPattern
-                        if dest_directory is None:
-                            dest_directory = componentPattern
-                    if dest_directory is None:
-                        raise SyntaxError()
-                    if self.configuration.verbose:
-                        print('    adding repository: svn', url,
-                              component_version)
-                        print('                   in:', \
-                            os.path.join(self.directory, dest_directory))
-                        if component_version:
-                            print('                  for: %s version %s' \
-                                % component_version)
 
-                    self.svnComponents.append(
-                        (component_version, url, dest_directory, bv_version))
-                elif sign in ('brainvisa', '+'):
-                    if versionPattern is None:
-                        raise SyntaxError()
-                    for component in brainvisa_projects.find_components(componentPattern):
-                        project = brainvisa_projects.project_per_component[component]
-                        for version, repo_dir in six.iteritems(brainvisa_projects.url_per_component[component]):
-                            repo, dir = repo_dir
-                            if fnmatchcase(version, versionPattern):
-                                self.addConfigurationLine(
-                                    '%s %s %s' % (repo, dir, version), virtual=True, component_version=(component, version))
-                elif sign in ('-', 'brainvisa_exclude'):
-                    if '/' in componentPattern:
-                        raise SyntaxError()
-                    else:
-                        if versionPattern is None:
-                            versionPattern = '*'
-                        for component in brainvisa_projects.find_components(componentPattern):
-                            for version, repo_dir in six.iteritems(brainvisa_projects.url_per_component[component]):
-                                if fnmatchcase(version, versionPattern):
-                                    # Remove unwanted svn components
-                                    count = 0
-                                    for component_version in [i[0] for i in self.svnComponents]:
-                                        if component_version:
-                                            c, v = component_version
-                                            if c == component and v == version:
-                                                if self.configuration.verbose:
-                                                    component_version, url, dest_directory, bv_version = self.svnComponents[
-                                                        count]
-                                                    print('    removing repository: svn', url)
-                                                    print('                     in:', os.path.join(self.directory, dest_directory))
-                                                    print('                    for: %s version %s' % component_version)
-                                                del self.svnComponents[count]
-                                                count -= 1
-                                        count += 1
-                                    # Remove unwanted git components
-                                    count = 0
-                                    for component_version in [i[0] for i in self.gitComponents]:
-                                        if component_version:
-                                            c, v = component_version
-                                            if c == component and v == version:
-                                                if self.configuration.verbose:
-                                                    component_version, url, git_tag, dest_directory, bv_version = self.gitComponents[
-                                                        count]
-                                                    print('    removing repository: git', url, git_tag)
-                                                    print('                     in:', os.path.join(self.directory, dest_directory))
-                                                    print('                    for: %s version %s' % component_version)
-                                                del self.gitComponents[count]
-                                                count -= 1
-                                        count += 1
+                self.svnComponents.append(
+                    (component_version, url, dest_directory, bv_version))
+            elif sign in ('brainvisa', '+'):
+                if versionPattern is None:
+                    raise SyntaxError()
+                for component in brainvisa_projects.find_components(
+                    componentPattern):
+                    project = brainvisa_projects.project_per_component[
+                        component]
+                    for version, repo_dir in six.iteritems(
+                        brainvisa_projects.url_per_component[component]):
+                        repo, dir = repo_dir
+                        if fnmatchcase(version, versionPattern):
+                            self.parseSourceConfigurationLine(
+                                '%s %s %s' % (repo, dir, version), 
+                                virtual=True, 
+                                component_version=(component, version))
+            elif sign in ('-', 'brainvisa_exclude'):
+                if '/' in componentPattern:
+                    raise SyntaxError()
                 else:
-                    raise SyntaxError('Line cannot begin with "%s"' % sign)
+                    if versionPattern is None:
+                        versionPattern = '*'
+                    for component in brainvisa_projects.find_components(
+                        componentPattern):
+                        for version, repo_dir in six.iteritems(
+                            brainvisa_projects.url_per_component[
+                                component]):
+                            if fnmatchcase(version, versionPattern):
+                                # Remove unwanted svn components
+                                count = 0
+                                for component_version \
+                                    in [i[0] for i in self.svnComponents]:
+                                    if component_version:
+                                        c, v = component_version
+                                        if c == component and v == version:
+                                            if self.configuration.verbose:
+                                                component_version, url, \
+                                                dest_directory, bv_version = \
+                                                self.svnComponents[count]
+                                                print('    removing repository:',
+                                                      'svn', url)
+                                                print('                     in:',
+                                                      os.path.join(
+                                                          self.directory, 
+                                                          dest_directory))
+                                                print('                    for: %s version %s' % component_version)
+                                            del self.svnComponents[count]
+                                            count -= 1
+                                    count += 1
+                                # Remove unwanted git components
+                                count = 0
+                                for component_version in [i[0] for i in self.gitComponents]:
+                                    if component_version:
+                                        c, v = component_version
+                                        if c == component and v == version:
+                                            if self.configuration.verbose:
+                                                component_version, url, git_tag, dest_directory, bv_version = self.gitComponents[
+                                                    count]
+                                                print('    removing repository: git', url, git_tag)
+                                                print('                     in:', os.path.join(self.directory, dest_directory))
+                                                print('                    for: %s version %s' % component_version)
+                                            del self.gitComponents[count]
+                                            count -= 1
+                                    count += 1
+            else:
+                raise SyntaxError('Line cannot begin with "%s"' % sign)
+            
         if not virtual:
             self.configurationLines.append(line)
 
@@ -2593,7 +2680,7 @@ class ComponentsConfigParser(DirectorySection):
     def __init__(self, directory, configuration):
         super(ComponentsConfigParser, self).__init__()
         self.configuration = configuration
-        self.directory = os.path.normpath(os.path.abspath(directory))
+        self.directory = directory
         self.configurationLines = []
         self.projects = set()
         self.components = {}
@@ -2730,7 +2817,8 @@ class ComponentsConfigParser(DirectorySection):
 
 class BuildDirectory(ComponentsConfigParser, ConfigVariableParser):
 
-    _path_variables = set(('stdout_file', 'stderr_file',
+    _path_variables = set(('directory',
+                           'stdout_file', 'stderr_file',
                            'test_ref_data_dir', 'test_run_data_dir'))
     _variables_with_replacements = set(('make_options', 'cmake_options',
                                         'ctest_options', 'directory_id', ))
@@ -2951,7 +3039,7 @@ if len(old_file) == 0:
                             self.cross_compiling_prefix)
 
                     if cross_compiling_dir is not None:
-                        cross_compiling_directories[k] = cross_compiling_dir
+                        cross_compiling_directories[s.directory] = cross_compiling_dir
 
         #print('==== Toolchain:', self.cross_compiling_prefix,
         #      'directories:', cross_compiling_directories)
@@ -3135,6 +3223,16 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                                         + cross_compiling_options
                                         + [config_dir]),
                    env=self.get_environ())
+            
+        
+        # After a first configuration, the global version file of the build 
+        # directory has been generated, and package directories variables, 
+        # must be updated
+        for p in self.configuration.packageDirectories.values():
+            if p.get_build_dir() is self:
+                version = self.get_version()
+                if version:
+                    p.update_python_vars({'version': version})
 
     def build(self, options, args):
         self._process_configuration_lines()
@@ -3165,8 +3263,19 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 
     def init_vars(self):
         super(BuildDirectory, self).init_vars()
-        self.__init_environ()
         
+        self.__init_python_vars()
+        self.__init_environ()
+     
+    def __init_python_vars(self):
+        if not self._property_recursivity.get('directory'):             
+            if self.target_system() == sys.platform:
+                build_system = get_pack_host_system_name()
+            else:
+                build_system = self.target_system() 
+
+            self.update_python_vars({'os': build_system})
+            
     def __init_environ(self):
         env = {}
         
@@ -3231,7 +3340,23 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
             directory, selected_version, version, build_model \
                 = directory_version_model
             print('  %s (%s) <- %s' % (component, version, directory))
-
+            
+    def get_version(self):
+        bvconf = os.path.join(self.directory, 
+                              'python', 'brainvisa', 'config.py')
+        fullVersion = None
+        
+        if os.path.exists(bvconf):
+            ver = {}
+            try:
+                with open(bvconf) as f:
+                    code = compile(f.read(), bvconf, 'exec')
+                    exec(code, ver, ver)
+                fullVersion = ver.get('fullVersion', fullVersion)
+            except ImportError:
+                pass
+            
+        return fullVersion
 
 class VirtualenvDirectory(BuildDirectory):
 
@@ -3284,7 +3409,7 @@ class VirtualenvDirectory(BuildDirectory):
 
 class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
 
-    _path_variables = set(('build_directory', 'installer_filename',
+    _path_variables = set(('directory', 'build_directory', 'installer_filename',
                            'offline_installer_filename',
                            'data_repos_dir', 'test_install_dir',
                            'stdout_file', 'stderr_file', 'test_ref_data_dir',
@@ -3354,9 +3479,36 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                     raise SyntaxError()
         self.configurationLines.append(line)
 
-    def set_dependencies(self):
-        build_section \
-              = self.configuration.buildDirectories.get(self.build_directory)
+    def get_matching_build_dirs(self):
+        build_dirs = []
+        for o in self.configuration.buildDirectories.values():
+            if normalize_path(
+                o.replace_vars(self.build_directory)) == o.directory:
+                build_dirs.append(o)
+                
+        return build_dirs
+        
+    def get_build_dir(self):
+        if not hasattr(self, 'build_dir'):
+            build_dirs = self.get_matching_build_dirs()
+            if len(build_dirs) == 0:
+                raise RuntimeError(
+                    'Package directory: referenced build directory "%s" does '
+                    'not exist' % self.build_directory)
+            elif len(build_dirs) > 1:
+                raise RuntimeError(
+                    'Package directory: referenced build directory "%s" '
+                    'must match a unique build directory. Matches %d '
+                    'directories %s' % (self.build_directory, len(build_dirs),
+                                        str(build_dirs)))
+            else:
+                self.build_dir = build_dirs[0]
+            
+        return self.build_dir
+    
+    def set_dependencies(self):                
+        build_section = self.get_build_dir()
+        
         if build_section is not None:
             build_section = [(build_section, 'build'),
                              (build_section, 'doc'),
@@ -3369,19 +3521,6 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
             'test_pack': [(self, 'install_pack')],
         }
 
-    def get_build_dir(self):
-        if not hasattr(self, 'build_dir'):
-            build_dir = self.configuration.buildDirectories.get(
-                            self.build_directory)
-            if build_dir is None:
-                raise RuntimeError(
-                    'Package directory: referenced build directory: "%s" does '
-                    'not exist' % self.build_directory)
-            
-            self.build_dir = build_dir
-            
-        return self.build_dir
-
     def test_config(self, options, args):
         build_dir = self.get_build_dir()
         
@@ -3393,8 +3532,8 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
 
     def info(self):
         self._process_configuration_lines()
-        print('Package directory: "' + self.directory + '"')
-        print('Real package directory:', self.replace_vars(self.directory))
+        print('Package directory: "' + self._directory + '"')
+        print('Real package directory:', self.directory)
         print('Build directory:', self.build_directory)
         for component, directory_version_model \
                 in six.iteritems(self.components):
@@ -3424,17 +3563,11 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                 fullVersion = '1.0.0'
 
                 if not self._property_recursivity.get('build_directory'):
-                    bvconf = os.path.join(self.build_directory, 
-                                          'python', 'brainvisa', 'config.py')
-                    if os.path.exists(bvconf):
-                        ver = {}
-                        try:
-                            with open(bvconf) as f:
-                                code = compile(f.read(), bvconf, 'exec')
-                                exec(code, ver, ver)
-                            fullVersion = ver.get('fullVersion', fullVersion)
-                        except ImportError:
-                            pass
+                    build_dir = self.get_build_dir()
+                    v = build_dir.get_version()
+                    if v:
+                        fullVersion = v
+                    
             self.update_python_vars({'version': fullVersion})
             
         if not self._property_recursivity.get('build_directory'):
@@ -3814,11 +3947,7 @@ Controller.prototype.FinishedPageCallback = function()
                         self.rm_with_empty_dirs(tmp_dir)
 
 
-    def install_package(self, options, args):        
-        if (options.package_date) :
-            self.update_python_vars({'date': options.package_date})
-        
-        
+    def install_package(self, options, args):       
         self.test_config(options, args)
         directory = self.replace_vars(self.directory)
         
@@ -3918,8 +4047,7 @@ Controller.prototype.FinishedPageCallback = function()
     def init_vars(self):        
         super(PackageDirectory, self).init_vars()
         
-        
-        self.__init_python_vars()        
+        self.__init_python_vars()
         self.__init_environ()
         
     def __init_environ(self):
@@ -3987,9 +4115,6 @@ Controller.prototype.FinishedPageCallback = function()
         return env
 
     def test_package(self, options, args):
-        if (options.package_date) :
-            self.update_python_vars({'date': options.package_date})
-            
         self.test_config(options, args)
         if not self.test_install_dir:
             return IGNORED_STEP
@@ -4027,9 +4152,6 @@ Controller.prototype.FinishedPageCallback = function()
         return test_res
 
     def testref_package(self, options, args):
-        if (options.package_date) :
-            self.update_python_vars({'date': options.package_date})
-            
         self.test_config(options, args)
         
         if not self.test_install_dir:

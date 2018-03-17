@@ -1714,6 +1714,7 @@ class PackCommand(StepCommand):
             raise ValueError('Invalid option: %s' % args[0])
         
         super(PackCommand, self).__init__(argv, configuration)
+        self.python_vars = dict(global_installer_datetime())
         self.options = options
         self.args = args
 
@@ -1755,6 +1756,9 @@ class InstallPackCommand(StepCommand):
                           'This is only useful if a %(version)s pattern '
                           'has been used in the package directory sections '
                           'of bv_maker.cfg.')
+        parser.add_option('--prefix', dest='prefix',
+                          default=None,
+                          help='sets the prefix directory to install the pack.')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
@@ -3937,7 +3941,8 @@ Controller.prototype.FinishedPageCallback = function()
                 os.unlink(report_file)
         # erase older repositories
         if '%(date)s' in self.directory:
-            real_vars = self.installer_variables()
+            real_vars = dict(self.installer_variables())
+            real_vars.update(global_installer_datetime())
             vars = dict(real_vars) # copy vars
             vars['date'] = '*'
             my_dir = environmentPathVariablesSubstitution(
@@ -4038,12 +4043,16 @@ Controller.prototype.FinishedPageCallback = function()
         
         remote_test_install = True if self.remote_test_host_cmd else False
 
-        # Test install directory
-        test_install_dir = self.test_install_dir
-        if remote_test_install and self.remote_test_install_dir:
-            remote_test_install_dir = self.remote_test_install_dir
-        else:    
-            remote_test_install_dir = test_install_dir
+        # Test install directory            
+        if options.prefix:
+            test_install_dir = options.prefix
+            remote_test_install_dir = options.prefix
+        else:
+            test_install_dir = self.test_install_dir
+            if remote_test_install and self.remote_test_install_dir:
+                remote_test_install_dir = self.remote_test_install_dir
+            else:    
+                remote_test_install_dir = test_install_dir
 
         # Temporary directory
         tmp_dir = os.path.join(os.path.dirname(test_install_dir), 'tmp')

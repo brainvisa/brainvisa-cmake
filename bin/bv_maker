@@ -452,6 +452,7 @@ http://brainvisa.info/brainvisa-cmake/
                 os.environ['USERPROFILE' if sys.platform.startswith('win') 
                            else 'HOME'], '.brainvisa', 'bv_maker.cfg')
         parser = OptionParser(usage=usage)
+        
         parser.add_option('-d', '--directory', dest='directories',
                           help='Restrict actions to a selected directory. May be used several times to process several directories.',
                           metavar='DIR', action='append', default=[])
@@ -1149,6 +1150,8 @@ class StepCommand(object):
             # Update directory python variables by those coming from the command
             # line (package date and version)
             o.update_python_vars(self.python_vars)
+            # Python variables update need to reprocess environment variables
+            o.reset_environ()
             
             # Get the new directory value
             d = o.directory
@@ -2164,6 +2167,9 @@ class ConfigVariableParser(object):
             if hasattr(self, 'env'):
                 # Add env property content
                 self.update_environ(getattr(self, 'env', {}))
+        
+    def reset_environ(self):
+        self.__init_environ()
 
     def update_python_vars(self, vars):
         '''Update python variable cache for the section'''               
@@ -3379,6 +3385,10 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                 self.test_ref_data_dir)
             
         self.update_environ(env)
+    
+    def reset_environ(self):
+        super(BuildDirectory, self).reset_environ()
+        self.__init_environ()
 
     def test(self, options, args):
         self._process_configuration_lines()
@@ -4204,7 +4214,11 @@ Controller.prototype.FinishedPageCallback = function()
         self.update_environ(env)
         
         return env
-
+    
+    def reset_environ(self):
+        super(PackageDirectory, self).reset_environ()
+        self.__init_environ()
+        
     def test_package(self, options, args):
         self.test_config(options, args)
         if not self.test_install_dir:

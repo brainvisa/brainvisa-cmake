@@ -21,11 +21,11 @@ function(__SVM_GET_VERSION)
     
     # Extract version information
     set(__regex "#define LIBSVM_VERSION \([0-9]+\)")
+    string(REGEX MATCHALL "${__regex}" __replaced ${__svm_header_content})
     if( NOT __replaced )
         # libsvm older than 3.0 did not contain version information
         set(__version "2.83") # most likely this version, doesn't really matter
     else()
-        string(REGEX MATCHALL "${__regex}" __replaced ${__svm_header_content})
         string(LENGTH "${__replaced}" __length)
         math(EXPR __length "${__length} - 23")
         string(SUBSTRING "${__replaced}" 23 ${__length} __replaced)

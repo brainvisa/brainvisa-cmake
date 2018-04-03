@@ -431,6 +431,7 @@ Commands:
 * testref_pack: Create the machine-specific reference files for tests in
   installed binary package.
 * test_pack: Run tests in installed binary packages.
+* publish_pack: Publish binary packages.
 
 To get help for a specific command, use -h option of the command. Example: "%prog build -h".
 
@@ -497,10 +498,12 @@ http://brainvisa.info/brainvisa-cmake/
         source_dirs = []
         build_dirs = []
         package_dirs = []
+        publication_dirs = []
         
         self.sourcesDirectories = {}
         self.buildDirectories = {}
         self.packageDirectories = {}
+        self.publicationDirectories = {}
         self.general_section = GeneralSection(self)
         condition_stack = []
 
@@ -601,7 +604,13 @@ http://brainvisa.info/brainvisa-cmake/
                                     l[1].strip(),
                                     self)
                                 package_dirs.append(currentDirectoryObject)
-
+                                
+                            elif l[0] == 'package_publication':
+                                currentDirectoryObject = PublicationDirectory(
+                                    l[1].strip(),
+                                    self)
+                                publication_dirs.append(currentDirectoryObject)
+                                
                             elif l[0] == 'general' and len(l) == 1:
                                 currentDirectoryObject = self.general_section
                             else:
@@ -634,7 +643,8 @@ http://brainvisa.info/brainvisa-cmake/
         for r, sections in ((None, [self.general_section]), \
                             ('sourcesDirectories', source_dirs), \
                             ('buildDirectories', build_dirs), \
-                            ('packageDirectories', package_dirs)):
+                            ('packageDirectories', package_dirs), \
+                            ('publicationDirectories', publication_dirs)):
             for s in sections:
                 # Variable initialization is done after parsing of sections
                 # because it may depends on the complete parsing of other 
@@ -1498,6 +1508,7 @@ class InfoCommand(StepCommand):
         dirs = dict(configuration.sourcesDirectories)
         dirs.update(configuration.buildDirectories)
         dirs.update(configuration.packageDirectories)
+        dirs.update(configuration.publicationDirectories)
         self.process('info', dirs, 'info')
 
 
@@ -1908,7 +1919,70 @@ class TestrefPackCommand(StepCommand):
     def __call__(self):
         self.process('testref_pack', configuration.packageDirectories,
                      'testref_package', self.options, self.args)
-    
+
+
+class PublishPackCommand(StepCommand):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] publish [options]
+
+    Run command to publish package for the selected publication directory.'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, '
+                          '"configure build" for build sections.')
+        parser.add_option('-m', '--make_options',
+                          default=None,
+                          help='options passed to make (ex: "-j8") during test '
+                          'reference generation. '
+                          'Same as the configuration option make_options but '
+                          'specified at runtime. The commandline option here '
+                          'overrides the bv_maker.cfg options.')
+        parser.add_option('--package-date', dest='package_date',
+                          default=None,
+                          help='sets the date of the pack to install. '
+                          'This is only useful if a %(date)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
+        parser.add_option('--package-time', dest='package_time',
+                          default=None,
+                          help='sets the time of the pack to install. '
+                          'This is only useful if a %(time)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
+        parser.add_option('--package-version', dest='package_version',
+                          default=None,
+                          help='sets the version of the pack to install. '
+                          'This is only useful if a %(version)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+        
+        super(PublishPackCommand, self).__init__(argv, configuration)
+        
+        date = installer_format_date(installer_parse_date(options.package_date)) \
+               if options.package_date else global_installer_datetime()['date']
+        time = installer_format_time(installer_parse_time(options.package_time)) \
+               if options.package_time else global_installer_datetime()['time']
+        self.python_vars = {'date': date,
+                            'time': time}
+        if options.package_version:
+            self.python_vars.update({'version': options.package_version})
+            
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        self.process('publish_pack', configuration.publicationDirectories,
+                     'publish_package', self.options, self.args)
+
 class VarReplacementType:
     NO = 0
     PYTHON = 1
@@ -3320,7 +3394,8 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         # After a first configuration, the global version file of the build 
         # directory has been generated, and package directories variables, 
         # must be updated
-        for p in self.configuration.packageDirectories.values():
+        for p in self.configuration.packageDirectories.values() \
+               + self.configuration.publicationDirectories.values():
             if p.get_build_dir() is self:
                 version = self.get_version()
                 if version:
@@ -3637,6 +3712,19 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                 = directory_version_model
             print('  %s (%s) <- %s' % (component, version, directory))
 
+    def get_pack_version(self):
+        if self.pack_version:
+            version = self.pack_version
+        else:
+            version = '1.0.0'
+
+            if not self._property_recursivity.get('build_directory'):
+                build_dir = self.get_build_dir()
+                v = build_dir.get_version()
+                if v:
+                    version = v
+        return version
+        
     def __init_python_vars(self):
         online = 'online'
         
@@ -3653,18 +3741,7 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
 
         if not self._property_recursivity.get('pack_version'):
             # Add version var
-            if self.pack_version:
-                fullVersion = self.pack_version
-            else:
-                fullVersion = '1.0.0'
-
-                if not self._property_recursivity.get('build_directory'):
-                    build_dir = self.get_build_dir()
-                    v = build_dir.get_version()
-                    if v:
-                        fullVersion = v
-                    
-            self.update_python_vars({'version': fullVersion})
+            self.update_python_vars({'version': self.get_pack_version()})
             
         if not self._property_recursivity.get('build_directory'):
             build_dir = self.get_build_dir()
@@ -3694,7 +3771,8 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                 #'%(version)s-%(os)s-%(online)s%(public)s')
       
         offline_installer_filename = self.offline_installer_filename
-        directory = self.replace_vars(self.directory)
+        #directory = self.replace_vars(self.directory)
+        directory = self.directory
 
         exe_suffix = ''
         if sys.platform == 'win32':
@@ -3913,7 +3991,8 @@ Controller.prototype.FinishedPageCallback = function()
 
     def package(self, options, args):
         self.test_config(options, args)
-        directory = self.replace_vars(self.directory)
+        #directory = self.replace_vars(self.directory)
+        directory = self.directory
         print('Building package:', directory)
         print('    from build dir:', self.build_dir.directory)
         self.cleanup_package_dir()
@@ -3937,7 +4016,8 @@ Controller.prototype.FinishedPageCallback = function()
             d = os.path.dirname(d)
 
     def cleanup_package_dir(self):
-        directory = self.replace_vars(self.directory)
+        #directory = self.replace_vars(self.directory)
+        directory = self.directory
         dirs = [directory, directory + '_tmp']
         pack_options = self.packaging_options
         if '--skip-repos' not in pack_options \
@@ -4046,7 +4126,8 @@ Controller.prototype.FinishedPageCallback = function()
 
     def install_package(self, options, args):       
         self.test_config(options, args)
-        directory = self.replace_vars(self.directory)
+        #directory = self.replace_vars(self.directory)
+        directory = self.directory
         
         if not self.test_install_dir:
             return IGNORED_STEP
@@ -4294,10 +4375,129 @@ Controller.prototype.FinishedPageCallback = function()
         return ' '.join(shlex.split(new_line))
 
 
+class PublicationDirectory(DirectorySection, ConfigVariableParser):
+
+    _path_variables = set(('directory', 'package_directory', 
+                           'stdout_file', 'stderr_file'))
+    _variables_with_replacements = set(('directory_id', 'publication_commands'))
+    _variables_with_env_only_replacements = set(('env',))
+    _validAdditiveOptions = set(('publication_commands', ))
+    _validOptions = set(('build_condition', ))
+    _validOptions.update(_variables_with_replacements)
+    _validOptions.update(_variables_with_env_only_replacements)
+    _validOptions.update(_path_variables)
+    _validOptions.update(_validAdditiveOptions)
+
+    def __init__(self, directory, configuration):
+        super(PublicationDirectory, self).__init__()
+        
+        self.configuration = configuration       
+        self.directory = directory
+        self.package_directory = ''
+        self.pathvars = None
+        self.default_steps = []
+        self.publication_commands = []
+        self.directory_id = ''
+        self.env = {}
+
+    def init_vars(self):
+        super(PublicationDirectory, self).init_vars()
+        
+        self.__init_python_vars()
+        
+    def __init_python_vars(self):
+        package_dir = self.get_package_dir()
+        
+        # Add same python variables than pack section
+        self.update_python_vars(package_dir.get_python_vars())
+
+    def get_matching_package_dirs(self):
+        package_dirs = []
+        for o in self.configuration.packageDirectories.values():
+            if normalize_path(
+                o.replace_vars(self.package_directory)) == o.directory:
+                package_dirs.append(o)
+                
+        return package_dirs
+        
+    def get_package_dir(self):
+        if not hasattr(self, 'package_dir'):
+            package_dirs = self.get_matching_package_dirs()
+            if len(package_dirs) == 0:
+                raise RuntimeError(
+                    'Package directory: referenced package directory "%s" does '
+                    'not exist' % self.package_directory)
+            elif len(package_dirs) > 1:
+                raise RuntimeError(
+                    'Package directory: referenced package directory "%s" '
+                    'must match a unique package directory. Matches %d '
+                    'directories %s' % (self.package_directory, 
+                                        len(package_dirs),
+                                        str(package_dirs)))
+            else:
+                self.package_dir = package_dirs[0]
+            
+        return self.package_dir
+    
+    def set_dependencies(self):                
+        pack_section = self.get_package_dir()
+        
+        if pack_section is not None:
+            pack_section = [(pack_section, 'build'),
+                            (pack_section, 'doc'),
+                            (pack_section, 'test'),
+                            (pack_section, 'pack')]
+        else:
+            pack_section = []
+            
+        self.depend_on_sections = {
+            'publish': pack_section,
+        }
+
+    def test_config(self, options, args):
+        package_dir = self.get_package_dir()
+        build_dir = package_dir.get_build_dir()
+
+    def info(self):
+        print('Publication package directory: "' + self._directory + '"')
+        print('Real publication package directory:', self.directory)
+        print('Package directory:', self.package_directory)
+        print('Build directory:', self.get_package_dir().build_directory)
+
+    def publish_package(self, options, args):       
+        self.test_config(options, args)
+        
+        package_dir = self.get_package_dir()
+        if not package_dir:
+            return IGNORED_STEP
+            
+        print('Running commands for package publication', 
+              self.package_directory, '=>', self.directory)
+
+        # These values can only be added to python variables when they are
+        # completely solved from the command
+        self.update_python_vars({'package_directory': self.package_directory,
+                                 'publication_directory': self.directory})
+        
+        if not self.publication_commands:
+            # Default publication command
+            self.publication_commands = [
+                'cmake -E copy_directory '
+                '"%(package_directory)s/brainvisa-installer" '
+                '"%(package_directory)s/packages" '
+                '"%(package_directory)s/packages_tmp" '
+                '"%(publication_directory)s"']
+
+        for c in self.publication_commands:
+            command = shlex.split(c)
+            system_output_on_error(command, env = self.env)
+            
+
 def display_failure_summary(configuration):
     sections = [('sourcesDirectories', ['sources']),
                 ('buildDirectories', ['configure', 'build', 'doc', 'test']),
                 ('packageDirectories', ['pack', 'install_pack', 'test_pack']),
+                ('publicationDirectories', ['publish_pack']),
                 ]
     global_failed = False
     status_map = {'not run': '',
@@ -4365,6 +4565,7 @@ commands = {
     'install_pack': InstallPackCommand,
     'test_pack': TestPackCommand,
     'testref_pack': TestrefPackCommand,
+    'publish_pack': PublishPackCommand,
 }
 
 default_commands = ['info', 'sources', 'configure', 'build', 'doc', 'test',
@@ -4397,7 +4598,7 @@ jenkins_wrapper.jenkins_global_notify_running()
 # Ordered command list
 for command in ['info', 'sources', 'configure', 'build', 'doc', 'test',
                 'testref', 'pack', 'install_pack', 'test_pack',
-                'testref_pack']:
+                'testref_pack', 'publish_pack']:
     if command in options_by_command:
         todo.append(
             commands[command](options_by_command[command], configuration))

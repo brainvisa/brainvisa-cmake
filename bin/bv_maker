@@ -4439,6 +4439,9 @@ class PublicationDirectory(DirectorySection, ConfigVariableParser):
             
         return self.package_dir
     
+    def get_build_dir(self):
+        return self.get_package_dir().get_build_dir()
+    
     def set_dependencies(self):                
         pack_section = self.get_package_dir()
         

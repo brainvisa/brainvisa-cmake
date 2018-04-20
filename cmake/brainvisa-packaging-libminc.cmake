@@ -11,6 +11,12 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   if( HDF5_FOUND )
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libhdf5 RUN )
   endif()
+  # this dependency is only present on ubuntu >= 16.04
+  if( LSB_DISTRIB STREQUAL "ubuntu"
+      AND LSB_DISTRIB_RELEASE VERSION_GREATER "16.0" )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN
+                                      DEPENDS libnifti RUN )
+  endif()
   # Find version
   if(MINC_VERSION)
     set( ${package_version} "${MINC_VERSION}" PARENT_SCOPE )

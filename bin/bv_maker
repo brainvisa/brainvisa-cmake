@@ -260,6 +260,10 @@ def system_output_on_error(*args, **kwargs):
         print(e.output)
         print('-- end of command outpput --')
         raise
+
+    if sys.version_info[0] >= 3:
+        output = output.decode()
+
     return output
 
 def cmake_path(path):
@@ -717,7 +721,11 @@ def get_host_libc_version():
     gnu_get_libc_version = libc.gnu_get_libc_version
     gnu_get_libc_version.restype = ctypes.c_char_p
     
-    return gnu_get_libc_version().split('.')
+    ver = gnu_get_libc_version()
+    if sys.version_info[0] >= 3:
+        # in python3, ver is a bytes, not a str
+        ver = ver.decode()
+    return ver.split('.')
 
 def get_pack_host_system_name():
     '''
@@ -1338,7 +1346,7 @@ class StepCommand(object):
         if email:
             try:
                 self.send_log_email(email, d, o, step, status)
-            except Exception, e:
+            except Exception as e:
                 print('WARNING: notification email could not be sent:',
                       e.message)
                 traceback.print_exc()

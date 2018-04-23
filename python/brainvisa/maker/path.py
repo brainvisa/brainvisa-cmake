@@ -131,7 +131,11 @@ class Path(str):
                 converters_registry=DefaultPathConverterRegistry()):
 
         t = type(obj)
-        if t in (str, unicode):
+        if t is Path:
+            o = str(obj)
+            s = obj.__system
+
+        elif isinstance(obj, str):
             o = obj
             s = None
         
@@ -145,16 +149,15 @@ class Path(str):
             else:
                 raise IndexError('%s must have a length greater than 0' 
                                  % t.title())
-        
+
         elif t is dict:
             o = obj.get('path')
             s = obj.get('system')
-        
-        elif t is Path:
-            o = str(obj)
-            s = obj.__system
-            
-        if type(o) not in (str, unicode):
+
+        else:
+            raise IndexError('incompatible type for Path')
+
+        if not isinstance(o, str):
             raise TypeError('Object of type %s is not convertible to Path' % t)
             
         if system is not None and s is not None and s != system:

@@ -8,7 +8,7 @@
 if( LIBNIFTI_LIBRARIES )
 
   # already found
-  SET( LIBBIFTI_FOUND TRUE )
+  SET( LIBNIFTI_FOUND TRUE )
 
 else()
 

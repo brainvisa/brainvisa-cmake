@@ -68,7 +68,10 @@ else :
     system = 'MacOS'
     systemplatform = system.lower()
     release = string.join( platform.mac_ver()[0].split('.')[:2], '.' )
-    arch = platform.processor()
+    if platform.architecture()[0] == '32bit':
+      arch = 'i686'
+    else:
+      arch = 'x86_64'
   elif systemtype == 'Windows':
     system = systemtype
     systemplatform = system.lower()

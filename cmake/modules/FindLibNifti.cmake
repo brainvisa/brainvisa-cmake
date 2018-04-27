@@ -12,7 +12,7 @@ if( LIBNIFTI_LIBRARIES )
 
 else()
 
-  set( LIBNIFTI_VERSION 2.0 )
+  set( LIBNIFTI_VERSION "2.0.0" )
   find_library( LIBNIFTI_LIBRARY NAMES niftiio )
   if( LIBNIFTI_LIBRARY )
     find_library( ZNZ_LIBRARY NAMES znz )

@@ -16,15 +16,26 @@ else()
   endif()
   
   if( NOT LIBQUADMATH_LIBRARIES )
+    string( REGEX MATCH "(([0-9]+)(.[0-9]+)?)" _gccmaj "${GCC_VERSION}" )
     set( _GCCPATH
       "/usr/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${GCC_VERSION}"
       "/usr/lib/gcc/${CMAKE_LIBRARY_ARCHITECTURE}/${CMAKE_MATCH_2}"
     )
     find_library( LIBQUADMATH_LIBRARIES quadmath quadmath-0 PATHS ${_GCCPATH} )
     if( NOT LIBQUADMATH_LIBRARIES )
-      file( GLOB LIBQUADMATH_LIBRARIES "${_GCCPATH}/libquadmath.so" )
+      foreach( _gccpath_ ${_GCCPATH} )
+        file( GLOB LIBQUADMATH_LIBRARIES "${_gccpath_}/libquadmath.so" )
+        if( LIBQUADMATH_LIBRARIES )
+          break()
+        endif()
+        file( GLOB LIBQUADMATH_LIBRARIES "${_gccpath_}/libquadmath.so.?" )
+        if( LIBQUADMATH_LIBRARIES )
+          break()
+        endif()
+      endforeach()
     endif()
     unset( _GCCPATH )
+    unset( _gccpath_ )
   endif()
   
   if( NOT LIBQUADMATH_LIBRARIES )

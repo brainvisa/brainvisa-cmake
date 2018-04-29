@@ -4,6 +4,7 @@
 # LIBNIFTI_FOUND - system has libnifti
 # LIBNIFTI_INCLUDE_DIRS - the libnifti include directory
 # LIBNIFTI_LIBRARIES - link to these to use libnifi
+# LIBNIFTI_VERSION - version of libnifti
 
 if( LIBNIFTI_LIBRARIES )
 
@@ -12,7 +13,7 @@ if( LIBNIFTI_LIBRARIES )
 
 else()
 
-  set( LIBNIFTI_VERSION "2.0.0" )
+  set( LIBNIFTI_VERSION "2.0.0" CACHE STRING "LibNifti version" )
   find_library( LIBNIFTI_LIBRARY NAMES niftiio )
   if( LIBNIFTI_LIBRARY )
     find_library( ZNZ_LIBRARY NAMES znz )

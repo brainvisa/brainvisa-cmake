@@ -285,6 +285,14 @@ find_file( DCMTK_dict dicom.dic
     PATHS ${_directories} ${CMAKE_LIBRARY_PATH} ${CMAKE_FRAMEWORK_PATH}
     PATH_SUFFIXES ${_librarySuffixes} ${_shareSuffixes}
 )
+if( NOT DCMTK_dict )
+  get_filename_component( _libdir ${DCMTK_dcmdata_LIBRARY} DIRECTORY )
+  find_file( DCMTK_dict dicom.dic
+    PATHS ${_libdir} ${_libdir}/../share/libdcmtk5
+    ${_libdir}/../share/libdcmtk5 /usr/share/libdcmtk5
+    PATH_SUFFIXES ${_librarySuffixes} ${_shareSuffixes}
+)
+endif()
 
 if( DCMTK_config_INCLUDE_DIR AND
     DCMTK_ofstd_INCLUDE_DIR AND

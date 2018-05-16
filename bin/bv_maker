@@ -4038,22 +4038,22 @@ Controller.prototype.FinishedPageCallback = function()
             if os.path.exists(report_file):
                 os.unlink(report_file)
         # erase older repositories
-        if '%(date)s' in self.directory:
+        if '%(date)s' in self._directory:
             real_vars = dict(self.installer_variables())
             real_vars.update(global_installer_datetime())
             vars = dict(real_vars) # copy vars
             vars['date'] = '*'
             my_dir = environmentPathVariablesSubstitution(
-                self.directory, env=self.get_environ()) % real_vars
+                self._directory, env=self.get_environ()) % real_vars
             dir_pattern = environmentPathVariablesSubstitution(
-                self.directory, env=self.get_environ()) % vars
+                self._directory, env=self.get_environ()) % vars
             older_dirs = [d for d in glob.glob(dir_pattern) if d != my_dir]
             older_tmp_dirs = [d for d in glob.glob(dir_pattern + '_tmp')
                               if d != my_dir + '_tmp']
             # check in older repos if they were OK
             repos_to_remove = set()
             for d in older_dirs:
-                report_file = os.path.join(directory, 'tests_report.txt')
+                report_file = os.path.join(d, 'tests_report.txt')
                 if os.path.exists(report_file):
                     report = open(report_file).readlines()
                     if report[-1].strip() != 'Tests_result: OK':
@@ -4076,7 +4076,7 @@ Controller.prototype.FinishedPageCallback = function()
             # remove older repos and installs
             vars['date'] = '%(date)s' # keep date pattern as is
             pattern = environmentPathVariablesSubstitution(
-                self.directory, env=self.get_environ()) % vars
+                self._directory, env=self.get_environ()) % vars
             pattern = pattern.replace('\\', '\\\\').replace('.', '\.')
             pattern = re.compile(pattern % {'date': '(.+)'})
             for d in repos_to_remove:

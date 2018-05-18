@@ -243,8 +243,8 @@ if not os.path.exists(cmake) or os.stat(cmake).st_mtime < os.stat(info).st_mtime
         print('set(BRAINVISA_PACKAGE_VERSION_MAJOR %d PARENT_SCOPE)' % version_major, file=f)
         print('set(BRAINVISA_PACKAGE_VERSION_MINOR %d PARENT_SCOPE)' % version_minor, file=f)
         print('set(BRAINVISA_PACKAGE_VERSION_PATCH %d PARENT_SCOPE)' % version_micro, file=f)
-        if 'MAINTAINTER' in locals():
-            print('set(BRAINVISA_PACKAGE_MAINTAINER \"%s\" PARENT_SCOPE)', file=f)
+        if 'MAINTAINER' in locals():
+            print('set(BRAINVISA_PACKAGE_MAINTAINER \"%s\" PARENT_SCOPE)' % MAINTAINER, file=f)
         print('set(BRAINVISA_PACKAGE_LICENCES \"%s\" PARENT_SCOPE)' % LICENSE, file=f)
     except:
         os.remove(cmake)

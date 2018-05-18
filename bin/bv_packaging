@@ -879,6 +879,15 @@ def create_debian_packages(options, selected_packages, dependencies):
     else:
         architecture = build_processor
 
+    # Loading json dictionary for system dependent package name
+    import brainvisa.maker
+    import json
+    pkgDic = {}
+    jsonPath = os.path.dirname( brainvisa.maker.__file__ )
+    jsonFile = os.path.join( jsonPath, 'bv_dependencies_' + build_system + '.json' )
+    if os.path.isfile( jsonFile ):
+        pkgDic = json.load( open( jsonFile ) )
+
     # Create temporary install directory
     install_directory = tempfile.mkdtemp()
     try:
@@ -911,11 +920,13 @@ Priority: optional
 Section: multiverse/science''') % package_info, file=control)
             dependencies = {}
             for dependency_type, dest_package, version_ranges, binary_independent in packages_dependencies.get(package, ()):
-                print(dependency_type, dest_package, version_ranges,
-                      binary_independent)
-                for version_range in version_ranges.split(';'):
-                    dependencies.setdefault(dependency_type, []).append(validDebianPackageName(
-                        dest_package) + (' ( ' + version_range + ' )' if version_ranges else ''))
+                deb_package = pkgDic.get( dest_package, dest_package )
+                if len( deb_package ) > 0:
+                    print(dependency_type, deb_package, version_ranges,
+                          binary_independent)
+                    for version_range in version_ranges.split(';'):
+                        dependencies.setdefault(dependency_type, []).append(validDebianPackageName(
+                            deb_package) + (' ( ' + version_range + ' )' if version_ranges else ''))
             for dependency_type in ('DEPENDS', 'RECOMMENDS', 'SUGGESTS', 'ENHANCES'):
                 deps = dependencies.get(dependency_type)
                 if deps:

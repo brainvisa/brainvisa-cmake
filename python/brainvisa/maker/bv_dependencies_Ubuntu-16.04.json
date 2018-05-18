@@ -1,0 +1,18 @@
+{
+  "blitz++": "libblitz0v5",
+  "dcmtk": "libdcmtk5",
+  "jasper": "libjasper1",
+  "libgfortran2": "libgfortran3",
+  "libglu1": "libglu1-mesa",
+  "libminc": "libminc2-4.0.0",
+  "libopenslide": "libopenslide0",
+  "libpng12": "libpng12-0",
+  "libqt4-assistantclient": "libqtassistantclient4",
+  "libqt4-clucene": "",
+  "libqt4-multimedia": "",
+  "libqt4-webkit": "libqtwebkit4",
+  "libsigc++2": "",
+  "libtiff": "libtiff5",
+  "python-sip4": "python-sip",
+  "zlib": "zlib1g"
+}

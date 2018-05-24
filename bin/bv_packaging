@@ -920,13 +920,17 @@ Priority: optional
 Section: multiverse/science''') % package_info, file=control)
             dependencies = {}
             for dependency_type, dest_package, version_ranges, binary_independent in packages_dependencies.get(package, ()):
-                deb_package = pkgDic.get( dest_package, dest_package )
-                if len( deb_package ) > 0:
-                    print(dependency_type, deb_package, version_ranges,
+                deb_package = { "name": dest_package, "version": version_ranges }
+                if dest_package in pkgDic:
+                    deb_package = pkgDic[ dest_package ]
+                if len( deb_package[ "name" ] ) > 0:
+                    deb_name = deb_package[ "name" ]
+                    deb_version_ranges = deb_package[ "version" ]
+                    print(dependency_type, deb_name, deb_version_ranges,
                           binary_independent)
-                    for version_range in version_ranges.split(';'):
+                    for version_range in deb_version_ranges.split(';'):
                         dependencies.setdefault(dependency_type, []).append(validDebianPackageName(
-                            deb_package) + (' ( ' + version_range + ' )' if version_ranges else ''))
+                            deb_name ) + (' ( ' + version_range + ' )' if deb_version_ranges else ''))
             for dependency_type in ('DEPENDS', 'RECOMMENDS', 'SUGGESTS', 'ENHANCES'):
                 deps = dependencies.get(dependency_type)
                 if deps:

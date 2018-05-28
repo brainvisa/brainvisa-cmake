@@ -344,7 +344,7 @@ components_definition = [
                 'groups': ['3dns'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/3dns-private/trunk','brainrat/3dns-private/trunk'),
-#                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/3dns-private/branches/bug_fix','brainrat/3dns-private/bug_fix'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/3dns-private/branches/bug_fix','brainrat/3dns-private/bug_fix'),
 #                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainrat/3dns-private/tags/latest_release','brainrat/3dns-private/latest_release'),
                 },
             }],

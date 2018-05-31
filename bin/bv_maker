@@ -3600,8 +3600,7 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                                         'packaging_options',
                                         'make_options', 'ctest_options',
                                         'installer_options'))
-    _variables_with_env_only_replacements = set(('build_directory',
-                                                 'env',
+    _variables_with_env_only_replacements = set(('env',
                                                  'test_ref_data_dir',
                                                  'test_run_data_dir',
                                                  'remote_test_ref_data_dir',
@@ -3662,7 +3661,7 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
         build_dirs = []
         for o in self.configuration.buildDirectories.values():
             if normalize_path(
-                o.replace_vars(self.build_directory)) == o.directory:
+                o.replace_vars(self._build_directory)) == o.directory:
                 build_dirs.append(o)
                 
         return build_dirs
@@ -3735,6 +3734,11 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
         
     def __init_python_vars(self):
         online = 'online'
+        offline = 'offline'
+        
+        if not self._property_recursivity.get('build_directory'):
+            build_dir = self.get_build_dir()
+            self.update_python_vars(build_dir.get_python_vars())
         
         if not self._property_recursivity.get('packaging_options'):
             # Add i2bm and public vars
@@ -3751,18 +3755,9 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
             # Add version var
             self.update_python_vars({'version': self.get_pack_version()})
             
-        if not self._property_recursivity.get('build_directory'):
-            build_dir = self.get_build_dir()
-             
-            if build_dir.target_system() == sys.platform:
-                pack_system = get_pack_host_system_name()
-            else:
-                pack_system = build_dir.target_system() 
-
-            self.update_python_vars({'os': pack_system})
-             
         # Add online var and local variables
-        self.update_python_vars({'online': online})
+        self.update_python_vars({'online': online, 
+                                 'offline': offline})
     
     def installer_variables(self):
         return self.get_python_vars()
@@ -3801,6 +3796,12 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
             from brainvisa.installer import version as bvi_ver
             if [int(x) for x in bvi_ver.version.split('.')] >= [1, 2]:
                 cmd += ['-j', offline_installer_filename]
+                
+                if self.data_repos_dir:
+                    # Add data directory as an additional repository to allow
+                    # binarycreator to find data packages to embed in the 
+                    # offline installer
+                    cmd += ['-f', self.data_repos_dir]
             else:
                 print('warning: bv installer version too old to handle '
                       'offline + online installers at the same time.')

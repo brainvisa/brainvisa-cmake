@@ -43,6 +43,10 @@ def get_default_sip_dir():
     pyqt_sip_dir = os.path.join(c.default_sip_dir, 'PyQt%d' % pyqt_ver)
     if os.path.isdir(pyqt_sip_dir):
         return pyqt_sip_dir
+    # try another shape (as on Mac/homebrew)
+    pyqt_sip_dir = os.path.join(c.default_sip_dir, 'Qt%d' % pyqt_ver)
+    if os.path.isdir(pyqt_sip_dir):
+        return pyqt_sip_dir
     return c.default_sip_dir
 
 def get_qt_tag(sip_flags):

@@ -175,18 +175,29 @@ else()
   endif()
 
   string(REPLACE "." "" _versionNoDot ${PYTHON_SHORT_VERSION} )
+  # look for python lib, first in python prefix directory
   find_library( PYTHON_LIBRARY
     NAMES ${_py_main_lib} python${_versionNoDot} 
           python${PYTHON_SHORT_VERSION} python
+    NO_DEFAULT_PATH
     HINTS
-      "${PYTHON_PREFIX}/lib"
-      ${PYTHON_FRAMEWORK_LIBRARIES}
+      "${PYTHON_PREFIX}/lib" ${PYTHON_FRAMEWORK_LIBRARIES}
+  )
+  if( NOT PYTHON_LIBRARY )
+    # not found, search also in system paths
+    find_library( PYTHON_LIBRARY
+      NAMES ${_py_main_lib} python${_versionNoDot} 
+            python${PYTHON_SHORT_VERSION} python
+      HINTS
+        "${PYTHON_PREFIX}/lib"
+        ${PYTHON_FRAMEWORK_LIBRARIES}
   #    [HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${_version}\\InstallPath]/libs
   #  PATH_SUFFIXES
   #    python${_version}/config
   #  # Avoid finding the .dll in the PATH.  We want the .lib.
   #  NO_SYSTEM_ENVIRONMENT_PATH
-  )
+    )
+  endif()
   mark_as_advanced( PYTHON_LIBRARY )
   
   if( WIN64 )

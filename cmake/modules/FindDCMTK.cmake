@@ -415,6 +415,10 @@ if( DCMTK_config_INCLUDE_DIR AND
     if( ZLIB_FOUND )
       SET( DCMTK_LIBRARIES ${DCMTK_LIBRARIES} ${ZLIB_LIBRARIES} )
     endif( ZLIB_FOUND )
+    find_package( Iconv )
+    if( Iconv_FOUND )
+      set( DCMTK_LIBRARIES ${DCMTK_LIBRARIES} ${Iconv_LIBRARIES} )
+    endif()
   ENDIF( APPLE )
 
   IF(DCMTK_dcmnet_LIBRARY)

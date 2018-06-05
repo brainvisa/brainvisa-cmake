@@ -27,6 +27,14 @@ else()
     BRAINVISA_FIND_FSENTRY( LIBGFORTRAN PATTERNS "libgfortran*" PATHS $ENV{PATH} )
   endif()
   
+  if( NOT LIBGFORTRAN_LIBRARIES AND CMAKE_Fortran_COMPILER )
+    # look relative to command path
+    get_filename_component( _fortran ${CMAKE_Fortran_COMPILER} REALPATH )
+    get_filename_component( _fpath ${_fortran} DIRECTORY )
+    file( GLOB _fpath2 "${_fpath}/lib/gcc/*" )
+    find_library( LIBGFORTRAN gfortran gfortran-3 HINTS ${fpath2} )
+  endif()
+
   # g2c doesn't mean to be mandatory on ubuntu or macos
   find_library( LIBG2C g2c )
   if( NOT LIBG2C )
@@ -50,7 +58,7 @@ else()
     string( REGEX MATCH "gcc version (([0-9]+)(.[0-9]+)?)" _gfortranver "${_gfortran_v}" )
     set( GFORTRAN_VERSION ${CMAKE_MATCH_1} CACHE STRING "gfortran version" )
   endif()
-  
+
   if( LIBGFORTRAN_LIBRARIES )
     set( LIBGFORTRAN_FOUND TRUE )
     set( LIBGFORTRAN_LIBRARIES "${LIBGFORTRAN_LIBRARIES}" CACHE PATH "gfortran libraries" FORCE )

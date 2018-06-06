@@ -58,6 +58,13 @@ if( NOT QWT_FOUND )
     endif()
   endif()
 
+  if( APPLE AND QWT_LIBRARY AND NOT QWT_INCLUDE_DIR )
+    # if the lib is a framework
+    find_path( QWT_INCLUDE_DIR qwt.h
+               PATHS ${QWT_LIBRARY}/Headers
+               NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH NO_CMAKE_SYSTEM_PATH )
+  endif()
+
   SET(QWT_FOUND FALSE)
   IF(QWT_INCLUDE_DIR AND QWT_LIBRARY)
     

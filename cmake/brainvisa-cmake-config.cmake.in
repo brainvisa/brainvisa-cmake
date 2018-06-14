@@ -1188,7 +1188,7 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
                             COMMAND "${PYTHON_HOST_EXECUTABLE}" -c "import py_compile;py_compile.main()" "${_fileBuild}"
                             DEPENDS "${_fileBuild}"
                             VERBATIM )
-        add_custom_command( OUTPUT "${_fileBuild}o"
+        add_custom_command( OUTPUT "${_pyo}"
                             COMMAND "${PYTHON_HOST_EXECUTABLE}" -O -c "import py_compile;py_compile.main()" "${_fileBuild}"
                             DEPENDS "${_fileBuild}"
                             VERBATIM )

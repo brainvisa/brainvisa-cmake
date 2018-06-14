@@ -1117,6 +1117,12 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
     find_package( PythonInterp REQUIRED )
   endif( NOT DEFINED PYTHON_EXECUTABLE )
 
+  # detect python version
+  string( REGEX MATCH "^([0-9]+).([0-9]+)$" _py_ver "${PYTHON_SHORT_VERSION}" )
+  if( ${CMAKE_MATCH_1} GREATER 2 )
+    set( _py3_suffix "cpython-${CMAKE_MATCH_1}${CMAKE_MATCH_2}" )
+  endif()
+
   # Read source directory and separate Python sources (*.py) from other files
   set( _pythonSources )
   set( _nonPythonSources )
@@ -1146,26 +1152,39 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
   foreach(_file ${_pythonSources})
     # Copy the source file in build directory
     set( _fileBuild "${CMAKE_BINARY_DIR}/${_destDir}/${_file}" )
+    get_filename_component( _path "${_fileBuild}" PATH )
+    # Byte compiled python code (*.pyc and *.pyo)
+    if( _py3_suffix )
+        # python3 produced byte-compiled code in a different location
+        get_filename_component( _base "${_fileBuild}" NAME_WE )
+        set( _pyc
+              "${_path}/__pycache__/${_base}.${_py3_suffix}.pyc" )
+        set( _pyo
+              "${_path}/__pycache__/${_base}.${_py3_suffix}.opt-1.pyc" )
+    else()
+        set( _pyc "${_fileBuild}c" )
+        set( _pyo "${_fileBuild}o" )
+    endif()
+
     if( NOT install_only )
         if( UNIX OR APPLE OR CMAKE_CROSSCOMPILING)
-        # Make a symlink instead of copying Python source allows to
-        # execute code from the build tree and directly benefit from
-        # modifications in the source tree (without typing make)
-        get_filename_component( _path "${_fileBuild}" PATH )
-        add_custom_command( OUTPUT "${_fileBuild}"
-                            COMMAND "${CMAKE_COMMAND}" -E make_directory "${_path}"
-                            COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_pythonDirectory}/${_file}" "${_fileBuild}"
-                            DEPENDS "${_pythonDirectory}/${_file}"
-                            VERBATIM )
+            # Make a symlink instead of copying Python source allows to
+            # execute code from the build tree and directly benefit from
+            # modifications in the source tree (without typing make)
+            add_custom_command( OUTPUT "${_fileBuild}"
+                                COMMAND "${CMAKE_COMMAND}" -E make_directory "${_path}"
+                                COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_pythonDirectory}/${_file}" "${_fileBuild}"
+                                DEPENDS "${_pythonDirectory}/${_file}"
+                                VERBATIM )
         else()
-        add_custom_command( OUTPUT "${_fileBuild}"
-                            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_pythonDirectory}/${_file}" "${_fileBuild}"
-                            DEPENDS "${_pythonDirectory}/${_file}"
-                            VERBATIM )
+            add_custom_command( OUTPUT "${_fileBuild}"
+                                COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_pythonDirectory}/${_file}" "${_fileBuild}"
+                                DEPENDS "${_pythonDirectory}/${_file}"
+                                VERBATIM )
         endif()
 
         # Byte compile python code (creating *.pyc and *.pyo)
-        add_custom_command( OUTPUT "${_fileBuild}c"
+        add_custom_command( OUTPUT "${_pyc}"
                             COMMAND "${PYTHON_HOST_EXECUTABLE}" -c "import py_compile;py_compile.main()" "${_fileBuild}"
                             DEPENDS "${_fileBuild}"
                             VERBATIM )
@@ -1177,10 +1196,10 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
 
     # Install source file and byte compiled files
     get_filename_component( _path "${_file}" PATH )
-    BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}" "${_fileBuild}c" "${_fileBuild}o"
+    BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}" "${_pyc}" "${_pyo}"
                        DESTINATION "${_destDir}/${_path}"
                        COMPONENT ${_component} )
-    set( _targetDepends ${_targetDepends} "${_fileBuild}" "${_fileBuild}c" "${_fileBuild}o" )
+    set( _targetDepends ${_targetDepends} "${_fileBuild}" "${_pyc}" "${_pyo}" )
   endforeach(_file ${_pythonSources})
 
   # Copy other files

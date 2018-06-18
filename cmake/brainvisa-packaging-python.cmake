@@ -1,11 +1,24 @@
 find_package( python )
 
-function( BRAINVISA_PYTHON_HAS_MODULE module result )
+function( BRAINVISA_PYTHON_HAS_MODULE module result)
   set( ${result} -1 )
   execute_process( COMMAND "${PYTHON_EXECUTABLE}" "-c" "import ${module}"
     RESULT_VARIABLE ${result} OUTPUT_VARIABLE _out ERROR_VARIABLE _err )
   set( ${result} ${${result}} PARENT_SCOPE )
 endfunction()
+
+# function( BRAINVISA_PYTHON_GET_MODULE_FILE module result)
+#   set( ${result} )
+#   execute_process( COMMAND "${PYTHON_EXECUTABLE}" 
+#                            "-c" "from __future__ import print_function;import os,${module};f, e = os.path.splitext(${module}.__file__);print(f + '.py' if e == '.pyc' else f, end='')"
+#     RESULT_VARIABLE _result_code OUTPUT_VARIABLE _out ERROR_VARIABLE _err )
+#   
+#   if( ${_result_code} EQUAL 0 )
+#     set(${result} ${${_out}})
+#   endif()
+#   
+#   set( ${result} ${${_result}} PARENT_SCOPE )
+# endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )
   set( ${package_name} ${component} PARENT_SCOPE )
@@ -304,13 +317,15 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
 
         BRAINVISA_PYTHON_HAS_MODULE( "matplotlib" _has_mpl )
         if( _has_mpl EQUAL 0 )
-          # BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS python-matplotlib RUN )
-         # patch matplotlib.__init__ to search for the data path
-          # this should not be done in brainvisa-install-python-matplotlib
-          # since matplotlib.__init__.py file is installed from here in the
-          # python component.
-          add_custom_command( TARGET install-${component} POST_BUILD
-            COMMAND "${PYTHON_HOST_EXECUTABLE}" "${brainvisa-cmake_DIR}/brainvisa-packaging-python-matplotlib-patchinit.py" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/matplotlib/__init__.py" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/matplotlib/__init__.py" )
+          if(EXISTS "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/matplotlib/__init__.py")
+            # BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS python-matplotlib RUN )
+            # patch matplotlib.__init__ to search for the data path
+            # this should not be done in brainvisa-install-python-matplotlib
+            # since matplotlib.__init__.py file is installed from here in the
+            # python component.
+            add_custom_command( TARGET install-${component} POST_BUILD
+                COMMAND "${PYTHON_HOST_EXECUTABLE}" "${brainvisa-cmake_DIR}/brainvisa-packaging-python-matplotlib-patchinit.py" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/matplotlib/__init__.py" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/matplotlib/__init__.py" )
+          endif()
         endif()
         # TODO: add additional /usr/local or /i2bm/... modules
 

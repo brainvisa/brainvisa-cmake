@@ -941,15 +941,21 @@ Section: multiverse/science''') % package_info, file=control)
                 # print('Depends:', ', '.join( deps ), file=control)
             control.close()
 
-            # Move files installed for this package in deb_directory
+            # Remove invalid files and links
+            valid_paths = []
             for path in paths:
                 source = os.path.join(install_directory, path)
                 if os.path.isfile(source):
-                    p, f = os.path.split(path)
-                    dest_directory = os.path.join(deb_directory, 'usr', p)
-                    if not os.path.exists(dest_directory):
-                        os.makedirs(dest_directory)
-                    os.rename(source, os.path.join(dest_directory, f))
+                    valid_paths.append(path)
+
+            # Move valid files and links installed for this package in deb_directory
+            for path in valid_paths:
+                source = os.path.join(install_directory, path)
+                p, f = os.path.split(path)
+                dest_directory = os.path.join(deb_directory, 'usr', p)
+                if not os.path.exists(dest_directory):
+                    os.makedirs(dest_directory)
+                os.rename(source, os.path.join(dest_directory, f))
 
             # Creating *.deb file
             try:

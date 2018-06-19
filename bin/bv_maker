@@ -1781,6 +1781,16 @@ class InstallPackCommand(StepCommand):
         parser.add_option('--prefix', dest='prefix',
                           default=None,
                           help='sets the prefix directory to install the pack.')
+        parser.add_option('--local', dest='local',
+                          action='store_true',
+                          default=False,
+                          help='True if the installation must be done ' \
+                               'locally. Default is False.')
+        parser.add_option('--offline', dest='offline',
+                          action='store_true',
+                          default=False,
+                          help='True if the installation must be done using ' \
+                               'offline installer. Default is False.')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
@@ -3593,6 +3603,7 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                            'data_repos_dir', 'test_install_dir',
                            'stdout_file', 'stderr_file', 'test_ref_data_dir',
                            'test_run_data_dir', 'remote_installer_filename',
+                           'remote_offline_installer_filename',
                            'remote_repos_dir', 'remote_data_repos_dir',
                            'remote_test_install_dir', 'remote_test_ref_data_dir',
                            'remote_test_run_data_dir'))
@@ -3639,6 +3650,7 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
         self.test_ref_data_dir = ''
         self.test_run_data_dir = tempfile.gettempdir()
         self.remote_installer_filename = None
+        self.remote_offline_installer_filename = None
         self.remote_repos_dir = None
         self.remote_data_repos_dir = None
         self.remote_test_install_dir = None
@@ -4141,7 +4153,9 @@ Controller.prototype.FinishedPageCallback = function()
         if not self.test_install_dir:
             return IGNORED_STEP
         
-        remote_test_install = True if self.remote_test_host_cmd else False
+        remote_test_install = True if self.remote_test_host_cmd \
+                                      and not options.local \
+                                      else False
 
         # Test install directory            
         if options.prefix:
@@ -4173,13 +4187,27 @@ Controller.prototype.FinishedPageCallback = function()
         else:
             remote_data_repos_dir = None
 
-        installer_filename = self.installer_filename
-        if remote_test_install and self.remote_installer_filename:
-            remote_installer_filename = self.remote_installer_filename
+        use_online_installer = not options.offline \
+            and self.installer_filename is not None
+        
+        if not use_online_installer \
+           and self.offline_installer_filename is not None:
+            installer_filename = self.offline_installer_filename
+        else:        
+            installer_filename = self.installer_filename
+            
+        if remote_test_install:
+            if not use_online_installer \
+               and self.remote_offline_installer_filename is not None:
+                remote_installer_filename = self.remote_offline_installer_filename
+            else:
+                remote_installer_filename = self.remote_installer_filename
+            
         else:
             remote_installer_filename = installer_filename
 
         print('Installing package:', directory)
+        print('    with installer:', remote_installer_filename)
         if(data_repos_dir):
             print('    using data package:', data_repos_dir)
         print('    from build dir:', self.build_dir.directory)
@@ -4203,11 +4231,14 @@ Controller.prototype.FinishedPageCallback = function()
             print('creating temporary directory...')
             os.makedirs(tmp_dir)
 
-        if not os.path.isdir(repos_dir) \
-            or (data_repos_dir is not None \
-            and not os.path.isdir(data_repos_dir)):
-            raise RuntimeError('Some repositories are missing (%s, %s)'
-                        % (repos_dir, data_repos_dir))
+        if use_online_installer \
+            and (not os.path.isdir(repos_dir) \
+                 or (data_repos_dir is not None \
+                 and not os.path.isdir(data_repos_dir))):
+            # For offline package installation these directories are not 
+            # necessary
+            raise RuntimeError('Some repositories are missing (%s, %s). ' \
+                'Installation may fail.' % (repos_dir, data_repos_dir))
 
         install_script = self.make_install_script( 
             remote_test_install_dir, 
@@ -4500,9 +4531,10 @@ class PublicationDirectory(DirectorySection, ConfigVariableParser):
                 '"%(package_directory)s/packages_tmp" '
                 '"%(publication_directory)s"']
 
+        env = self.get_environ()
         for c in self.publication_commands:
             command = shlex.split(c)
-            system_output_on_error(command, env = self.env)
+            system_output_on_error(command, env = env)
             
 
 def display_failure_summary(configuration):

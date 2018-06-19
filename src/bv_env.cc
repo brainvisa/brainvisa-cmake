@@ -316,7 +316,7 @@ string find_python_site_packages( const string &install_directory )
 }
 
 
-bool file_exists( string file_name ) 
+bool filesystem_exists( string file_name ) 
 {
   struct stat stFileInfo;
   bool blnReturn;
@@ -354,7 +354,7 @@ string find_python_osmodule( const string &install_directory )
 #else
         string site_os = install_directory + PATH_SEP + "lib" + PATH_SEP + entry_name + PATH_SEP + "os.py";
 #endif
-        if( file_exists( site_os ) )
+        if( filesystem_exists( site_os ) )
         {
           result = site_os;
           break;
@@ -389,7 +389,7 @@ string find_in_path( const string & exe_name )
   for( i=path.begin(); i!=e; ++i )
   {
     string full_path = *i + PATH_SEP + exe_name;
-    if( file_exists( full_path ) )
+    if( filesystem_exists( full_path ) )
       return full_path;
   }
 
@@ -520,7 +520,7 @@ int main( int argc, char *argv[] )
     for( vector< string >::const_iterator it = path.begin(); it != path.end(); ++it ) {
       vector <string> l = split_path( *it );
       l.push_back( argv[0] );
-      if ( file_exists( join_path( l ) ) ) {
+      if ( filesystem_exists( join_path( l ) ) ) {
         l.pop_back();
         l.pop_back();
         install_directory = join_path( l );
@@ -538,7 +538,7 @@ int main( int argc, char *argv[] )
 #ifdef __APPLE__
   set_variables[ "QT_PLUGIN_PATH" ] = install_directory + PATH_SEP + "lib" + PATH_SEP + "qt-plugins";
 #else
-  if( file_exists( install_directory + PATH_SEP + "lib" + PATH_SEP
+  if( filesystem_exists( install_directory + PATH_SEP + "lib" + PATH_SEP
     + "qt-plugins" ) )
   {
     // binary install: remove any QT_PLUGIN_PATH naming system libs
@@ -550,6 +550,22 @@ int main( int argc, char *argv[] )
   path_prepend[ "DCMDICTPATH" ] = split_env( install_directory + PATH_SEP + "lib" + PATH_SEP + "dicom.dic" );
 
   path_prepend[ "PYTHONPATH" ] = split_env( install_directory + PATH_SEP + "python" );
+#ifndef WIN32
+  std::string osmodule = find_python_osmodule( install_directory );
+  std::string moddir = osmodule.size() > 6 
+                     ? osmodule.substr(0, osmodule.size() - 6)
+                     : "";
+  std::string pythondir = install_directory + PATH_SEP + "python";
+  if(!moddir.empty() && moddir != pythondir) {
+    // CentOS fixes
+    path_prepend[ "PYTHONPATH" ].push_back(moddir);
+    std::string dynloaddir = moddir + PATH_SEP + "lib-dynload";
+    if (filesystem_exists(dynloaddir))
+      path_prepend[ "PYTHONPATH" ].push_back(dynloaddir);
+        
+  }
+#endif
+  
   path_prepend[ "PATH" ] = split_env( install_directory + PATH_SEP + "bin" + PATH_SEP + "real-bin" + ENV_SEP + install_directory + PATH_SEP + "bin" );
 
 #ifdef WIN32
@@ -642,7 +658,7 @@ int main( int argc, char *argv[] )
     }
     
     for( vector< string >::const_reverse_iterator it2 = it->second.rbegin(); it2 != it->second.rend(); ++it2 ) {
-      if ( file_exists( *it2 ) ) {
+      if ( filesystem_exists( *it2 ) ) {
         content.insert( content.begin(), *it2 );
       }
     }

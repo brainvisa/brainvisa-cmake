@@ -90,7 +90,7 @@ bool is_sep(const char c, const string & sep = PATH_SEP) {
   bool res = false;
   
   // Test if string is one of PATH_SEP¨characters
-  for (int i = 0; i < sep.size(); i++) {
+  for (string::size_type i = 0; i < sep.size(); i++) {
     if (c == sep[i]) {
       res = true;
       break;
@@ -113,7 +113,7 @@ vector <string> split_path( const string &str, const string & sep = string(PATH_
     while ( pos < str.size() ) {
       // Search the next character of PATH_SEP in the string
       string::size_type pos2 = string::npos;
-      for (int i = 0; i < sep.size(); i++){
+      for (string::size_type i = 0; i < sep.size(); i++){
         string::size_type pos3 = str.find( sep[i], pos );
         if ((pos3 != string::npos) && (pos3 < pos2)) {
           pos2 = pos3;
@@ -753,14 +753,14 @@ int main( int argc, char *argv[] )
 #endif
   } else {
   
-  bool dos_term = false;
+  //bool dos_term = false;
   bool msys_term = false;
   bool wine_term = false;
   
 #ifdef WIN32
   // We only use windows format in dos shell
   msys_term = is_msys_term();
-  dos_term = is_dos_term();
+  //dos_term = is_dos_term();
   wine_term = is_wine_term();
 #endif
 

@@ -1,4 +1,4 @@
-message( STATUS "Add specific paths for Ubuntu distribution" )
+message( STATUS "Add specific paths for CentOS distribution" )
 
 # something has changed somewhere, the ELF format is not recognized by default
 # any longer and makes install fail because of a rpath/relink step missing.

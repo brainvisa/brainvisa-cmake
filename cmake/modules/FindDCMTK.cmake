@@ -410,17 +410,6 @@ if( DCMTK_config_INCLUDE_DIR AND
         ${DCMTK_DIR}/include)
   ENDIF()
 
-  IF( APPLE )
-    find_package( ZLIB )
-    if( ZLIB_FOUND )
-      SET( DCMTK_LIBRARIES ${DCMTK_LIBRARIES} ${ZLIB_LIBRARIES} )
-    endif( ZLIB_FOUND )
-    find_package( Iconv )
-    if( Iconv_FOUND )
-      set( DCMTK_LIBRARIES ${DCMTK_LIBRARIES} ${Iconv_LIBRARIES} )
-    endif()
-  ENDIF( APPLE )
-
   IF(DCMTK_dcmnet_LIBRARY)
    IF(EXISTS /etc/debian_version AND EXISTS /lib64/libwrap.so.0)
      SET( DCMTK_LIBRARIES
@@ -525,6 +514,20 @@ if( DCMTK_config_INCLUDE_DIR AND
     unset(__dcmtk_version_files)
     unset(__dcmtk_version_regex)
   endif()
+
+  IF( APPLE )
+    find_package( ZLIB )
+    if( ZLIB_FOUND )
+      SET( DCMTK_LIBRARIES ${DCMTK_LIBRARIES} ${ZLIB_LIBRARIES} )
+    endif( ZLIB_FOUND )
+    if( DCMTK_VERSION VERSION_GREATER "3.6.1" )
+      find_package( Iconv )
+      if( Iconv_FOUND )
+        set( DCMTK_LIBRARIES ${DCMTK_LIBRARIES} ${Iconv_LIBRARIES} )
+      endif()
+    endif()
+  ENDIF( APPLE )
+
 endif()
 
 

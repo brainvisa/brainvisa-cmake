@@ -30,7 +30,7 @@ else()
   if( NOT LIBGFORTRAN_LIBRARIES AND CMAKE_Fortran_COMPILER )
     # look relative to command path
     get_filename_component( _fortran ${CMAKE_Fortran_COMPILER} REALPATH )
-    get_filename_component( _fpath ${_fortran} DIRECTORY )
+    get_filename_component( _fpath ${_fortran} PATH )
     file( GLOB _fpath2 "${_fpath}/lib/gcc/*" )
     find_library( LIBGFORTRAN gfortran gfortran-3 HINTS ${fpath2} )
   endif()

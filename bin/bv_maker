@@ -4202,9 +4202,11 @@ Controller.prototype.FinishedPageCallback = function()
             if not use_online_installer \
                and self.remote_offline_installer_filename is not None:
                 remote_installer_filename = self.remote_offline_installer_filename
-            else:
+            elif self.remote_installer_filename is not None:
                 remote_installer_filename = self.remote_installer_filename
-            
+            else:
+                remote_installer_filename = installer_filename
+
         else:
             remote_installer_filename = installer_filename
 

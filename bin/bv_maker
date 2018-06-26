@@ -3598,14 +3598,16 @@ class VirtualenvDirectory(BuildDirectory):
 
 class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
 
-    _path_variables = set(('directory', 'build_directory', 'installer_filename',
+    _path_variables = set(('directory', 'build_directory',
+                           'installer_filename',
                            'offline_installer_filename',
                            'data_repos_dir', 'test_install_dir',
                            'stdout_file', 'stderr_file', 'test_ref_data_dir',
                            'test_run_data_dir', 'remote_installer_filename',
                            'remote_offline_installer_filename',
                            'remote_repos_dir', 'remote_data_repos_dir',
-                           'remote_test_install_dir', 'remote_test_ref_data_dir',
+                           'remote_test_install_dir',
+                           'remote_test_ref_data_dir',
                            'remote_test_run_data_dir'))
     _variables_with_replacements = set(('pack_version', 'directory_id',
                                         'packaging_options',

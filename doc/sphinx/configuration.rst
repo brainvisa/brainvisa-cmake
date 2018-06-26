@@ -326,8 +326,6 @@ The package section must define some variables which specify which build directo
 * ``packaging_options``: options passed to the *bv_packaging* program (in *brainvisa-installer* project). Typically: --i2bm
 * ``build_condition``: As in build sections, condition when the package section steps are performed.
 * ``remote_test_host_cmd``: The contents of this variable is actually prepended to package install and package test commands. It it typically used to perform remote connections to a test machine, using ssh and/or docker for instance:
-* ``stderr_file``: file used to redirect the standard error stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If not specified, it will be mixed with standard output.
-* ``stdout_file``: file used to redirect the standard output stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If neither it nor ``stderr_file`` are specified, then a temporary file will be used, and erased when each step is finished.
 
   .. code-block:: bash
 
@@ -339,6 +337,8 @@ The package section must define some variables which specify which build directo
 
       remote_test_host_cmd = docker run --rm -v /tests:/tests -u "$(id -u):$(id -g)" -e USER=$USER custom_test_image xvfb-run
 
+* ``stderr_file``: file used to redirect the standard error stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If not specified, it will be mixed with standard output.
+* ``stdout_file``: file used to redirect the standard output stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If neither it nor ``stderr_file`` are specified, then a temporary file will be used, and erased when each step is finished.
 * ``test_install_dir``: Package installation directory. Mandatory if ``install_pack`` or ``test_pack`` steps are performed.
 * ``test_ref_data_dir``: directory where reference data will be written (during :ref:`testref_pack step <testref_pack_step>`) and read (during :ref:`test step <test_step>`) for comparison.
 * ``test_run_data_dir``: directory where data will be written during the :ref:`test_pack step <test_pack_step>`.

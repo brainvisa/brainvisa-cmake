@@ -203,18 +203,18 @@ components_definition = [
             }],
         ],
     }),
-    ('axon_web', {
-        'components': [
-            ['axon_web', {
-                'groups': ['all'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon_web/trunk','axon_web/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon_web/branches/4.0','axon_web/branches/4.0'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon_web/tags/4.0.2','axon_web/tags/4.0.2'),
-                },
-            }],
-        ],
-    }),
+    #('axon_web', {
+        #'components': [
+            #['axon_web', {
+                #'groups': ['all'],
+                #'branches': {
+                    #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon_web/trunk','axon_web/trunk'),
+                    #'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon_web/branches/4.0','axon_web/branches/4.0'),
+                    #'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon_web/tags/4.0.2','axon_web/tags/4.0.2'),
+                #},
+            #}],
+        #],
+    #}),
     ('datamind', {
         'description': 'Statistics, data mining, machine learning.',
         'components': [

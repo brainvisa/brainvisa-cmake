@@ -665,6 +665,17 @@ int main( int argc, char *argv[] )
     set_env( it->first, join_path( content, ENV_SEP ) );
   }
 
+#ifdef __APPLE__
+  /* On MacOS >= 10.10, DYLD_LIBRARY_PATH variables are erased when in a
+     script (shell/bash script, or python or other script run via a shebang).
+     We set different variables to copy their values, so that scripts knowing
+     this can retreive them if needed.
+  */
+  set_env( "BV_MAC_LIB_PATH", getenv( "DYLD_LIBRARY_PATH" ) );
+  set_env( "BV_MAC_FWK_PATH", getenv( "DYLD_FRAMEWORK_PATH" ) );
+  set_env( "BV_MAC_FBL_PATH", getenv( "DYLD_FALLBACK_LIBRARY_PATH" ) );
+#endif
+
   const string unenv_prefix( "BRAINVISA_UNENV_" );
   if ( argc > 1 )
   {

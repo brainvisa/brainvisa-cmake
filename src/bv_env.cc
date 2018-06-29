@@ -674,6 +674,10 @@ int main( int argc, char *argv[] )
   set_env( "BV_MAC_LIB_PATH", getenv( "DYLD_LIBRARY_PATH" ) );
   set_env( "BV_MAC_FWK_PATH", getenv( "DYLD_FRAMEWORK_PATH" ) );
   set_env( "BV_MAC_FBL_PATH", getenv( "DYLD_FALLBACK_LIBRARY_PATH" ) );
+  set_variables[ "BV_MAC_LIB_PATH" ] = getenv( "DYLD_LIBRARY_PATH" );
+  set_variables[ "BV_MAC_FWK_PATH" ] = getenv( "DYLD_FRAMEWORK_PATH" );
+  set_variables[ "BV_MAC_FBL_PATH" ] = getenv( "DYLD_FALLBACK_LIBRARY_PATH" );
+
 #endif
 
   const string unenv_prefix( "BRAINVISA_UNENV_" );

@@ -16,6 +16,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
       endif( match )
     endif()
   endif(PNG12_VERSION)
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS zlib RUN )
 endfunction()
 
 

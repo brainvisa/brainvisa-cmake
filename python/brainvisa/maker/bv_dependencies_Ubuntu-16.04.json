@@ -7,6 +7,8 @@
              "version": "" },
   "jasper": { "name": "libjasper1",
               "version": "" },
+  "libopenjpeg": { "name": "libopenjpeg5",
+                   "version": "" },
   "libgfortran2": { "name": "libgfortran3",
                     "version": "" },
   "libglu1": { "name": "libglu1-mesa",

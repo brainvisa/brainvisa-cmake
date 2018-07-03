@@ -21,7 +21,7 @@ else()
 
     if( LIBHARFBUZZ_FIND_REQUIRED )
         message( SEND_ERROR "LIBHARFBUZZ was not found." )
-    elseif( NOT LIBDOUBLECONVERSION_FIND_QUIETLY )
+    elseif( NOT LIBHARFBUZZ_FIND_QUIETLY )
         message( STATUS "LIBHARFBUZZ was not found." )
     endif()
   endif()

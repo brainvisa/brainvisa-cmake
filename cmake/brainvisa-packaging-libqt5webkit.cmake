@@ -25,9 +25,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5webchannel RUN )
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5positioning RUN )
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5sensors RUN )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libwoff RUN )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libwebp RUN )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libhyphen RUN )
   endif()
-  # TODO
-  # ub18: libwoff2dec.so.1.0.2 libwebp.so.6 libhyphen.so.0
 endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )

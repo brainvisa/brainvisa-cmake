@@ -21,7 +21,7 @@ else()
 
     if( LIBGRAPHITE2_FIND_REQUIRED )
         message( SEND_ERROR "LibGraphite2 was not found." )
-    elseif( NOT LIBDOUBLECONVERSION_FIND_QUIETLY )
+    elseif( NOT LIBGRAPHITE2_FIND_QUIETLY )
         message( STATUS "LibGraphite2 was not found." )
     endif()
   endif()

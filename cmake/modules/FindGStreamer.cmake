@@ -12,6 +12,7 @@
 # GSTVIDEO_LIBRARIES - link to these to use libgstvideo
 # GSTAUDIO_LIBRARIES - link to these to use libgstaudio
 # GSTTAG_LIBRARIES - link to these to use libgsttag
+# GSTFFT_LIBRARIES - link to these to use libgstfft
 
 if (NOT GSTREAMER_INCLUDE_DIRS OR NOT GSTREAMER_LIBRARIES)
     find_package(PkgConfig)
@@ -62,6 +63,11 @@ if (NOT GSTREAMER_INCLUDE_DIRS OR NOT GSTREAMER_LIBRARIES)
             if(_GSTTAG_FOUND)
                 find_library( GSTTAG_LIBRARIES gsttag-${_gstreamer_ver}
                                 PATHS ${_GSTTAG_LIBRARY_DIRS} )
+            endif()
+            pkg_search_module(_GSTFFT gstreamer-fft-${_gstreamer_ver})
+            if(_GSTFFT_FOUND)
+                find_library( GSTFFT_LIBRARIES gstfft-${_gstreamer_ver}
+                                PATHS ${_GSTFFT_LIBRARY_DIRS} )
             endif()
             set( GSTREAMER_INCLUDE_DIRS ${_GSTREAMER_INCLUDE_DIRS} CACHE PATH "paths to GStreamer header files" )
             set( GSTREAMER_VERSION "${_GSTREAMER_VERSION}" CACHE STRING "version of GStreamer library")

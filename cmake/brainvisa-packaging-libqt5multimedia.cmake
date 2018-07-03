@@ -78,7 +78,6 @@ function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
     foreach( _include ${Qt5Multimedia_INCLUDE_DIRS} )
       get_filename_component( _name ${_include} NAME )
       if( _name STREQUAL "QtMultimedia" )
-        message("install: ${_name}")
         BRAINVISA_INSTALL_DIRECTORY( "${_include}" include/qt5/${_name}
           ${component}-dev )
       endif()

@@ -10,6 +10,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libpng12 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libgcc1 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libstdc++6 RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libxcb RUN )
   if( LIBAUDIO_FOUND AND NOT(CMAKE_CROSSCOMPILING AND WIN32))
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libaudio RUN )
   endif()
@@ -17,6 +18,17 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   find_package( GObject QUIET )
   if( GOBJECT_FOUND )
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS gobject RUN )
+  endif()
+  if( LSB_DISTRIB STREQUAL "ubuntu"
+      AND LSB_DISTRIB_RELEASE VERSION_GREATER "16.04" )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libfreetype6 RUN )
+  endif()
+  if( LSB_DISTRIB STREQUAL "ubuntu"
+      AND LSB_DISTRIB_RELEASE VERSION_GREATER "18.0" )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS zlib RUN )
+    # it's png16 actually
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libpng12 RUN )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libharfbuzz RUN )
   endif()
 endfunction()
 

@@ -1,4 +1,4 @@
-# Find LIBDOUBLECONVERSION
+# Find LibDoubleConversion
 #
 # LIBDOUBLECONVERSION_FOUND
 # LIBDOUBLECONVERSION_LIBRARIES - the double-conversion libraries

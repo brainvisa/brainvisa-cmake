@@ -6,6 +6,9 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   set( ${package_version} "${QT_VERSION_MAJOR}.${QT_VERSION_MINOR}.${QT_VERSION_PATCH}" PARENT_SCOPE )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libstdc++6 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libgcc1 RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libpcre RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libharfbuzz RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libgraphite2 RUN )
   if( UNIX )
     # this (weak) dependency is only present on linux/ubuntu
     find_package( Libicui18n QUIET )
@@ -18,9 +21,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
       BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS glib RUN )
     endif()
     if( LSB_DISTRIB STREQUAL "ubuntu"
-        AND LSB_DISTRIB_RELEASE VERSION_GREATER "12.0" )
-      BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN
-                                       DEPENDS libpcre RUN )
+        AND LSB_DISTRIB_RELEASE VERSION_GREATER "18.0" )
       BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN
                                        DEPENDS libdoubleconversion RUN )
     endif()

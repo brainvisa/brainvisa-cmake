@@ -1,18 +1,18 @@
-find_package( Qt5OpenGL )
+find_package( Qt5Sensors )
 
 function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )
   set( ${package_name} ${component} PARENT_SCOPE )
   set( ${package_maintainer} "IFR 49" PARENT_SCOPE )
   set( ${package_version} "${QT_VERSION_MAJOR}.${QT_VERSION_MINOR}.${QT_VERSION_PATCH}" PARENT_SCOPE )
 
-  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5widgets RUN )
-  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" DEV DEPENDS libqt5widgets DEV )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5core RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" DEV DEPENDS libqt5core DEV )
 endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  if(Qt5OpenGL_FOUND)
+  if(Qt5Sensors_FOUND)
     set( libs )
-    foreach( _lib ${Qt5OpenGL_LIBRARIES})
+    foreach( _lib ${Qt5Sensors_LIBRARIES})
       # get lib file
       get_target_property( _lib_loc ${_lib} LOCATION )
       # get the .so without version number
@@ -23,7 +23,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${libs} )
     # install plugins
     set( _plugins_dir )
-    foreach( plugin ${Qt5OpenGL_PLUGINS} )
+    foreach( plugin ${Qt5Sensors_PLUGINS} )
       get_target_property( _loc ${plugin} LOCATION )
       # message( "Plugin ${plugin} is at location ${_loc}" )
       set( _plugins ${_plugins} ${_loc} )
@@ -39,6 +39,24 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
                            DESTINATION "lib/qt5/plugins/${_dir}"
                            COMPONENT "${component}" )
       endforeach()
+    else()
+      # Qt5Sensors_PLUGINS is empty
+      get_filename_component( _dir ${libs} PATH )
+      set( _plugins_dir "${_dir}/qt5/plugins" )
+      if( EXISTS ${_plugins_dir} )
+        if( EXISTS "${_plugins_dir}/sensors" )
+          BRAINVISA_INSTALL( DIRECTORY "${_plugins_dir}/sensors"
+                             DESTINATION "lib/qt5/plugins"
+                             USE_SOURCE_PERMISSIONS
+                             COMPONENT "${component}" )
+        endif()
+        if( EXISTS "${_plugins_dir}/sensorgestures" )
+          BRAINVISA_INSTALL( DIRECTORY "${_plugins_dir}/sensorgestures"
+                             DESTINATION "lib/qt5/plugins"
+                             USE_SOURCE_PERMISSIONS
+                             COMPONENT "${component}" )
+        endif()
+      endif()
     endif()
     set(${component}_PACKAGED TRUE PARENT_SCOPE)
   else()
@@ -47,13 +65,13 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
 endfunction()
 
 # this variable declares the install rule for the dev package
-set( libqt5opengl-dev-installrule TRUE )
+set( libqt5sensors-dev-installrule TRUE )
 
 function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
-  if(Qt5OpenGL_FOUND)
-    foreach( _include ${Qt5OpenGL_INCLUDE_DIRS} )
+  if(Qt5Sensors_FOUND)
+    foreach( _include ${Qt5Network_INCLUDE_DIRS} )
       get_filename_component( _name ${_include} NAME )
-      if( _name STREQUAL "QtOpenGL" )
+      if( _name STREQUAL "QtSensors" )
         BRAINVISA_INSTALL_DIRECTORY( "${_include}" include/qt5/${_name}
           ${component}-dev )
       endif()

@@ -7,6 +7,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   set( ${package_version} "${QT_VERSION_MAJOR}.${QT_VERSION_MINOR}.${QT_VERSION_PATCH}" PARENT_SCOPE )
 
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5core RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" DEV DEPENDS libqt5core DEV )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libpng12 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libgcc1 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libstdc++6 RUN )
@@ -57,7 +58,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       if( EXISTS ${_plugins_dir} )
         if( EXISTS "${_plugins_dir}/imageformats" )
           BRAINVISA_INSTALL( DIRECTORY "${_plugins_dir}/imageformats"
-                             DESTINATION "lib/qt-plugins"
+                             DESTINATION "lib/qt5/plugins"
                              USE_SOURCE_PERMISSIONS
                              COMPONENT "${component}" )
         endif()

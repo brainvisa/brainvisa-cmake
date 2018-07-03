@@ -1,18 +1,18 @@
-find_package( Qt5OpenGL )
+find_package( Qt5Qml )
 
 function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )
   set( ${package_name} ${component} PARENT_SCOPE )
   set( ${package_maintainer} "IFR 49" PARENT_SCOPE )
   set( ${package_version} "${QT_VERSION_MAJOR}.${QT_VERSION_MINOR}.${QT_VERSION_PATCH}" PARENT_SCOPE )
 
-  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5widgets RUN )
-  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" DEV DEPENDS libqt5widgets DEV )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5network RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" DEV DEPENDS libqt5network DEV )
 endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  if(Qt5OpenGL_FOUND)
+  if(Qt5Qml_FOUND)
     set( libs )
-    foreach( _lib ${Qt5OpenGL_LIBRARIES})
+    foreach( _lib ${Qt5Qml_LIBRARIES})
       # get lib file
       get_target_property( _lib_loc ${_lib} LOCATION )
       # get the .so without version number
@@ -23,7 +23,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
     BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${libs} )
     # install plugins
     set( _plugins_dir )
-    foreach( plugin ${Qt5OpenGL_PLUGINS} )
+    foreach( plugin ${Qt5Qml_PLUGINS} )
       get_target_property( _loc ${plugin} LOCATION )
       # message( "Plugin ${plugin} is at location ${_loc}" )
       set( _plugins ${_plugins} ${_loc} )
@@ -40,6 +40,15 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
                            COMPONENT "${component}" )
       endforeach()
     endif()
+    # qml dir
+    get_filename_component( _dir ${libs} PATH )
+    set( _qml_dir "${_dir}/qt5/qml" )
+    if( EXISTS ${_qml_dir} )
+      BRAINVISA_INSTALL( DIRECTORY "${_qml_dir}"
+                         DESTINATION "lib/qt5"
+                         USE_SOURCE_PERMISSIONS
+                         COMPONENT "${component}" )
+    endif()
     set(${component}_PACKAGED TRUE PARENT_SCOPE)
   else()
     set(${component}_PACKAGED FALSE PARENT_SCOPE)
@@ -47,13 +56,13 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
 endfunction()
 
 # this variable declares the install rule for the dev package
-set( libqt5opengl-dev-installrule TRUE )
+set( libqt5qml-dev-installrule TRUE )
 
 function( BRAINVISA_PACKAGING_COMPONENT_DEV component )
-  if(Qt5OpenGL_FOUND)
-    foreach( _include ${Qt5OpenGL_INCLUDE_DIRS} )
+  if(Qt5Qml_FOUND)
+    foreach( _include ${Qt5Qml_INCLUDE_DIRS} )
       get_filename_component( _name ${_include} NAME )
-      if( _name STREQUAL "QtOpenGL" )
+      if( _name STREQUAL "QtQml" )
         BRAINVISA_INSTALL_DIRECTORY( "${_include}" include/qt5/${_name}
           ${component}-dev )
       endif()

@@ -6,7 +6,9 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   set( ${package_version} "${QT_VERSION_MAJOR}.${QT_VERSION_MINOR}.${QT_VERSION_PATCH}" PARENT_SCOPE )
 
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5multimedia RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" DEV DEPENDS libqt5multimedia DEV )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5widgets RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" DEV DEPENDS libqt5widgets DEV )
 
 endfunction()
 
@@ -37,7 +39,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
       list( REMOVE_DUPLICATES _plugins_dir )
       foreach( _dir ${_plugins_dir} )
         BRAINVISA_INSTALL( FILES ${_plugins_${dir}}
-                           DESTINATION "lib/qt-plugins/${_dir}"
+                           DESTINATION "lib/qt5/plugins/${_dir}"
                            COMPONENT "${component}" )
       endforeach()
     endif()

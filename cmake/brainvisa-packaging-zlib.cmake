@@ -21,7 +21,8 @@ endfunction()
 
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
-  if(WIN32)
+  if(WIN32 OR (LSB_DISTRIB STREQUAL "ubuntu"
+               AND LSB_DISTRIB_RELEASE VERSION_GREATER "16.0") )
     if (ZLIB_FOUND)
       BRAINVISA_INSTALL_RUNTIME_LIBRARIES( ${component} ${ZLIB_LIBRARIES} )
       set(${component}_PACKAGED TRUE PARENT_SCOPE)

@@ -21,8 +21,9 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
         AND LSB_DISTRIB_RELEASE VERSION_GREATER "12.0" )
       BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN
                                        DEPENDS libpcre RUN )
+      BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN
+                                       DEPENDS libdoubleconversion RUN )
     endif()
-    # ubuntu 18.04: libdouble-conversion.so.1
   endif()
 endfunction()
 

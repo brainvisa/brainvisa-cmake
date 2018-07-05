@@ -13,7 +13,6 @@ if( LIBNIFTI_LIBRARIES )
 
 else()
 
-  set( LIBNIFTI_VERSION "2.0.0" CACHE STRING "LibNifti version" )
   find_library( LIBNIFTI_LIBRARY NAMES niftiio )
   if( LIBNIFTI_LIBRARY )
     find_library( ZNZ_LIBRARY NAMES znz )
@@ -25,6 +24,7 @@ else()
 
     set( LIBNIFTI_INCLUDE_DIRS ${LIBNIFTI_INCLUDE_DIR}
          CACHE PATH "LibNifti include directories" )
+    set( LIBNIFTI_VERSION "2.0.0" CACHE STRING "LibNifti version" )
 
     set( LIBNIFTI_FOUND TRUE )
   else()

@@ -3,7 +3,7 @@ find_package( Qt5Quick )
 function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )
   set( ${package_name} ${component} PARENT_SCOPE )
   set( ${package_maintainer} "IFR 49" PARENT_SCOPE )
-  set( ${package_version} "${QT_VERSION_MAJOR}.${QT_VERSION_MINOR}.${QT_VERSION_PATCH}" PARENT_SCOPE )
+  set( ${package_version} "${QT_VERSION}" PARENT_SCOPE )
 
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5gui RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5qml RUN )

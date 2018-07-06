@@ -1173,10 +1173,13 @@ class StepCommand(object):
             
             # Get the new directory value
             d = o.directory
+            normalize_path_needed = 'directory' in \
+                getattr(o, '_path_variables', set())
             
             # Resolve directories pattern using configuration directory 
             # variables
             conf_dirs = [normalize_path(o.replace_vars(c)) \
+                         if normalize_path_needed else o.replace_vars(c) \
                          for c in configuration.directories] \
                         if configuration.directories else []
                         
@@ -4421,9 +4424,10 @@ Controller.prototype.FinishedPageCallback = function()
 
 class PublicationDirectory(DirectorySection, ConfigVariableParser):
 
-    _path_variables = set(('directory', 'package_directory', 
+    _path_variables = set(('package_directory', 
                            'stdout_file', 'stderr_file'))
-    _variables_with_replacements = set(('directory_id', 'publication_commands'))
+    _variables_with_replacements = set(('directory', 'directory_id', 
+                                        'publication_commands'))
     _variables_with_env_only_replacements = set(('env',))
     _validAdditiveOptions = set(('publication_commands', ))
     _validOptions = set(('build_condition', ))

@@ -28,6 +28,11 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO cmake package_name package_maintain
     if( LSB_DISTRIB_RELEASE VERSION_GREATER "14.0" )
       BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libxslt RUN )
     endif()
+  else()
+    if( LSB_DISTRIB STREQUAL "centos linux"
+        AND LSB_DISTRIB_RELEASE VERSION_GREATER "7.4")
+        BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libwebp RUN )
+    endif()
   endif()
 endfunction()
 

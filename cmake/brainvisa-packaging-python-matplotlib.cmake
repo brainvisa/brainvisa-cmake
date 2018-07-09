@@ -5,6 +5,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   set( ${package_maintainer} "IFR 49" PARENT_SCOPE )
   set( ${package_version} "1.0.0" PARENT_SCOPE )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS python-numpy RUN )
+  if( LSB_DISTRIB STREQUAL "centos linux"
+    AND LSB_DISTRIB_RELEASE VERSION_GREATER "7.4")
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS agg RUN )
+  endif()
 endfunction()
 
 

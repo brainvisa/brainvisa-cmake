@@ -10,10 +10,13 @@ endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
   file( GLOB LIBPCRE_LIBRARIES
+        /usr/lib/x86_64-linux-gnu/libpcre.so.?
         /lib/libpcre.so.?
         /lib/x86_64-linux-gnu/libpcre.so.?
+        /usr/lib/x86_64-linux-gnu/libpcre16.so.?
         /lib/libpcre16.so.?
         /lib/x86_64-linux-gnu/libpcre16.so.?
+        /usr/lib/x86_64-linux-gnu/libpcre32.so.?
         /lib/libpcre32.so.?
         /lib/x86_64-linux-gnu/libpcre32.so.?
       )

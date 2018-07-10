@@ -12,6 +12,10 @@ ELSE()
     find_package(PkgConfig)
     if(PKG_CONFIG_FOUND)
         pkg_search_module(_OPENJPEG libopenjp2)
+        if(NOT _OPENJPEG_FOUND)
+           # Test if OpenJpeg-1 is installed
+   	   pkg_search_module(_OPENJPEG libopenjpeg1)
+        endif()
         if(_OPENJPEG_FOUND)
             find_library(OPENJPEG_LIBRARIES ${_OPENJPEG_LIBRARIES}
                          PATHS ${_OPENJPEG_LIBRARY_DIRS})

@@ -72,6 +72,13 @@ install( FILES ${_files}
          DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake/modules"
          COMPONENT brainvisa-cmake )
 
+install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/test_programs"
+         DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake/modules"
+         USE_SOURCE_PERMISSIONS
+         COMPONENT brainvisa-cmake
+         PATTERN ".svn" EXCLUDE
+         PATTERN "*~" EXCLUDE )
+
 BRAINVISA_GLOB_AND_FILTER( GLOB_RECURSE _files 
                            RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
                            "${CMAKE_CURRENT_SOURCE_DIR}/cmake/toolchains/*[^~]" )

@@ -2,8 +2,9 @@
 # Once done this will define
 #
 # MINC_FOUND        - system has minc and it can be used
-# MINC_INCLUDE_DIRS - directory where the header file can be found
-# MINC_LIBRARIES    - the minc libraries
+# LIBMINC_INCLUDE_DIRS - directory where the header file can be found
+# LIBMINC_LIBRARIES    - the minc libraries
+# LIBMINC_DEFINITIONS  - macros
 #
 # Need to look for Netcdf and hdf5 as well
 if(LIBMINC_INCLUDE_DIRS AND LIBMINC_LIBRARIES AND LIBMINC_DEFINITIONS)
@@ -148,8 +149,6 @@ else()
                     set( LIBMINC_DEFINITIONS ${LIBMINC_DEFINITIONS} -DHAVE_MINC2=1 )
                 ENDIF(HAVE_MINC2)
 
-                set( LIBMINC_DEFINITIONS ${LIBMINC_DEFINITIONS} CACHE STRING "MINC library definitions" )
-
                 ENDIF( MINC_volumeio_LIBRARY )
             ENDIF( MINC_minc_LIBRARY )
             
@@ -168,6 +167,49 @@ else()
                     endif()
                 endif()
             endforeach()
+        endif()
+
+        if( MINC_FOUND )
+          # test formats
+
+          if( NOT DEFINED MINC_NIFTI_SUPPORT )
+            try_compile( MINC_NIFTI_SUPPORT ${CMAKE_BINARY_DIR}/testbin
+              ${brainvisa-cmake_DIR}/modules/test_programs/minc_support_nifti.c
+              CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${LIBMINC_INCLUDE_DIRS}"
+              LINK_LIBRARIES ${LIBMINC_LIBRARIES}
+              OUTPUT_VARIABLE out
+            )
+            if( MINC_NIFTI_SUPPORT )
+              list( APPEND LIBMINC_DEFINITIONS "-DMINC_NIFTI_SUPPORT" )
+            endif()
+          endif()
+
+          if( NOT DEFINED MINC_MNC2_SUPPORT )
+            try_compile( MINC_MNC2_SUPPORT ${CMAKE_BINARY_DIR}/testbin
+              ${brainvisa-cmake_DIR}/modules/test_programs/minc_support_mnc2.c
+              CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${LIBMINC_INCLUDE_DIRS}"
+              LINK_LIBRARIES ${LIBMINC_LIBRARIES}
+              OUTPUT_VARIABLE out
+            )
+            if( MINC_MNC2_SUPPORT )
+              list( APPEND LIBMINC_DEFINITIONS "-DMINC_MNC2_SUPPORT" )
+            endif()
+          endif()
+
+          if( NOT DEFINED MINC_MGH_SUPPORT )
+            try_compile( MINC_MGH_SUPPORT ${CMAKE_BINARY_DIR}/testbin
+              ${brainvisa-cmake_DIR}/modules/test_programs/minc_support_mgh.c
+              CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${LIBMINC_INCLUDE_DIRS}"
+              LINK_LIBRARIES ${LIBMINC_LIBRARIES}
+              OUTPUT_VARIABLE out
+            )
+            if( MINC_MGH_SUPPORT )
+              list( APPEND LIBMINC_DEFINITIONS "-DMINC_MGH_SUPPORT" )
+            endif()
+          endif()
+
+          set( LIBMINC_DEFINITIONS ${LIBMINC_DEFINITIONS}
+            CACHE STRING "MINC library definitions" )
         endif()
 
         IF( NOT MINC_FOUND )

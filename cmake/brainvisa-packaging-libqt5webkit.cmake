@@ -9,10 +9,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libsqlite3-0 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libxslt RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libxml2 RUN )
-  # this dependency is only present on ubuntu >= 18.04
   if( LSB_DISTRIB STREQUAL "ubuntu"
       AND LSB_DISTRIB_RELEASE VERSION_EQUAL "16.04" )
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5opengl RUN )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libproxy RUN )
   endif()
   if( LSB_DISTRIB STREQUAL "ubuntu"
       AND LSB_DISTRIB_RELEASE VERSION_GREATER "16.0" )

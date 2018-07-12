@@ -6,6 +6,8 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   set( ${package_version} "${QT_VERSION}" PARENT_SCOPE )
 
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5network RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN
+                                    DEPENDS libdoubleconversion RUN )
 endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )

@@ -21,6 +21,8 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libqt5quick RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libqt5positioning RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libqt5sensors RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libqt5dbus RUN )
+  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libqt5xcbqpa RUN )
   if( LSB_DISTRIB STREQUAL "ubuntu"
       AND LSB_DISTRIB_RELEASE VERSION_GREATER "18.0" )
     BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libqt5webchannel RUN )
@@ -28,7 +30,6 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   # TODO...
 #   libqt5clucene5:amd64
 #   libqt5concurrent5:amd64
-#   libqt5dbus5:amd64
 #   libqt5designer5:amd64
 #   libqt5designercomponents5:amd64
 #   libqt5feedback5:amd64

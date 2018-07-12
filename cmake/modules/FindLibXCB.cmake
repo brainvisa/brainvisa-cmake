@@ -21,18 +21,19 @@ ELSE()
       if( LIBXCB_LIBRARY )
         set( LIBXCB_FOUND TRUE)
 
-        # look for xcb-render and xcb-shm
-        pkg_search_module(_LIBXCB_RENDER xcb-render)
-        if(_LIBXCB_RENDER_FOUND)
-          find_library( LIBXCB_RENDER_LIBRARY ${_LIBXCB_RENDER_LIBRARIES}
-               PATH ${_LIBXCB_RENDER_LIBRARY_DIRS} )
-        endif()
-        pkg_search_module(_LIBXCB_SHM xcb-shm)
-        if(_LIBXCB_SHM_FOUND)
-          find_library( LIBXCB_SHM_LIBRARY ${_LIBXCB_SHM_LIBRARIES}
-               PATH ${_LIBXCB_SHM_LIBRARY_DIRS} )
-        endif()
-        set( LIBXCB_LIBRARIES ${LIBXCB_LIBRARY} ${LIBXCB_RENDER_LIBRARY} ${LIBXCB_SHM_LIBRARY} CACHE PATH "LibXCB libraries" FORCE )
+        # look for xcb modules
+        foreach( module "render" "shm" "image" "icccm" "sync" "xfixes" "randr"
+                "shape" "keysyms" "xkb" "util" )
+          pkg_search_module( _LIBXCB_${module} xcb-${module} )
+          if( _LIBXCB_${module}_FOUND )
+            find_library( LIBXCB_${module}_LIBRARY
+                          ${_LIBXCB_${module}_LIBRARIES}
+                          PATH ${_LIBXCB_${module}_LIBRARY_DIRS} )
+            list( APPEND LIBXCB_LIBRARIES ${LIBXCB_${module}_LIBRARY} )
+          endif()
+        endforeach()
+
+        set( LIBXCB_LIBRARIES ${LIBXCB_LIBRARIES} CACHE PATH "LibXCB libraries" FORCE )
       endif()
     endif()
   endif()

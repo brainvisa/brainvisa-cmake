@@ -74,6 +74,14 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
                              COMPONENT "${component}" )
         endif()
       endif()
+      if( EXISTS ${_plugins_dir} )
+        if( EXISTS "${_plugins_dir}/platforms" )
+          BRAINVISA_INSTALL( DIRECTORY "${_plugins_dir}/platforms"
+                             DESTINATION "lib/qt5/plugins"
+                             USE_SOURCE_PERMISSIONS
+                             COMPONENT "${component}" )
+        endif()
+      endif()
     endif()
     set(${component}_PACKAGED TRUE PARENT_SCOPE)
   else()

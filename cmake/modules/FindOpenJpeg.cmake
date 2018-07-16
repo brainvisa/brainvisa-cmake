@@ -40,9 +40,45 @@ ELSE()
             PATHS /usr/lib 
                   /usr/local/lib
                   /usr/lib/x86_64-linux-gnu
-        )
+        )       
         set(OPENJPEG_LIBRARIES ${OPENJPEG_LIBRARY} 
             CACHE PATH "OpenJpeg libraries" FORCE)
+            
+        IF( OPENJPEG_INCLUDE_DIRS )
+            # Try to find version
+            list(APPEND __openjpeg_version_files "openjpeg.h")
+            list(APPEND __openjpeg_version_regex
+                "#define[ \\t]*OPENJPEG_VERSION[ \\t]*\"([^\"]*)\"")
+            
+            foreach(__include_dir ${OPENJPEG_INCLUDE_DIRS})
+                foreach(__vf ${__openjpeg_version_files})
+                    set(__vf "${__include_dir}/${__vf}")
+                    if( EXISTS "${__vf}" )
+                        foreach(__re ${__openjpeg_version_regex})
+                            file( READ "${__vf}" header )
+                            string( REGEX MATCH "${__re}" match "${header}" )
+                            if( match )
+                                set( OPENJPEG_VERSION "${CMAKE_MATCH_1}" 
+                                     CACHE STRING "OpenJPEG version" )
+                                break()
+                            endif()
+                        endforeach()
+                        unset(__re)
+                    endif()
+                    if(OPENJPEG_VERSION)
+                        break()
+                    endif()
+                endforeach()
+            unset(__vf)
+            if(OPENJPEG_VERSION)
+                break()
+            endif()
+            endforeach()
+            unset(__include_dir)
+            unset(__openjpeg_version_files)
+            unset(__openjpeg_version_regex)
+        ENDIF()
+        
         IF( OPENJPEG_INCLUDE_DIRS AND OPENJPEG_LIBRARIES )
             SET( OPENJPEG_FOUND TRUE )
         ELSE()

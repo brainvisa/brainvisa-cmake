@@ -478,12 +478,12 @@ if( DCMTK_config_INCLUDE_DIR AND
 
   if(NOT DCMTK_VERSION)
     # Try to find version
-    list(INSERT __dcmtk_version_files 
+    list(APPEND __dcmtk_version_files 
           "dcmtk/dcmdata/dcuid.h"
           "dcmtk/config/cfunix.h"
           "dcmtk/config/osconfig.h")
         
-    list(INSERT __dcmtk_version_regex
+    list(APPEND __dcmtk_version_regex
           "#define[ \\t]*OFFIS_DCMTK_VERSION_STRING[ \\t]*\"([^\"]*)\""
           "#define[ \\t]*PACKAGE_VERSION[ \\t]*\"([^\"]*)\"")
   

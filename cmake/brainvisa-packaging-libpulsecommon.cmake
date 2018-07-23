@@ -1,7 +1,7 @@
 find_library( LIBPULSECOMMON pulsecommon )
 if( NOT LIBPULSECOMMON )
   # find libpulsecommon.so.?
-  file( GLOB LIBPULSECOMMON /usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-?.?.so )
+  file( GLOB LIBPULSECOMMON /usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-*.?.so )
   if( LIBPULSECOMMON )
     set( LIBPULSECOMMON "${LIBPULSECOMMON}" CACHE STRING "libpulsecommon library" FORCE )
   endif()
@@ -13,7 +13,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   # Find version
   set( ${package_version} "0.0.0" PARENT_SCOPE )
   get_filename_component( real "${LIBPULSECOMMON}" REALPATH )
-  string( REGEX MATCH "^.*libpulsecommon${CMAKE_SHARED_LIBRARY_SUFFIX}[.](.*)$" match "${real}" )
+  string( REGEX MATCH "^.*libpulsecommon-(.*)[.]${CMAKE_SHARED_LIBRARY_SUFFIX}$" match "${real}" )
   if( match )
     set( ${package_version} "${CMAKE_MATCH_1}" PARENT_SCOPE )
   endif()

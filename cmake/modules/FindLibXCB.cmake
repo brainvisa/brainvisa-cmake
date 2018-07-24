@@ -23,7 +23,7 @@ ELSE()
 
         # look for xcb modules
         foreach( module "render" "shm" "image" "icccm" "sync" "xfixes" "randr"
-                "shape" "keysyms" "xkb" "util" )
+                "shape" "keysyms" "xkb" "util" "renderutil" )
           pkg_search_module( _LIBXCB_${module} xcb-${module} )
           if( _LIBXCB_${module}_FOUND )
             find_library( LIBXCB_${module}_LIBRARY

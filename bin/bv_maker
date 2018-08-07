@@ -340,7 +340,7 @@ def environmentVariablesSubstitution(value, env=None):
 def environmentPathVariablesSubstitution(path, env=None):
     return normalize_path(environmentVariablesSubstitution(path, env))
 
-def run_and_log_tests(cwd=None, env=None, options=None):
+def run_and_log_tests(cwd=None, env=None, options=None, projects=None):
     # get test labels to assign them to projects
     test_labels = system_output_on_error(
         ['ctest', '--print-labels'] + options, cwd=cwd)
@@ -356,6 +356,9 @@ def run_and_log_tests(cwd=None, env=None, options=None):
             + '\n'.join(lines))
     logs = {}
     for label in labels:
+        if projects is not None and label not in projects:
+            # skip this test, it's not part of the packaging/build config
+            continue
         logfile = tempfile.mkstemp(prefix='bv_test_%s' % label, suffix='.log')
         os.close(logfile[0])
         start_time = time.localtime()
@@ -4372,7 +4375,8 @@ Controller.prototype.FinishedPageCallback = function()
         else:
             ctoptions = self.ctest_options
         test_res = run_and_log_tests(cwd=self.build_dir.directory,
-                                     env=new_env, options=ctoptions)
+                                     env=new_env, options=ctoptions,
+                                     projects=self.projects)
         if test_res:
             status = 'OK'
             for item in six.itervalues(test_res):

@@ -3724,8 +3724,9 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
         
         if self.init_components_from_build_dir.upper() == 'ON':
             build_dir._process_configuration_lines()
-            self.projects = build_dir.projects
-            self.components = build_dir.components
+            # make sure to do an actual copy of build dir projects/components
+            self.projects = list(build_dir.projects)
+            self.components = dict(build_dir.components)
         self._process_configuration_lines()
 
     def info(self):

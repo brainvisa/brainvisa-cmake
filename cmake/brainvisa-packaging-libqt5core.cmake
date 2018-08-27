@@ -9,7 +9,6 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libgcc1 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libpcre RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libharfbuzz RUN )
-  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libpcre RUN )
   if( UNIX )
     # this (weak) dependency is only present on linux/ubuntu
     find_package( Libicui18n QUIET )

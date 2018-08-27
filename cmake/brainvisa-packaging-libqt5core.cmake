@@ -9,7 +9,6 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libgcc1 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libpcre RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libharfbuzz RUN )
-  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libgraphite2 RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libpcre RUN )
   if( UNIX )
     # this (weak) dependency is only present on linux/ubuntu
@@ -26,6 +25,11 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
         AND LSB_DISTRIB_RELEASE VERSION_GREATER "18.0" )
       BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN
                                        DEPENDS libdoubleconversion RUN )
+    endif()
+    find_package( LibGraphite2 QUIET )
+    if( LIBGRAPHITE2_FOUND )
+      BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libgraphite2
+                                       RUN )
     endif()
   endif()
 endfunction()

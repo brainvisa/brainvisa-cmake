@@ -13,7 +13,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libqt5sql RUN ">= ${QT_VERSION}" )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libqt5multimedia RUN ">= ${QT_VERSION}" )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libqt5multimediawidgets RUN ">= ${QT_VERSION}" )
-  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libqt5webkit RUN ">= ${QT_VERSION}" )
+  if( NOT APPLE )
+    # QtWebKit is not available on MacOs 10.11 via brew...
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libqt5webkit RUN ">= ${QT_VERSION}" )
+  endif()
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libqt5webkitwidgets RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libqt5svg RUN ">= ${QT_VERSION}" )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN RECOMMENDS libqt5xml RUN ">= ${QT_VERSION}" )

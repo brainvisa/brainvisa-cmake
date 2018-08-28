@@ -362,15 +362,6 @@ def run_and_log_tests(cwd=None, env=None, options=None, projects=None):
         logfile = tempfile.mkstemp(prefix='bv_test_%s' % label, suffix='.log')
         os.close(logfile[0])
         start_time = time.localtime()
-        # FIXME DEBUG
-        print('projects to test: %s' % ', '.join(projects),
-              file=open(logfile[1], 'a'))
-        print('labels to test: %s' % ', '.join(labels),
-              file=open(logfile[1], 'a'))
-        print('current label: %s' % label,
-              file=open(logfile[1], 'a'))
-        print('-------------------------------------',
-              file=open(logfile[1], 'a'))
         try:
             system(cwd=cwd, env=env,
                   *(['ctest', '-L', '^%s$' % label, '--output-on-failure',
@@ -390,6 +381,15 @@ def run_and_log_tests(cwd=None, env=None, options=None, projects=None):
             logitem['stop_time'] = time.localtime()
             logs[label] = logitem
             #os.unlink(logfile[1])
+        # FIXME DEBUG
+        print('-------------------------------------',
+              file=open(logfile[1], 'a'))
+        print('projects to test: %s' % ', '.join(projects),
+              file=open(logfile[1], 'a'))
+        print('labels to test: %s' % ', '.join(labels),
+              file=open(logfile[1], 'a'))
+        print('current label: %s' % label,
+              file=open(logfile[1], 'a'))
     return logs
 
 

@@ -33,3 +33,9 @@ if( CMAKE_MATCH_1 STREQUAL "16.04" )
         endif()
     endif()
 endif()
+if( CMAKE_MATCH_1 VERSION_GREATER "18.0" )
+    # on Ubuntu >= 18, Qt4 does not contain QtWebKit, so it's time to switch
+    # to Qt5
+    set( DESIRED_QT_VERSION 5 CACHE STRING
+         "Pick a version of QT to use: 3, 4, 5...")
+endif()

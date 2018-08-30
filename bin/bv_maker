@@ -571,6 +571,7 @@ http://brainvisa.info/brainvisa-cmake/
                                                         'general'):
                             raise SyntaxError()
                         
+                        former_directory_object = currentDirectoryObject
                         if l[0] == 'if' \
                                 and currentDirectoryObject is not None \
                                 and len(l) >= 2:
@@ -631,6 +632,12 @@ http://brainvisa.info/brainvisa-cmake/
                                 currentDirectoryObject = self.general_section
                             else:
                                 raise SyntaxError()
+                            if former_directory_object is self.general_section\
+                                    and currentDirectoryObject \
+                                        != self.general_section:
+                                # global variables from general section should
+                                # be made available for others
+                                self.general_section.init_vars()
                     elif len(condition_stack) == 0 \
                         or False not in condition_stack:
                         if currentDirectoryObject is None:
@@ -663,11 +670,11 @@ http://brainvisa.info/brainvisa-cmake/
                             ('publicationDirectories', publication_dirs)):
             for s in sections:
                 # Variable initialization is done after parsing of sections
-                # because it may depends on the complete parsing of other 
+                # because it may depend on the complete parsing of other
                 # sections
                 s.init_vars()
-                
-                registry = getattr(self, r, None) if r else None               
+
+                registry = getattr(self, r, None) if r else None
                 if registry is not None:
                      # Register section
                     registry[s.directory] = s
@@ -2328,7 +2335,8 @@ class GeneralSection(ConfigVariableParser):
         set(('directory_id_by_default',
              'jenkins_global_job_name_step_by_default',
              'jenkins_server_url'))
-    _variables_with_env_only_replacements = set(('jenkins_build_name',))
+    _variables_with_env_only_replacements = set(('jenkins_build_name', 'env'))
+    _validAdditiveOptions = set(('env', ))
     _path_variables = set(('global_status_file', ))
     _validOptions = set(('failure_email', 'success_email', 'smtp_server',
                          'from_email', 'reply_to_email',
@@ -2340,7 +2348,13 @@ class GeneralSection(ConfigVariableParser):
     _validOptions.update(_variables_with_replacements)
     _validOptions.update(_path_variables)
     _validOptions.update(_variables_with_env_only_replacements)
-    
+
+    _variables_with_env_only_replacements = set(('cross_compiling_prefix',
+                                          'cross_compiling_target_system',
+                                          'cross_compiling_to_target_path_cmd',
+                                          'env',
+                                          'test_ref_data_dir',
+                                          'test_run_data_dir'))
 
     def __init__(self, configuration):
         super(GeneralSection, self).__init__()
@@ -2361,12 +2375,20 @@ class GeneralSection(ConfigVariableParser):
         self.jenkins_username = None
         self.jenkins_token = None
         self.directory_id_by_default = ''
+        self.env = {}
 
     def addConfigurationLine(self, line):
         if ConfigVariableParser.addConfigurationLine(self, line):
             pass
         else:
             raise SyntaxError()
+
+    def init_vars(self):
+        super(GeneralSection, self).init_vars()
+        # actually add env vars to os.environ
+        for var, value in six.iteritems(self._env_vars):
+            if var not in os.environ or os.environ[var] != value:
+                os.environ[var] = value
 
 
 class DirectorySection(object):

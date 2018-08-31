@@ -570,8 +570,7 @@ http://brainvisa.info/brainvisa-cmake/
                         if len(l) != 2 and l[0] not in ('if', 'endif', 'else', 
                                                         'general'):
                             raise SyntaxError()
-                        
-                        former_directory_object = currentDirectoryObject
+
                         if l[0] == 'if' \
                                 and currentDirectoryObject is not None \
                                 and len(l) >= 2:
@@ -632,12 +631,6 @@ http://brainvisa.info/brainvisa-cmake/
                                 currentDirectoryObject = self.general_section
                             else:
                                 raise SyntaxError()
-                            if former_directory_object is self.general_section\
-                                    and currentDirectoryObject \
-                                        != self.general_section:
-                                # global variables from general section should
-                                # be made available for others
-                                self.general_section.init_vars()
                     elif len(condition_stack) == 0 \
                         or False not in condition_stack:
                         if currentDirectoryObject is None:
@@ -2218,8 +2211,13 @@ class ConfigVariableParser(object):
             elif oper == '-':
                 self.property_remove(option, value)
                 
+            self.validate_option(option)
             return True # parsed
         return False # not parsed
+
+    def validate_option(self, option):
+        # by default nothing more is done
+        pass
 
     def is_path(self, var):
         return var in getattr(self, '_path_variables', set())
@@ -2375,6 +2373,11 @@ class GeneralSection(ConfigVariableParser):
             pass
         else:
             raise SyntaxError()
+
+    def validate_option(self, option):
+        if option == 'env':
+            # env variables are set immediately
+            self.init_vars()
 
     def init_vars(self):
         super(GeneralSection, self).init_vars()

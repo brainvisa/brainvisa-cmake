@@ -153,7 +153,7 @@ if res == 0:
             if i not in indices:
                 # write an empty file
                 fname = base + str(i) + '.' + ext
-                print('adding empty file', fname)
+                # print('adding empty file', fname)
                 open(os.path.join(tdir, fname), 'w')
                 tlist.append(fname)
 

@@ -2349,13 +2349,6 @@ class GeneralSection(ConfigVariableParser):
     _validOptions.update(_path_variables)
     _validOptions.update(_variables_with_env_only_replacements)
 
-    _variables_with_env_only_replacements = set(('cross_compiling_prefix',
-                                          'cross_compiling_target_system',
-                                          'cross_compiling_to_target_path_cmd',
-                                          'env',
-                                          'test_ref_data_dir',
-                                          'test_run_data_dir'))
-
     def __init__(self, configuration):
         super(GeneralSection, self).__init__()
         

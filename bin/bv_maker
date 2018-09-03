@@ -652,6 +652,12 @@ http://brainvisa.info/brainvisa-cmake/
                                     self.buildDirectories[
                                         previous_directory_object.directory] \
                                             = previous_directory_object
+                                    previous_directory_object._initialized \
+                                        = True
+                                if previous_directory_object in source_dirs:
+                                    previous_directory_object.parseSourceConfiguration()
+                                    previous_directory_object._initialized \
+                                        = True
 
                     elif len(condition_stack) == 0 \
                         or False not in condition_stack:
@@ -687,17 +693,18 @@ http://brainvisa.info/brainvisa-cmake/
                 # Variable initialization is done after parsing of sections
                 # because it may depend on the complete parsing of other
                 # sections
-                s.init_vars()
+                if not hasattr(s, '_initialized') or not s._initialized:
+                    s.init_vars()
 
-                registry = getattr(self, r, None) if r else None
-                if registry is not None:
-                     # Register section
-                    registry[s.directory] = s
-                
-                if isinstance(s, SourceDirectory):
-                    # Parses source configuration
-                    s.parseSourceConfiguration()
-                    
+                    registry = getattr(self, r, None) if r else None
+                    if registry is not None:
+                        # Register section
+                        registry[s.directory] = s
+
+                    if isinstance(s, SourceDirectory):
+                        # Parses source configuration
+                        s.parseSourceConfiguration()
+
                 if options.verbose:
                     print(s.directory if hasattr(s, 'directory') else 'general', 
                         'options:')

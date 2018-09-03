@@ -617,9 +617,6 @@ http://brainvisa.info/brainvisa-cmake/
                                     l[1].strip(),
                                     self)
                                 build_dirs.append(currentDirectoryObject)
-                                # build dirs may be referenced in packaging
-                                # sections, they have to be available early
-                                self.buildDirectories = build_dirs
 
                             elif l[0] == 'virtualenv':
                                 currentDirectoryObject = VirtualenvDirectory(
@@ -648,6 +645,14 @@ http://brainvisa.info/brainvisa-cmake/
                                 # previous section has been closed:
                                 # process its variables
                                 previous_directory_object.init_vars()
+                                # and register it:
+                                # build dirs may be referenced in packaging
+                                # sections, they have to be available early
+                                if previous_directory_object in build_dirs:
+                                    self.buildDirectories[
+                                        previous_directory_object.directory] \
+                                            = previous_directory_object
+
                     elif len(condition_stack) == 0 \
                         or False not in condition_stack:
                         if currentDirectoryObject is None:

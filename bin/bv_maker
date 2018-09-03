@@ -605,6 +605,7 @@ http://brainvisa.info/brainvisa-cmake/
                                       repr(line))
                                 sys.stdout.flush()
                                 
+                            previous_directory_object = currentDirectoryObject
                             if l[0] == 'source':
                                 currentDirectoryObject = SourceDirectory(
                                     l[1].strip(),
@@ -616,6 +617,9 @@ http://brainvisa.info/brainvisa-cmake/
                                     l[1].strip(),
                                     self)
                                 build_dirs.append(currentDirectoryObject)
+                                # build dirs may be referenced in packaging
+                                # sections, they have to be available early
+                                self.buildDirectories = build_dirs
 
                             elif l[0] == 'virtualenv':
                                 currentDirectoryObject = VirtualenvDirectory(
@@ -639,6 +643,11 @@ http://brainvisa.info/brainvisa-cmake/
                                 currentDirectoryObject = self.general_section
                             else:
                                 raise SyntaxError()
+                            if previous_directory_object \
+                                    not in (None, currentDirectoryObject):
+                                # previous section has been closed:
+                                # process its variables
+                                previous_directory_object.init_vars()
                     elif len(condition_stack) == 0 \
                         or False not in condition_stack:
                         if currentDirectoryObject is None:

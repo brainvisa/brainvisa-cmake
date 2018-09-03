@@ -574,8 +574,16 @@ http://brainvisa.info/brainvisa-cmake/
                         if l[0] == 'if' \
                                 and currentDirectoryObject is not None \
                                 and len(l) >= 2:
-                            condition_stack.append(
-                                check_filter_condition(l[1:]))
+                            if len(condition_stack) != 0 \
+                                    and condition_stack[-1] is False:
+                                # if an upstream condition is already false,
+                                # all the subtree is false (but we still have
+                                # to parse it to count if/endif/else
+                                # occurrences in it)
+                                condition_stack.append(False)
+                            else:
+                                condition_stack.append(
+                                    check_filter_condition(l[1:]))
                         elif l[0] == 'endif' and len(l) == 1:
                             if len(condition_stack) > 0:
                                 # ends the filtered section
@@ -3704,6 +3712,16 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                     raise SyntaxError()
         self.configurationLines.append(line)
 
+    def validate_option(self, option):
+        if option in ('init_components_from_build_dir', 'build_directory'):
+            if self.build_directory not in ('', None):
+                if self.init_components_from_build_dir.upper() == 'ON':
+                    build_dir = self.get_build_dir()
+                    build_dir._process_configuration_lines()
+                    self.components = dict(build_dir.components)
+                else:
+                    self.components = {}
+
     def get_matching_build_dirs(self):
         build_dirs = []
         for o in self.configuration.buildDirectories.values():
@@ -3747,14 +3765,15 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
         }
 
     def test_config(self, options, args):
-        build_dir = self.get_build_dir()
-        
-        if self.init_components_from_build_dir.upper() == 'ON':
-            build_dir._process_configuration_lines()
-            # make sure to do an actual copy of build dir projects/components
-            self.projects = list(build_dir.projects)
-            self.components = dict(build_dir.components)
-        self._process_configuration_lines()
+        if not self._configuration_lines_processed:
+            build_dir = self.get_build_dir()
+
+            if self.init_components_from_build_dir.upper() == 'ON':
+                build_dir._process_configuration_lines()
+                # make sure to do an actual copy of build dir projects/components
+                self.projects = list(build_dir.projects)
+                self.components = dict(build_dir.components)
+            self._process_configuration_lines()
 
     def info(self):
         self._process_configuration_lines()
@@ -4047,7 +4066,8 @@ Controller.prototype.FinishedPageCallback = function()
         return script_fname
 
     def package(self, options, args):
-        self.test_config(options, args)
+        #self.test_config(options, args)
+        self._process_configuration_lines()
         #directory = self.replace_vars(self.directory)
         directory = self.directory
         print('Building package:', directory)
@@ -4182,7 +4202,8 @@ Controller.prototype.FinishedPageCallback = function()
 
 
     def install_package(self, options, args):       
-        self.test_config(options, args)
+        #self.test_config(options, args)
+        self._process_configuration_lines()
         #directory = self.replace_vars(self.directory)
         directory = self.directory
         
@@ -4379,7 +4400,8 @@ Controller.prototype.FinishedPageCallback = function()
         self.__init_environ()
         
     def test_package(self, options, args):
-        self.test_config(options, args)
+        #self.test_config(options, args)
+        self._process_configuration_lines()
         if not self.test_install_dir:
             return IGNORED_STEP
         if not self.test_ref_data_dir:
@@ -4417,8 +4439,9 @@ Controller.prototype.FinishedPageCallback = function()
         return test_res
 
     def testref_package(self, options, args):
-        self.test_config(options, args)
-        
+        #self.test_config(options, args)
+        self._process_configuration_lines()
+
         if not self.test_install_dir:
             return IGNORED_STEP
         if not self.test_ref_data_dir:
@@ -4537,9 +4560,9 @@ class PublicationDirectory(DirectorySection, ConfigVariableParser):
             'publish': pack_section,
         }
 
-    def test_config(self, options, args):
-        package_dir = self.get_package_dir()
-        build_dir = package_dir.get_build_dir()
+    #def test_config(self, options, args):
+        #package_dir = self.get_package_dir()
+        #build_dir = package_dir.get_build_dir()
 
     def info(self):
         print('Publication package directory: "' + self._directory + '"')
@@ -4548,8 +4571,9 @@ class PublicationDirectory(DirectorySection, ConfigVariableParser):
         print('Build directory:', self.get_package_dir().build_directory)
 
     def publish_package(self, options, args):       
-        self.test_config(options, args)
-        
+        #self.test_config(options, args)
+        self._process_configuration_lines()
+
         package_dir = self.get_package_dir()
         if not package_dir:
             return IGNORED_STEP

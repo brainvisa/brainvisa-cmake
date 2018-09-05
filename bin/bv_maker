@@ -605,7 +605,6 @@ http://brainvisa.info/brainvisa-cmake/
                                       repr(line))
                                 sys.stdout.flush()
                                 
-                            previous_directory_object = currentDirectoryObject
                             if l[0] == 'source':
                                 currentDirectoryObject = SourceDirectory(
                                     l[1].strip(),
@@ -640,24 +639,6 @@ http://brainvisa.info/brainvisa-cmake/
                                 currentDirectoryObject = self.general_section
                             else:
                                 raise SyntaxError()
-                            if previous_directory_object \
-                                    not in (None, currentDirectoryObject):
-                                # previous section has been closed:
-                                # process its variables
-                                previous_directory_object.init_vars()
-                                # and register it:
-                                # build dirs may be referenced in packaging
-                                # sections, they have to be available early
-                                if previous_directory_object in build_dirs:
-                                    self.buildDirectories[
-                                        previous_directory_object.directory] \
-                                            = previous_directory_object
-                                    previous_directory_object._initialized \
-                                        = True
-                                if previous_directory_object in source_dirs:
-                                    previous_directory_object.parseSourceConfiguration()
-                                    previous_directory_object._initialized \
-                                        = True
 
                     elif len(condition_stack) == 0 \
                         or False not in condition_stack:
@@ -2473,6 +2454,9 @@ class DirectorySection(object):
             raise
         return cond
 
+    def process_configuration_lines(self):
+        pass
+
 
 class SourceDirectory(DirectorySection, ConfigVariableParser):
 
@@ -2932,7 +2916,7 @@ class ComponentsConfigParser(DirectorySection):
         self.components = {}
         self._configuration_lines_processed = False
 
-    def _process_configuration_lines(self):
+    def process_configuration_lines(self):
         if not self._configuration_lines_processed:
             if self.configuration.verbose:
                 print('Processing build directory %s' % self.directory)
@@ -3231,7 +3215,7 @@ if len(old_file) == 0:
             return path
 
     def configure(self, options, args):
-        self._process_configuration_lines()
+        self.process_configuration_lines()
         # Order of projects and components is important for dependencies
         sortedProjects = [p for p in brainvisa_projects.ordered_projects
                           if p in self.projects]
@@ -3482,7 +3466,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                     p.update_python_vars({'version': version})
 
     def build(self, options, args):
-        self._process_configuration_lines()
+        self.process_configuration_lines()
         if options.clean or self.clean_build.upper() == 'ON':
             if self.clean_commands:
                 clean_opts = ['-b']
@@ -3502,7 +3486,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                env=self.get_environ())
 
     def doc(self):
-        self._process_configuration_lines()
+        self.process_configuration_lines()
         print('Building docs in directory:', self.directory)
         system(cwd=self.directory, *
                (['make'] + self.make_options + ['doc']),
@@ -3546,7 +3530,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         self.__init_environ()
 
     def test(self, options, args):
-        self._process_configuration_lines()
+        self.process_configuration_lines()
         if options.ctest_options is not None:
             ctoptions = shlex.split(options.ctest_options)
         else:
@@ -3566,7 +3550,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                                  env=env)
 
     def testref(self, options, args):
-        self._process_configuration_lines()
+        self.process_configuration_lines()
         if options.make_options is not None:
             ctoptions = shlex.split(options.make_options)
         else:
@@ -3584,7 +3568,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                                    env=env)
 
     def info(self):
-        self._process_configuration_lines()
+        self.process_configuration_lines()
         print('Build directory: "' + self.directory + '"')
         for component, directory_version_model \
                 in six.iteritems(self.components):
@@ -3733,15 +3717,15 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                     raise SyntaxError()
         self.configurationLines.append(line)
 
-    def validate_option(self, option):
-        if option in ('init_components_from_build_dir', 'build_directory'):
-            if self.build_directory not in ('', None):
-                if self.init_components_from_build_dir.upper() == 'ON':
-                    build_dir = self.get_build_dir()
-                    build_dir._process_configuration_lines()
-                    self.components = dict(build_dir.components)
-                else:
-                    self.components = {}
+    #def validate_option(self, option):
+        #if option in ('init_components_from_build_dir', 'build_directory'):
+            #if self.build_directory not in ('', None):
+                #if self.init_components_from_build_dir.upper() == 'ON':
+                    #build_dir = self.get_build_dir()
+                    #build_dir.process_configuration_lines()
+                    #self.components = dict(build_dir.components)
+                #else:
+                    #self.components = {}
 
     def get_matching_build_dirs(self):
         build_dirs = []
@@ -3785,22 +3769,22 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
             'test_pack': [(self, 'install_pack')],
         }
 
-    def test_config(self, options, args):
+    def process_configuration_lines(self):
         if not self._configuration_lines_processed:
             build_dir = self.get_build_dir()
 
             if self.init_components_from_build_dir.upper() == 'ON':
-                build_dir._process_configuration_lines()
+                build_dir.process_configuration_lines()
                 # make sure to do an actual copy of build dir projects/components
                 self.projects = list(build_dir.projects)
                 self.components = dict(build_dir.components)
-            self._process_configuration_lines()
+            super(PackageDirectory, self).process_configuration_lines()
 
     def info(self):
-        self._process_configuration_lines()
+        self.process_configuration_lines()
         print('Package directory: "' + self._directory + '"')
-        print('Real package directory:', self.directory)
-        print('Build directory:', self.build_directory)
+        print('  Real package directory:', self.directory)
+        print('  Build directory:', self.build_directory)
         for component, directory_version_model \
                 in six.iteritems(self.components):
             directory, selected_version, version, build_model \
@@ -4088,7 +4072,7 @@ Controller.prototype.FinishedPageCallback = function()
 
     def package(self, options, args):
         #self.test_config(options, args)
-        self._process_configuration_lines()
+        self.process_configuration_lines()
         #directory = self.replace_vars(self.directory)
         directory = self.directory
         print('Building package:', directory)
@@ -4224,7 +4208,7 @@ Controller.prototype.FinishedPageCallback = function()
 
     def install_package(self, options, args):       
         #self.test_config(options, args)
-        self._process_configuration_lines()
+        self.process_configuration_lines()
         #directory = self.replace_vars(self.directory)
         directory = self.directory
         
@@ -4422,7 +4406,7 @@ Controller.prototype.FinishedPageCallback = function()
         
     def test_package(self, options, args):
         #self.test_config(options, args)
-        self._process_configuration_lines()
+        self.process_configuration_lines()
         if not self.test_install_dir:
             return IGNORED_STEP
         if not self.test_ref_data_dir:
@@ -4461,7 +4445,7 @@ Controller.prototype.FinishedPageCallback = function()
 
     def testref_package(self, options, args):
         #self.test_config(options, args)
-        self._process_configuration_lines()
+        self.process_configuration_lines()
 
         if not self.test_install_dir:
             return IGNORED_STEP
@@ -4587,13 +4571,13 @@ class PublicationDirectory(DirectorySection, ConfigVariableParser):
 
     def info(self):
         print('Publication package directory: "' + self._directory + '"')
-        print('Real publication package directory:', self.directory)
-        print('Package directory:', self.package_directory)
-        print('Build directory:', self.get_package_dir().build_directory)
+        print('  Real publication package directory:', self.directory)
+        print('  Package directory:', self.package_directory)
+        print('  Build directory:', self.get_package_dir().build_directory)
 
     def publish_package(self, options, args):       
         #self.test_config(options, args)
-        self._process_configuration_lines()
+        self.process_configuration_lines()
 
         package_dir = self.get_package_dir()
         if not package_dir:

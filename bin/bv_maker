@@ -45,7 +45,7 @@ import json
 from optparse import OptionParser
 from fnmatch import fnmatchcase
 import tempfile
-from dateutil import parser as date_parser
+import datetime
 import distutils.spawn
 import platform
 import shlex
@@ -764,10 +764,10 @@ def get_pack_host_system_name():
 
 
 def installer_parse_date(value):
-    return date_parser.parse(value.replace('_', '-')).timetuple()[:3]
+    return datetime.datetime.strptime(value, '%Y_%m_%d').timetuple()[:3]
 
 def installer_parse_time(value):
-    return date_parser.parse(value).timetuple()[3:6]
+    return datetime.datetime.strptime(value, '%H:%M:%S').timetuple()[3:6]
 
 def installer_format_date(date):
     return '%04d_%02d_%02d' % date

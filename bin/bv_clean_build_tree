@@ -18,14 +18,41 @@ except ImportError:
        def iteritems(obj, *args, **kwargs):
           return obj.iteritems(*args, **kwargs)
 
+def target_system(directory):
+    cmake_cache = os.path.join(directory, 'CMakeCache.txt')
+    if os.path.exists(cmake_cache):
+        # check if the build directory is a cross-compilation one
+        cross = False
+        system = None
+        with open(cmake_cache) as f:
+            for line in f:
+                if line.startswith('CMAKE_CROSSCOMPILING:') and 'ON'in line:
+                    cross = True
+                    if system is not None:
+                        break
+                elif line.startswith('CMAKE_TOOLCHAIN_FILE:'):
+                    if '-w32-' in line:
+                        system = 'win32'
+                    elif '-w64-' in line:
+                        system = 'win64'
+                    else:
+                        print('could not identify toolchain system')
+                        system = sys.platform
+                    if cross:
+                        break
+        if system is not None and cross:
+            return system
+    return sys.platform
+
 def clean_lib_dir(directory):
-    if sys.platform.startswith('linux'):
+    system = target_system(directory)
+    if system.startswith('linux'):
         libre = re.compile('^lib(.*)\.so\..*$')
         liblink = 'lib%s.so'
-    elif sys.platform == 'darwin':
+    elif system == 'darwin':
         libre = re.compile('^lib(.*)(\.[0-9]+)+\.dylib$')
         liblink = 'lib%s.dylib'
-    elif sys.platform.startswith('win'):
+    elif system.startswith('win'):
         libre = re.compile('lib(.*)((\.[0-9]+)+)\.dll$')
         liblink = None
         libs = {}
@@ -181,7 +208,7 @@ def parse_cmake_executables(directory):
         raise RuntimeError('No CMakeCache.txt found - not cleaning bin/')
     cmds_re = re.compile('^.*-commands:INTERNAL=(.+)$')
     all_cmds = []
-    for line in open(cmake_cache).xreadlines():
+    for line in open(cmake_cache):
         m = cmds_re.match(line)
         if m:
             cmds = m.group(1).split(';')
@@ -216,6 +243,8 @@ if options.binaries:
                                 #sk = skipped.setdefault(bindir, [])
                                 #sk.append(f)
                             #else:
+                            if f.endswith('.exe') and f[:-4] in all_cmds:
+                                continue # win exe in list: skip
                             print('rm obsolete command', f)
                             if not options.list :
                                 os.unlink(os.path.join(bindir, f))

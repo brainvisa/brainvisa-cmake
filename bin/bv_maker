@@ -310,6 +310,15 @@ def normalize_path(path):
         path = file_scheme + path
     
     return path
+
+def get_matching_dirs(directories, pattern):
+    dirs = []
+    for d in directories:
+        if normalize_path(
+            d.replace_vars(pattern)) == d.directory:
+            dirs.append(d)
+            
+    return dirs
     
 env_vars_regex = re.compile(r'\$([A-Za-z0-9_]*)')
 python_vars_regex = re.compile(r'\%\(([A-Za-z0-9_]*)\)s')
@@ -1184,9 +1193,9 @@ class StepCommand(object):
         super(StepCommand, self).__init__()
         self.python_vars = {}
 
-    def process(self, step, directories_dict, method, *meth_args,
+    def process(self, step, directories_list, method, *meth_args,
                 **meth_kwargs):
-        for o in directories_dict.values():
+        for o in directories_list:
             # Update directory python variables by those coming from the command
             # line (package date and version)
             o.update_python_vars(self.python_vars)
@@ -1542,7 +1551,7 @@ class InfoCommand(StepCommand):
         dirs.update(configuration.buildDirectories)
         dirs.update(configuration.packageDirectories)
         dirs.update(configuration.publicationDirectories)
-        self.process('info', dirs, 'info')
+        self.process('info', dirs.values(), 'info')
 
 
 class SourcesCommand(StepCommand):
@@ -1578,7 +1587,7 @@ class SourcesCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('sources', configuration.sourcesDirectories,
+        self.process('sources', configuration.sourcesDirectories.values(),
                      'process', self.options, self.args)
 
 
@@ -1610,7 +1619,7 @@ class ConfigureCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('configure', configuration.buildDirectories,
+        self.process('configure', configuration.buildDirectories.values(),
                      'configure', self.options, self.args)
 
 class BuildCommand(StepCommand):
@@ -1641,7 +1650,7 @@ class BuildCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('build', configuration.buildDirectories,
+        self.process('build', configuration.buildDirectories.values(),
                      'build', self.options, self.args)
 
 
@@ -1669,7 +1678,7 @@ class DocCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('doc', configuration.buildDirectories, 'doc')
+        self.process('doc', configuration.buildDirectories.values(), 'doc')
 
 
 class TestCommand(StepCommand):
@@ -1702,7 +1711,7 @@ class TestCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('test', configuration.buildDirectories, 'test',
+        self.process('test', configuration.buildDirectories.values(), 'test',
                      self.options, self.args)
 
 
@@ -1737,7 +1746,7 @@ class TestrefCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('testref', configuration.buildDirectories, 'testref',
+        self.process('testref', configuration.buildDirectories.values(), 'testref',
                      self.options, self.args)
 
 
@@ -1766,7 +1775,26 @@ class PackCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('pack', configuration.packageDirectories,
+        # First, we need to order packages to manage dependencies between 
+        # them (especially for offline installer that refer to data package, 
+        # because in this case, it is necessary to update data package  
+        # repository before software package has been packaged)
+        def __getPackageDirectoriesByDepth():
+            def __getDepth(package_dir):
+                data_dir = package_dir.get_data_dir()
+                if not data_dir:
+                    return 0
+                else:
+                    return __getDepth(data_dir) + 1      
+                
+            dirs=[]
+            for o in configuration.packageDirectories.values():
+                dirs.append((__getDepth(o), o))
+            
+            #print([(o, d.directory) for o, d in sorted(dirs)])
+            return [d for o, d in sorted(dirs)]
+        
+        self.process('pack', __getPackageDirectoriesByDepth(),
                      'package', self.options, self.args)
 
 
@@ -1835,7 +1863,7 @@ class InstallPackCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('install_pack', configuration.packageDirectories,
+        self.process('install_pack', configuration.packageDirectories.values(),
                      'install_package', self.options, self.args)
 
 
@@ -1897,7 +1925,7 @@ class TestPackCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('test_pack', configuration.packageDirectories,
+        self.process('test_pack', configuration.packageDirectories.values(),
                      'test_package', self.options, self.args)
 
 
@@ -1960,7 +1988,7 @@ class TestrefPackCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('testref_pack', configuration.packageDirectories,
+        self.process('testref_pack', configuration.packageDirectories.values(),
                      'testref_package', self.options, self.args)
 
 
@@ -2023,7 +2051,7 @@ class PublishPackCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('publish_pack', configuration.publicationDirectories,
+        self.process('publish_pack', configuration.publicationDirectories.values(),
                      'publish_package', self.options, self.args)
 
 class VarReplacementType:
@@ -3644,7 +3672,8 @@ class VirtualenvDirectory(BuildDirectory):
 
 class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
 
-    _path_variables = set(('directory', 'build_directory',
+    _path_variables = set(('directory', 
+                           'build_directory',
                            'installer_filename',
                            'offline_installer_filename',
                            'data_repos_dir', 'test_install_dir',
@@ -3655,7 +3684,8 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                            'remote_test_install_dir',
                            'remote_test_ref_data_dir',
                            'remote_test_run_data_dir'))
-    _variables_with_replacements = set(('pack_version', 'directory_id',
+    _variables_with_replacements = set(('package_repository_subdir', 
+                                        'pack_version', 'directory_id',
                                         'packaging_options',
                                         'make_options', 'ctest_options',
                                         'installer_options'))
@@ -3679,6 +3709,7 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
     def __init__(self, directory, configuration):
         super(PackageDirectory, self).__init__(directory, configuration)
         self.build_directory = ''
+        self.package_repository_subdir = 'packages'
         self.packaging_options = []
         #self.packaging_thirdparty = ''
         self.installer_filename = None
@@ -3726,19 +3757,21 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                     #self.components = dict(build_dir.components)
                 #else:
                     #self.components = {}
-
-    def get_matching_build_dirs(self):
-        build_dirs = []
-        for o in self.configuration.buildDirectories.values():
-            if normalize_path(
-                o.replace_vars(self._build_directory)) == o.directory:
-                build_dirs.append(o)
+    
+    #def get_matching_build_dirs(self):
+        #build_dirs = []
+        #for o in self.configuration.buildDirectories.values():
+            #if normalize_path(
+                #o.replace_vars(self._build_directory)) == o.directory:
+                #build_dirs.append(o)
                 
-        return build_dirs
+        #return build_dirs
         
     def get_build_dir(self):
         if not hasattr(self, 'build_dir'):
-            build_dirs = self.get_matching_build_dirs()
+            #build_dirs = self.get_matching_build_dirs()
+            build_dirs = get_matching_dirs(self.configuration.buildDirectories.values(),
+                              self._build_directory)
             if len(build_dirs) == 0:
                 raise RuntimeError(
                     'Package directory: referenced build directory "%s" does '
@@ -3753,6 +3786,24 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                 self.build_dir = build_dirs[0]
             
         return self.build_dir
+        
+    def get_data_dir(self):
+        if not hasattr(self, 'data_dir'):
+            data_dirs = get_matching_dirs(self.configuration.packageDirectories.values(),
+                              self._data_repos_dir)
+            if len(data_dirs) == 0:
+                self.data_dir = None
+                
+            elif len(data_dirs) > 1:
+                raise RuntimeError(
+                    'Package directory: referenced data directory "%s" '
+                    'must match a unique package directory. Matches %d '
+                    'directories %s' % (self.data_repos_dir, len(data_dirs),
+                                        str(data_dirs)))
+            else:
+                self.data_dir = data_dirs[0]
+            
+        return self.data_dir
     
     def set_dependencies(self):                
         build_section = self.get_build_dir()
@@ -3782,8 +3833,11 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
 
     def info(self):
         self.process_configuration_lines()
-        print('Package directory: "' + self._directory + '"')
-        print('  Real package directory:', self.directory)
+        print('Base package directory: "' + self._directory + '"')
+        print('  Real base package directory:', self.directory)
+        print('  Real final package repository:', os.path.join(self.directory, self.package_repository_subdir))
+        print('  Real temporary package repository:', 
+              os.path.join(self.directory, self.package_repository_subdir) + '_tmp')
         print('  Build directory:', self.build_directory)
         for component, directory_version_model \
                 in six.iteritems(self.components):
@@ -3847,7 +3901,7 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
       
         offline_installer_filename = self.offline_installer_filename
         #directory = self.replace_vars(self.directory)
-        directory = self.directory
+        directory = os.path.join(self.directory, self.package_repository_subdir)
 
         exe_suffix = ''
         if sys.platform == 'win32':
@@ -3869,11 +3923,14 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
             if [int(x) for x in bvi_ver.version.split('.')] >= [1, 2]:
                 cmd += ['-j', offline_installer_filename]
                 
-                if self.data_repos_dir:
+                data_dir = self.get_data_dir()
+                if data_dir and data_dir.directory:
                     # Add data directory as an additional repository to allow
                     # binarycreator to find data packages to embed in the 
                     # offline installer
-                    cmd += ['-f', self.data_repos_dir]
+                    cmd += ['-f', os.path.join(
+                        data_dir.directory, 
+                        data_dir.package_repository_subdir)]
             else:
                 print('warning: bv installer version too old to handle '
                       'offline + online installers at the same time.')
@@ -4074,7 +4131,7 @@ Controller.prototype.FinishedPageCallback = function()
         #self.test_config(options, args)
         self.process_configuration_lines()
         #directory = self.replace_vars(self.directory)
-        directory = self.directory
+        directory = os.path.join(self.directory, self.package_repository_subdir)
         print('Building package:', directory)
         print('    from build dir:', self.build_dir.directory)
         self.cleanup_package_dir()
@@ -4099,7 +4156,7 @@ Controller.prototype.FinishedPageCallback = function()
 
     def cleanup_package_dir(self):
         #directory = self.replace_vars(self.directory)
-        directory = self.directory
+        directory = os.path.join(self.directory, self.package_repository_subdir)
         dirs = [directory, directory + '_tmp']
         pack_options = self.packaging_options
         if '--skip-repos' not in pack_options \
@@ -4112,13 +4169,16 @@ Controller.prototype.FinishedPageCallback = function()
             if os.path.exists(report_file):
                 os.unlink(report_file)
         # erase older repositories
-        if '%(date)s' in self._directory:
+        if '%(date)s' in os.path.join(self._directory,
+                                      self._package_repository_subdir):
             real_vars = dict(self.installer_variables())
             real_vars.update(global_installer_datetime())
             vars = dict(real_vars) # copy vars
             vars['date'] = '*'
             my_dir = environmentPathVariablesSubstitution(
-                self._directory, env=self.get_environ()) % real_vars
+                os.path.join(self._directory,
+                             self._package_repository_subdir), 
+                env=self.get_environ()) % real_vars
             dir_pattern = environmentPathVariablesSubstitution(
                 self._directory, env=self.get_environ()) % vars
             older_dirs = [d for d in glob.glob(dir_pattern) if d != my_dir]
@@ -4210,7 +4270,7 @@ Controller.prototype.FinishedPageCallback = function()
         #self.test_config(options, args)
         self.process_configuration_lines()
         #directory = self.replace_vars(self.directory)
-        directory = self.directory
+        directory = os.path.join(self.directory, self.package_repository_subdir)
         
         if not self.test_install_dir:
             return IGNORED_STEP
@@ -4241,10 +4301,22 @@ Controller.prototype.FinishedPageCallback = function()
             remote_repos_dir = repos_dir
         
         # Data repository directory
-        data_repos_dir = self.data_repos_dir
+        data_dir = self.get_data_dir()
+        if data_dir and data_dir.directory:
+            data_repos_dir = os.path.join(
+                data_dir.directory, 
+                data_dir.package_repository_subdir)
+            
+        else:
+            data_repos_dir = ''
+            
         if remote_test_install and self.remote_data_repos_dir:
             remote_data_repos_dir = self.remote_data_repos_dir
-        elif self.data_repos_dir:
+            if data_dir is not None:
+                remote_data_repos_dir = \
+                    os.path.join(remote_data_repos_dir,
+                                 data_dir.package_repository_subdir)
+        elif data_repos_dir:
             remote_data_repos_dir = data_repos_dir
         else:
             remote_data_repos_dir = None
@@ -4423,7 +4495,9 @@ Controller.prototype.FinishedPageCallback = function()
         install_dir = self.test_install_dir
         # Add directories to env
         new_env = self.get_environ(dict(os.environ))
-        repos_dir = self.replace_vars(self.directory)
+        repos_dir = self.replace_vars(
+            os.path.join(self.directory,
+                         self.package_repository_subdir))
         report_file = os.path.join(repos_dir, 'tests_report.txt')
         if options.ctest_options is not None:
             ctoptions = shlex.split(options.ctest_options)
@@ -4518,19 +4592,12 @@ class PublicationDirectory(DirectorySection, ConfigVariableParser):
         
         # Add same python variables than pack section
         self.update_python_vars(package_dir.get_python_vars())
-
-    def get_matching_package_dirs(self):
-        package_dirs = []
-        for o in self.configuration.packageDirectories.values():
-            if normalize_path(
-                o.replace_vars(self.package_directory)) == o.directory:
-                package_dirs.append(o)
-                
-        return package_dirs
         
     def get_package_dir(self):
         if not hasattr(self, 'package_dir'):
-            package_dirs = self.get_matching_package_dirs()
+            package_dirs = get_matching_dirs(
+                self.configuration.packageDirectories.values(),
+                self.package_directory)
             if len(package_dirs) == 0:
                 raise RuntimeError(
                     'Package directory: referenced package directory "%s" does '

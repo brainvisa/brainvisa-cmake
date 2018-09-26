@@ -2493,7 +2493,9 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
     _validAdditiveOptions = set(('default_steps', 'cross_compiling_dirs'))
     _validOptions = set(('revision_control',
                          'build_condition',
-                         'stdout_file', 'stderr_file'))
+                         'stdout_file', 
+                         'stderr_file',
+                         'default_source_dir'))
     _validOptions.update(_variables_with_replacements)
     _validOptions.update(_path_variables)
     _validOptions.update(_validAdditiveOptions)
@@ -2602,6 +2604,11 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                         brainvisa_projects.url_per_component[component]):
                         repo, dir = repo_dir
                         if fnmatchcase(version, versionPattern):
+                            default_source_dir = getattr(self, 'default_source_dir', None)
+                            if default_source_dir:
+                                dir = default_source_dir % dict(project=project,
+                                                                component=component,
+                                                                branch=version)
                             self.parseSourceConfigurationLine(
                                 '%s %s %s' % (repo, dir, version), 
                                 virtual=True, 

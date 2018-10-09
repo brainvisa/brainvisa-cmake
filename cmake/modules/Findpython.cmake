@@ -19,12 +19,14 @@
 #  PYTHON_INCLUDE_PATH - path to target python header files
 #  PYTHON_LIBRARY - path to target python dynamic library
 #  PYTHON_FLAGS - flags used to compile target python dynamic library
-function(__GET_PYTHON_INFO __python_executable __output_prefix __translate_path)
+function(__GET_PYTHON_INFO __python_executable __output_prefix __translate_path __target_system_prefix)
 
   get_filename_component("${__output_prefix}_EXECUTABLE_NAME" 
                          "${__python_executable}" NAME CACHE)
      
-  execute_process( COMMAND "${__python_executable}" "-c" "import sys, os; sys.stdout.write(os.path.normpath( sys.prefix ))"
+  execute_process( COMMAND ${__target_system_prefix}
+                           "${__python_executable}"
+                           "-c" "import sys, os; sys.stdout.write(os.path.normpath( sys.prefix ))"
     OUTPUT_VARIABLE _prefix )
   if(__translate_path AND COMMAND TARGET_TO_HOST_PATH)
     #message("==== __GET_PYTHON_INFO, TARGET_TO_HOST_PATH is defined")
@@ -33,12 +35,18 @@ function(__GET_PYTHON_INFO __python_executable __output_prefix __translate_path)
   FILE( TO_CMAKE_PATH "${_prefix}" "${__output_prefix}_PREFIX" )
   set("${__output_prefix}_PREFIX" "${${__output_prefix}_PREFIX}"
         CACHE FILEPATH "Python install prefix")
-  execute_process( COMMAND "${__python_executable}" "-c" "import sys; sys.stdout.write(\".\".join( (str(i) for i in sys.version_info[ :2 ]) ))"
+  execute_process( COMMAND ${__target_system_prefix}
+                           "${__python_executable}" 
+                           "-c" "import sys; sys.stdout.write(\".\".join( (str(i) for i in sys.version_info[ :2 ]) ))"
     OUTPUT_VARIABLE _version )
-  execute_process( COMMAND "${__python_executable}" "-c" "import sys; sys.stdout.write(\".\".join( (str(i) for i in sys.version_info[ :3 ]) ))"
+  execute_process( COMMAND ${__target_system_prefix}
+                           "${__python_executable}" 
+                           "-c" "import sys; sys.stdout.write(\".\".join( (str(i) for i in sys.version_info[ :3 ]) ))"
     OUTPUT_VARIABLE _fullVersion )
   message( STATUS "Using python ${_fullVersion}: ${__python_executable}" )
-  execute_process( COMMAND "${__python_executable}" "-c" "from __future__ import print_function; import sys, os; print(\";\".join([s for s in sys.path if os.path.exists(s)]))"
+  execute_process( COMMAND ${__target_system_prefix}
+                           "${__python_executable}"
+                           "-c" "from __future__ import print_function; import sys, os; print(\";\".join([s for s in sys.path if os.path.exists(s)]))"
     OUTPUT_VARIABLE _pythonpath OUTPUT_STRIP_TRAILING_WHITESPACE )
   if(__translate_path AND COMMAND TARGET_TO_HOST_PATH)
     TARGET_TO_HOST_PATH( "${_pythonpath}" _pythonpath ) 
@@ -114,13 +122,16 @@ else()
   cmake_find_frameworks( Python )
 
   # Get python information for the host python interpreter
-  __GET_PYTHON_INFO("${PYTHON_HOST_EXECUTABLE}" PYTHON_HOST NO)
+  __GET_PYTHON_INFO("${PYTHON_HOST_EXECUTABLE}" PYTHON_HOST NO "")
   
   # Also get target python interpreter information if possible
-  if(CMAKE_CROSSCOMPILING)   
+  if(CMAKE_CROSSCOMPILING)
+    if(WIN32)
+        find_package(Wine)
+    endif()
     if(CMAKE_CROSSCOMPILING_RUNNABLE)
         # Get python information for the target Python interpreter
-        __GET_PYTHON_INFO("${PYTHON_EXECUTABLE}" PYTHON YES)
+        __GET_PYTHON_INFO("${PYTHON_EXECUTABLE}" PYTHON YES "${CMAKE_TARGET_SYSTEM_PREFIX}")
     endif()
   else()
     set(PYTHON_EXECUTABLE_NAME "${PYTHON_HOST_EXECUTABLE_NAME}" 

@@ -61,5 +61,14 @@ do
   i=$(($i+1))
 done
 
-echo ${BRAINVISA_TEST_REMOTE_COMMAND} "${BRAINVISA_ENV}" "$CMD" ${exp[@]}
-exec ${BRAINVISA_TEST_REMOTE_COMMAND} "${BRAINVISA_ENV}" "$CMD" ${exp[@]}
+bv_env_cmd=("${BRAINVISA_ENV}")
+if [ ".${BRAINVISA_ENV##*.}" == ".exe" ]; then
+    # Use wine command if defined
+    if [ -n "${WINECMD}" ]; then
+        bv_env_cmd=("${WINECMD}" "${bv_env_cmd[@]}")
+    fi
+fi
+
+echo ${BRAINVISA_TEST_REMOTE_COMMAND} "${bv_env_cmd[@]}" "$CMD" ${exp[@]}
+exec ${BRAINVISA_TEST_REMOTE_COMMAND} "${bv_env_cmd[@]}" "$CMD" ${exp[@]}
+

@@ -56,6 +56,7 @@ IF(PYQT4_VERSION)
   # Already in cache, be silent
   SET(PYQT4_FOUND TRUE)
 ELSE(PYQT4_VERSION)
+  find_package(PythonInterp)
   FIND_FILE(_find_pyqt_py FindPyQt.py
                           HINTS ${CMAKE_MODULE_PATH}
                           CMAKE_FIND_ROOT_PATH_BOTH)
@@ -66,31 +67,16 @@ ELSE(PYQT4_VERSION)
 
   SET(_python_executable ${PYTHON_HOST_EXECUTABLE})
   IF(CMAKE_CROSSCOMPILING)
-    IF(CROSSCOMPILING_PYTHON_EXECUTABLE)
-      # Some cross compilation platforms authorize to run target executables
-      # as, for example, linux using wine. That's why we use python target 
-      # executable to get PyQt infos
-      INCLUDE("${CMAKE_CURRENT_LIST_DIR}/UseEnvProcessExecute.cmake")
-      SET(_python_executable "${CROSSCOMPILING_PYTHON_EXECUTABLE}")
-      IF (NOT CROSSCOMPILING_PYTHON_HOME)
-        GET_FILENAME_COMPONENT(_python_home_dir 
-                               "${_python_executable}"
-                               DIRECTORY)
-      ELSE()
-        SET(_python_home_dir "${CROSSCOMPILING_PYTHON_HOME}")
-      ENDIF()
-      
-      # Execute process setting PYTHONHOME variable
-      ENV_EXECUTE_PROCESS(COMMAND ${_python_executable} ${_find_pyqt_py} 
-                          ENV "PYTHONHOME=${_python_home_dir}"
-                          OUTPUT_VARIABLE pyqt_config)
-    ELSE()
-      MESSAGE(STATUS "PyQt4: needs runnable target python interpreter to find version of package (set CROSSCOMPILING_PYTHON_EXECUTABLE to a usable target python interpreter). If it is not possible to run target python interpreter on the build platform, it is necessary to manually set PYQT4_VERSION, PYQT4_VERSION_STR, PYQT4_VERSION_TAG, PYQT4_SIP_DIR and PYQT4_SIP_FLAGS to valid values")
+    IF(WIN32)
+        find_package(Wine)
     ENDIF()
-  ELSE()
-    EXECUTE_PROCESS(COMMAND ${_python_executable} ${_find_pyqt_py} 
-                    OUTPUT_VARIABLE pyqt_config)
+    IF(NOT CMAKE_CROSSCOMPILING_RUNNABLE)
+      MESSAGE(STATUS "PyQt4: needs runnable target python interpreter to find version of package. If it is not possible to run target python interpreter on the build platform, it is necessary to manually set PYQT4_VERSION, PYQT4_VERSION_STR, PYQT4_VERSION_TAG, PYQT4_SIP_DIR and PYQT4_SIP_FLAGS to valid values")
+    ENDIF()
   ENDIF()
+
+  EXECUTE_PROCESS(COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX} ${PYTHON_EXECUTABLE} ${_find_pyqt_py} 
+                  OUTPUT_VARIABLE pyqt_config)
   
   IF(pyqt_config)
     STRING(REGEX MATCH "^pyqt_version:([^\n]+).*$" _dummy ${pyqt_config})

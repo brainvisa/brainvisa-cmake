@@ -180,6 +180,33 @@ function( BRAINVISA_SYSTEM_PATH_TO_LIST  result_variable_name system_path )
   set( ${result_variable_name} "${system_path}" PARENT_SCOPE )
 endfunction( BRAINVISA_SYSTEM_PATH_TO_LIST  result_variable_name system_path )
 
+#
+# BRAINVISA_TARGET_SYSTEM_COMMAND
+#   Get a usable command to run on the target system (mainly for cross 
+#   compilation).
+#
+# Usage:
+#  BRAINVISA_TARGET_SYSTEM_COMMAND( <output variable> <command> [<arg1> ... <argn>] )
+#
+# Example:
+#   BRAINVISA_TARGET_SYSTEM_COMMAND( TARGET_COMMAND "program.exe" "--help" )
+#   message( ${p} )
+function(BRAINVISA_TARGET_SYSTEM_COMMAND variable)
+  set(__command "${ARGN}")
+  if(CMAKE_CROSSCOMPILING)
+    if(WIN32)
+      find_package(Wine)
+      if(WINE_FOUND)
+        set(__command "${WINE_RUNTIME}" ${__command})
+      else()
+        message(SEND_ERROR "Unable to build command for target system wine, because wine was not found")
+      endif()
+    endif()
+  endif()
+  message("===== TARGET COMMAND: ${__command}")
+  set(${variable} ${__command} PARENT_SCOPE)
+  unset(__command)
+endfunction()
 
 macro( BRAINVISA_FIND_PACKAGE component )
   if( ${component}_IS_BEING_COMPILED AND NOT ${component}_BINARY_DIR )
@@ -1392,8 +1419,21 @@ function( BRAINVISA_GENERATE_COMMANDS_HELP_INDEX )
 #     message("--BRAINVISA_ADD_COMMAND_HELP_INDEX - _depends : ${_depends}")
 #     message("--BRAINVISA_ADD_COMMAND_HELP_INDEX - _dirs : ${_dirs}")
 
+#     brainvisa_target_system_command(__target_cmd 
+#         "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
+#             "${PYTHON_EXECUTABLE}"
+#             ${CREATE_COMMANDS_DOC}
+#             -t "${_helppath}"
+#             -v 0
+#             ${_cmd_options}
+#             "${_output_directory}/${_index_file}")
+#     message("===== TARGET SYSTEM COMMAND: ${__target_cmd}")
+    if(CMAKE_CROSSCOMPILING AND WINE32)
+        find_package(Wine)
+    endif()
     add_custom_command( OUTPUT "${_output_directory}/${_index_file}"
-                        COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
+                        COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX}
+                                "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
                                 "${PYTHON_EXECUTABLE}"
                                 ${CREATE_COMMANDS_DOC}
                                 -t "${_helppath}"
@@ -1533,10 +1573,15 @@ function( BRAINVISA_ADD_COMMAND_HELP name)
   if(TARGET "${name}-help")
     message( FATAL_ERROR "Target: ${name}-help already exists. Impossible to use it for BRAINVISA_ADD_COMMAND_HELP" )
   else()
+    if(CMAKE_CROSSCOMPILING AND WINE32)
+      find_package(Wine)
+    endif()
     # Add help generation target
     add_custom_command( OUTPUT "${_component_help_directory}/${name}"
                         COMMAND "${CMAKE_COMMAND}" -E make_directory "${_component_help_directory}"
-                        COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}" "${PYTHON_EXECUTABLE}" -c "import sys, subprocess; subprocess.call( ['${_command}'], stdout = sys.stdout, stderr = sys.stdout )" > ${_component_help_directory}/${name}
+                        COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX}
+                                "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}" 
+                                "${PYTHON_EXECUTABLE}" -c "import sys, subprocess; subprocess.call( ['${_command}'], stdout = sys.stdout, stderr = sys.stdout )" > ${_component_help_directory}/${name}
                         DEPENDS ${_depends}
                         COMMENT "Generating ${name} help file ..."
                         VERBATIM )
@@ -2208,10 +2253,14 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
     if( NOT target )
       set( target ${PROJECT_NAME}-${default_target} )
     endif()
+    if(CMAKE_CROSSCOMPILING AND WINE32)
+      find_package(Wine)
+    endif()
     add_custom_target( ${target}
                       COMMAND "${CMAKE_COMMAND}" -E make_directory
                         "${output_directory}"
-                      COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
+                      COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX}
+                        "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
                         "${SPHINXBUILD_EXECUTABLE}"
                         ${source_directory}
                         ${output_directory}

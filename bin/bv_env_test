@@ -63,9 +63,19 @@ done
 
 bv_env_cmd=("${BRAINVISA_ENV}")
 if [ ".${BRAINVISA_ENV##*.}" == ".exe" ]; then
-    # Use wine command if defined
+    # Use wine command if defined and not already used in command
     if [ -n "${WINECMD}" ]; then
-        bv_env_cmd=("${WINECMD}" "${bv_env_cmd[@]}")
+        base_cmd=(${BRAINVISA_TEST_REMOTE_COMMAND} "${bv_env_cmd[@]}" "$CMD")
+        wine_found=0
+        for arg in ${base_cmd[@]}; do
+            if [ "${arg}" == "wine" ] || [ "${arg}" == "wine64" ]; then
+                wine_found=1
+                break;
+            fi
+        done
+        if [ "${wine_found}" == "0" ]; then
+            bv_env_cmd=("${WINECMD}" "${bv_env_cmd[@]}")
+        fi
     fi
 fi
 

@@ -133,18 +133,33 @@ def convert_perforce_directory(project, repos, svn_repos, authors_file=None):
         os.chdir(cur_dir)
 
 
-def graft_history(project, old_project, repos, branch='master',
+def graft_history(project, old_project, repos, old_repos, branch='master',
                   old_branch='trunk'):
     '''
     branch older commits (perforce) to the beginning of master
+
+    Parameters
+    ----------
+    project: str
+        later project name
+    old_project: str
+        former project name
+    repos: str
+        later project git repos directory (including project name)
+    old_repos: str
+        former project git repos directory (including project name)
+    branch: str
+        later project branch to graft
+    old_branch: str
+        former project branch
     '''
     cur_dir = os.getcwd()
-    os.chdir(os.path.join(repos, old_project))
+    os.chdir(old_repos)
     cmd = 'git checkout %s' % old_branch
     print(cmd)
     subprocess.check_call(cmd.split())
-    os.chdir(os.path.join(repos, project))
-    cmd = 'git remote add old %s' % os.path.join(repos, old_project)
+    os.chdir(repos)
+    cmd = 'git remote add old %s' % old_repos
     print(cmd)
     subprocess.check_call(cmd.split())
     cmd = 'git fetch old'
@@ -181,6 +196,8 @@ def main():
     parser.add_argument('--p4', action='append', default=[],
                         help='convert old perforce directory project, to graft missing history from. format: project[:svn_dir[:git_dir]]]. \n'
                         'Several -o options allowed.')
+    parser.add_argument('-g', '--graft', action='append', default=[],
+                        help='graft the beginning of a project branch to the end of another project branch to recover older history that git-svn could not figure out (especially useful for old perforce history). Several -g options allowed. Syntax: later_project[/later_git_branch][@later_repos_dir]:older_project[/older_git_branch][@older_repos_dir]. Projects/branches should have been converted to git first using -p / --p4 options (during this run of bv_git_to_svn or a previous one). Ex: axon/master:brainvisa/trunk will graft axon after brainvisa. The default branches are resp. master and trunk.')
 
     options = parser.parse_args()
     projects = options.project
@@ -194,6 +211,7 @@ def main():
         svn_repos = bioproj
     authors_file = options.authors_file
     p4_projects = options.p4
+    grafts = options.graft
 
     for project in projects:
         if ':' in project:
@@ -203,6 +221,7 @@ def main():
         convert_project(project, repos, '%s/%s' % (svn_repos, svn_dir),
                         authors_file=authors_file)
 
+    # recover older perforce histories in separate projects
     for project_def in p4_projects:
         pdef = project_def.split(':')
         project = pdef[0]
@@ -217,9 +236,35 @@ def main():
                                    repos,
                                   '%s/%s' % (svn_repos, svn_dir),
                                   authors_file=authors_file)
-    ## graft older perforce history on axon
-    #perforce_project = 'brainvisa'
-    #graft_history('axon', 'brainvisa', repos, 'integration', 'trunk')
+    # graft older perforce history on axon
+    for graft_spec in grafts:
+        new, old = [x.split('@') for x in grafts.split(':')]
+        if len(new) >= 2:
+            newp, new_dir = new
+        else:
+            newp = new[0]
+            new_dir = None
+        if len(old) >= 2:
+            oldp, old_dir = old
+        else:
+            oldp = old[0]
+            old_dir = None
+        new_project = newp.split(':')
+        if len(new_project) >= 2:
+            new_project, new_branch = new_project
+        else:
+            new_project, new_branch = new_project[0], 'master'
+        old_project = oldp.split(':')
+        if len(old_project) >= 2:
+            old_project, old_branch = old_project
+        else:
+            old_project, old_branch = old_project[0], 'trunk'
+        if new_dir is None:
+            new_dir = s.path.join(repos, new_project)
+        if old_dir is None:
+            old_dir = os.path.join(repos, old_project)
+        graft_history(new_project, old_project, new_dir, old_dir,
+                      new_branch, old_branch)
 
 
 if __name__ == '__main__':

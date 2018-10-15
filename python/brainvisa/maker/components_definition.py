@@ -550,6 +550,28 @@ components_definition = [
             }],
         ],
     }),
+    ('sacha', {
+        'components': [
+            ['sacha-private', { # Experimental branch to propose a new organization
+                'groups': ['catidb3_all', 'cati_platform'],
+                'branches': {
+                    #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/sacha/sacha-private/trunk', 'sacha-private/trunk'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/sacha/sacha-private/branches/bug_fix', 'sacha-private/bug_fix'),
+                    #'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/sacha/sacha-private/branches/release_candidate', 'sacha-private/release_candidate'),
+                    #'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/sacha/sacha-private/tags/latest_release', 'sacha-private/latest_release'),
+                },
+            }],
+            ['sacha-gpl', { # Experimental branch to propose a new organization
+                'groups': ['catidb3_all', 'cati_platform'],
+                'branches': {
+                    #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/sacha/sacha-gpl/trunk', 'sacha-gpl/trunk'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/sacha/sacha-gpl/branches/bug_fix', 'sacha-gpl/bug_fix'),
+                    #'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/sacha/sacha-gpl/branches/release_candidate', 'sacha-gpl/release_candidate'),
+                    #'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/sacha/sacha-gpl/tags/latest_release', 'sacha-gpl/latest_release'),
+                },
+            }],
+        ],
+    }),
     ('release', {
         'components': [
             ['brainvisa-release', {

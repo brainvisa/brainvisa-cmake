@@ -619,7 +619,7 @@ components_definition = [
         'description': 'CATI quality control software.',
         'components': [
             ['qualicati', {
-                'groups': ['all', 'cati_platform'],
+                'groups': ['cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/qualicati/trunk','qualicati/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/qualicati/branches/bug_fix','qualicati/bug_fix'),

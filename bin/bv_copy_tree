@@ -90,16 +90,28 @@ def make_ext_symlink(source, dest, ext_links, simulation):
 
 
 parser = OptionParser(sys.argv[0] + ' [options] source1 [source2] [...] dest'
-                      'Copy directories trees, like "cp -a" or "rsync -a --copy-unsafe-links", but try to preserve internal symlinks, and keep a unique copy of actual files for external symlinks.\n'
+                      'Copy directories trees, like "cp -a" or "rsync '
+                      '-a --copy-unsafe-links", but try to preserve internal '
+                      'symlinks, and keep a unique copy of actual files for '
+                      'external symlinks.\n'
                       '')
 parser.add_option('-b', '--base', dest='base', action='append', default=[],
-                  help='base directory to consider external symlinks. Default is input directories. Several -b options may be passed.')
+                  help='base directory to consider external symlinks. Default '
+                  'is input directories. Several -b options may be passed.')
 parser.add_option('-s', '--simulation', dest='simulation',
-                  action='store_true', help='do not perform actual copies, don\'t write anything, just tell what will be done (use with -v option)')
+                  action='store_true', help='do not perform actual copies, '
+                  'don\'t write anything, just tell what will be done (use with -v option)')
 parser.add_option('-v', '--verbose', dest='verbose', action='store_true',
                   help='say what is done')
 parser.add_option('-e', '--exclude', dest='exclude', action='append',
-                  default=[], help='exclude some (source) directories from copies. Several -e options may be passed.')
+                  default=[],
+                  help='exclude some (source) directories from copies. '
+                  'Several -e options may be passed.')
+parser.add_option('-r', '--remove-under', dest='remove', action='append',
+                  default=[],
+                  help='remove destination directories under the given '
+                  'directory before copying new files in them. Multiple -r '
+                  'options allowed.')
 
 options, args = parser.parse_args(sys.argv)
 
@@ -110,6 +122,7 @@ dest = realrealpath(args[-1])
 sources = [realrealpath(p) for p in args[1:-1]]
 exclude = [realrealpath(p) for p in options.exclude]
 missing = [p for p in sources if not os.path.exists(p)]
+remove = [os.path.join(r, '') for r in options.remove]
 if missing:
     print >> sys.stderr, 'missing files:', missing
     sources = [p for p in sources if p not in missing]
@@ -139,6 +152,9 @@ ext_links = {}  # external links list
 
 while sources:
     source = sources.pop()
+    remove_dest = False # don't remove top-level dest dirs
+    if isinstance(source, tuple):
+        source, remove_dest = source
     if realrealpath(source) in exclude:
         if options.verbose:
             print 'skipping excluded %s file/directory' % source
@@ -170,10 +186,15 @@ while sources:
             make_ext_symlink(spath, destpath, ext_links, options.simulation)
     elif os.path.isdir(source):
         # directory
+        if os.path.isdir(destpath) and not options.simulation:
+            for rdir in remove:
+                if destpath.startswith(rdir) and destpath != rdir:
+                    shutil.rmtree(destpath)
+                    break
         if not options.simulation and not os.path.isdir(destpath):
             os.mkdir(destpath)
         for filename in os.listdir(source):
-            sources.append(os.path.join(source, filename))
+            sources.append((os.path.join(source, filename), remove))
     else:
         # file
         if is_extlink:

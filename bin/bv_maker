@@ -404,6 +404,18 @@ def run_and_log_tests(cwd=None, env=None, options=None, projects=None):
 
 def run_and_log_testref(cwd=None, env=None, options=None):
     logs = {}
+
+    if ((configuration.general_section.email_notification_by_default. \
+            upper() != 'ON' and not configuration.options.email) \
+            or (configuration.general_section.failure_email == ''
+                and configuration.general_section.success_email == ''
+                and configuration.general_section.failure_email_by_project
+                    == {})) \
+            and (not configuration.general_section.jenkins_server_url
+                  or configuration.options.disable_jenkins):
+        print_output = True
+    else:
+        print_output = False
     logfile = tempfile.mkstemp(prefix='bv_testref', suffix='.log')
     os.close(logfile[0])
     start_time = time.localtime()
@@ -413,6 +425,8 @@ def run_and_log_testref(cwd=None, env=None, options=None):
     except Exception as e:
         if hasattr(e, 'output'):
             open(logfile[1], 'w').write(e.output)
+            if print_output:
+                print(e.output)
         logitem = {}
         logitem['log_file'] = logfile[1]
         logitem['exception'] = e
@@ -428,6 +442,8 @@ def run_and_log_testref(cwd=None, env=None, options=None):
         logitem['stop_time'] = time.localtime()
         logs['testref'] = logitem
         #os.unlink(logfile[1])
+        if print_output:
+            print(output)
     return logs
 
 
@@ -4546,8 +4562,9 @@ Controller.prototype.FinishedPageCallback = function()
         install_dir = self.test_install_dir
         # Add directories to env
         new_env = self.get_environ(dict(os.environ))
-        return run_and_log_testref(cwd=self.build_dir.directory,
-                                   env=new_env, options=ctoptions)
+        test_res = run_and_log_testref(cwd=self.build_dir.directory,
+                                       env=new_env, options=ctoptions)
+        return test_res
 
     def expand_shell(self, line):
         ''' Allow shell commands expressions $(command arg) in string
@@ -4682,8 +4699,10 @@ class PublicationDirectory(DirectorySection, ConfigVariableParser):
 
 def display_failure_summary(configuration):
     sections = [('sourcesDirectories', ['sources']),
-                ('buildDirectories', ['configure', 'build', 'doc', 'test']),
-                ('packageDirectories', ['pack', 'install_pack', 'test_pack']),
+                ('buildDirectories', ['configure', 'build', 'doc', 'testref',
+                                      'test']),
+                ('packageDirectories', ['pack', 'install_pack', 'testref_pack',
+                                        'test_pack']),
                 ('publicationDirectories', ['publish_pack']),
                 ]
     global_failed = False

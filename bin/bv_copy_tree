@@ -107,11 +107,16 @@ parser.add_option('-e', '--exclude', dest='exclude', action='append',
                   default=[],
                   help='exclude some (source) directories from copies. '
                   'Several -e options may be passed.')
-parser.add_option('-r', '--remove-under', dest='remove', action='append',
+parser.add_option('-r', '--remove-under', dest='remove_under', action='append',
                   default=[],
                   help='remove destination directories under the given '
                   'directory before copying new files in them. Multiple -r '
                   'options allowed.')
+parser.add_option('-d', '--remove-dir', dest='remove_dir', action='append',
+                  default=[],
+                  help='remove destination directories which are equal to '
+                  'the given directory before copying new files in them. '
+                  'Multiple -d options allowed.')
 
 options, args = parser.parse_args(sys.argv)
 
@@ -122,7 +127,8 @@ dest = realrealpath(args[-1])
 sources = [realrealpath(p) for p in args[1:-1]]
 exclude = [realrealpath(p) for p in options.exclude]
 missing = [p for p in sources if not os.path.exists(p)]
-remove = [os.path.join(r, '') for r in options.remove]
+remove_under = [os.path.join(r, '') for r in options.remove_under]
+remove_dirs = [os.path.join(r, '') for r in options.remove_dir]
 if missing:
     print >> sys.stderr, 'missing files:', missing
     sources = [p for p in sources if p not in missing]
@@ -152,9 +158,6 @@ ext_links = {}  # external links list
 
 while sources:
     source = sources.pop()
-    remove_dest = False # don't remove top-level dest dirs
-    if isinstance(source, tuple):
-        source, remove_dest = source
     if realrealpath(source) in exclude:
         if options.verbose:
             print 'skipping excluded %s file/directory' % source
@@ -187,14 +190,17 @@ while sources:
     elif os.path.isdir(source):
         # directory
         if os.path.isdir(destpath) and not options.simulation:
-            for rdir in remove:
-                if destpath.startswith(rdir) and destpath != rdir:
-                    shutil.rmtree(destpath)
-                    break
+            if destpath in remove_dirs:
+                shutil.rmtree(destpath)
+            else:
+                for rdir in remove_under:
+                    if destpath.startswith(rdir) and destpath != rdir:
+                        shutil.rmtree(destpath)
+                        break
         if not options.simulation and not os.path.isdir(destpath):
             os.mkdir(destpath)
         for filename in os.listdir(source):
-            sources.append((os.path.join(source, filename), remove))
+            sources.append(os.path.join(source, filename))
     else:
         # file
         if is_extlink:

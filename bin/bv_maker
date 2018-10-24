@@ -4419,7 +4419,9 @@ Controller.prototype.FinishedPageCallback = function()
                + ['--script', self.build_dir.to_target_path(install_script)]
         try:
             print('installing...')
-            cmd = '"' + '" "'.join(cmd) + '"'
+            # the ssh command needs to be converted to a string, some options
+            # do not pass when check_call() is used with a list.
+            cmd = '"' + '" "'.join([x.replace('"', '\"') for x in cmd]) + '"'
             print(cmd)
             subprocess.check_call(cmd, shell=True, env=self.get_environ())
             print('done.')

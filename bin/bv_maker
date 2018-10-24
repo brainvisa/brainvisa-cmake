@@ -607,8 +607,14 @@ http://brainvisa.info/brainvisa-cmake/
                                 # occurrences in it)
                                 condition_stack.append(False)
                             else:
-                                condition_stack.append(
-                                    check_filter_condition(l[1:]))
+                                try:
+                                    condition_stack.append(
+                                        check_filter_condition(l[1:]))
+                                except:
+                                    print('error in condition, line %d:'
+                                          % lineCount, file=sys.stderr)
+                                    print(line, file=sys.stderr)
+                                    raise
                         elif l[0] == 'endif' and len(l) == 1:
                             if len(condition_stack) > 0:
                                 # ends the filtered section

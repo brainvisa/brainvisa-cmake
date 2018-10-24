@@ -624,8 +624,12 @@ http://brainvisa.info/brainvisa-cmake/
                                             'by [if] clause.')
                         elif l[0] == 'else' and len(l) == 1:
                             if len(condition_stack) > 0:
-                                # inverts the filtered section
-                                condition_stack[-1] = not condition_stack[-1]
+                                # inverts the filtered section, only if its
+                                # parent condition is True
+                                if len(condition_stack) == 1 \
+                                        or condition_stack[-2]:
+                                    condition_stack[-1] \
+                                        = not condition_stack[-1]
                             else:
                                 SyntaxError('[else] clause is not preceded by '
                                             '[if] clause.')

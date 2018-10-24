@@ -2,7 +2,9 @@
 
 from __future__ import print_function
 import os
+import re
 import subprocess
+import time
 
 
 def convert_project(project, repos, svn_repos, authors_file=None):
@@ -32,18 +34,19 @@ def convert_project(project, repos, svn_repos, authors_file=None):
         subprocess.check_call(cmd.split())
     except:
         # git-svn died with signal 11
-        print('conversion fails at some point... trying again...')
+        print('conversion fails at some point... trying again in 5 seconds...')
         os.chdir(project)
         # several times...
         ok = False
         while not ok:
+            time.sleep(5)
             cmd = 'git svn fetch'
             try:
                 print(cmd)
                 subprocess.check_call(cmd.split())
                 ok = True
             except:
-                print('conversion fails at some point... trying again...')
+                print('conversion fails at some point... trying again in 5 seconds...')
     make_branches(os.path.join(repos, project))
     make_tags(os.path.join(repos, project))
     os.chdir(cur_dir)
@@ -70,7 +73,7 @@ def make_branches(repos):
     os.chdir(cur_dir)
 
 
-def make_tags(repos):
+def make_tags(repos, latest_release_version=None):
     '''
     Make tags
 
@@ -78,7 +81,9 @@ def make_tags(repos):
     ----------
     repos: str
         git repos directory, including the project dir.
-     '''
+    latest_release_version: str
+        version number that will replace the latest_release SVN tag
+    '''
     cur_dir = os.getcwd()
     os.chdir(repos)
     cmd = 'git branch -a'
@@ -87,16 +92,58 @@ def make_tags(repos):
     for branch in branches:
         branch = branch.strip()
         if branch.startswith('remotes/origin/tags/'):
-            tag = branch[len('remotes/origin/tags/'):]
-            print('tag:', tag)
-            if tag != 'latest_release':
-                cmd = 'git tag -a -m'.split() + ["version %s" % tag, tag,
-                                                 branch]
+            svn_tag_name = branch[len('remotes/origin/tags/'):]
+            print('tag:', svn_tag_name)
+            # The SVN tag can have a history that deviates from the main line
+            # of history, which typically consists of empty commits that are
+            # created when the branch is moved from latest_release to a named
+            # version. We want the tag to point to a commit that is on the main
+            # line of history as far as possible, so that e.g. "git describe"
+            # can give useful output. Therefore, we search for the closest
+            # commit on the mainline with "git merge-base", then we validate
+            # with "git diff" that the contents of this commit are the same as
+            # the tag.
+            ancestor_commit = subprocess.check_output(
+                ['git', 'merge-base', branch, 'master']
+            ).strip()
+            returncode = subprocess.call(['git', 'diff', '--quiet',
+                                          ancestor_commit, branch])
+            if returncode == 0:
+                tag_cmd_env = {}
+                if (re.match(r'^\d+\.\d+\.\d+$', svn_tag_name)
+                    or (svn_tag_name == 'latest_release'
+                        and latest_release_version is not None)):
+                    if svn_tag_name == 'latest_release':
+                        tag_version = latest_release_version
+                    else:
+                        tag_version = svn_tag_name
+                    tag_cmd = ['git', 'tag', '-a', '-m',
+                               "version %s" % tag_version,
+                               'v' + tag_version, ancestor_commit]
+                    # We want the tag object to carry the date and committer
+                    # who created the tag in SVN in the first place (typically,
+                    # the person who moved the branch to tags/latest_release).
+                    tag_commit = subprocess.check_output(
+                        ['git', 'rev-list', '--reverse',
+                         ancestor_commit + '..' + branch]
+                    ).split('\n', 1)[0]
+                    tag_date, tagger_name, tagger_email = subprocess.check_output(
+                        ['git', 'show', '--format=%cI%n%cn%n%ce', '--no-patch',
+                         tag_commit]
+                    ).strip().split('\n')
+                    tag_cmd_env = {'GIT_COMMITTER_NAME': tagger_name,
+                                   'GIT_COMMITTER_EMAIL': tagger_email,
+                                   'GIT_COMMITTER_DATE': tag_date}
+                else:
+                    # Create a lightweight tag for SVN tags that are not named
+                    # X.Y.Z (these tags may move, e.g. latest_release)
+                    tag_cmd = ['git', 'tag', svn_tag_name, branch]
+                print(tag_cmd)
+                tag_cmd_env.update(os.environ)
+                subprocess.check_call(tag_cmd, env=tag_cmd_env)
             else:
-                cmd = 'git tag %s %s' % (tag, branch)
-                cmd = cmd.split()
-            print(cmd)
-            subprocess.check_call(cmd)
+                print('WARNING: cannot find a mainline commit that matches '
+                      'the SVN tag %s, no git tag will be created.')
     os.chdir(cur_dir)
 
 

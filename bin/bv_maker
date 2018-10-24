@@ -4329,6 +4329,7 @@ Controller.prototype.FinishedPageCallback = function()
             data_repos_dir = os.path.join(
                 data_dir.directory, 
                 data_dir.package_repository_subdir)
+            data_repos_dir = self.replace_vars(data_repos_dir)
             
         else:
             data_repos_dir = ''

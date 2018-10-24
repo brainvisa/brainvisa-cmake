@@ -25,6 +25,7 @@ def convert_project(project, repos, svn_repos, authors_file=None):
     '''
     cur_dir = os.getcwd()
     os.chdir(repos)
+    auth_args = ''
     if authors_file:
         auth_args = '--authors-file %s ' % authors_file
     cmd = 'git svn clone --stdlayout --follow-parent %s%s' \
@@ -165,6 +166,7 @@ def convert_perforce_directory(project, repos, svn_repos, authors_file=None):
     '''
     cur_dir = os.getcwd()
     os.chdir(repos)
+    auth_args = ''
     if authors_file:
         auth_args = '--authors-file %s ' % authors_file
     cmd = 'git svn clone --trunk=main --branches=. %s%s' \

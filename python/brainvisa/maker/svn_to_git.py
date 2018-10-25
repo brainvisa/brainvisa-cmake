@@ -212,13 +212,17 @@ def make_tags(repos, latest_release_version=None):
                     tag_cmd_env = {'GIT_COMMITTER_NAME': tagger_name,
                                    'GIT_COMMITTER_EMAIL': tagger_email,
                                    'GIT_COMMITTER_DATE': tag_date}
+                    print(tag_cmd)
+                    tag_cmd_env.update(os.environ)
+                    subprocess.check_call(tag_cmd, env=tag_cmd_env)
+                elif svn_tag_name in ('latest_release', 'release_candidate'):
+                    cmd = ['git', 'branch', '--force', svn_tag_name, branch]
+                    print(cmd)
+                    subprocess.check_call(cmd)
                 else:
-                    # TODO stop creating these tags (these "tags" may move),
-                    # make a branch for latest_release.
-                    tag_cmd = ['git', 'tag', '--force', svn_tag_name, branch]
-                print(tag_cmd)
-                tag_cmd_env.update(os.environ)
-                subprocess.check_call(tag_cmd, env=tag_cmd_env)
+                    print("WARNING: not converting the SVN tag '%s' to Git "
+                          "because it does not match the X.Y.Z format."
+                          % svn_tag_name)
             else:
                 print('WARNING: cannot find a mainline commit that matches '
                       'the SVN tag %s, no git tag will be created.'

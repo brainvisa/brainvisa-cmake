@@ -27,29 +27,69 @@ def convert_project(project, repos, svn_repos, authors_file=None):
     os.chdir(repos)
     auth_args = ''
     if authors_file:
-        auth_args = '--authors-file %s ' % authors_file
-    cmd = 'git svn clone --stdlayout --follow-parent %s%s' \
+        auth_args = ' --authors-file %s' % authors_file
+    cmd = 'git svn clone --stdlayout --follow-parent%s %s' \
         % (auth_args, svn_repos)
     try:
         print(cmd)
         subprocess.check_call(cmd.split())
     except:
         # git-svn died with signal 11
-        print('conversion fails at some point... trying again in 5 seconds...')
-        os.chdir(project)
-        # several times...
-        ok = False
-        while not ok:
-            time.sleep(5)
-            cmd = 'git svn fetch'
-            try:
-                print(cmd)
-                subprocess.check_call(cmd.split())
-                ok = True
-            except:
-                print('conversion fails at some point... trying again in 5 seconds...')
+        print('conversion fails at some point... trying again...')
+        fetch_project(project, '.', authors_file)
     make_branches(os.path.join(repos, project))
     make_tags(os.path.join(repos, project))
+    os.chdir(cur_dir)
+
+
+def update_project(project, repos, authors_file=None):
+    '''
+    Incorporate new changes from the SVN repo into the Git repo.
+
+    Parameters
+    ----------
+    project: str
+        component name (brainvisa-share, axon etc)
+    repos: str
+        git base repos directory. The project repos will be a subdirectory of
+        it so it's safe to use the same repos directory for several projects
+    authors_file: str
+        correspondance map file betweeen svn and git[hub] logins.
+        format: see git-svn manpage (--authors-file)
+    '''
+    update_branches(os.path.join(repos, project))
+    make_tags(os.path.join(repos, project))
+
+
+def fetch_project(project, repos, authors_file=None):
+    '''
+    Parameters
+    ----------
+    project: str
+        component name (brainvisa-share, axon etc)
+    repos: str
+        git base repos directory. The project repos will be a subdirectory of
+        it so it's safe to use the same repos directory for several projects
+    authors_file: str
+        correspondance map file betweeen svn and git[hub] logins.
+        format: see git-svn manpage (--authors-file)
+    '''
+    cur_dir = os.getcwd()
+    os.chdir(repos)
+    auth_args = ''
+    if authors_file:
+        auth_args = ' --authors-file %s' % authors_file
+    os.chdir(project)
+    ok = False      # try several times in case git-svn crashes...
+    while not ok:
+        cmd = 'git svn fetch' + auth_args
+        try:
+            print(cmd)
+            subprocess.check_call(cmd.split())
+            ok = True
+        except:
+            print('conversion fails at some point... trying again in 5 seconds...')
+            time.sleep(5)
     os.chdir(cur_dir)
 
 
@@ -65,10 +105,37 @@ def make_branches(repos):
     '''
     cur_dir = os.getcwd()
     os.chdir(repos)
-    cmd = 'git branch -m master integration'
+    cmd = 'git branch integration refs/remotes/origin/trunk'
     print(cmd)
     subprocess.check_call(cmd.split())
-    cmd = 'git branch master origin/bug_fix' # --track
+    cmd = 'git checkout -B master refs/remotes/origin/bug_fix'
+    print(cmd)
+    subprocess.check_call(cmd.split())
+    os.chdir(cur_dir)
+
+
+def update_branches(repos):
+    '''
+    Update master / integration branches matching resp. bug_fix and trunk
+    branches in svn
+
+    Parameters
+    ----------
+    repos: str
+        git repos directory, including the project dir.
+    '''
+    cur_dir = os.getcwd()
+    os.chdir(repos)
+    cmd = 'git checkout integration'
+    print(cmd)
+    subprocess.check_call(cmd.split())
+    cmd = 'git merge --ff-only refs/remotes/origin/trunk'
+    print(cmd)
+    subprocess.check_call(cmd.split())
+    cmd = 'git checkout master'
+    print(cmd)
+    subprocess.check_call(cmd.split())
+    cmd = 'git merge --ff-only refs/remotes/origin/bug_fix'
     print(cmd)
     subprocess.check_call(cmd.split())
     os.chdir(cur_dir)
@@ -118,9 +185,19 @@ def make_tags(repos, latest_release_version=None):
                         tag_version = latest_release_version
                     else:
                         tag_version = svn_tag_name
+                    git_tag_name = 'v' + tag_version
+
+                    # Skip the tag if it already exists in git
+                    returncode = subprocess.call(
+                        ['git', 'rev-parse', '--quiet', '--verify',
+                         git_tag_name + '^{tag}'],
+                        stdout=open(os.devnull, 'w'))
+                    if returncode == 0:
+                        continue
+
                     tag_cmd = ['git', 'tag', '-a', '-m',
-                               "version %s" % tag_version,
-                               'v' + tag_version, ancestor_commit]
+                               "Version %s (from SVN tag %s)" % (tag_version, svn_tag_name),
+                               git_tag_name, ancestor_commit]
                     # We want the tag object to carry the date and committer
                     # who created the tag in SVN in the first place (typically,
                     # the person who moved the branch to tags/latest_release).
@@ -136,9 +213,9 @@ def make_tags(repos, latest_release_version=None):
                                    'GIT_COMMITTER_EMAIL': tagger_email,
                                    'GIT_COMMITTER_DATE': tag_date}
                 else:
-                    # Create a lightweight tag for SVN tags that are not named
-                    # X.Y.Z (these tags may move, e.g. latest_release)
-                    tag_cmd = ['git', 'tag', svn_tag_name, branch]
+                    # TODO stop creating these tags (these "tags" may move),
+                    # make a branch for latest_release.
+                    tag_cmd = ['git', 'tag', '--force', svn_tag_name, branch]
                 print(tag_cmd)
                 tag_cmd_env.update(os.environ)
                 subprocess.check_call(tag_cmd, env=tag_cmd_env)
@@ -230,6 +307,8 @@ def main():
     bioproj = 'https://bioproj.extra.cea.fr/neurosvn'
 
     parser = argparse.ArgumentParser('Convert some svn repositories to git')
+    parser.add_argument('-u', '--update', action='store_true',
+                        help='update projects instead of cloning them')
     parser.add_argument('-p', '--project', action='append', default=[],
                         help='project (component) to be converted. A project or component name may precise which sub-directory in the svn repos they are in, using a ":", ex: "soma-base:soma/soma-base". If not specified, the project dir is supposed to be found directly under the project name directory in the base svn repository.'
                         'Multiple projects can be processed using multiple '
@@ -266,8 +345,11 @@ def main():
             project, svn_dir = project.split(':')
         else:
             svn_dir = project
-        convert_project(project, repos, '%s/%s' % (svn_repos, svn_dir),
-                        authors_file=authors_file)
+        if options.update:
+            update_project(project, repos, authors_file=authors_file)
+        else:
+            convert_project(project, repos, '%s/%s' % (svn_repos, svn_dir),
+                            authors_file=authors_file)
 
     # recover older perforce histories in separate projects
     for project_def in p4_projects:

@@ -128,7 +128,7 @@ sources = [realrealpath(p) for p in args[1:-1]]
 exclude = [realrealpath(p) for p in options.exclude]
 missing = [p for p in sources if not os.path.exists(p)]
 remove_under = [os.path.join(r, '') for r in options.remove_under]
-remove_dirs = [os.path.join(r, '') for r in options.remove_dir]
+remove_dirs = options.remove_dir
 if missing:
     print >> sys.stderr, 'missing files:', missing
     sources = [p for p in sources if p not in missing]

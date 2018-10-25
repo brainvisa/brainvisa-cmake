@@ -144,7 +144,8 @@ def make_tags(repos, latest_release_version=None):
                 subprocess.check_call(tag_cmd, env=tag_cmd_env)
             else:
                 print('WARNING: cannot find a mainline commit that matches '
-                      'the SVN tag %s, no git tag will be created.')
+                      'the SVN tag %s, no git tag will be created.'
+                      % svn_tag_name)
     os.chdir(cur_dir)
 
 
@@ -229,7 +230,7 @@ def main():
     bioproj = 'https://bioproj.extra.cea.fr/neurosvn'
 
     parser = argparse.ArgumentParser('Convert some svn repositories to git')
-    parser.add_argument('-p', '--project', action='append',
+    parser.add_argument('-p', '--project', action='append', default=[],
                         help='project (component) to be converted. A project or component name may precise which sub-directory in the svn repos they are in, using a ":", ex: "soma-base:soma/soma-base". If not specified, the project dir is supposed to be found directly under the project name directory in the base svn repository.'
                         'Multiple projects can be processed using multiple '
                         '-p arguments')
@@ -250,8 +251,6 @@ def main():
 
     options = parser.parse_args()
     projects = options.project
-    if not projects:
-        parser.parse_args(['-h'])
     repos = options.repos
     if not repos:
         repos = os.getcwd()

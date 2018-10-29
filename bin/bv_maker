@@ -517,6 +517,12 @@ http://brainvisa.info/brainvisa-cmake/
         parser.add_option('--disable-jenkins', action='store_true',
                           dest='disable_jenkins', default=False,
                           help='disable Jenkins server logging')
+        parser.add_option('--def', '--only-if-default', action='store_true',
+                          dest='in_config', default=False,
+                          help='apply only steps which are defined as default '
+                          'steps in the bv_maker.cfg config file. Equivalent '
+                          'to passing --only-if-default to every substep '
+                          'which supports it.')
         parser.add_option(
             '-v', '--verbose', dest='verbose', action='store_true',
             help='show as much information as possible')
@@ -1241,7 +1247,9 @@ class StepCommand(object):
                         if configuration.directories else []
                         
             if (not conf_dirs or d in conf_dirs) and o.conditional_build():
-                if not self.options.in_config or step in o.default_steps:
+                if (not self.options.in_config
+                    and not configuration.options.in_config) \
+                        or step in o.default_steps:
                     if o.has_satisfied_dependencies(step):
                         self.redirect_stdout(d, o, step)
                         logs = None

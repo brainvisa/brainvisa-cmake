@@ -29,10 +29,10 @@ components_definition = [
             ['casa-distro', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/casa-distro/branches/bug_fix','casa-distro/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/casa-distro/branches/bug_fix','casa-distro/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/casa-distro/branches/bug_fix','casa-distro/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/casa-distro/branches/bug_fix','casa-distro/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/casa-distro.git branch:integration','development/casa-distro/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/casa-distro.git branch:master','development/casa-distro/master'),
+                    'release_candidate': ('git https://github.com/brainvisa/casa-distro.git branch:release_candidate','development/casa-distro/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/casa-distro.git branch:latest_release','development/casa-distro/latest_release'),
                 },
                 'build_model': 'pure_python',
             }],

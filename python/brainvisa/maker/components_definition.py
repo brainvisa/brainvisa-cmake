@@ -90,10 +90,10 @@ components_definition = [
             ['soma-base', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/trunk','soma/soma-base/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/branches/bug_fix','soma/soma-base/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/branches/release_candidate','soma/soma-base/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/tags/latest_release','soma/soma-base/latest_release'),
+                    'trunk': ('git https://github.com/populse/soma-base.git branch:integration','soma/soma-base/integration'),
+                    'bug_fix': ('git https://github.com/populse/soma-base.git branch:master','soma/soma-base/master'),
+                    'release_candidate': ('git https://github.com/populse/soma-base.git branch:release_candidate','soma/soma-base/release_candidate'),
+                    'latest_release': ('git https://github.com/populse/soma-base.git branch:latest_release','soma/soma-base/latest_release'),
                 },
             }],
             ['soma-io', {

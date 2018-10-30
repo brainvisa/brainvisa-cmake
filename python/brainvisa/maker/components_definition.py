@@ -8,13 +8,13 @@ components_definition = [
             ['brainvisa-cmake', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    # trunk actually points to bug_fix branch, because both
-                    # have to be synchronized. trunk will be reserved for
-                    # future incompatible releases.
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/branches/bug_fix','development/brainvisa-cmake/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/branches/bug_fix','development/brainvisa-cmake/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/branches/bug_fix','development/brainvisa-cmake/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/branches/bug_fix','development/brainvisa-cmake/latest_release'),
+                    # integration actually points to master branch, because
+                    # both have to be synchronized. integration will be
+                    # reserved for future incompatible releases.
+                    'trunk': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:master','development/brainvisa-cmake/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:master','development/brainvisa-cmake/master'),
+                    'release_candidate': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:release_candidate','development/brainvisa-cmake/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:latest_release','development/brainvisa-cmake/latest_release'),
                 },
             }],
             ['brainvisa-installer', {

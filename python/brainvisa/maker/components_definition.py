@@ -117,10 +117,10 @@ components_definition = [
             ['soma-workflow', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/neurospin/soma-workflow.git branch:integration','soma/soma-workflow/trunk'),
-                    'bug_fix': ('git https://github.com/neurospin/soma-workflow.git default:master','soma/soma-workflow/bug_fix'),
-                    'release_candidate': ('git https://github.com/neurospin/soma-workflow.git branch:release_candidate','soma/soma-workflow/release_candidate'),
-                    'latest_release': ('git https://github.com/neurospin/soma-workflow.git tag:latest_release','soma/soma-workflow/latest_release'),
+                    'trunk': ('git https://github.com/populse/soma-workflow.git branch:integration','soma/soma-workflow/integration'),
+                    'bug_fix': ('git https://github.com/populse/soma-workflow.git default:master','soma/soma-workflow/master'),
+                    'release_candidate': ('git https://github.com/populse/soma-workflow.git branch:release_candidate','soma/soma-workflow/release_candidate'),
+                    'latest_release': ('git https://github.com/populse/soma-workflow.git tag:latest_release','soma/soma-workflow/latest_release'),
                 },
             }],
         ],
@@ -130,10 +130,10 @@ components_definition = [
             ['capsul', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/neurospin/capsul.git branch:integration','capsul/trunk'),
-                    'bug_fix': ('git https://github.com/neurospin/capsul.git default:master','capsul/bug_fix'),
-                    'release_candidate': ('git https://github.com/neurospin/capsul.git branch:release_candidate','capsul/release_candidate'),
-                    'latest_release': ('git https://github.com/neurospin/capsul.git tag:latest_release','capsul/latest_release'),
+                    'trunk': ('git https://github.com/populse/capsul.git branch:integration','capsul/integration'),
+                    'bug_fix': ('git https://github.com/populse/capsul.git default:master','capsul/master'),
+                    'release_candidate': ('git https://github.com/populse/capsul.git branch:release_candidate','capsul/release_candidate'),
+                    'latest_release': ('git https://github.com/populse/capsul.git tag:latest_release','capsul/latest_release'),
                 },
                 'build_model': 'pure_python',
             }],

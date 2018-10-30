@@ -57,6 +57,7 @@ def update_project(project, repos, authors_file=None):
         correspondance map file betweeen svn and git[hub] logins.
         format: see git-svn manpage (--authors-file)
     '''
+    fetch_project(project, repos, authors_file)
     update_branches(os.path.join(repos, project))
     make_tags(os.path.join(repos, project))
 
@@ -107,7 +108,8 @@ def make_branches(repos):
     os.chdir(repos)
     cmd = 'git branch integration refs/remotes/origin/trunk'
     print(cmd)
-    subprocess.check_call(cmd.split())
+    # is allowed to fail for projects that do not have trunk
+    subprocess.call(cmd.split())
     cmd = 'git checkout -B master refs/remotes/origin/bug_fix'
     print(cmd)
     subprocess.check_call(cmd.split())
@@ -128,10 +130,12 @@ def update_branches(repos):
     os.chdir(repos)
     cmd = 'git checkout integration'
     print(cmd)
-    subprocess.check_call(cmd.split())
-    cmd = 'git merge --ff-only refs/remotes/origin/trunk'
-    print(cmd)
-    subprocess.check_call(cmd.split())
+    # is allowed to fail for projects that do not have trunk
+    returncode = subprocess.call(cmd.split())
+    if returncode == 0:
+        cmd = 'git merge --ff-only refs/remotes/origin/trunk'
+        print(cmd)
+        subprocess.check_call(cmd.split())
     cmd = 'git checkout master'
     print(cmd)
     subprocess.check_call(cmd.split())

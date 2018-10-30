@@ -57,6 +57,7 @@ def update_project(project, repos, authors_file=None):
         correspondance map file betweeen svn and git[hub] logins.
         format: see git-svn manpage (--authors-file)
     '''
+    fetch_project(project, repos, authors_file)
     update_branches(os.path.join(repos, project))
     make_tags(os.path.join(repos, project))
 

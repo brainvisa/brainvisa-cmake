@@ -20,10 +20,10 @@ components_definition = [
             ['brainvisa-installer', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-installer/trunk','brainvisa-installer/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-installer/branches/bug_fix','brainvisa-installer/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-installer/branches/release_candidate','brainvisa-installer/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-installer/tags/latest_release','brainvisa-installer/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/brainvisa-installer.git branch:integration','development/brainvisa-installer/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/brainvisa-installer.git branch:master','development/brainvisa-installer/master'),
+                    'release_candidate': ('git https://github.com/brainvisa/brainvisa-installer.git branch:release_candidate','development/brainvisa-installer/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/brainvisa-installer.git branch:latest_release','development/brainvisa-installer/latest_release'),
                 },
             }],
             ['casa-distro', {
@@ -577,10 +577,10 @@ components_definition = [
             ['brainvisa-release', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/trunk','development/brainvisa-release/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/branches/bug_fix','development/brainvisa-release/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/branches/release_candidate','development/brainvisa-release/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/tags/latest_release','development/brainvisa-release/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/brainvisa-release.git branch:integration','development/brainvisa-release/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/brainvisa-release.git branch:master','development/brainvisa-release/master'),
+                    'release_candidate': ('git https://github.com/brainvisa/brainvisa-release.git branch:release_candidate','development/brainvisa-release/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/brainvisa-release.git branch:latest_release','development/brainvisa-release/latest_release'),
                 },
             }],
         ],

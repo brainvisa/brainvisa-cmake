@@ -76,10 +76,10 @@ components_definition = [
             ['brainvisa-share', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-share/trunk','brainvisa-share/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-share/branches/bug_fix','brainvisa-share/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-share/branches/release_candidate','brainvisa-share/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-share/tags/latest_release','brainvisa-share/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/brainvisa-share.git branch:integration','brainvisa-share/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/brainvisa-share.git branch:master','brainvisa-share/master'),
+                    'release_candidate': ('git https://github.com/brainvisa/brainvisa-share.git branch:release_candidate','brainvisa-share/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/brainvisa-share.git branch:latest_release','brainvisa-share/latest_release'),
                 },
             }],
         ],

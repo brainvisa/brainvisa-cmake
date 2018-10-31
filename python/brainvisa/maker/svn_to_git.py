@@ -7,7 +7,8 @@ import subprocess
 import time
 
 
-def convert_project(project, repos, svn_repos, authors_file=None):
+def convert_project(project, repos, svn_repos, authors_file=None,
+                    latest_release_version=None):
     '''
     Parameters
     ----------
@@ -38,11 +39,13 @@ def convert_project(project, repos, svn_repos, authors_file=None):
         print('conversion fails at some point... trying again...')
         fetch_project(project, '.', authors_file)
     make_branches(os.path.join(repos, project))
-    make_tags(os.path.join(repos, project))
+    make_tags(os.path.join(repos, project),
+              latest_release_version=latest_release_version)
     os.chdir(cur_dir)
 
 
-def update_project(project, repos, authors_file=None):
+def update_project(project, repos, authors_file=None,
+                   latest_release_version=None):
     '''
     Incorporate new changes from the SVN repo into the Git repo.
 
@@ -59,7 +62,8 @@ def update_project(project, repos, authors_file=None):
     '''
     fetch_project(project, repos, authors_file)
     update_branches(os.path.join(repos, project))
-    make_tags(os.path.join(repos, project))
+    make_tags(os.path.join(repos, project),
+              latest_release_version=latest_release_version)
 
 
 def fetch_project(project, repos, authors_file=None):
@@ -330,6 +334,10 @@ def main():
                         help='authors file passed to git-svn: Syntax is '
                         'compatible with the file used by git cvsimport:\n'
                         'loginname = Joe User <user@example.com>')
+    parser.add_argument('--latest-release-version', default=None,
+                        help='version number (without the v prefix) of the '
+                        'Git tag which will be created from the '
+                        'latest_release SVN tag')
     parser.add_argument('--p4', action='append', default=[],
                         help='convert old perforce directory project, to graft missing history from. format: project[:svn_dir[:git_dir]]]. \n'
                         'Several -o options allowed.')
@@ -354,10 +362,16 @@ def main():
         else:
             svn_dir = project
         if options.update:
-            update_project(project, repos, authors_file=authors_file)
+            update_project(
+                project, repos, authors_file=authors_file,
+                latest_release_version=options.latest_release_version
+            )
         else:
-            convert_project(project, repos, '%s/%s' % (svn_repos, svn_dir),
-                            authors_file=authors_file)
+            convert_project(
+                project, repos, '%s/%s' % (svn_repos, svn_dir),
+                authors_file=authors_file,
+                latest_release_version=options.latest_release_version
+            )
 
     # recover older perforce histories in separate projects
     for project_def in p4_projects:

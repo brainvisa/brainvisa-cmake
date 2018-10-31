@@ -99,10 +99,10 @@ components_definition = [
             ['soma-io', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io/trunk','soma/soma-io/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io/branches/bug_fix','soma/soma-io/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io/branches/release_candidate','soma/soma-io/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io/tags/latest_release','soma/soma-io/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/soma-io.git branch:integration','soma/soma-io/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/soma-io.git branch:master','soma/soma-io/master'),
+                    'release_candidate': ('git https://github.com/brainvisa/soma-io.git branch:release_candidate','soma/soma-io/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/soma-io.git branch:latest_release','soma/soma-io/latest_release'),
                 },
             }],
             ['soma-io-gpl', {

@@ -200,10 +200,10 @@ components_definition = [
             ['axon', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon/trunk','axon/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon/branches/bug_fix','axon/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon/branches/release_candidate','axon/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon/tags/latest_release','axon/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/axon.git branch:integration','axon/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/axon.git branch:master','axon/master'),
+                    'release_candidate': ('git https://github.com/brainvisa/axon.git branch:release_candidate','axon/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/axon.git branch:latest_release','axon/latest_release'),
                 },
             }],
         ],

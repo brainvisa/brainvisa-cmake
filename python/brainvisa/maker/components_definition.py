@@ -29,9 +29,9 @@ components_definition = [
             ['casa-distro', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/brainvisa/casa-distro.git branch:integration','development/casa-distro/integration'),
+                    'trunk': ('git https://github.com/brainvisa/casa-distro.git branch:master','development/casa-distro/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/casa-distro.git branch:master','development/casa-distro/master'),
-                    'release_candidate': ('git https://github.com/brainvisa/casa-distro.git branch:release_candidate','development/casa-distro/release_candidate'),
+                    'release_candidate': ('git https://github.com/brainvisa/casa-distro.git branch:master','development/casa-distro/release_candidate'),
                     'latest_release': ('git https://github.com/brainvisa/casa-distro.git branch:latest_release','development/casa-distro/latest_release'),
                 },
                 'build_model': 'pure_python',

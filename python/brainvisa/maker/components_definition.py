@@ -125,7 +125,7 @@ components_definition = [
             }],
         ],
     }),
-    ('capsul', {
+    ('populse', {
         'components': [
             ['capsul', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
@@ -134,6 +134,13 @@ components_definition = [
                     'bug_fix': ('git https://github.com/neurospin/capsul.git default:master','capsul/bug_fix'),
                     'release_candidate': ('git https://github.com/neurospin/capsul.git branch:release_candidate','capsul/release_candidate'),
                     'latest_release': ('git https://github.com/neurospin/capsul.git tag:latest_release','capsul/latest_release'),
+                },
+                'build_model': 'pure_python',
+            }],
+            ['populse_db', {
+                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
+                'branches': {
+                    'bug_fix': ('git https://github.com/populse/populse_db.git default:master','populse/populse_db'),
                 },
                 'build_model': 'pure_python',
             }],

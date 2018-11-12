@@ -2884,28 +2884,24 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
         # also fetch tags from there, but not from the other remotes.
         remotes = self.get_git_remotes(dest)
         for remote in remotes:
-            # get stderr in a separate stream since git finds it funny to print
-            # normal operation messages in stderr.
-            stderr_str = tempfile.NamedTemporaryFile(delete=False)
-            retcode = subprocess.call(['git', 'fetch', '--quiet',
-                                       remote],
-                                      cwd=dest, stderr=stderr_str)
-            stderr_str.close()
-            stderr_content = open(stderr_str.name).read()
-            os.unlink(stderr_str.name)
+            # Redirect stderr to stdout since git fetch prints progress on
+            # stderr, but bv_build_nightly considers everything printed to
+            # stderr to be an error.
+            retcode = subprocess.call(['git', 'fetch', remote],
+                                      cwd=dest, stderr=subprocess.STDOUT)
 
             if retcode != 0:
-                sys.stderr.write(stderr_content)
-                print(
-                    '{0}: could not fetch from git repository {1}'.format(dest, src))
-            else:
-                # if no error, the output is sent to stdout, not stderr.
-                sys.stdout.write(stderr_content)
+                print('{0}: could not fetch from git repository {1}'
+                      .format(dest, src))
 
         # Fetch the remote ref specified in bv_maker.cfg into refs/bv_head
-        retcode = subprocess.call(['git', 'fetch', '--tags', '--quiet', src,
+        #
+        # Redirect stderr to stdout since git fetch prints progress on
+        # stderr, but other BrainVISA tools consider every print to stderr
+        # to be an error.
+        retcode = subprocess.call(['git', 'fetch', '--tags', src,
                                    "+" + remote_ref + ":refs/bv_head"],
-                                  cwd=dest)
+                                  cwd=dest, stderr=subprocess.STDOUT)
         if retcode != 0:
             print(
                 '{0}: could not fetch from git repository {1}'.format(dest, src))

@@ -2531,6 +2531,7 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                          'build_condition',
                          'stdout_file', 
                          'stderr_file',
+                         'update_git_remotes',
                          'default_source_dir'))
     _validOptions.update(_variables_with_replacements)
     _validOptions.update(_path_variables)
@@ -2546,6 +2547,7 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
         self.gitComponents = []
         self.default_steps = ['sources']
         self.revision_control = 'ON'
+        self.update_git_remotes = 'OFF'
         self.directory_id = ''
         # cross_compiling_dirs contains toolchain substitutions for source
         # directories. This is used when execution needs different path to
@@ -2878,21 +2880,18 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
         except subprocess.CalledProcessError:
             old_bv_head = None
 
-        # FIXME
-        # Update all remotes and git tags?? Why?? We should definitely update
-        # the remote that matches the upstream configured in bv_maker.cfg, and
-        # also fetch tags from there, but not from the other remotes.
-        remotes = self.get_git_remotes(dest)
-        for remote in remotes:
+        # Update remotes, including the 'origin' remote configured above, only
+        # if the user has explicitly configured update_git_remotes = 'ON'.
+        if self.update_git_remotes.upper() == 'ON':
             # Redirect stderr to stdout since git fetch prints progress on
             # stderr, but bv_build_nightly considers everything printed to
             # stderr to be an error.
-            retcode = subprocess.call(['git', 'fetch', remote],
+            retcode = subprocess.call(['git', 'remote', 'update'],
                                       cwd=dest, stderr=subprocess.STDOUT)
-
             if retcode != 0:
                 print('{0}: could not fetch from git repository {1}'
                       .format(dest, src))
+                # An error here is not fatal
 
         # Fetch the remote ref specified in bv_maker.cfg into refs/bv_head
         #

@@ -2858,7 +2858,7 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
         retcode = subprocess.call(['git', 'remote', 'set-url', 'origin', src],
                                   cwd=dest, stderr=open(os.devnull, 'w'))
         if retcode != 0:
-            subprocess.call(['git', 'remote', 'add', 'origin', src],
+            subprocess.call(['git', 'remote', 'add', '--tags', 'origin', src],
                             cwd=dest)
             # Failure is ignored deliberately (the remote is just for
             # convenience)
@@ -2887,7 +2887,7 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
             # get stderr in a separate stream since git finds it funny to print
             # normal operation messages in stderr.
             stderr_str = tempfile.NamedTemporaryFile(delete=False)
-            retcode = subprocess.call(['git', 'fetch', '--quiet', '--tags',
+            retcode = subprocess.call(['git', 'fetch', '--quiet',
                                        remote],
                                       cwd=dest, stderr=stderr_str)
             stderr_str.close()
@@ -2903,7 +2903,7 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
                 sys.stdout.write(stderr_content)
 
         # Fetch the remote ref specified in bv_maker.cfg into refs/bv_head
-        retcode = subprocess.call(['git', 'fetch', '--quiet', src,
+        retcode = subprocess.call(['git', 'fetch', '--tags', '--quiet', src,
                                    "+" + remote_ref + ":refs/bv_head"],
                                   cwd=dest)
         if retcode != 0:

@@ -234,7 +234,9 @@ def system_output_on_error(*args, **kwargs):
     # to the caller. Only stdout is used in this case, when the output
     # strings is actally useful in this situation.
     # However it should be in the exception e.output
-    print(' '.join([str(x) for x in args]))
+    echo = kwargs.pop('echo', True)
+    if echo:
+        print(' '.join([str(x) for x in args]))
     try:
         if subprocess32 is not None:
             # !!! Redirecting STDERR to STDOUT is a burden on Windows OS and 
@@ -352,7 +354,7 @@ def environmentPathVariablesSubstitution(path, env=None):
 def run_and_log_tests(cwd=None, env=None, options=None, projects=None):
     # get test labels to assign them to projects
     test_labels = system_output_on_error(
-        ['ctest', '--print-labels'] + options, cwd=cwd)
+        ['ctest', '--print-labels'] + options, echo=False, cwd=cwd)
     lines = test_labels.strip().split('\n')
     if 'All Labels:' in lines:
         labels_index = lines.index('All Labels:')
@@ -2791,7 +2793,7 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
 
     def get_git_remotes(self, dest):
         cmd_output = str(system_output_on_error(['git', 'remote', '-v'],
-                                                cwd=dest))
+                                                echo=False, cwd=dest))
         remotes = {}
         for line in cmd_output.split('\n'):
             remotere = re.compile('^([^ ]+)[\s|\t]+([^ ]+)\s+([^ ]+)\s*$')
@@ -2876,6 +2878,7 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
         except subprocess.CalledProcessError:
             old_bv_head = None
 
+        # FIXME
         # Update all remotes and git tags?? Why?? We should definitely update
         # the remote that matches the upstream configured in bv_maker.cfg, and
         # also fetch tags from there, but not from the other remotes.

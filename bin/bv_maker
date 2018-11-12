@@ -2757,6 +2757,7 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
 
         # update Git Repositories
 
+        self.git_update_status_list = []
         for component_version, url, git_tag, dest_directory, bv_version \
                 in self.gitComponents:
             if dest_directory is None:
@@ -2767,6 +2768,11 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
             if use_rcs and options.git:
                 self.gitupdate(url, dest_path, git_tag)
             source_directories.append((dest_path, bv_version))
+
+        if self.git_update_status_list:
+            print('Summary of Git component updates:')
+        for status_element in self.git_update_status_list:
+            print('{1:25} {0}'.format(*status_element))
 
         components_sources = {}
         for dest_path, bv_version in source_directories:
@@ -2845,6 +2851,7 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
             os.makedirs(dest)
             retcode = subprocess.call(['git', 'init', '--quiet'], cwd=dest)
             if retcode != 0:
+                self.git_update_status_list.append((dest, 'ERROR: cannot init'))
                 print(
                     'ERROR: could not initialize git repository in {0}'.format(dest))
                 return
@@ -2904,6 +2911,7 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
         if retcode != 0:
             print(
                 '{0}: could not fetch from git repository {1}'.format(dest, src))
+            self.git_update_status_list.append((dest, 'ERROR: cannot fetch'))
             return  # Abort for this repository, continue with other repositories
 
         # Check if we are in detached HEAD state
@@ -2920,7 +2928,11 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
             retcode = subprocess.call(['git', 'checkout', '--quiet',
                                        '--detach', 'refs/bv_head', '--'],
                                       cwd=dest)
-            if retcode != 0:
+            if retcode == 0:
+                self.git_update_status_list.append((dest, 'up-to-date (following)'))
+            else:
+                self.git_update_status_list.append(
+                    (dest, 'NOT updated (uncommitted changes)'))
                 print("""\
 The git repository at {0} could not be updated,
 please refer to the above error message.
@@ -2943,7 +2955,11 @@ Or, discard your changes and go back to following the upstream version:
             retcode = subprocess.call(
                 ['git', 'merge', '--ff-only', 'refs/bv_head'],
                 cwd=dest)
-            if retcode != 0:
+            if retcode == 0:
+                self.git_update_status_list.append((dest, 'up-to-date (fast-forward)'))
+            else:
+                self.git_update_status_list.append(
+                    (dest, 'NOT updated (diverged)'))
                 print("""\
 Upstream changes could not be merged in {0},
 because your local branch has diverged from the remote ref '{1}'
@@ -2958,6 +2974,8 @@ go back to letting bv_maker update your repository:
             # HEAD is detached but has been moved since last bv_maker run. The
             # user has likely checked out a tag manually, do not mess with
             # their repository.
+            self.git_update_status_list.append(
+                    (dest, 'NOT updated (detached)'))
             print("""\
 The git repository at {0} will not be updated by bv_maker,
 because it is detached at a commit that does not correspond to bv_head.

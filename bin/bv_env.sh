@@ -14,17 +14,6 @@
 #   . /somewhere/bin/bv_env.sh /somewhere
 #   PATH=/somewhere/bin:$PATH . bv_env.sh
 
-# first, on Mac, re-set DYLD_*_PATH variables because MacOS 10.10+ erases them.
-if [ -z "${DYLD_LIBRARY_PATH}" -a -n "${BV_MAC_LIB_PATH}" ]; then
-  export DYLD_LIBRARY_PATH=${BV_MAC_LIB_PATH}
-fi
-if [ -z "${DYLD_FRAMEWORK_PATH}" -a -n "${BV_MAC_FWK_PATH}" ]; then
-  export DYLD_FRAMEWORK_PATH=${BV_MAC_FWK_PATH}
-fi
-if [ -z "${DYLD_FALLBACK_LIBRARY_PATH}" -a -n "${BV_MAC_FBL_PATH}" ]; then
-  export DYLD_FALLBACK_LIBRARY_PATH=${BV_MAC_FBL_PATH}
-fi
-
 # Create a temporary file with mktemp if available
 bv_env_tempfile=$(mktemp -t bv_env.XXXXXXXXXX 2>/dev/null)
 

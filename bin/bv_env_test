@@ -18,17 +18,6 @@
 # Other example using docker:
 # BRAINVISA_TEST_REMOTE_COMMAND=docker run --rm -v /home/test:/home/test -u "$(id -u):$(id -g)" -e TMPDIR=/home/test/tmp -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$DISPLAY cati/brainvisa-test:ubuntu-16.04 xvfb-run
 
-# first, on Mac, re-set DYLD_*_PATH variables because MacOS 10.10+ erases them.
-if [ -z "${DYLD_LIBRARY_PATH}" -a -n "${BV_MAC_LIB_PATH}" ]; then
-  export DYLD_LIBRARY_PATH=${BV_MAC_LIB_PATH}
-fi
-if [ -z "${DYLD_FRAMEWORK_PATH}" -a -n "${BV_MAC_FWK_PATH}" ]; then
-  export DYLD_FRAMEWORK_PATH=${BV_MAC_FWK_PATH}
-fi
-if [ -z "${DYLD_FALLBACK_LIBRARY_PATH}" -a -n "${BV_MAC_FBL_PATH}" ]; then
-  export DYLD_FALLBACK_LIBRARY_PATH=${BV_MAC_FBL_PATH}
-fi
-
 # use only basename of main executable
 # (to avoid hard-coded /usr/bin/python for instance)
 if [ -z ${BRAINVISA_PACKAGE_INSTALL_PREFIX} ]; then

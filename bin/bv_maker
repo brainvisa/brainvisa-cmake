@@ -2770,9 +2770,11 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
             source_directories.append((dest_path, bv_version))
 
         if self.git_update_status_list:
-            print('Summary of Git component updates:')
+            print()
+            print('Summary of Git component updates')
+            print('================================')
         for status_element in self.git_update_status_list:
-            print('{1:25} {0}'.format(*status_element))
+            print('{1:23} {0}'.format(*status_element))
 
         components_sources = {}
         for dest_path, bv_version in source_directories:
@@ -2929,21 +2931,24 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
                                        '--detach', 'refs/bv_head', '--'],
                                       cwd=dest)
             if retcode == 0:
-                self.git_update_status_list.append((dest, 'up-to-date (following)'))
+                status_text = 'up-to-date'
             else:
-                self.git_update_status_list.append(
-                    (dest, 'NOT updated (uncommitted changes)'))
+                status_text = 'NOT UPDATED (see above)'
                 print("""\
 The git repository at {0} could not be updated,
 please refer to the above error message.
 
 If you have made local changes, you should keep track of them in a branch:
+
+  cd '{0}'
   git checkout -b <my_branch>
   git add ...
   git commit
 
 Or, discard your changes and go back to following the upstream version:
-  git checkout bv_head""".format(dest))
+
+  git -C '{0}' checkout refs/bv_head
+""".format(dest))
         elif not detached_head:
             # We are following a branch. Advance the branch if it has not
             # diverged from upstream. If local commits exist, that would
@@ -2956,32 +2961,33 @@ Or, discard your changes and go back to following the upstream version:
                 ['git', 'merge', '--ff-only', 'refs/bv_head'],
                 cwd=dest)
             if retcode == 0:
-                self.git_update_status_list.append((dest, 'up-to-date (fast-forward)'))
+                status_text = 'up-to-date (on branch)'
             else:
-                self.git_update_status_list.append(
-                    (dest, 'NOT updated (diverged)'))
+                status_text = 'NOT UPDATED (see above)'
                 print("""\
 Upstream changes could not be merged in {0},
-because your local branch has diverged from the remote ref '{1}'
-configured in bv_maker.cfg.
+please refer to the above error message.
 
 If you do not want to develop in this repository anymore, you should first
 decide what to do with your local changes, then leave the branch and
 go back to letting bv_maker update your repository:
 
-  git -C '{0}' checkout bv_head""".format(dest, remote_ref))
+  git -C '{0}' checkout refs/bv_head
+""".format(dest, remote_ref))
         else:
             # HEAD is detached but has been moved since last bv_maker run. The
             # user has likely checked out a tag manually, do not mess with
             # their repository.
-            self.git_update_status_list.append(
-                    (dest, 'NOT updated (detached)'))
+            status_text = 'NOT UPDATED (see above)'
             print("""\
 The git repository at {0} will not be updated by bv_maker,
 because it is detached at a commit that does not correspond to bv_head.
-If you want to let bv_maker update your repository to the remote ref '{1}',
-you should run:
-  git -C '{0}' checkout bv_head""".format(dest, remote_ref))
+If you want to let bv_maker update your repository to the configured
+remote ref '{1}', you should run:
+
+  git -C '{0}' checkout refs/bv_head
+""".format(dest, remote_ref))
+        self.git_update_status_list.append((dest, status_text))
 
     def info(self):
         print('Source directory: "' + self.directory + '"')

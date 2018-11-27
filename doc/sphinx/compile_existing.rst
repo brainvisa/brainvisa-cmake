@@ -16,6 +16,7 @@ First time configuration
 You must have the following software on your system:
 
 * Subversion. The command svnadmin must also be installed on your system. On some Linux distributions it is not in the subversion package (for instance in Ubuntu you must install subversion-tools package).
+* Git
 * CMake (version >= 2.6.4)
 * Python (version >= 2.6)
 * Make
@@ -34,7 +35,7 @@ For Linux and MacOS:
 
 .. code-block:: bash
 
-    svn export https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/branches/bug_fix /tmp/brainvisa-cmake
+    git clone https://github.com/brainvisa/brainvisa-cmake.git /tmp/brainvisa-cmake
     cd /tmp/brainvisa-cmake
     cmake -DCMAKE_INSTALL_PREFIX=. .
     make install
@@ -42,17 +43,9 @@ For Linux and MacOS:
 For Windows:
 ############
 
-.. code-block:: cmake
-
-    svn export https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/branches/bug_fix /c/tmp/brainvisa-cmake
-    cd /c/tmp/brainvisa-cmake
-    cmake -G 'MSYS Makefiles' -DCMAKE_INSTALL_PREFIX=. .
-    make install
+Creating a developpment environment is not supported under Windows. Building Windows version of BrainVISA software is done on Linux using cross-compilation.
 
 You can now use :code:`/tmp/brainvisa-cmake/bin/bv_env_host bv_maker` to setup your environement (**you must edit the configuration file first**). You will always have a copy of brainvisa-cmake installed in a build directory at configuration time. Therefore, you may delete this temporary brainvisa-cmake version and use the one in your build directory.
-
-.. note::
-    The svn address here, https://bioproj.extra.cea.fr/neurosvn/brainvisa/branches/bug_fix/brainvisa-cmake is the address of the **bug_fix** branch in our development tree, which corresponds to the "stable, usable" version, not the released version as found in https://bioproj.extra.cea.fr/neurosvn/brainvisa/source_views/brainvisa_cmake. As new features have been added sonce the last release, such as support for **git** projects and svn project hosted on a separate repository (such as capsul), this newer version is needed to build projects on the current repository.
 
 
 3) Edit bv_maker configuration file
@@ -93,9 +86,6 @@ Typical configuration:
 .. code-block:: bash
 
     /tmp/brainvisa-cmake/bin/bv_env_host bv_maker sources
-
-You can permanently accept the certificate for https://bioproj.extra.cea.fr:443 by typing p when asked.
-When a password is requested you can press return and use your BioProj login and password.
 
 
 5) Configure build directories with CMake

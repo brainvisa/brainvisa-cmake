@@ -612,7 +612,7 @@ components_definition = [
     ('disco', {
         'components': [
             ['disco', {
-                'groups': ['all', 'cati_platform'],
+                'groups': ['all'],
                 'branches': {
                     'trunk': ('git https://bioproj.extra.cea.fr/git/brainvisa-disco branch:integration', 'disco/integration'),
                     'bug_fix': ('git https://bioproj.extra.cea.fr/git/brainvisa-disco branch:master', 'disco/master'),

@@ -614,10 +614,10 @@ components_definition = [
             ['disco', {
                 'groups': ['all', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/disco/trunk', 'disco/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/disco/branches/bug_fix', 'disco/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/disco/branches/release_candidate', 'disco/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/disco/tags/latest_release', 'disco/latest_release'),
+                    'trunk': ('git https://bioproj.extra.cea.fr/git/brainvisa-disco branch:integration', 'disco/integration'),
+                    'bug_fix': ('git https://bioproj.extra.cea.fr/git/brainvisa-disco branch:master', 'disco/master'),
+                    'release_candidate': ('git https://bioproj.extra.cea.fr/git/brainvisa-disco branch:release_candidate', 'disco/release_candidate'),
+                    'latest_release': ('git https://bioproj.extra.cea.fr/git/brainvisa-disco branch:latest_release', 'disco/latest_release'),
                 },
             }],
         ],

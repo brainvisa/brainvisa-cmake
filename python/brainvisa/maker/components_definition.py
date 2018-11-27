@@ -11,10 +11,10 @@ components_definition = [
                     # integration actually points to master branch, because
                     # both have to be synchronized. integration will be
                     # reserved for future incompatible releases.
-                    'trunk': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:github_migration','development/brainvisa-cmake/integration'),
-                    'bug_fix': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:github_migration','development/brainvisa-cmake/master'),
-                    'release_candidate': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:github_migration','development/brainvisa-cmake/release_candidate'),
-                    'latest_release': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:github_migration','development/brainvisa-cmake/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:master','development/brainvisa-cmake/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:master','development/brainvisa-cmake/master'),
+                    'release_candidate': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:master','development/brainvisa-cmake/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:master','development/brainvisa-cmake/latest_release'),
                 },
             }],
             ['brainvisa-installer', {

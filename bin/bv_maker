@@ -797,12 +797,15 @@ def get_pack_host_system_name():
         Get system name to use for packaging.
         Because linux compatibility for packs depends on libc version, the
         libc version is integrated to the system name.
+        On Mac, the version of OSX is also appended.
     '''
     pack_system = get_host_system_name()
     if pack_system.startswith('linux'):
         libc_version = get_host_libc_version()
         pack_system += '-glibc-'+ '.'.join(libc_version[:2])  
-        
+    elif pack_system.startswith('osx'):
+        pack_system += '-' + '.'.join(platform.mac_ver()[:2])
+
     return pack_system
 
 

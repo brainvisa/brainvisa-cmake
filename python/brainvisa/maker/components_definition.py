@@ -8,31 +8,31 @@ components_definition = [
             ['brainvisa-cmake', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    # trunk actually points to bug_fix branch, because both
-                    # have to be synchronized. trunk will be reserved for
-                    # future incompatible releases.
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/branches/bug_fix','development/brainvisa-cmake/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/branches/bug_fix','development/brainvisa-cmake/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/branches/bug_fix','development/brainvisa-cmake/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-cmake/branches/bug_fix','development/brainvisa-cmake/latest_release'),
+                    # integration actually points to master branch, because
+                    # both have to be synchronized. integration will be
+                    # reserved for future incompatible releases.
+                    'trunk': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:github_migration','development/brainvisa-cmake/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:github_migration','development/brainvisa-cmake/master'),
+                    'release_candidate': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:github_migration','development/brainvisa-cmake/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:github_migration','development/brainvisa-cmake/latest_release'),
                 },
             }],
             ['brainvisa-installer', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-installer/trunk','brainvisa-installer/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-installer/branches/bug_fix','brainvisa-installer/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-installer/branches/release_candidate','brainvisa-installer/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-installer/tags/latest_release','brainvisa-installer/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/brainvisa-installer.git branch:integration','development/brainvisa-installer/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/brainvisa-installer.git branch:master','development/brainvisa-installer/master'),
+                    'release_candidate': ('git https://github.com/brainvisa/brainvisa-installer.git branch:release_candidate','development/brainvisa-installer/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/brainvisa-installer.git branch:latest_release','development/brainvisa-installer/latest_release'),
                 },
             }],
             ['casa-distro', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/casa-distro/branches/bug_fix','casa-distro/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/casa-distro/branches/bug_fix','casa-distro/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/casa-distro/branches/bug_fix','casa-distro/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/casa-distro/branches/bug_fix','casa-distro/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/casa-distro.git branch:master','development/casa-distro/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/casa-distro.git branch:master','development/casa-distro/master'),
+                    'release_candidate': ('git https://github.com/brainvisa/casa-distro.git branch:master','development/casa-distro/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/casa-distro.git branch:latest_release','development/casa-distro/latest_release'),
                 },
                 'build_model': 'pure_python',
             }],
@@ -76,10 +76,10 @@ components_definition = [
             ['brainvisa-share', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-share/trunk','brainvisa-share/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-share/branches/bug_fix','brainvisa-share/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-share/branches/release_candidate','brainvisa-share/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/brainvisa-share/tags/latest_release','brainvisa-share/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/brainvisa-share.git branch:integration','brainvisa-share/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/brainvisa-share.git branch:master','brainvisa-share/master'),
+                    'release_candidate': ('git https://github.com/brainvisa/brainvisa-share.git branch:release_candidate','brainvisa-share/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/brainvisa-share.git branch:latest_release','brainvisa-share/latest_release'),
                 },
             }],
         ],
@@ -90,19 +90,19 @@ components_definition = [
             ['soma-base', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/trunk','soma/soma-base/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/branches/bug_fix','soma/soma-base/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/branches/release_candidate','soma/soma-base/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base/tags/latest_release','soma/soma-base/latest_release'),
+                    'trunk': ('git https://github.com/populse/soma-base.git branch:integration','soma/soma-base/integration'),
+                    'bug_fix': ('git https://github.com/populse/soma-base.git branch:master','soma/soma-base/master'),
+                    'release_candidate': ('git https://github.com/populse/soma-base.git branch:release_candidate','soma/soma-base/release_candidate'),
+                    'latest_release': ('git https://github.com/populse/soma-base.git branch:latest_release','soma/soma-base/latest_release'),
                 },
             }],
             ['soma-io', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io/trunk','soma/soma-io/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io/branches/bug_fix','soma/soma-io/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io/branches/release_candidate','soma/soma-io/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io/tags/latest_release','soma/soma-io/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/soma-io.git branch:integration','soma/soma-io/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/soma-io.git branch:master','soma/soma-io/master'),
+                    'release_candidate': ('git https://github.com/brainvisa/soma-io.git branch:release_candidate','soma/soma-io/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/soma-io.git branch:latest_release','soma/soma-io/latest_release'),
                 },
             }],
             ['soma-io-gpl', {
@@ -117,10 +117,10 @@ components_definition = [
             ['soma-workflow', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/neurospin/soma-workflow.git branch:integration','soma/soma-workflow/trunk'),
-                    'bug_fix': ('git https://github.com/neurospin/soma-workflow.git default:master','soma/soma-workflow/bug_fix'),
-                    'release_candidate': ('git https://github.com/neurospin/soma-workflow.git branch:release_candidate','soma/soma-workflow/release_candidate'),
-                    'latest_release': ('git https://github.com/neurospin/soma-workflow.git tag:latest_release','soma/soma-workflow/latest_release'),
+                    'trunk': ('git https://github.com/populse/soma-workflow.git branch:integration','soma/soma-workflow/integration'),
+                    'bug_fix': ('git https://github.com/populse/soma-workflow.git default:master','soma/soma-workflow/master'),
+                    'release_candidate': ('git https://github.com/populse/soma-workflow.git branch:release_candidate','soma/soma-workflow/release_candidate'),
+                    'latest_release': ('git https://github.com/populse/soma-workflow.git tag:latest_release','soma/soma-workflow/latest_release'),
                 },
             }],
         ],
@@ -130,10 +130,10 @@ components_definition = [
             ['capsul', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/neurospin/capsul.git branch:integration','capsul/trunk'),
-                    'bug_fix': ('git https://github.com/neurospin/capsul.git default:master','capsul/bug_fix'),
-                    'release_candidate': ('git https://github.com/neurospin/capsul.git branch:release_candidate','capsul/release_candidate'),
-                    'latest_release': ('git https://github.com/neurospin/capsul.git tag:latest_release','capsul/latest_release'),
+                    'trunk': ('git https://github.com/populse/capsul.git branch:integration','capsul/integration'),
+                    'bug_fix': ('git https://github.com/populse/capsul.git default:master','capsul/master'),
+                    'release_candidate': ('git https://github.com/populse/capsul.git branch:release_candidate','capsul/release_candidate'),
+                    'latest_release': ('git https://github.com/populse/capsul.git tag:latest_release','capsul/latest_release'),
                 },
                 'build_model': 'pure_python',
             }],
@@ -152,28 +152,28 @@ components_definition = [
             ['aims-free', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-free/trunk','aims/aims-free/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-free/branches/bug_fix','aims/aims-free/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-free/branches/release_candidate','aims/aims-free/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-free/tags/latest_release','aims/aims-free/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/aims-free.git branch:integration','aims/aims-free/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/aims-free.git branch:master','aims/aims-free/master'),
+                    'release_candidate': ('git https://github.com/brainvisa/aims-free.git branch:release_candidate','aims/aims-free/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/aims-free.git branch:latest_release','aims/aims-free/latest_release'),
                 },
             }],
             ['aims-gpl', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-gpl/trunk','aims/aims-gpl/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-gpl/branches/bug_fix','aims/aims-gpl/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-gpl/branches/release_candidate','aims/aims-gpl/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-gpl/tags/latest_release','aims/aims-gpl/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/aims-gpl.git branch:integration','aims/aims-gpl/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/aims-gpl.git branch:master','aims/aims-gpl/master'),
+                    'release_candidate': ('git https://github.com/brainvisa/aims-gpl.git branch:release_candidate','aims/aims-gpl/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/aims-gpl.git branch:latest_release','aims/aims-gpl/latest_release'),
                 },
             }],
             ['aims-til', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-til/trunk','aims/aims-til/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-til/branches/bug_fix','aims/aims-til/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-til/branches/release_candidate','aims/aims-til/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-til/tags/latest_release','aims/aims-til/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/aims-til.git branch:integration','aims/aims-til/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/aims-til.git branch:master','aims/aims-til/master'),
+                    'release_candidate': ('git https://github.com/brainvisa/aims-til.git branch:release_candidate','aims/aims-til/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/aims-til.git branch:latest_release','aims/aims-til/latest_release'),
                 },
             }],
         ],
@@ -184,19 +184,19 @@ components_definition = [
             ['anatomist-free', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-free/trunk','anatomist/anatomist-free/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-free/branches/bug_fix','anatomist/anatomist-free/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-free/branches/release_candidate','anatomist/anatomist-free/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-free/tags/latest_release','anatomist/anatomist-free/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/anatomist-free.git branch:integration','anatomist/anatomist-free/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/anatomist-free.git branch:master','anatomist/anatomist-free/master'),
+                    'release_candidate': ('git https://github.com/brainvisa/anatomist-free.git branch:release_candidate','anatomist/anatomist-free/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/anatomist-free.git branch:latest_release','anatomist/anatomist-free/latest_release'),
                 },
             }],
             ['anatomist-gpl', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-gpl/trunk','anatomist/anatomist-gpl/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-gpl/branches/bug_fix','anatomist/anatomist-gpl/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-gpl/branches/release_candidate','anatomist/anatomist-gpl/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/anatomist/anatomist-gpl/tags/latest_release','anatomist/anatomist-gpl/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/anatomist-gpl.git branch:integration','anatomist/anatomist-gpl/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/anatomist-gpl.git branch:master','anatomist/anatomist-gpl/master'),
+                    'release_candidate': ('git https://github.com/brainvisa/anatomist-gpl.git branch:release_candidate','anatomist/anatomist-gpl/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/anatomist-gpl.git branch:latest_release','anatomist/anatomist-gpl/latest_release'),
                 },
             }],
         ],
@@ -207,10 +207,10 @@ components_definition = [
             ['axon', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon/trunk','axon/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon/branches/bug_fix','axon/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon/branches/release_candidate','axon/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/axon/tags/latest_release','axon/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/axon.git branch:integration','axon/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/axon.git branch:master','axon/master'),
+                    'release_candidate': ('git https://github.com/brainvisa/axon.git branch:release_candidate','axon/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/axon.git branch:latest_release','axon/latest_release'),
                 },
             }],
         ],
@@ -584,10 +584,10 @@ components_definition = [
             ['brainvisa-release', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/trunk','development/brainvisa-release/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/branches/bug_fix','development/brainvisa-release/bug_fix'),
-                    'release_candidate': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/branches/release_candidate','development/brainvisa-release/release_candidate'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/development/brainvisa-release/tags/latest_release','development/brainvisa-release/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/brainvisa-release.git branch:integration','development/brainvisa-release/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/brainvisa-release.git branch:master','development/brainvisa-release/master'),
+                    'release_candidate': ('git https://github.com/brainvisa/brainvisa-release.git branch:release_candidate','development/brainvisa-release/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/brainvisa-release.git branch:latest_release','development/brainvisa-release/latest_release'),
                 },
             }],
         ],

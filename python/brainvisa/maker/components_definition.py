@@ -312,10 +312,10 @@ components_definition = [
             ['morphologist-ui', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/neurospin/morphologist.git branch:integration', 'morphologist/morphologist-ui/trunk'),
-                    'bug_fix': ('git https://github.com/neurospin/morphologist.git default:master', 'morphologist/morphologist-ui/bug_fix'),
-                    'release_candidate': ('git https://github.com/neurospin/morphologist.git branch:release_candidate', 'morphologist/morphologist-ui/release_candidate'),
-                    'latest_release': ('git https://github.com/neurospin/morphologist.git tag:latest_release', 'morphologist/morphologist-ui/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/morphologist.git branch:integration', 'morphologist/morphologist-ui/trunk'),
+                    'bug_fix': ('git https://github.com/brainvisa/morphologist.git default:master', 'morphologist/morphologist-ui/bug_fix'),
+                    'release_candidate': ('git https://github.com/brainvisa/morphologist.git branch:release_candidate', 'morphologist/morphologist-ui/release_candidate'),
+                    'latest_release': ('git https://github.com/brainvisa/morphologist.git tag:latest_release', 'morphologist/morphologist-ui/latest_release'),
                 },
             }],
         ],

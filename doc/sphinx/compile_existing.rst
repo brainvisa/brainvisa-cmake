@@ -143,9 +143,13 @@ Git repositories and bv_maker
 
 in the ``[source]`` section of ``bv_maker.cfg``:
 
-.. code-block::
+.. code-block:: bash
 
   git https://github.com/neurospin/highres-cortex.git master highres-cortex/master
+
+
+Remotes and forks
+-----------------
 
 Git repos are normally linked to the main "origin" repository. When personal forks are used, the local repository has to be linked to this indirect personal fork. Connecting to personal forks can be done in each client repository once it is setup once:
 
@@ -155,4 +159,25 @@ Git repos are normally linked to the main "origin" repository. When personal for
     git branch --set-upstream-to perso/master master
 
 This way later *pulls* (as done by ``bv_maker sources``) will pull from the personal fork.
+
+
+Credentials
+-----------
+
+GitHub may use either https or git (ssh) protocols. Https is likely to ask username and password at each push operation. git/ssh protocol uses a ssh key, which avoids the needs to type a password every time. This key has to be registered by users on the GitHub web site.
+You may swich to git/ssh protocol by changing a remote URL in a repository directory (which has to be done for each repository client directory):
+
+.. code-block:: bash
+
+    git remote set-url origin git@github.com:brainvisa/brainvisa-cmake.git
+
+Brainvisa-cmake provides the https version by default because we cannot know if users have registered a ssh key on GitHub (or even if users actually have an account on GitHub or are using the anonymous read access).
+
+BioProj projects which are under git (there are a few) always use https, and moreover need credentials even at read time (on fetch / pull operations), which is even more annoying. Consider storing permanently credential information in the git config:
+
+.. code-block:: bash
+
+    git config credential.helper store
+
+This will allow git to store username and password **unencrypted** in the .git directory of the project. You have to do so for each project, and in brainvisa-cmake, each declared branch (bug_fix / trunk etc.) since each is a separate clone of the git repos. Then on the next update (``bv_maker sources``) git will ask for username and password, still for each project directory, and then store them and don't ask again the next time.
 

@@ -6,7 +6,7 @@ You must create this file in the following directory: ``$HOME/.brainvisa/bv_make
 
 In this file you can configure several types of directories:
 
-* **source directory**: A source directory contains the source code of a set of selected projects. This source code will be updated (to reflect the changes that occured on BioProj server) each time you use bv_maker configure. You can define as many source directory as you want. In a source directory configuration you can select any project and combine several versions of the same project.
+* **source directory**: A source directory contains the source code of a set of selected projects. This source code will be updated (to reflect the changes that occured on BioProj or GitHub servers) each time you use bv_maker sources. You can define as many source directories as you want. In a source directory configuration you can select any project and combine several versions of the same project.
 
 * **build directory**: A build directory will contain compiled version of the projects. A build directory can contain any project but only one version per project is allowed. You can define as many source directory as you want.
 

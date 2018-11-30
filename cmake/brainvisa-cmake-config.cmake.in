@@ -1907,7 +1907,7 @@ function( BRAINVISA_ADD_TEST )
     get_filename_component(_python_executable "${PYTHON_HOST_EXECUTABLE}" REALPATH)
 
     # Get target python interpreter name
-    get_filename_component(_python_test "${CROSSCOMPILING_PYTHON_EXECUTABLE}" NAME)
+    get_filename_component(_python_test "${PYTHON_EXECUTABLE}" NAME)
     foreach( _arg ${_command_args} )
       list( GET _command_args ${_arg_index} result )
       if(EXISTS "${result}")

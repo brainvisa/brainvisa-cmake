@@ -32,7 +32,7 @@ components_definition = [
                     'trunk': ('git https://github.com/brainvisa/casa-distro.git branch:master','development/casa-distro/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/casa-distro.git branch:master','development/casa-distro/master'),
                     'release_candidate': ('git https://github.com/brainvisa/casa-distro.git branch:master','development/casa-distro/release_candidate'),
-                    'latest_release': ('git https://github.com/brainvisa/casa-distro.git branch:latest_release','development/casa-distro/latest_release'),
+                    'latest_release': ('git https://github.com/brainvisa/casa-distro.git branch:master','development/casa-distro/latest_release'),
                 },
                 'build_model': 'pure_python',
             }],

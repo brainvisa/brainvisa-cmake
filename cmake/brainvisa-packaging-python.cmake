@@ -335,11 +335,17 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
 
       else() # "${PYTHON_BIN_DIR}" STREQUAL "/usr/bin"
 
-        BRAINVISA_INSTALL(DIRECTORY "${PYTHON_MODULES_PATH}"
-          DESTINATION "lib"
-          USE_SOURCE_PERMISSIONS
-          COMPONENT "${component}"
-        )
+#         BRAINVISA_INSTALL(DIRECTORY "${PYTHON_MODULES_PATH}"
+#           DESTINATION "lib"
+#           USE_SOURCE_PERMISSIONS
+#           COMPONENT "${component}"
+#         )
+        # the previous cmake-based copy cannot copy a symlink going outside the
+        # copied tree, which happens on Mac for python installed using brew
+
+        add_custom_command( TARGET install-${component} PRE_BUILD
+          COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${CMAKE_COMMAND} -E make_directory "$(BRAINVISA_INSTALL_PREFIX)/lib" \;${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${PYTHON_MODULES_PATH} "$(BRAINVISA_INSTALL_PREFIX)/lib" \;else ${CMAKE_COMMAND} -E make_directory "${CMAKE_INSTALL_PREFIX}/lib" \; ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${PYTHON_MODULES_PATH} "${CMAKE_INSTALL_PREFIX}/lib" \;fi )
+
       endif() # "${PYTHON_BIN_DIR}" STREQUAL "/usr/bin"
       
     

@@ -12,10 +12,14 @@ def realrealpath(path):
 
 
 def is_in_base(path, bases):
-    rpath = os.path.normpath(os.path.abspath(path))
+    rpath = os.path.realpath(os.path.abspath(path))
     for base in bases:
-        if rpath == base or rpath.startswith(base + os.sep):
+        rbase = os.path.realpath(base)
+        if rpath == rbase or rpath.startswith(rbase + os.sep):
             return (True, os.path.relpath(rpath, base), base)
+    for base in bases:
+        if path == base or path.startswith(base + os.sep):
+            return (True, os.path.relpath(path, base), base)
     return (False, path, '')
 
 
@@ -32,10 +36,10 @@ def is_external_link(path, bases):
     while not found:
         lpath = os.readlink(path)
         if not os.path.isabs(lpath):
-            path = os.path.normpath(os.path.abspath(os.path.join(
-                os.path.dirname(path), lpath)))
+            path = os.path.realpath(
+                os.path.join(os.path.realpath(os.path.dirname(path)), lpath))
         else:
-            path = os.path.normpath(lpath)
+            path = os.path.realpath(lpath)
         found = not os.path.islink(path)
         inbase, relpath, base = is_in_base(path, bases)
     return (not inbase, path, not found, relpath, base)
@@ -43,7 +47,7 @@ def is_external_link(path, bases):
 
 def rel_link(source, dest, destbase):
     if not os.path.isabs(source):
-        source = os.path.normpath(os.path.join(destbase, source))
+        source = os.path.realpath(os.path.join(destbase, source))
     relspath = os.path.relpath(source, os.path.dirname(dest))
     if os.path.basename( relspath ) == relspath \
             and relspath == os.path.basename(dest):
@@ -52,7 +56,7 @@ def rel_link(source, dest, destbase):
 
 
 def symlink(reldpath, destpath, simulation):
-    if os.path.islink( destpath ) \
+    if os.path.islink(destpath) \
             and os.readlink(destpath) == reldpath:
         # link already exists and points the correct location
         return

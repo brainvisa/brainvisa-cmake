@@ -1,5 +1,6 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
+from __future__ import print_function
 from optparse import OptionParser
 import os
 import sys
@@ -82,7 +83,7 @@ def copy2(source, dest, simulation=False):
 def make_ext_symlink(source, dest, ext_links, simulation):
     if ext_links.has_key(source):
         realsrc = ext_links[source]
-        # print 'already copied as', realsrc
+        # print('already copied as', realsrc)
         reldpath = rel_link(realsrc, dest, '')
         if reldpath is not None:
             symlink(reldpath, destpath, simulation)
@@ -134,7 +135,7 @@ missing = [p for p in sources if not os.path.exists(p)]
 remove_under = [os.path.join(r, '') for r in options.remove_under]
 remove_dirs = options.remove_dir
 if missing:
-    print >> sys.stderr, 'missing files:', missing
+    print(sys.stderr, 'missing files:', missing, file=sys.stderr)
     sources = [p for p in sources if p not in missing]
 
 if ( os.path.exists( dest ) and not os.path.isdir( dest ) ) or \
@@ -151,10 +152,10 @@ if not os.path.exists(dest):
                for p in os.listdir(sources[0])]
 
 if options.verbose:
-    print 'sources:', sources
-    print 'dest:', dest
-    print 'bases:', bases
-    print 'exclude:', exclude
+    print('sources:', sources)
+    print('dest:', dest)
+    print('bases:', bases)
+    print('exclude:', exclude)
 
 ext_links = {}  # external links list
 
@@ -164,32 +165,32 @@ while sources:
     source = sources.pop()
     if realrealpath(source) in exclude:
         if options.verbose:
-            print 'skipping excluded %s file/directory' % source
+            print('skipping excluded %s file/directory' % source)
         continue
     if realrealpath(source) == dest:
         if options.verbose:
-            print 'skipping', source, ', which is destination directory'
+            print('skipping', source, ', which is destination directory')
         continue
     x, rpath, base = is_in_base(source, bases)
     destpath = os.path.join(dest, rpath)
     if options.verbose:
-        print source, '->', destpath, x, rpath, base
+        print(source, '->', destpath, x, rpath, base)
     try:
         is_extlink, spath, is_link, relpath, base \
             = is_external_link(source, bases)
-    except IOError, e:
-        print >> sys.stderr, e
+    except IOError as e:
+        print(e, file=sys.stderr)
         continue
     if is_link:
         if not is_extlink:
             # internal symlink
             if options.verbose:
-                print 'internal symlink:', relpath
+                print('internal symlink:', relpath)
             reldpath = rel_link(relpath, destpath, dest)
             symlink(reldpath, destpath, options.simulation)
         else:
             if options.verbose:
-                print 'external symlink:', relpath
+                print('external symlink:', relpath)
             make_ext_symlink(spath, destpath, ext_links, options.simulation)
     elif os.path.isdir(source):
         # directory
@@ -209,21 +210,22 @@ while sources:
         # file
         if is_extlink:
             if options.verbose:
-                print 'external symlink -> file:', destpath, '->', relpath, 'from', source
+                print('external symlink -> file:', destpath, '->', relpath,
+                      'from', source)
             make_ext_symlink(spath, destpath, ext_links, options.simulation)
         elif os.path.islink(source):
             reldpath = rel_link(relpath, destpath, dest)
             if reldpath is None:
                 if options.verbose:
-                    print 'identity symlink'
+                    print('identity symlink')
             else:
                 if options.verbose:
-                    print 'internal symlink -> file:', reldpath
+                    print('internal symlink -> file:', reldpath)
                 symlink(reldpath, destpath, options.simulation)
         else:
             # regular file
             if options.verbose:
-                print 'regular file:', spath
+                print('regular file:', spath)
             if not options.simulation:
                 if os.path.lexists(destpath):
                     os.remove(destpath)

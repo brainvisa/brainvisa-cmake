@@ -278,6 +278,7 @@ if( BRAINVISA_BVMAKER )
            bv_release
            bv_show_build_logs
            bv_sip4make
+           bv_svn_to_git
            bv_system_info
            bv_unenv
            bv_unit_test

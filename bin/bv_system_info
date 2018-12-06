@@ -1,6 +1,7 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import sys, os
 
 def getValueFromFile( file, index = 0 ):
@@ -121,13 +122,13 @@ else :
 if __name__ == '__main__':
   if len(sys.argv) > 1 :
     if sys.argv[1] == '-p' or sys.argv[1] == '--platform' :
-      print systemplatform
+      print(systemplatform)
     elif sys.argv[1] == '-s' or sys.argv[1] == '--shortname' :
-      print shortname
+      print(shortname)
     else :
-      print ' Get system identification information '
-      print '       -p or --platform option gives a general information about the platform (linux, windows, irix, macos, solaris)'
-      print '       -s or --shortname option gives a system shortname without architecture'
-      print '       -h or --help option display this help'
+      print(' Get system identification information ')
+      print('       -p or --platform option gives a general information about the platform (linux, windows, irix, macos, solaris)')
+      print('       -s or --shortname option gives a system shortname without architecture')
+      print('       -h or --help option display this help')
   else :
-    print identification
+    print(identification)

@@ -80,7 +80,7 @@ endif()
 #IF(PYTHONINTERP_FOUND)
 
 #MESSAGE("Calling python to query for Numpy location")
-#set(_cmd "${PYTHON_HOST_EXECUTABLE} -c \"import numpy.distutils.misc_util; print ';'.join(numpy.distutils.misc_util.get_numpy_include_dirs())\"")
+#set(_cmd "${PYTHON_HOST_EXECUTABLE} -c \"from __future__ import print_function; import numpy.distutils.misc_util; print(';'.join(numpy.distutils.misc_util.get_numpy_include_dirs()))\"")
 #EXEC_PROGRAM("${_cmd}" OUTPUT_VARIABLE NUMPY_INCLUDE_DIR)
 
 #MESSAGE("${NUMPY_INCLUDE_DIR}")

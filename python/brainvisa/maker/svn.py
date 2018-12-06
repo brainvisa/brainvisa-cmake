@@ -88,7 +88,7 @@ def svn_cat(url,
                         simulate=simulate,
                         verbose=verbose)
 
-    except SystemError, e:
+    except SystemError as e:
         raise RuntimeError('SVN error: Unable to cat from ' + url)
 
 
@@ -139,7 +139,7 @@ def svn_checkout(url,
                         simulate=simulate,
                         verbose=verbose)
 
-    except SystemError, e:
+    except SystemError as e:
         raise RuntimeError('SVN error: Unable to export from '
                         + url + ' to ' + path)
 
@@ -170,7 +170,7 @@ def svn_commit(path,
                         simulate=simulate,
                         verbose=verbose)
 
-    except SystemError, e:
+    except SystemError as e:
         raise RuntimeError('SVN error: Unable to commit changes from ' + path)
 
 
@@ -242,7 +242,7 @@ def svn_exists(url):
         svn_info(url)
         return True
 
-    except RuntimeError, e:
+    except RuntimeError as e:
         return False
 
 
@@ -269,7 +269,7 @@ def svn_export(url,
                         simulate=simulate,
                         verbose=verbose)
 
-    except SystemError, e:
+    except SystemError as e:
         raise RuntimeError('SVN error: Unable to export from '
                         + url + ' to ' + path)
 
@@ -300,7 +300,7 @@ def svn_info(url,
                         simulate=simulate,
                         verbose=verbose)
 
-    except SystemError, e:
+    except SystemError as e:
         raise RuntimeError('SVN error: Unable to get info for ' + url)
 
 
@@ -330,7 +330,7 @@ def svn_list(url,
                         simulate=simulate,
                         verbose=verbose)
 
-    except SystemError, e:
+    except SystemError as e:
         raise RuntimeError('SVN error: Unable to list content of ' + url)
 
 def svn_merge( source,
@@ -399,7 +399,7 @@ def svn_merge( source,
                      simulate = simulate,
                      verbose = verbose )
       
-    except SystemError, e:
+    except SystemError as e:
       raise RuntimeError( 'SVN error: Unable to merge ' + source
                         + ' and ' + dest )
     
@@ -429,7 +429,7 @@ def svn_mkdir( url,
                      simulate = simulate,
                      verbose = verbose )
       
-    except SystemError, e:
+    except SystemError as e:
       raise RuntimeError( 'SVN error: Unable to mkdir at ' + url )
 
 def svn_move( source,
@@ -515,7 +515,7 @@ def svn_propset( path,
                      simulate = simulate,
                      verbose = verbose )
                      
-    except SystemError, e:
+    except SystemError as e:
       raise RuntimeError( 'SVN error: Unable to set property ' + name
                         + ' value: ' + value + ' for path: ' + path )
 
@@ -539,7 +539,7 @@ def svn_propget( path,
       return system( cmd,
                      verbose = verbose )
                      
-    except SystemError, e:
+    except SystemError as e:
       raise RuntimeError( 'SVN error: Unable to get property ' + name
                         + ' value for path: ' + path )
                         
@@ -561,7 +561,7 @@ def svn_update( path,
                      simulate = simulate,
                      verbose = verbose )
                      
-    except SystemError, e:
+    except SystemError as e:
       raise RuntimeError( 'SVN error: Unable to update ' + path )
     
 def svn_glob( *urlpatterns ):

@@ -32,6 +32,7 @@
 #
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
+from __future__ import print_function
 import os, sys, string, re, time, types, urlparse, posixpath, fnmatch
 
 from optparse import OptionParser
@@ -74,8 +75,8 @@ for arg in args[0:]:
   for c in found_components:
     projects.add( project_per_component[c] )
 
-print "Selected projects : ", projects
-print "Selected components : ", components
+print("Selected projects : ", projects)
+print("Selected components : ", components)
 
 for c in components:
   
@@ -89,14 +90,14 @@ for c in components:
                       c,
                       trunk_client_info
                   )
-    #print 'client_type:', client_type, ', url:', url
+    #print('client_type:', client_type, ', url:', url)
     if client_comp.client_type().key() == 'svn':
       for b in branches:
         v, d = client_comp.branch_version_max(b)
         u = client_comp.branch_url(b, d)
         if v:
-            print 'project: %s, component: %s, branch: %s, url: %s => type: %s, version: %s' % (p, c, b, client_comp.client_type().key(), u, v)
+            print('project: %s, component: %s, branch: %s, url: %s => type: %s, version: %s' % (p, c, b, client_comp.client_type().key(), u, v))
         else:
-            print 'project: %s, component: %s, branch: %s => type: %s - Unable to find a valid project info file.' \
-                'Please check that either project_info.cmake or info.py exists).' \
-                    % (p, c, b, client_comp.client_type().key(), u)
+            print('project: %s, component: %s, branch: %s => type: %s - Unable to find a valid project info file.'
+                'Please check that either project_info.cmake or info.py exists).'
+                    % (p, c, b, client_comp.client_type().key(), u))

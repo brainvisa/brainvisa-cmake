@@ -22,7 +22,7 @@ import datetime
 try:
     import matplotlib
     sys.path.append( os.path.abspath( os.path.join( os.path.dirname( os.path.dirname( matplotlib.__file__ ) ), 'sphinx', 'ext' ) ) )
-except Exception, e:
+except Exception as e:
     print('warning:', e)
 
 # If extensions (or modules to document with autodoc) are in another directory,

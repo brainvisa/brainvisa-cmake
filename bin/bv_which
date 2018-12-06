@@ -1,4 +1,5 @@
-#! /usr/bin/env python2
+#! /usr/bin/env python
+from __future__ import print_function
 import sys, os, string, types, glob
 from optparse import OptionParser
 
@@ -54,4 +55,4 @@ for n in args:
       for f in  findInPath( n, p ):
         rf = no_link( f )
         if rf != f: f = f + ' ( ' + rf + ' )'
-        print v + ': ' + f
+        print(v + ': ' + f)

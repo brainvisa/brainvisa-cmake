@@ -152,7 +152,7 @@ def packages_selection(rules):
                         pattern = attribute_selection
                     attributes[attribute] = re.compile(
                         fnmatch.translate(pattern))
-                for package_info in packages_info.itervalues():
+                for package_info in six.itervalues(packages_info):
                     selected = True
                     for attribute, pattern in six.iteritems(attributes):
                         value = package_info.get(attribute)

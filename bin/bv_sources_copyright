@@ -35,6 +35,7 @@
 from __future__ import print_function
 import sys, os, re
 from optparse import OptionParser
+import six
 
 parser = OptionParser( version="%prog 1.1",
   usage="usage: %prog [options] -t <file_type> <files_or_directories>" )
@@ -131,7 +132,7 @@ class HeaderClassifier:
     return result
   
   def printHeaders( headers, file=sys.stdout ):
-    for header, fileInfos in headers.iteritems():
+    for header, fileInfos in six.iteritems(headers):
       print('-=' * 40)
       print(header)
       print('-=' * 40)
@@ -141,7 +142,7 @@ class HeaderClassifier:
 
   def replaceHeaders( headers, newHeaderFileName ):
     newHeader = open( newHeaderFileName ).read()
-    for header, fileInfos in headers.iteritems():
+    for header, fileInfos in six.iteritems(headers):
       for f, headerStart in fileInfos:
         newFile = ''
         file = open( f )
@@ -202,7 +203,7 @@ class CppOldHeaderClassifier( CppHeaderClassifier ):
   def separateHeaders( self, fileNames ):
     aimsHeader = re.compile( r'^[ \t\n]*/\*[ \t\n]*\*[ \t\n]*Copyright[^\n]*CEA.*' )
     result = {}
-    for header, fileInfos in CppHeaderClassifier.separateHeaders( self, fileNames ).iteritems():
+    for header, fileInfos in six.iteritems(CppHeaderClassifier.separateHeaders(self, fileNames)):
       if aimsHeader.match( header ):
         result[ header ] = fileInfos
     return result
@@ -215,7 +216,7 @@ class CppOldHeaderClassifier( CppHeaderClassifier ):
       commentLine = re.compile( r'^\s*\*\s*[^\s].*$' )
       emptyCommentLine = re.compile( r'^\s*\*/?\s*$' )
       franceLine = re.compile( r'^\s*\*\s*France\s*$' )
-      for header, fileInfos in CppHeaderClassifier.separateHeaders( self, fileNames ).iteritems():
+      for header, fileInfos in six.iteritems(CppHeaderClassifier.separateHeaders( self, fileNames)):
         headerSize = len( header )
         if aimsHeader.match( header ):
           l = header.split( '\n' )
@@ -253,12 +254,12 @@ class CppOldHeaderClassifier( CppHeaderClassifier ):
       return result
   
     def printHeaders( headers, file=sys.stdout ):
-      for header, commentsAndfileInfos in headers.iteritems():
+      for header, commentsAndfileInfos in six.iteritems(headers):
         print('-=' * 40)
         print(header)
         print('-=' * 40)
         first = True
-        for comment, fileInfos in commentsAndfileInfos.iteritems():
+        for comment, fileInfos in six.iteritems(commentsAndfileInfos):
           if not first:
             print('- ' * 40)
           if comment:
@@ -270,9 +271,9 @@ class CppOldHeaderClassifier( CppHeaderClassifier ):
   
     def replaceHeaders( headers, newHeaderFileName ):
       newHeader = open( newHeaderFileName ).read()
-      for header, commentsAndfileInfos in headers.iteritems():
+      for header, commentsAndfileInfos in six.iteritems(headers):
         if header is None: continue
-        for comment, fileInfos in commentsAndfileInfos.iteritems():
+        for comment, fileInfos in six.iteritems(commentsAndfileInfos):
           for f, headerStart, headerSize in fileInfos:
             newFile = ''
             file = open( f )

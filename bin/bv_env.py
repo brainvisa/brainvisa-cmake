@@ -37,6 +37,17 @@ from __future__ import print_function
 import sys, os
 from glob import glob
 
+try:
+    # compatibility for python3
+    import six
+except ImportError:
+    # six module not here, assume python2
+    class six(object):
+       @staticmethod
+       def iteritems(obj, *args, **kwargs):
+          return obj.iteritems(*args, **kwargs)
+
+
 if os.path.exists( sys.argv[0] ):
   this_script = sys.argv[0]
 else:
@@ -76,12 +87,12 @@ for n in unset_variables:
   if n in os.environ:
     backup_variables[ n ] = os.environ[ n ]
     del os.environ[ n ]
-for n, v in set_variables.iteritems():
+for n, v in six.iteritems(set_variables):
   v = v.replace( '${INSTALL_DIRECTORY}', install_directory )
   if n in os.environ and os.environ[ n ] != v:
     backup_variables[ n ] = os.environ[ n ]
   os.environ[ n ] = v
-for n, l in path_prepend.iteritems():
+for n, l in six.iteritems(path_prepend):
   if n in os.environ:
     backup_variables[ n ] = os.environ[ n ]
     content = os.environ[ n ].split( os.pathsep )
@@ -94,11 +105,11 @@ for n, l in path_prepend.iteritems():
   os.environ[ n ] = os.pathsep.join( ( i for i in content if os.path.exists( i ) ) )
 
 if len( sys.argv ) > 1:
-  for n, v in backup_variables.iteritems():
+  for n, v in six.iteritems(backup_variables):
     os.environ[ 'BRAINVISA_UNENV_' + n ] = v
   os.execvpe( sys.argv[1], sys.argv[ 1: ], os.environ )
 else:
-  for n, v in backup_variables.iteritems():
+  for n, v in six.iteritems(backup_variables):
     print('export BRAINVISA_UNENV_' + n + "='" + v + "'")
   for n in unset_variables:
     print('unset', n)

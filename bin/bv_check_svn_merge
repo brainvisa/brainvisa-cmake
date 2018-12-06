@@ -109,7 +109,7 @@ def revisions_info( *revisions ):
   if not isinstance( log_entries, list ):
     log_entries = [ log_entries ]
   for r in log_entries:
-    yield dict( ( i, j[ 'value' ] ) for i,j in r.iteritems() if isinstance( j, dict ) )
+    yield dict( ( i, j[ 'value' ] ) for i,j in six.iteritems(r) if isinstance( j, dict ) )
 
 
 previous_project = None

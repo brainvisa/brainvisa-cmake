@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import glob, operator, os, re, string
 from fnmatch import fnmatchcase
 import sys
@@ -347,7 +348,7 @@ def update_project_info(project_info_path, version):
         )
     
     if project_info_content != project_info_content_new:
-        #print project_info_content_new
+        #print(project_info_content_new)
         # Write new project info content to file
         # and commit local changes to the branch
         f = open( project_info_path, "w" )
@@ -404,26 +405,26 @@ def find_components(componentsPattern):
 
 #if __name__ == '__main__':
     
-    #print 'components_definition = ['
+    #print('components_definition = [')
     #for project in sorted(components_definition):
         #project_dict = components_definition[project]
-        #print "    ('%s', {" % project
+        #print("    ('%s', {" % project)
         #description = project_dict.get('description')
         #if description:
-            #print "        'description': %s," % repr(description)
-        #print "        'components': ["
+            #print("        'description': %s," % repr(description))
+        #print("        'components': [")
         #for component, component_dict in project_dict['components']:
-            #print "            ['%s', {" % component
+            #print("            ['%s', {" % component)
             #groups = component_dict.pop('groups')
-            #print "                'groups': %s," % repr(groups)
-            #print "                'branches': {"
+            #print("                'groups': %s," % repr(groups))
+            #print("                'branches': {")
             #for branch in ('trunk', 'bug_fix', 'latest_release'):
                 #url = component_dict['branches'].get(branch)
                 #if url:
                   #url, dest_directory = url
-                  #print "                    '%s': (%s,%s)," % (branch,repr(url),repr(dest_directory))
-            #print '                },'
-            #print '            }],'
-        #print "        ],"
-        #print '    }),'
-    #print ']'
+                  #print("                    '%s': (%s,%s)," % (branch,repr(url),repr(dest_directory)))
+            #print('                },')
+            #print('            }],')
+        #print("        ],")
+        #print('    }),')
+    #print(']')

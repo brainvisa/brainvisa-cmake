@@ -75,6 +75,9 @@ def copy2(source, dest, simulation=False):
             # some filesystems cannot carry all flags
             if e.errno == errno.EOPNOTSUPP:
                 # fallback to a standard copy
+                if os.path.exists(dest):
+                    os.chmod(dest, 0777)
+                    os.unlink(dest)
                 shutil.copy(source, dest)
             else:
                 raise # real error

@@ -84,7 +84,7 @@ def copy2(source, dest, simulation=False):
 
 
 def make_ext_symlink(source, dest, ext_links, simulation):
-    if ext_links.has_key(source):
+    if source in ext_links:
         realsrc = ext_links[source]
         # print('already copied as', realsrc)
         reldpath = rel_link(realsrc, dest, '')

@@ -47,26 +47,36 @@ else( SIP_VERSION )
         message( FATAL_ERROR "SIP not found" )
       endif( SIP_FIND_REQUIRED )
     endif( SIP_EXECUTABLE )
-endif( SIP_VERSION )
 
-if( SIP_FOUND )
-  if( ( ${SIP_VERSION} VERSION_GREATER 4.7.4 ) AND
-      ( ${SIP_VERSION} VERSION_LESS 4.7.7 ) )
-    # this flag is used in pyaims/pyanatomist to work around buggy throw
-    # statements which make sip segfault
-    set( SIP_FLAGS "-t" "SIPTHROW_BUG" CACHE STRING "options passed to SIP program" )
-  else()
-    set( SIP_FLAGS "" CACHE STRING "options passed to SIP program" )
-  endif()
-  if( NOT SIP4MAKE_EXECUTABLE )
-    # find the sip4make.py wrapper script
-    find_program( SIP4MAKE_EXECUTABLE
-      NAMES bv_sip4make
-      DOC "Path to bv_sip4make script" )
-    if( NOT SIP4MAKE_EXECUTABLE )
-      # not found: use the regular sip executable
-      set( SIP4MAKE_EXECUTABLE "$SIP_EXECUTABLE" CACHE FILEPATH "Path to bv_sip4make script (or sip itself as fallback)" )
+    if( SIP_FOUND )
+      if( ( ${SIP_VERSION} VERSION_GREATER 4.7.4 ) AND
+        ( ${SIP_VERSION} VERSION_LESS 4.7.7 ) )
+        # this flag is used in pyaims/pyanatomist to work around buggy throw
+        # statements which make sip segfault
+        set( SIP_FLAGS "-t" "SIPTHROW_BUG" CACHE STRING "options passed to SIP program" )
+      elseif( ${SIP_VERSION} VERSION_GREATER 4.19.9 )
+        # using sip >= 4.19.9, the sip module is a "private copy" inside PyQt, we must use
+        # the module as it is named in PyQt.
+        execute_process( COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX} ${PYTHON_EXECUTABLE} -c "import PyQt${DESIRED_QT_VERSION}"
+            RESULT_VARIABLE _new_module )
+        if( _new_module EQUAL 0 )
+          set(SIP_FLAGS "-n" "PyQt${DESIRED_QT_VERSION}.sip" CACHE STRING "options passed to SIP program" )
+        else()
+          set( SIP_FLAGS "" CACHE STRING "options passed to SIP program" )
+        endif()
+      else()
+        set( SIP_FLAGS "" CACHE STRING "options passed to SIP program" )
+      endif()
+      if( NOT SIP4MAKE_EXECUTABLE )
+        # find the sip4make.py wrapper script
+        find_program( SIP4MAKE_EXECUTABLE
+        NAMES bv_sip4make
+        DOC "Path to bv_sip4make script" )
+        if( NOT SIP4MAKE_EXECUTABLE )
+          # not found: use the regular sip executable
+          set( SIP4MAKE_EXECUTABLE "$SIP_EXECUTABLE" CACHE FILEPATH "Path to bv_sip4make script (or sip itself as fallback)" )
+        endif()
+      endif()
     endif()
-  endif()
-endif()
 
+endif( SIP_VERSION )

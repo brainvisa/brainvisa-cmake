@@ -300,8 +300,8 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           endif()
         endforeach()
         set( i 0 )
-        foreach( _pypath ${_toinstall} )
-          list( GET _dirs ${i} _dir )
+        if( NOT LSB_DISTRIB STREQUAL "ubuntu"
+            OR LSB_DISTRIB_RELEASE VERSION_GREATER "14.0" )
           # we must erase any previous numpy installation before installing it
           # again because some C libs may be installed with non-overlapping
           # names and end-up conflicting:
@@ -309,8 +309,24 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           # .x86_64-linux-gnu extension in the newer module, but the former
           # ones are loaded.
           # Same for PyQt and sip when they are re-installed manually
+          #
+          # BUT
+          #
+          # we mustn't do that on Ubuntu 12.04 since there, we actually must
+          # install a mixup of /usr/lib/pythonxx, /usr/lib/pyshared and others
+          # which overlap (and even symlink each other...)
+          #
+          set( bv_copy_options1 "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/numpy" "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/numpy" "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/PyQt5" "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/PyQt5" "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/PyQt4" "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/PyQt4" )
+          set( bv_copy_options2 "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages/numpy" "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/numpy" "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages/PyQt4" "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/PyQt5" "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/PyQt5" )
+        else()
+          set( bv_copy_options1 "" )
+          set( bv_copy_options2 "" )
+        endif()
+
+        foreach( _pypath ${_toinstall} )
+          list( GET _dirs ${i} _dir )
           add_custom_command( TARGET install-${component} PRE_BUILD
-            COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${CMAKE_COMMAND} -E make_directory "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/numpy" "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/numpy" "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/PyQt5" "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/PyQt5" "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/PyQt4" "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/PyQt4" ${_exclude} ${_pypath} "$(BRAINVISA_INSTALL_PREFIX)/${_dir}" \; if [ -f "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/sip.x86_64-linux-gnu.so" -a -f "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/sip.so" ] \; then rm "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/sip.x86_64-linux-gnu.so" \; fi \; if [ -f "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/sip.x86_64-linux-gnu.so" -a -f "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/sip.so" ] \; then rm "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/sip.x86_64-linux-gnu.so" \; fi \;else ${CMAKE_COMMAND} -E make_directory "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages/numpy" "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/numpy" "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages/PyQt4" "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/PyQt5" "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/PyQt5" ${_exclude} ${_pypath} "${CMAKE_INSTALL_PREFIX}/${_dir}" \; if [ -f "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/sip.x86_64-linux-gnu.so" -a -f "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/sip.so" ] \; then rm "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/sip.x86_64-linux-gnu.so" \; fi \; if [ -f "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages/sip.x86_64-linux-gnu.so" -a -f "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages/sip.so" ] \; then rm "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages/sip.x86_64-linux-gnu.so" \; fi \; fi )
+            COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${CMAKE_COMMAND} -E make_directory "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${bv_copy_options1} ${_exclude} ${_pypath} "$(BRAINVISA_INSTALL_PREFIX)/${_dir}" \; if [ -f "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/sip.x86_64-linux-gnu.so" -a -f "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/sip.so" ] \; then rm "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/sip.x86_64-linux-gnu.so" \; fi \; if [ -f "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/sip.x86_64-linux-gnu.so" -a -f "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/sip.so" ] \; then rm "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/sip.x86_64-linux-gnu.so" \; fi \;else ${CMAKE_COMMAND} -E make_directory "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${bv_copy_options2} ${_exclude} ${_pypath} "${CMAKE_INSTALL_PREFIX}/${_dir}" \; if [ -f "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/sip.x86_64-linux-gnu.so" -a -f "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/sip.so" ] \; then rm "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/sip.x86_64-linux-gnu.so" \; fi \; if [ -f "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages/sip.x86_64-linux-gnu.so" -a -f "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages/sip.so" ] \; then rm "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages/sip.x86_64-linux-gnu.so" \; fi \; fi )
           math( EXPR i "${i} + 1" )
         endforeach()
 

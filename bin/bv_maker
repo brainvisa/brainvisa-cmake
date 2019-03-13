@@ -4360,7 +4360,7 @@ Controller.prototype.FinishedPageCallback = function()
                                       and not options.local \
                                       else False
 
-        # Test install directory            
+        # Test install directory
         if options.prefix:
             test_install_dir = options.prefix
             remote_test_install_dir = options.prefix
@@ -4481,7 +4481,13 @@ Controller.prototype.FinishedPageCallback = function()
             # do not pass when check_call() is used with a list.
             cmd = '"' + '" "'.join([x.replace('"', '\"') for x in cmd]) + '"'
             print(cmd)
-            subprocess.check_call(cmd, shell=True, env=self.get_environ())
+            # setup QT_QPA_PLATFORM=minimal envar to avoid need for
+            # GUI/X server. Note that if remote_test_host_cmd is used (ssh or
+            # other), it will need to re-export this variable in the remote
+            # context to be taken into account.
+            env = dict(self.get_environ())
+            env['QT_QPA_PLATFORM'] = 'minimal'
+            subprocess.check_call(cmd, shell=True, env=env)
             print('done.')
         finally:
             os.unlink(install_script)

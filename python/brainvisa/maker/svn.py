@@ -42,6 +42,7 @@ import fnmatch
 import posixpath
 import lxml.objectify
 import tempfile
+import six
 
 from brainvisa.maker.brainvisa_clients import system, normurl
 from brainvisa.maker.brainvisa_projects     import parse_project_info_cmake, \
@@ -596,7 +597,7 @@ def svn_glob( *urlpatterns ):
       while( len(url_path_pattern_stack) ):
         url_path_pattern_splitted = url_path_pattern_stack.pop()
 
-        for i in xrange(len(url_path_pattern_splitted)):
+        for i in six.moves.xrange(len(url_path_pattern_splitted)):
           # Find first path component that contains special characters
           if ( len(svn_glob_regexp.findall(
                                   url_path_pattern_splitted[i])) > 0 ):

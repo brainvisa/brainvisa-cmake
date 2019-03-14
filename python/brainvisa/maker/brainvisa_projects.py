@@ -23,7 +23,8 @@ except ImportError:
 
 if sys.version_info[0] >= 3:
     def execfile(filename, globals=None, locals=None):
-        exec(compile(open(filename).read(), filename, 'exec'), globals, locals)
+        exec(compile(open(filename, 'rb').read(), filename, 'exec'), globals,
+             locals)
 
 
 class ProjectsSet(object):
@@ -167,8 +168,8 @@ def parse_project_info_cmake(
   build_model = None
   
   p = re.compile( r'\s*set\(\s*([^ \t]*)\s*(.*[^ \t])\s*\)' )
-  for line in open( path ):
-    match = p.match( line )
+  for line in open(path, 'rb'):
+    match = p.match(line.decode())
     if match:
       variable, value = match.groups()
       if variable == 'BRAINVISA_PACKAGE_NAME':
@@ -309,7 +310,7 @@ def update_project_info(project_info_path, version):
     if project_info_path is None or not os.path.exists( project_info_path ):
         return False
         
-    project_info_content = open( project_info_path ).read()
+    project_info_content = open(project_info_path, 'rb').read().decode()
         
     # Set version in project info file
     # It needs to have a version with at least 3

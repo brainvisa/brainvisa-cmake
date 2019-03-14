@@ -47,8 +47,8 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         # skip
         # message( "      == skip" )
       else()
-        string( FIND ${_l} libhdf5 _l2 )
-        if( NOT ${_l2} EQUAL -1 )
+        string( REGEX MATCH "libhdf5" _l2 ${_l} )
+        if( _l2 )
           # skip
           # message( "      == skip" )
         else()

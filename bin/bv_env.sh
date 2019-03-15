@@ -128,7 +128,7 @@ fi
 }
 
 # source any bash_completion scripts
-base_dir=$(dirname $(dirname "$bv_env"))
+base_dir=$(dirname $(dirname $(abspath "$bv_env")))
 if [ -d "$base_dir/etc/bash_completion.d" ]; then
     for d in "$base_dir/etc/bash_completion.d/"*; do
         . "$d"

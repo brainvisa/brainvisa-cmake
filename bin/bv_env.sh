@@ -128,11 +128,16 @@ fi
 }
 
 # source any bash_completion scripts
-base_dir=$(dirname $(dirname $(realpath "$bv_env")))
-if [ -d "$base_dir/etc/bash_completion.d" ]; then
-    for d in "$base_dir/etc/bash_completion.d/"*; do
-        . "$d"
-    done
+shell=$(basename "$SHELL")
+if [ "$shell" = "bash" ]; then
+    base_dir=$(dirname $(dirname $(realpath "$bv_env")))
+    if [ -d "$base_dir/etc/bash_completion.d" ]; then
+        for d in "$base_dir/etc/bash_completion.d/"*; do
+            if [ -f "$d" ]; then # if the dir is emty, we get an entry with *
+                . "$d"
+            fi
+        done
+    fi
 fi
 
 bv_env_cleanup

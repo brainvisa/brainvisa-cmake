@@ -162,6 +162,13 @@ install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
          PATTERN ".svn" EXCLUDE
          PATTERN "*~" EXCLUDE )
 
+install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/etc"
+         DESTINATION "."
+         USE_SOURCE_PERMISSIONS
+         COMPONENT brainvisa-cmake
+         PATTERN ".svn" EXCLUDE
+         PATTERN "*~" EXCLUDE )
+
 # Generate a list of all brainvisa-cmake installed files
 # so that bv_maker can copy and already installed brainvisa-cmake
 if( NOT DISABLE_FILE_INSTALLATION_LIST AND NOT BRAINVISA_BVMAKER )

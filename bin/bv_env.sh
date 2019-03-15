@@ -127,6 +127,14 @@ fi
     return 1
 }
 
+# source any bash_completion scripts
+base_dir=$(dirname $(dirname "$bv_env"))
+if [ -d "$base_dir/etc/bash_completion.d" ]; then
+    for d in "$base_dir/etc/bash_completion.d/"*; do
+        . "$d"
+    done
+fi
+
 bv_env_cleanup
 
 # Empty the cache of known command locations, which is necessary to take

@@ -136,7 +136,7 @@ class Path(str):
             o = str(obj)
             s = obj.__system
 
-        elif isinstance(obj, six.types.StringTypes):
+        elif isinstance(obj, six.string_types):
             if not isinstance(obj, str): # unicode
                 o = obj.encode()
             else:
@@ -161,7 +161,7 @@ class Path(str):
         else:
             raise IndexError('incompatible type for Path')
 
-        if not isinstance(o, six.types.StringTypes):
+        if not isinstance(o, six.string_types):
             raise TypeError('Object of type %s is not convertible to Path' % t)
             
         if system is not None and s is not None and s != system:

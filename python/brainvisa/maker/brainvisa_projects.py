@@ -169,6 +169,10 @@ def parse_project_info_cmake(
   
   p = re.compile( r'\s*set\(\s*([^ \t]*)\s*(.*[^ \t])\s*\)' )
   for line in open(path, 'rb'):
+    try:
+      line = line.decode()
+    except:
+      line = line.decode('utf-8') # in case the default encoding is ascii
     match = p.match(line.decode())
     if match:
       variable, value = match.groups()
@@ -310,7 +314,12 @@ def update_project_info(project_info_path, version):
     if project_info_path is None or not os.path.exists( project_info_path ):
         return False
         
-    project_info_content = open(project_info_path, 'rb').read().decode()
+    project_info_content = open(project_info_path, 'rb').read()
+    try:
+        project_info = project_info.decode()
+    except:
+        # in case the default encoding is ascii
+        project_info = project_info.decode('utf-8')
         
     # Set version in project info file
     # It needs to have a version with at least 3

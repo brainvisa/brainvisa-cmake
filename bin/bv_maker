@@ -591,7 +591,11 @@ http://brainvisa.info/brainvisa-cmake/
             # Read configuration file
             for line in open(options.configuration_file, 'rb'):
                 lineCount += 1
-                line = line.strip().decode()
+                line = line.strip()
+                try:
+                    line = line.decode()
+                except:
+                    line = line.decode('utf-8()
                 # skip comments
                 if not line or line[0] == '#' or line.startswith('//'):
                     continue

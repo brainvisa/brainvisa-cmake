@@ -595,7 +595,7 @@ http://brainvisa.info/brainvisa-cmake/
                 try:
                     line = line.decode()
                 except:
-                    line = line.decode('utf-8()
+                    line = line.decode('utf-8')
                 # skip comments
                 if not line or line[0] == '#' or line.startswith('//'):
                     continue

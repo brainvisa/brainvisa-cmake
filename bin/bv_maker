@@ -3564,8 +3564,8 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         # After a first configuration, the global version file of the build 
         # directory has been generated, and package directories variables, 
         # must be updated
-        for p in self.configuration.packageDirectories.values() \
-               + self.configuration.publicationDirectories.values():
+        for p in list(self.configuration.packageDirectories.values()) \
+               + list(self.configuration.publicationDirectories.values()):
             if p.get_build_dir() is self:
                 version = self.get_version()
                 if version:

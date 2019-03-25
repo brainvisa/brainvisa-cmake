@@ -173,7 +173,7 @@ def parse_project_info_cmake(
       line = line.decode()
     except:
       line = line.decode('utf-8') # in case the default encoding is ascii
-    match = p.match(line.decode())
+    match = p.match(line)
     if match:
       variable, value = match.groups()
       if variable == 'BRAINVISA_PACKAGE_NAME':

@@ -130,7 +130,9 @@ fi
 # source any bash_completion scripts
 shell=$(basename "$SHELL")
 if [ "$shell" = "bash" ]; then
-    base_dir=$(dirname $(dirname $(realpath "$bv_env")))
+    _x=$(type -t realpath) && bv_env=$(realpath "$bv_env")
+    unset _x
+    base_dir=$(dirname $(dirname "$bv_env"))
     if [ -d "$base_dir/etc/bash_completion.d" ]; then
         for d in "$base_dir/etc/bash_completion.d/"*; do
             if [ -f "$d" ]; then # if the dir is emty, we get an entry with *

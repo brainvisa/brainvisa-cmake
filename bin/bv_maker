@@ -214,20 +214,31 @@ def get_target_path_system(platform):
 
 def system(*args, **kwargs):
     print(' '.join(args))
-    if subprocess32 is not None:
-        popen = subprocess32.Popen(args, **kwargs)
-    else:
-        if 'timeout' in kwargs:
-            # timeout not supported in python2.subprocess
-            kwargs = dict(kwargs)
-            del kwargs['timeout']
-        popen = subprocess.Popen(args, **kwargs)
-    popen.communicate()
-    if popen.returncode != 0:
-        txt = 'Command failed: %s' % ' '.join((repr(i) for i in args))
-        if 'cwd' in kwargs:
-            txt = '%s\nFrom directory: %s' % (txt, kwargs['cwd'])
-        raise OSError(txt)
+    error = None
+    try:
+        try:
+            if subprocess32 is not None:
+                popen = subprocess32.Popen(args, **kwargs)
+            else:
+                if 'timeout' in kwargs:
+                    # timeout not supported in python2.subprocess
+                    kwargs = dict(kwargs)
+                    del kwargs['timeout']
+                popen = subprocess.Popen(args, **kwargs)
+            popen.communicate()
+            if popen.returncode != 0:
+                raise OSError()
+        except Exception as e:
+            error = (type(e), e, sys.exc_info()[2])
+    finally:
+        if error:
+            txt = 'Command failed: %s' % ' '.join((repr(i) for i in args))
+            if 'cwd' in kwargs:
+                txt = '%s\nFrom directory: %s' % (txt, kwargs['cwd'])
+            txt += '\n%s' % error[1].args[0]
+            if isinstance(error, tuple):
+                error = (error[0], error[0](txt, *error[1].args[1:]), error[2])
+            six.reraise(*error)
 
 def system_output_on_error(*args, **kwargs):
     # system_output_on_error is a bit strange currently:
@@ -2107,20 +2118,20 @@ class VarReplacementType:
 def replace_vars(value, 
                  replacement_type = VarReplacementType.ALL,
                  python_vars = None,
-                 env_vars = None):   
+                 env_vars = None):
     result = value
-    
+
     if python_vars and (replacement_type & VarReplacementType.PYTHON):
         # Uses python variable substitutions to allow partial replacements
         #print('replace_vars, replace_python_vars call', value, replacement_type)
         #result = result % python_vars
         result = pythonVariablesSubstitution(result, python_vars = python_vars)
-        
+
     if env_vars and (replacement_type & VarReplacementType.ENV):
         #print('replace_vars, replace_env_vars call', value, replacement_type)
         # Replaces only environment variables
         result = environmentVariablesSubstitution(result, env = env_vars)
-        
+
     return result
     
 class ConfigVariableParser(object):
@@ -2264,7 +2275,7 @@ class ConfigVariableParser(object):
             if hasattr(self, option):
                 var_type = type(getattr(self, option))
                 if var_type in (list, tuple):
-                    value = shlex.split(value)
+                    value = shlex.split(value.encode('utf-8'))
                 elif var_type is dict:
                     if value.startswith('{') and value.endswith('}'):
                         try:

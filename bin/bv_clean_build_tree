@@ -245,9 +245,17 @@ if options.binaries:
                             #else:
                             if f.endswith('.exe') and f[:-4] in all_cmds:
                                 continue # win exe in list: skip
-                            print('rm obsolete command', f)
-                            if not options.list :
-                                os.unlink(os.path.join(bindir, f))
+                            if f.endswith('.app'):
+                                # Mac graphical commands
+                                if f[:-4] in all_cmds:
+                                    continue
+                                print('rm obsolete command', f[:-4])
+                                if not options.list :
+                                    shutil.rmtree(os.path.join(bindir, f))
+                            else:
+                                print('rm obsolete command', f)
+                                if not options.list :
+                                    os.unlink(os.path.join(bindir, f))
             except RuntimeError as e:
                 print(e)
     for d, items in six.iteritems(skipped):

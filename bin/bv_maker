@@ -3303,7 +3303,9 @@ if len(old_file) == 0:
                                                        target_path_system)):
                 if self.cross_compiling_to_target_path_cmd:
                     # Register host to target conversion command
-                    cmd = shlex.split(self.cross_compiling_to_target_path_cmd)
+                    cmd = shlex.split(
+                        self.cross_compiling_to_target_path_cmd.encode(
+                            'utf-8'))
                 elif host_path_system == 'linux' \
                     and target_path_system == 'windows':
                     # Default cross compilation try to use winepath command
@@ -3649,7 +3651,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
     def test(self, options, args):
         self.process_configuration_lines()
         if options.ctest_options is not None:
-            ctoptions = shlex.split(options.ctest_options)
+            ctoptions = shlex.split(options.ctest_options.encode('utf-8'))
         else:
             ctoptions = self.ctest_options
         print('Testing directory:', self.directory)
@@ -3669,7 +3671,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
     def testref(self, options, args):
         self.process_configuration_lines()
         if options.make_options is not None:
-            ctoptions = shlex.split(options.make_options)
+            ctoptions = shlex.split(options.make_options.encode('utf-8'))
         else:
             ctoptions = self.make_options
         print('Creating test reference data for directory:', self.directory)
@@ -4482,14 +4484,14 @@ Controller.prototype.FinishedPageCallback = function()
 
         cmd = []
         if remote_test_install:
-            cmd = shlex.split(self.remote_test_host_cmd)
+            cmd = shlex.split(self.remote_test_host_cmd.encode('utf-8'))
 
         if sys.platform == 'darwin':
             # on Mac, the installer is a .app
             remote_installer_filename += '.app/Contents/MacOS/%s' \
                 % os.path.basename(remote_installer_filename)
         cmd += [remote_installer_filename] \
-               + shlex.split(self.installer_options) \
+               + shlex.split(self.installer_options.encode('utf-8')) \
                + ['--script', self.build_dir.to_target_path(install_script)]
         try:
             print('installing...')
@@ -4606,7 +4608,7 @@ Controller.prototype.FinishedPageCallback = function()
                          self.package_repository_subdir))
         report_file = os.path.join(repos_dir, 'tests_report.txt')
         if options.ctest_options is not None:
-            ctoptions = shlex.split(options.ctest_options)
+            ctoptions = shlex.split(options.ctest_options.encode('utf-8'))
         else:
             ctoptions = self.ctest_options
         test_res = run_and_log_tests(cwd=self.build_dir.directory,
@@ -4637,7 +4639,7 @@ Controller.prototype.FinishedPageCallback = function()
                 and not os.path.exists(self.test_ref_data_dir):
             os.makedirs(self.test_ref_data_dir)
         if options.make_options is not None:
-            ctoptions = shlex.split(options.make_options)
+            ctoptions = shlex.split(options.make_options.encode('utf-8'))
         else:
             ctoptions = self.make_options
         print('Creating test reference files for package:', self.directory)
@@ -4660,7 +4662,7 @@ Controller.prototype.FinishedPageCallback = function()
             text = subprocess.check_output(expr, shell=True).strip()
             new_line += text
             new_line += expressions.pop(0)
-        return ' '.join(shlex.split(new_line))
+        return ' '.join(shlex.split(new_line.encode('utf-8')))
 
 
 class PublicationDirectory(DirectorySection, ConfigVariableParser):
@@ -4776,7 +4778,7 @@ class PublicationDirectory(DirectorySection, ConfigVariableParser):
 
         env = self.get_environ()
         for c in self.publication_commands:
-            command = shlex.split(c)
+            command = shlex.split(c.encode('utf-8'))
             system_output_on_error(command, env = env)
             
 

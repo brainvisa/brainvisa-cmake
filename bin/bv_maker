@@ -60,6 +60,7 @@ try:
     import subprocess32
 except ImportError:
     subprocess32 = None
+
 try:
     import jenkins
     if '_get_job_folder' not in jenkins.Jenkins.__dict__:
@@ -188,6 +189,14 @@ from brainvisa.maker.version import version as brainvisa_cmake_version
 
 from brainvisa.maker.version_number import VersionNumber
 from brainvisa.maker.version_number import version_format_short
+
+if sys.version_info[:2] < (2, 7):
+    # in python 2.6, shlex.split() does not work correctly using
+    # unicode strings
+    def shlex_split(s, *args, **kwargs):
+        return shlex.split(s.encode('utf-8'), *args, **kwargs)
+else:
+    shlex_split = shlex.split
 
 IGNORED_STEP = 'ignored'
 jenkins_cli = None
@@ -2275,7 +2284,7 @@ class ConfigVariableParser(object):
             if hasattr(self, option):
                 var_type = type(getattr(self, option))
                 if var_type in (list, tuple):
-                    value = shlex.split(value.encode('utf-8'))
+                    value = shlex_split(value)
                 elif var_type is dict:
                     if value.startswith('{') and value.endswith('}'):
                         try:
@@ -3303,9 +3312,7 @@ if len(old_file) == 0:
                                                        target_path_system)):
                 if self.cross_compiling_to_target_path_cmd:
                     # Register host to target conversion command
-                    cmd = shlex.split(
-                        self.cross_compiling_to_target_path_cmd.encode(
-                            'utf-8'))
+                    cmd = shlex_split(self.cross_compiling_to_target_path_cmd)
                 elif host_path_system == 'linux' \
                     and target_path_system == 'windows':
                     # Default cross compilation try to use winepath command
@@ -3651,7 +3658,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
     def test(self, options, args):
         self.process_configuration_lines()
         if options.ctest_options is not None:
-            ctoptions = shlex.split(options.ctest_options.encode('utf-8'))
+            ctoptions = shlex_split(options.ctest_options)
         else:
             ctoptions = self.ctest_options
         print('Testing directory:', self.directory)
@@ -3671,7 +3678,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
     def testref(self, options, args):
         self.process_configuration_lines()
         if options.make_options is not None:
-            ctoptions = shlex.split(options.make_options.encode('utf-8'))
+            ctoptions = shlex_split(options.make_options)
         else:
             ctoptions = self.make_options
         print('Creating test reference data for directory:', self.directory)
@@ -4484,14 +4491,14 @@ Controller.prototype.FinishedPageCallback = function()
 
         cmd = []
         if remote_test_install:
-            cmd = shlex.split(self.remote_test_host_cmd.encode('utf-8'))
+            cmd = shlex_split(self.remote_test_host_cmd)
 
         if sys.platform == 'darwin':
             # on Mac, the installer is a .app
             remote_installer_filename += '.app/Contents/MacOS/%s' \
                 % os.path.basename(remote_installer_filename)
         cmd += [remote_installer_filename] \
-               + shlex.split(self.installer_options.encode('utf-8')) \
+               + shlex_split(self.installer_options) \
                + ['--script', self.build_dir.to_target_path(install_script)]
         try:
             print('installing...')
@@ -4608,7 +4615,7 @@ Controller.prototype.FinishedPageCallback = function()
                          self.package_repository_subdir))
         report_file = os.path.join(repos_dir, 'tests_report.txt')
         if options.ctest_options is not None:
-            ctoptions = shlex.split(options.ctest_options.encode('utf-8'))
+            ctoptions = shlex_split(options.ctest_options)
         else:
             ctoptions = self.ctest_options
         test_res = run_and_log_tests(cwd=self.build_dir.directory,
@@ -4639,7 +4646,7 @@ Controller.prototype.FinishedPageCallback = function()
                 and not os.path.exists(self.test_ref_data_dir):
             os.makedirs(self.test_ref_data_dir)
         if options.make_options is not None:
-            ctoptions = shlex.split(options.make_options.encode('utf-8'))
+            ctoptions = shlex_split(options.make_options)
         else:
             ctoptions = self.make_options
         print('Creating test reference files for package:', self.directory)
@@ -4662,7 +4669,7 @@ Controller.prototype.FinishedPageCallback = function()
             text = subprocess.check_output(expr, shell=True).strip()
             new_line += text
             new_line += expressions.pop(0)
-        return ' '.join(shlex.split(new_line.encode('utf-8')))
+        return ' '.join(shlex_split(new_line))
 
 
 class PublicationDirectory(DirectorySection, ConfigVariableParser):
@@ -4778,7 +4785,7 @@ class PublicationDirectory(DirectorySection, ConfigVariableParser):
 
         env = self.get_environ()
         for c in self.publication_commands:
-            command = shlex.split(c.encode('utf-8'))
+            command = shlex_split(c)
             system_output_on_error(command, env = env)
             
 

@@ -980,9 +980,9 @@ class JenkinsWrapper(object):
 
         job_name = self.jenkins_job_name(o, step)
         job_long_name = self.jenkins_long_job_name(o, step)
-        duration_t = [y - x
-                      for x, y in zip(o.start_time[step],
-                                      o.stop_time[step])]
+        duration_t = tuple([y - x
+                            for x, y in zip(o.start_time[step],
+                                            o.stop_time[step])])
         # duration in seconds
         duration = int(time.mktime(duration_t) - time.mktime((0, ) * 9)) \
             * 1000

@@ -1032,8 +1032,8 @@ class JenkinsWrapper(object):
               <duration>%d</duration>
               <displayName>%s</displayName>
               <description>%s</description>
-            </run>''' % (binascii.hexlify(message), int(res), duration,
-                         job_long_name, status)
+            </run>''' % (binascii.hexlify(message.encode('utf-8')), int(res),
+                         duration, job_long_name, status)
 
             folder_url, short_name = jen._get_job_folder(job_name)
             jen.jenkins_open(jenkins.Request(

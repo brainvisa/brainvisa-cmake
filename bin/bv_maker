@@ -1849,14 +1849,14 @@ class PackCommand(StepCommand):
                 if not data_dir:
                     return 0
                 else:
-                    return __getDepth(data_dir) + 1      
+                    return __getDepth(data_dir) + 1
                 
             dirs=[]
             for o in configuration.packageDirectories.values():
                 dirs.append((__getDepth(o), o))
             
             #print([(o, d.directory) for o, d in sorted(dirs)])
-            return [d for o, d in sorted(dirs)]
+            return [d for o, d in sorted(dirs, key=lambda x: x[0])]
         
         self.process('pack', __getPackageDirectoriesByDepth(),
                      'package', self.options, self.args)

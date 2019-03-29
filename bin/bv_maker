@@ -1056,7 +1056,7 @@ class JenkinsWrapper(object):
         if start_time is None or stop_time is None:
             duration = 0
         else:
-            duration_t = [y - x for x, y in zip(start_time, stop_time)]
+            duration_t = tuple([y - x for x, y in zip(start_time, stop_time)])
             duration = int(time.mktime(duration_t) - time.mktime((0, ) * 9)) \
                 * 1000
 

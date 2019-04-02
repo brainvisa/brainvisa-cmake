@@ -53,6 +53,17 @@ function _complete_bv_maker_()
 }
 
 
+function _complete_bv_env_()
+{
+    # exec bv_env and retreive PATH variable so that we can delegate completion
+    # using the _command() bash completion function, within the correct path
+
+    local _x=$(${COMP_WORDS[0]} | fgrep 'export PATH=')
+    PATH="${_x:13:-1}" _command
+}
+
+
 # complete -W "info sources configure build doc testref test pack install_pack testref_pack test_pack publish_pack -c -h -d -s -b --username -e --email --disable-jenkins --def --only-if-default -v --verbose --version" bv_maker
 
 complete -F _complete_bv_maker_ -o default -o nospace bv_maker
+complete -F _complete_bv_env_ bv_env

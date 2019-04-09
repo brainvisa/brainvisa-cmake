@@ -310,7 +310,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           # numpy/core/*.x86_64-linux-gnu.so are named without the
           # .x86_64-linux-gnu extension in the newer module, but the former
           # ones are loaded.
-          # Same for PyQt, sip, zmq when they are re-installed manually
+          # Same for PyQt, sip, zmq, scipy when they are re-installed manually
           #
           # BUT
           #
@@ -318,7 +318,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           # install a mixup of /usr/lib/pythonxx, /usr/lib/pyshared and others
           # which overlap (and even symlink each other...)
           #
-          set( removed_packages "numpy" "PyQt5" "PyQt4" "zmq" )
+          set( removed_packages "numpy" "PyQt5" "PyQt4" "zmq" "scipy" )
           set( bv_copy_options1 "" )
           set( bv_copy_options2 "" )
           foreach( p in ${removed_packages} )

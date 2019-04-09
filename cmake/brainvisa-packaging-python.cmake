@@ -300,6 +300,8 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           endif()
         endforeach()
         set( i 0 )
+        set( bv_copy_options1 "" )
+        set( bv_copy_options2 "" )
         if( NOT LSB_DISTRIB STREQUAL "ubuntu"
             OR LSB_DISTRIB_RELEASE VERSION_GREATER "14.0" )
           # we must erase any previous numpy installation before installing it
@@ -308,7 +310,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           # numpy/core/*.x86_64-linux-gnu.so are named without the
           # .x86_64-linux-gnu extension in the newer module, but the former
           # ones are loaded.
-          # Same for PyQt and sip when they are re-installed manually
+          # Same for PyQt, sip, zmq when they are re-installed manually
           #
           # BUT
           #
@@ -316,11 +318,17 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           # install a mixup of /usr/lib/pythonxx, /usr/lib/pyshared and others
           # which overlap (and even symlink each other...)
           #
-          set( bv_copy_options1 "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/numpy" "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/numpy" "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/PyQt5" "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/PyQt5" "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/PyQt4" "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/PyQt4" )
-          set( bv_copy_options2 "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages/numpy" "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/numpy" "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages/PyQt4" "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/PyQt5" "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/PyQt5" )
-        else()
+          set( removed_packages "numpy" "PyQt5" "PyQt4" "zmq" )
           set( bv_copy_options1 "" )
           set( bv_copy_options2 "" )
+          foreach( p in ${removed_packages} )
+            list( APPEND bv_copy_options1
+              "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/${p}"
+              "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/${p}" )
+            list( APPEND bv_copy_options2
+              "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages/${p}"
+              "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/${p}" )
+          endforeach()
         endif()
 
         foreach( _pypath ${_toinstall} )

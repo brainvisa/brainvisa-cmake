@@ -470,6 +470,11 @@ def run_and_log_testref(cwd=None, env=None, options=None):
     return logs
 
 
+class GitUpdateError(Exception):
+    """Exception for a non-fatal error updating a Git repository."""
+    pass
+
+
 class GlobalConfiguration(object):
 
     def __init__(self, argv):
@@ -2785,7 +2790,8 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
 
         # update Git Repositories
 
-        self.git_update_status_list = []
+        git_update_status_list = []
+        git_update_failure = False
         for component_version, url, git_tag, dest_directory, bv_version \
                 in self.gitComponents:
             if dest_directory is None:
@@ -2794,14 +2800,21 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                     dest_directory = dest_directory[:-4]
             dest_path = os.path.join(self.directory, dest_directory)
             if use_rcs and options.git:
-                self.gitupdate(url, dest_path, git_tag)
-            source_directories.append((dest_path, bv_version))
+                try:
+                    self.gitupdate(url, dest_path, git_tag)
+                except GitUpdateError as exc:
+                    status_message = str(exc)
+                    git_update_failure = True
+                else:
+                    status_message = 'up-to-date'
+                git_update_status_list.append((dest_path, status_message))
+                source_directories.append((dest_path, bv_version))
 
-        if self.git_update_status_list:
+        if git_update_status_list:
             print()
             print('Summary of Git component updates')
             print('================================')
-        for status_element in self.git_update_status_list:
+        for status_element in git_update_status_list:
             print('{1:23} {0}'.format(*status_element))
 
         components_sources = {}
@@ -2819,6 +2832,8 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                 print('WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % os.path.join(self.directory, dest_path))
         json.dump(components_sources, open(
             os.path.join(self.directory, 'components_sources.json'), 'w'), indent=2)
+        if git_update_failure:
+            raise RuntimeError('Error updating one or more Git repositories')
 
     def svncommand(self, *svnargs):
         cmd = ['svn', svnargs[0]]
@@ -2879,12 +2894,8 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
                 print('directory %s is not a git repository => clone from git %s'
                       % (dest, src))
             os.makedirs(dest)
-            retcode = subprocess.call(['git', 'init', '--quiet'], cwd=dest)
-            if retcode != 0:
-                self.git_update_status_list.append((dest, 'ERROR: cannot init'))
-                print(
-                    'ERROR: could not initialize git repository in {0}'.format(dest))
-                return
+            # An error with git init is immediately fatal (raises OSError)
+            system('git', 'init', '--quiet', cwd=dest)
 
         remotes = self.get_git_remotes(dest)
         if 'origin' in remotes:
@@ -2895,7 +2906,7 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
                 src = remote[1] + remote[2]
         # Configure a remote for the developer's convenience
         retcode = subprocess.call(['git', 'remote', 'set-url', 'origin', src],
-                                  cwd=dest, stderr=open(os.devnull, 'w'))
+                                  cwd=dest, stderr=open(os.devnull, 'wb'))
         if retcode != 0:
             subprocess.call(['git', 'remote', 'add', '--tags', 'origin', src],
                             cwd=dest)
@@ -2926,9 +2937,8 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
             retcode = subprocess.call(['git', 'remote', 'update'],
                                       cwd=dest, stderr=subprocess.STDOUT)
             if retcode != 0:
-                print('{0}: could not fetch from git repository {1}'
-                      .format(dest, src))
                 # An error here is not fatal
+                print('{0}: error updating remotes'.format(dest))
 
         # Fetch the remote ref specified in bv_maker.cfg into refs/bv_head
         #
@@ -2939,15 +2949,14 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
                                    "+" + remote_ref + ":refs/bv_head"],
                                   cwd=dest, stderr=subprocess.STDOUT)
         if retcode != 0:
-            print(
-                '{0}: could not fetch from git repository {1}'.format(dest, src))
-            self.git_update_status_list.append((dest, 'ERROR: cannot fetch'))
-            return  # Abort for this repository, continue with other repositories
+            print('{0}: could not fetch from git repository {1}'
+                  .format(dest, src))
+            raise GitUpdateError('ERROR: cannot fetch')
 
         # Check if we are in detached HEAD state
         retcode = subprocess.call(['git', 'symbolic-ref', '--quiet', 'HEAD'],
-                                  cwd=dest, stdout=open(os.devnull, 'w'))
-        detached_head = False if retcode == 0 else True
+                                  cwd=dest, stdout=open(os.devnull, 'wb'))
+        detached_head = (retcode != 0)
 
         if (not old_head) or (detached_head and old_head == old_bv_head):
             # HEAD is detached, and is the same as left by the previous
@@ -2958,10 +2967,7 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
             retcode = subprocess.call(['git', 'checkout', '--quiet',
                                        '--detach', 'refs/bv_head', '--'],
                                       cwd=dest)
-            if retcode == 0:
-                status_text = 'up-to-date'
-            else:
-                status_text = 'NOT UPDATED (see above)'
+            if retcode != 0:
                 print("""\
 The git repository at {0} could not be updated,
 please refer to the above error message.
@@ -2977,6 +2983,7 @@ Or, discard your changes and go back to following the upstream version:
 
   git -C '{0}' checkout refs/bv_head
 """.format(dest))
+                raise GitUpdateError('NOT UPDATED (see above)')
         elif not detached_head:
             # We are following a branch. Advance the branch if it has not
             # diverged from upstream. If local commits exist, that would
@@ -2988,10 +2995,7 @@ Or, discard your changes and go back to following the upstream version:
             retcode = subprocess.call(
                 ['git', 'merge', '--ff-only', 'refs/bv_head'],
                 cwd=dest)
-            if retcode == 0:
-                status_text = 'up-to-date (on branch)'
-            else:
-                status_text = 'NOT UPDATED (see above)'
+            if retcode != 0:
                 print("""\
 Upstream changes could not be merged in {0},
 please refer to the above error message.
@@ -3002,11 +3006,11 @@ go back to letting bv_maker update your repository:
 
   git -C '{0}' checkout refs/bv_head
 """.format(dest, remote_ref))
+                raise GitUpdateError('NOT UPDATED (see above)')
         else:
             # HEAD is detached but has been moved since last bv_maker run. The
             # user has likely checked out a tag manually, do not mess with
             # their repository.
-            status_text = 'NOT UPDATED (see above)'
             print("""\
 The git repository at {0} will not be updated by bv_maker,
 because it is detached at a commit that does not correspond to bv_head.
@@ -3015,7 +3019,7 @@ remote ref '{1}', you should run:
 
   git -C '{0}' checkout refs/bv_head
 """.format(dest, remote_ref))
-        self.git_update_status_list.append((dest, status_text))
+            raise GitUpdateError('NOT UPDATED (see above)')
 
     def info(self):
         print('Source directory: "' + self.directory + '"')

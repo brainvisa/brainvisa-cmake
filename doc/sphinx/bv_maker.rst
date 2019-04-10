@@ -105,3 +105,11 @@ Test_pack step
 .. include:: bv_maker_help_test_pack.rst
 
 
+.. _publish_pack_step:
+
+Publish_pack step
+-----------------
+
+.. include:: bv_maker_help_publish_pack.rst
+
+

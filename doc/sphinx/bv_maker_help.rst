@@ -20,6 +20,7 @@ Commands:
 * testref_pack: Create the machine-specific reference files for tests in
   installed binary package.
 * test_pack: Run tests in installed binary packages.
+* publish_pack: Publish binary packages.
 
 To get help for a specific command, use -h option of the command. Example: "bv_maker build -h".
 
@@ -43,7 +44,7 @@ Options:
                         several times to process several directories.
   -c CONFIG, --config=CONFIG
                         specify configuration file. Default
-                        ="/home/riviere/.brainvisa/bv_maker.cfg"
+                        ="/home/dr144257/.brainvisa/bv_maker.cfg"
   -s DIR, --sources=DIR
                         directory containing sources
   -b DIR, --build=DIR   build directory
@@ -51,4 +52,9 @@ Options:
   -e, --email           Use email notification (if configured in the general
                         section of the configuration file)
   --disable-jenkins     disable Jenkins server logging
+  --def, --only-if-default
+                        apply only steps which are defined as default steps in
+                        the bv_maker.cfg config file. Equivalent to passing
+                        --only-if-default to every substep which supports it.
   -v, --verbose         show as much information as possible
+  --version             show bv_maker (brainvisa-cmake) version number

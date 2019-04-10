@@ -12,6 +12,8 @@ In this file you can configure several types of directories:
 
 * **package directory**: A package directory is an installer repository directory. It is built from a build directory, and can be used to make a repository, to install the package, and to run tests on the installed packages.
 
+* **publication directory**: A publication directory is where a "finished" package will be copied to be published. Several operations can be performed during this step (like ploading to a web server etc).
+
 A section may also contain conditional parts. See the `Conditional subsections`_ section for details.
 
 
@@ -302,7 +304,7 @@ A package directory definition section starts with a line with the following syn
 
 where ``<directory>`` is the name of the directory where the packaging results will be written (packages repository). As the source and build directories, the package directory name can contain environment variable substitution.
 
-The package section allows 4 additional steps :doc:`bv_maker`: ``pack``, ``install_pack``, ``testref_pack`` and ``test_pack``
+The package section allows 4 additional steps in :doc:`bv_maker`: ``pack``, ``install_pack``, ``testref_pack`` and ``test_pack``
 
 * :ref:`pack <pack_step>` will build a packages repository and an installer program
 * :ref:`install_pack <install_pack_step>` will install the previously built installer, possibly on a remote machine or docker machine
@@ -380,6 +382,40 @@ Variables substitution in the form ``$(variable)s`` can replace the following va
       data_repos_dir = /home/local/brainvisa_packages/test_data_repository
       - communication
       - web
+
+
+Definition of a publication directory
+=====================================
+
+A publication directory definition section starts with a line with the following syntax:
+
+.. code-block:: bash
+
+    [ package_publication <directory> ]
+
+where ``<directory>`` is the name of the directory where the package publication results will be written. As the source, build and package directories, the publicatioon directory name can contain environment variable substitution.
+
+The package_publication section allows a dedicated step in :doc:`bv_maker`: ``publish_pack``.
+
+* :ref:`publish_pack <publish_pack_step>` will copy a packages repository to a given location
+
+The package_publication section must define some variables which specify which package directory will be published and how.
+
+* ``package_directory``: references a package directory, which must exist in the configuration file. It is mandatory.
+* ``directory_id``: used in Jenkins notification
+* ``env``: environment variables dictionary
+* ``build_condition``: As in build sections, condition when the package section steps are performed.
+* ``publication_commands``: commands to be performed to actually do the "publication" work. If not specified, the default publication commands will copy the package repository and installers to the publication directory.
+* ``stderr_file``: file used to redirect the standard error stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If not specified, it will be mixed with standard output.
+* ``stdout_file``: file used to redirect the standard output stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If neither it nor ``stderr_file`` are specified, then a temporary file will be used, and erased when each step is finished.
+
+**Example**
+
+.. code-block:: bash
+
+    [ package_publication /home/local/brainvisa_release ]
+      package_directory = $HOME/brainvisa/brainvisa_packages/test_repository
+      build_condition = sys.platform == "linux2"
 
 
 Syntax for components selection

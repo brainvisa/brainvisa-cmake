@@ -302,34 +302,41 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         set( i 0 )
         set( bv_copy_options1 "" )
         set( bv_copy_options2 "" )
+        # we must erase any previous numpy installation before installing it
+        # again because some C libs may be installed with non-overlapping
+        # names and end-up conflicting:
+        # numpy/core/*.x86_64-linux-gnu.so are named without the
+        # .x86_64-linux-gnu extension in the newer module, but the former
+        # ones are loaded.
+        # Same for PyQt, sip, zmq, scipy when they are re-installed manually
+        #
+        # BUT
+        #
+        # we mustn't do that systematically on Ubuntu 12.04 since there, we
+        # actually must install a mixup of /usr/lib/pythonxx,
+        # /usr/lib/pyshared and others which overlap (and even symlink each
+        # other...)
+        # In fact it depends on the modules and the way they were installed
+        # (system modules or upgraded using pip)
+        #
         if( NOT LSB_DISTRIB STREQUAL "ubuntu"
             OR LSB_DISTRIB_RELEASE VERSION_GREATER "14.0" )
-          # we must erase any previous numpy installation before installing it
-          # again because some C libs may be installed with non-overlapping
-          # names and end-up conflicting:
-          # numpy/core/*.x86_64-linux-gnu.so are named without the
-          # .x86_64-linux-gnu extension in the newer module, but the former
-          # ones are loaded.
-          # Same for PyQt, sip, zmq, scipy when they are re-installed manually
-          #
-          # BUT
-          #
-          # we mustn't do that on Ubuntu 12.04 since there, we actually must
-          # install a mixup of /usr/lib/pythonxx, /usr/lib/pyshared and others
-          # which overlap (and even symlink each other...)
-          #
           set( removed_packages "numpy" "PyQt5" "PyQt4" "zmq" "scipy" )
-          set( bv_copy_options1 "" )
-          set( bv_copy_options2 "" )
-          foreach( p in ${removed_packages} )
-            list( APPEND bv_copy_options1
-              "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/${p}"
-              "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/${p}" )
-            list( APPEND bv_copy_options2
-              "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages/${p}"
-              "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/${p}" )
-          endforeach()
+        else()
+          # on our ubuntu 12 we have upgraded numpy, scipy and zmq using pip.
+          # this is specific to our own install, I know.
+          set( removed_packages "numpy" "scipy" "zmq" )
         endif()
+        set( bv_copy_options1 "" )
+        set( bv_copy_options2 "" )
+        foreach( p in ${removed_packages} )
+          list( APPEND bv_copy_options1
+            "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/${p}"
+            "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/${p}" )
+          list( APPEND bv_copy_options2
+            "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages/${p}"
+            "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/${p}" )
+        endforeach()
 
         foreach( _pypath ${_toinstall} )
           list( GET _dirs ${i} _dir )

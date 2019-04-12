@@ -652,7 +652,7 @@ def create_directory_package(options, selected_packages, dependencies,
                         outf = os.path.join(
                             share_inst_dir, os.path.basename(f))
                         shutil.copyfile(f, outf)
-                        os.chmod(outf, 0666)
+                        os.chmod(outf, 0o666)
         except Exception as e:
             print('database update / copy failed:')
             print(e)

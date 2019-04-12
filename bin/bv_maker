@@ -3920,6 +3920,7 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
             'pack': build_section,
             'install_pack': [(self, 'pack')],
             'test_pack': [(self, 'install_pack')],
+            'testref_pack': [(self, 'install_pack')],
         }
 
     def process_configuration_lines(self):
@@ -4741,10 +4742,7 @@ class PublicationDirectory(DirectorySection, ConfigVariableParser):
         pack_section = self.get_package_dir()
         
         if pack_section is not None:
-            pack_section = [(pack_section, 'build'),
-                            (pack_section, 'doc'),
-                            (pack_section, 'test'),
-                            (pack_section, 'pack')]
+            pack_section = [(pack_section, 'pack')]
         else:
             pack_section = []
             

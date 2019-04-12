@@ -1647,6 +1647,10 @@ class SourcesCommand(StepCommand):
                           'of bv_maker.cfg config file. Default steps are '
                           'normally "sources" for source sections, and '
                           '"configure build" for build sections')
+        parser.add_option('--ignore-git-failure', dest='ignore_git_failure',
+                          action='store_true', default=False,
+                          help='ignore git update failures, useful when '
+                          'working on a feature branch')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
@@ -2522,10 +2526,16 @@ class DirectorySection(object):
             self.set_dependencies()
             self.deps_set = True
 
-        for dep, dep_step in self.depend_on_sections.get(step, []):
-            if dep.has_failed(dep_step):
-                self.status[step] = 'unmet dependency'
-                return False
+        for dep_sec in self.depend_on_sections.get(step, []):
+            dep, dep_step = dep_sec[:2]
+            if len(dep_sec) >= 3: # function to test dependency
+                if not dep_sec[2](self, dep, dep_step):
+                    self.status[step] = 'unmet dependency'
+                    return False
+            else:
+                if dep.has_failed(dep_step):
+                    self.status[step] = 'unmet dependency'
+                    return False
         return True
 
     def set_dependencies(self):
@@ -2565,7 +2575,8 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                          'stdout_file', 
                          'stderr_file',
                          'update_git_remotes',
-                         'default_source_dir'))
+                         'default_source_dir',
+                         'ignore_git_failure'))
     _validOptions.update(_variables_with_replacements)
     _validOptions.update(_path_variables)
     _validOptions.update(_validAdditiveOptions)
@@ -2588,9 +2599,11 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
         # components, it is necessary to access source directory through
         # network share, instead of NFS mount point.
         self.cross_compiling_dirs = {}
+        self.ignore_git_failure = False
         if self.configuration.verbose:
             print('Processing source directory %s' % self.directory)
-        
+        self._git_only_failed = False
+
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ source ... ]:
         #    default_steps [info] [sources]
@@ -2739,6 +2752,9 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
             self.configurationLines.append(line)
 
     def process(self, options, args):
+        self._git_only_failed = False
+        if options.ignore_git_failure:
+            self.ignore_git_failure = True
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
         clientFile = open(os.path.join(self.directory, 'bv_maker.cfg'), 'w')
@@ -2833,6 +2849,7 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
         json.dump(components_sources, open(
             os.path.join(self.directory, 'components_sources.json'), 'w'), indent=2)
         if git_update_failure:
+            self._git_only_failed = True
             raise RuntimeError('Error updating one or more Git repositories')
 
     def svncommand(self, *svnargs):
@@ -3033,6 +3050,19 @@ remote ref '{1}', you should run:
             if component_version:
                 component, version = component_version
                 print('    component %s (%s)' % (component, version))
+
+    @staticmethod
+    def dep_condition(dest_section, src_section, step):
+        # this function is used for step condition testing. It is overloaded
+        # just in case the option ignore_git_failure is set: then next
+        # steps are still enabled, while this source step has failed.
+        if not src_section.has_failed(step):
+            return True
+        if src_section.status.get(step, 'not run') == 'failed' \
+                and src_section.ignore_git_failure \
+                and src_section._git_only_failed:
+            return True
+        return False
 
 
 class ComponentsConfigParser(DirectorySection):
@@ -3271,7 +3301,7 @@ if len(old_file) == 0:
 
     def set_dependencies(self):
         self.depend_on_sections = {
-            'configure': [(d, 'sources')
+            'configure': [(d, 'sources', SourceDirectory.dep_condition)
                           for d in
                           self.configuration.sourcesDirectories.values()],
             'build': [(self, 'configure')],

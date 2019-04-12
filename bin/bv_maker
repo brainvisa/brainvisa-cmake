@@ -3991,7 +3991,7 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
         return self.get_python_vars()
     
     def installer_cmdline(self):
-        components = self.components.keys()
+        components = list(self.components.keys())
         projects = list(self.projects)
         pack_options = self.packaging_options
         installer_filename = self.installer_filename

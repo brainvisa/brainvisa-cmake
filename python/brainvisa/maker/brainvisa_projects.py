@@ -211,10 +211,11 @@ def parse_project_info_python(
                 format = version_format
             )
   execfile(path, d, d)
+
   for var in ('NAME', 'version_major', 'version_minor', 'version_micro'):
     if var not in d:
       raise KeyError('Variable %s missing in info file %s' % (var, path))
-    
+
   project = component = d['NAME']
   if len(version) > 0:
     version[0] = d['version_major']
@@ -292,10 +293,15 @@ def read_project_info( directory,
                      )
       
     elif project_info_path.endswith( '.py' ):
-        project_info = parse_project_info_python(
-                           project_info_path,
-                           version_format = version_format
-                       )
+        try:
+            project_info = parse_project_info_python(
+                              project_info_path,
+                              version_format = version_format
+                          )
+        except ImportError:
+            print('File %s cannot be imported, project is skipped.'
+                  % project_info_path, file=sys.stderr)
+            return None
         
     else:
       raise RuntimeError( 'File ' + project_info_path + ' has unknown '

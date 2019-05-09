@@ -2845,7 +2845,7 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                 components_sources.setdefault(component, {})[
                     bv_version or version] = (dest_path, build_model)
             else:
-                print('WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % os.path.join(self.directory, dest_path))
+                print('WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found or used' % os.path.join(self.directory, dest_path))
         json.dump(components_sources, open(
             os.path.join(self.directory, 'components_sources.json'), 'w'), indent=2)
         if git_update_failure:

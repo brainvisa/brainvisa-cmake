@@ -2591,7 +2591,7 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
         self.gitComponents = []
         self.default_steps = ['sources']
         self.revision_control = 'ON'
-        self.update_git_remotes = 'OFF'
+        self.update_git_remotes = 'ON'
         self.directory_id = ''
         # cross_compiling_dirs contains toolchain substitutions for source
         # directories. This is used when execution needs different path to
@@ -2636,6 +2636,8 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                 l + [None, None])[:5]
             git_tag_type, git_tag = (['branch'] \
                 + git_tag.split(':',1))[-2:]
+            # git_tag is the git branch (master, integration...)
+            # bv_version is the bv branch name (bug_fix, trunk)
             if self.configuration.verbose:
                 print('    adding repository: git', url, git_tag)
                 print('                   in:', \
@@ -2889,6 +2891,13 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                 remotes[remote] = protocol, prefix, address
         return remotes
 
+    @classmethod
+    def have_git_lfs(cls):
+        if not hasattr(cls, '_have_git_lfs'):
+            cls._have_git_lfs \
+                  = bool(distutils.spawn.find_executable('git-lfs'))
+        return cls._have_git_lfs
+
     def gitupdate(self, src, dest, remote_ref="HEAD"):
         # Set a username in src if necessary
         if '@' not in src and self.configuration.username:
@@ -2898,7 +2907,22 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
 
         print("Updating git repository {0}".format(dest))
 
+        # NOTE: the older "light" mode has been disabled. It used to
+        # create an empty repository, then selectively add a remote
+        # which was not fetched at start, and then update only a
+        # detached branch.
+        # It was removed because:
+        # * I cannot make it work with git-lfs, which really needs to
+        #   initialize its repositories using "git lfs clone" otherwise
+        #   things are not working well
+        # * it used to confuse a lot non-expert developers who did not
+        #   understand the detached branch thing, and needs to manually
+        #   create/checkout a branch before developing. Even for experienced
+        #   developers, we often forget to check all branches and their
+        #   updated status before working.
+
         # Clone repository if it does not exist yet locally
+        cloned_org = False
         if not os.path.exists(os.path.join(dest, '.git')):
             if os.path.isdir(dest) and os.listdir(dest):
                 print('''
@@ -2910,25 +2934,43 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
             if self.configuration.verbose:
                 print('directory %s is not a git repository => clone from git %s'
                       % (dest, src))
-            os.makedirs(dest)
-            # An error with git init is immediately fatal (raises OSError)
-            system('git', 'init', '--quiet', cwd=dest)
+            if self.have_git_lfs():
+                system('git', 'lfs', 'clone', src, '--branch', remote_ref,
+                       dest)
+                system('git', 'lfs', 'install', cwd=dest)
+            else:
+                # NOTE: disabling older light mode
+                #os.makedirs(dest)
+                ## An error with git init is immediately fatal (raises OSError)
+                #system('git', 'init', '--quiet', cwd=dest)
+                system('git', 'clone', src, '--branch', remote_ref, dest)
+            system('git', 'fetch', '--tags', cwd=dest)
+            cloned_org = True
 
         remotes = self.get_git_remotes(dest)
-        if 'origin' in remotes:
-            remote = remotes['origin']
-            if src.endswith(remote[2]):
-                    # user has configured manually a different protocol:
-                    # respect it.
-                src = remote[1] + remote[2]
-        # Configure a remote for the developer's convenience
-        retcode = subprocess.call(['git', 'remote', 'set-url', 'origin', src],
-                                  cwd=dest, stderr=open(os.devnull, 'wb'))
-        if retcode != 0:
-            subprocess.call(['git', 'remote', 'add', '--tags', 'origin', src],
-                            cwd=dest)
-            # Failure is ignored deliberately (the remote is just for
-            # convenience)
+
+        # NOTE: disabling older light mode
+        #if not cloned_org:
+            #if 'origin' in remotes:
+                #remote = remotes['origin']
+                #if src.endswith(remote[2]):
+                        ## user has configured manually a different protocol:
+                        ## respect it.
+                    #src = remote[1] + remote[2]
+            ## Configure a remote for the developer's convenience
+            #retcode = subprocess.call(['git', 'remote', 'set-url', 'origin',
+                                       #src],
+                                      #cwd=dest, stderr=open(os.devnull, 'wb'))
+            #if retcode != 0:
+                #subprocess.call(['git', 'remote', 'add', '--tags', 'origin',
+                                 #src],
+                                #cwd=dest)
+                ## Failure is ignored deliberately (the remote is just for
+                ## convenience)
+
+        # NOTE: the following code still managed detached branches, but
+        # the detached mode is now never initialized, thus it merely handles
+        # repositories built before the light mode has been disabled.
 
         # Get the SHA-1 identifiers of HEAD and refs/bv_head commits
         try:

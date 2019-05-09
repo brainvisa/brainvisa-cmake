@@ -137,6 +137,7 @@ In case of problems
 
 * **CMake has caches**. They sometimes keep erroneous values. Do not hesitate to remove the ``CMakeCache.txt`` file at the root of the build trees before reconfiguring. It sometimes solves incomprehensible configure problems.
 
+.. _git_repositories:
 
 Git repositories and bv_maker
 =============================
@@ -158,7 +159,15 @@ Git repos are normally linked to the main "origin" repository. When personal for
     git remote add -f perso git@github.com:<login>/morphologist.git
     git branch --set-upstream-to perso/master master
 
+You can use any other name instead of "perso".
+
 This way later *pulls* (as done by ``bv_maker sources``) will pull from the personal fork.
+
+The way bv_maker handles git repositories has changed in bv_maker 3:
+
+* in bv_maker >= 3, repositories are full clones. All remotes are fetched by default when ``bv_maker sources`` is invoked (:ref:`see the config option <source_directory>` ``update_git_remotes``). The default branch (``master``, ``integration``) is checked out according to the target branch. If `git-lfs <https://git-lfs.github.com/>`_ is installed on the system, it is used to clone repositories which might use it, and initialized on new repositories (the ``git lfs install`` comamnd is run on newly cloned directories). The new behavior is havier in terms of network traffic and disk space occupation, but easier to use for developers, and more closely corresponds to the standard git use workflow. Moreover it seemed necessary to perform a "full clone" to be able to use git-lfs properly.
+
+* in bv_maker < 3, repositories were in "light" mode: remotes were not fetched at first, and a detached branch was used to follow the movements of the default remote branch. On later updates, only the current branch was fast-forwarded, and by default remotes were not fetched at all (:ref:`see the config option <source_directory>` ``update_git_remotes``).
 
 
 Credentials

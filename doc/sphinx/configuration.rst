@@ -173,11 +173,14 @@ In the source section, it is also possible to define some option variables, delc
 * ``cross_compiling_dirs``: dictionary of directories. ``cross_compiling_dirs`` contains toolchain substitutions for source directory. This is used when execution needs different path to access sources (i.e.: in windows cross compilation, for pure python components, it is necessary to access source directories through network shares, instead of NFS mount point). For instance, the following configuration line: ``i686-w64-mingw32://computer/basedir`` will replace the source directory path with the UNC path ``//computer/basedir`` in a build directory that uses the i686-w64-mingw32 ``cross_compiling_prefix``. The network share ``//computer/basedir`` must have been properly configured on ``computer`` to be accessible.
 * ``directory_id``: used in Jenkins notification
 * ``revision_control``: ``ON`` (default) or ``OFF``. If enabled, revision control systems (*svn*, *git*) will be used to update the sources. If OFF, the sources directory will be left as is as a fixed sources tree.
+* ``default_source_dir``: ? I don't know... **FIXME**
 * ``default_steps``: steps performed for this build directory when bv_maker is invoked without specifying steps (typically just ``bv_maker``). Defaults to: ``sources``.
 * ``env``: environment variables dictionary
+* ``ignore_git_failure``: don't stop after the sources step if one or more git repositories cannot be updated in fast-forward mode (which also occurs when working on a non-principal branch). Later steps will thus be performed, but the source step will still be reported as failed.
 * ``revision_control``: ``ON`` (default) or ``OFF``. When ON, sources components will be updated using revision control systems (RCS) (svn, git...), and a list of valid components will be generated during the :ref:`sources step <sources_step>` and saved in a file, named ``components_sources.json`` in the main sources directory. If sources are only local, turning ``revision_control`` to OFF will avoid using RCS, but will still generate the list of components for building.
 * ``stderr_file``: file used to redirect the standard error stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If not specified, it will be mixed with standard output.
 * ``stdout_file``: file used to redirect the standard output stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If neither it nor ``stderr_file`` are specified, then a temporary file will be used, and erased when each step is finished.
+* ``update_git_remotes``: ``ON`` (default) or ``OFF``. If ON, all git remotes will be fetched, otherwise only the current active branch in a component will be fast-forwarded. The default value in brainvisa-cmake < 3 used to be ``OFF``, but this was changed in order to make things clearer/easier and to handle git-lfs projects. The former "light" mode (no fetch + detached branch mode) has been deprecated also: it still works for repositories created usinbg bv_maker 2.x but new repositories are not initialized this way any longer. See :ref:`git_repositories`
 
 
 Add components to the list
@@ -203,9 +206,18 @@ A line starting with a minus is has the same syntax as the previous action but r
 Add directories to the list
 ---------------------------
 
+subversion components
++++++++++++++++++++++
+
 .. code-block:: bash
 
     + repository_directory local_directory
+
+or:
+
+.. code-block:: bash
+
+    brainvisa repository_directory local_directory
 
 In order to include some directories that do not correspond to registered BrainVISA components, one can directly give the directory name in ``repository_directory``. This directory name must be given relatively to the main BrainVISA repository URL: https://bioproj.extra.cea.fr/neurosvn/brainvisa. By default, ``repository_directory`` is also used to define where this directory will be in the source directory. It is not mandatory to provide a value for local_directory. If it is given, it is used instead of repositor_directory to define the directory location relatively to the source directory.
 
@@ -222,6 +234,15 @@ Whereas the following configuration will link the same repository directory with
 
     [ source /home/myself/brainvisa ]
       + perso/myself/myproject myproject
+
+git components
+++++++++++++++
+
+See also :ref:`git_repositories`
+
+.. code-block:: bash
+
+    git https://github.com/neurospin/highres-cortex.git master highres-cortex/master
 
 
 .. _build_directory:

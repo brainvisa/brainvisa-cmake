@@ -1036,10 +1036,12 @@ endfunction()
 
 # BRAINVISA_COPY_DIRECTORY
 #  Recursively copy and install all files in <source directory> except files named
-#  CMakeLists.txt, *~ or */.svn/*.
+#  CMakeLists.txt, *~, */.svn/*, *.od[tp], *.doc, *.s[dx]w.
 #
 # Usage:
-#  BRAINVISA_COPY_DIRECTORY( <source directory> <destination directory> <component> [IMMEDIATE] [GET_TARGET <target variable>] [NO_SYMLINKS] )
+#  BRAINVISA_COPY_DIRECTORY( <source directory> <destination directory> <component> [IMMEDIATE] [GET_TARGET <target variable>] [NO_SYMLINKS] [COPY_DOCS] )
+#
+#   if COPY_DOCS is used, files with extention *.od[tp], *.doc, *.s[dx]w are copied
 #
 function( BRAINVISA_COPY_DIRECTORY _directory _destination _component )
   set( _argn "${ARGN}" )
@@ -1072,13 +1074,26 @@ function( BRAINVISA_COPY_DIRECTORY _directory _destination _component )
     list( REMOVE_AT _argn ${result} )
   endif()
 
+  # Read COPY_DOCS option
+  list( FIND _argn COPY_DOCS result )
+  if( result EQUAL -1 )
+    set( copy_docs FALSE )
+  else()
+    set( copy_docs TRUE )
+    list( REMOVE_AT _argn ${result} )
+  endif()
+
   file( GLOB_RECURSE _selectedFiles RELATIVE "${_directory}" "${_directory}/*" )
   set( i 0 )
   list( LENGTH _selectedFiles l )
   while( ${i} LESS ${l} )
     list( GET _selectedFiles ${i} file )
     get_filename_component( f "${file}" NAME )
-    string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*#.*)|(.*\\.svn/.*)|(.*\\.od[tp])|(.*\\.doc)|(.*\\.s[dx]w)|(.*\\..*swp)$" _match "${file}" )
+    if ( copy_docs )
+        string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*#.*)|(.*\\..*swp)$" _match "${file}" )
+    else()
+        string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*#.*)|(.*\\.svn/.*)|(.*\\.od[tp])|(.*\\.doc)|(.*\\.s[dx]w)|(.*\\..*swp)$" _match "${file}" )
+    endif()
     if( _match )
       list( REMOVE_AT _selectedFiles ${i} )
       math( EXPR l "${l} - 1" )

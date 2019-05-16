@@ -52,7 +52,9 @@ do
   i=$(($i+1))
 done
 
-bv_env_cmd=("${BRAINVISA_ENV}")
+# PYTHONHASHSEED disables Python hash randomization so that test results are
+# reproducible (randomization is enabled by default in Python 3.3 and later).
+bv_env_cmd=(env PYTHONHASHSEED=0 "${BRAINVISA_ENV}")
 if [[ .${BRAINVISA_ENV##*.} == .exe ]]; then
     # Use wine command if defined and not already used in command
     if [[ -n $WINECMD ]]; then

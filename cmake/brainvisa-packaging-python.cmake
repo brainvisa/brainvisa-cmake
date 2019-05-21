@@ -223,6 +223,9 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           list( REVERSE _inv_pypath )
         endif()
 
+        # get python main version
+        string( REGEX MATCH "([^.]+)" py_version ${PYTHON_SHORT_VERSION} )
+
         set( _toinstall )
         set( _uicpdir )
         set( _pyside1 )
@@ -337,6 +340,11 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
             "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages/${p}"
             "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/${p}" )
         endforeach()
+
+        # make a symlink lib/python3 -> lib/python3.6 to avoid duplicating modules
+        # in ubuntu installs
+        add_custom_command( TARGET install-${component} PRE_BUILD
+          COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${CMAKE_COMMAND} -E create_symlink "python${PYTHON_SHORT_VERSION}" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${py_version}" \; else ${CMAKE_COMMAND} -E create_symlink "python${PYTHON_SHORT_VERSION}" "${CMAKE_INSTALL_PREFIX}/lib/python${py_version}" \; fi )
 
         foreach( _pypath ${_toinstall} )
           list( GET _dirs ${i} _dir )

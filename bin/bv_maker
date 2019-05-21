@@ -1917,6 +1917,12 @@ class InstallPackCommand(StepCommand):
                           default=False,
                           help='True if the installation must be done using ' \
                                'offline installer. Default is False.')
+        parser.add_option('--debug', dest='debug',
+                          action='store_true',
+                          default=False,
+                          help='True if the installation must be done in debug ' \
+                               'mode (i.e. generated files must not be deleted). ' \
+                               'Default is False.')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
@@ -4592,7 +4598,8 @@ Controller.prototype.FinishedPageCallback = function()
             subprocess.check_call(cmd, shell=True, env=env)
             print('done.')
         finally:
-            os.unlink(install_script)
+            if not options.debug:
+                os.unlink(install_script)
 
     def init_vars(self):        
         super(PackageDirectory, self).init_vars()

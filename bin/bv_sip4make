@@ -57,7 +57,7 @@ if sipopt == len(sys.argv) - 1:
     sipopt = -1
 if sipopt >= 0:
     sipcmd = sys.argv[sipopt + 1]
-    del sys.argv[sipopt], sys.argv[sipopt + 1]
+    del sys.argv[sipopt + 1], sys.argv[sipopt]
 elif sys.platform.startswith('win'):
     sipcmd = 'sip.exe'
 else:

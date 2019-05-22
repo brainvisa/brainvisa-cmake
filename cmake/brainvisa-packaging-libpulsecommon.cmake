@@ -1,7 +1,12 @@
 find_library( LIBPULSECOMMON pulsecommon )
 if( NOT LIBPULSECOMMON )
   # find libpulsecommon.so.?
+  # ubuntu style
   file( GLOB LIBPULSECOMMON /usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-*.?.so )
+  if( NOT LIBPULSECOMMON )
+    # redhat/centos style
+    file( GLOB LIBPULSECOMMON /usr/lib64/pulseaudio/libpulsecommon-*.?.so )
+  endif()
   if( LIBPULSECOMMON )
     set( LIBPULSECOMMON "${LIBPULSECOMMON}" CACHE STRING "libpulsecommon library" FORCE )
   endif()

@@ -162,6 +162,7 @@ else()
     PATHS
       "${PYTHON_PREFIX}/include"
     PATH_SUFFIXES
+      python${PYTHON_SHORT_VERSION}m
       python${PYTHON_SHORT_VERSION}
     NO_DEFAULT_PATH
   )

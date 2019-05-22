@@ -9,7 +9,6 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   if( NOT APPLE AND NOT WIN32 AND LSB_DISTRIB STREQUAL "ubuntu" )
       BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN
                                       DEPENDS libdoubleconversion RUN )
-    endif()
   endif()
 endfunction()
 

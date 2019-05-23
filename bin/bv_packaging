@@ -638,7 +638,7 @@ def create_directory_package(options, selected_packages, dependencies,
                 share_c = {}
                 fopts = {'encoding': 'utf-8'} if sys.version_info[0] >= 3 else {}
                 with open(share_conf, **fopts) as f:
-                    six.exec_(f, share_c)
+                    six.exec_(f.read(), share_c)
                 share_path = os.path.join(brainvisacmake_directory, 'share',
                                           share_c['share'])
                 files = glob.glob(

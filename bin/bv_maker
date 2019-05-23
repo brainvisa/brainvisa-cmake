@@ -4099,6 +4099,8 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                sys.executable, bvi, '-r', directory]
         if installer_filename:
             cmd += ['-i', installer_filename]
+            if not offline_installer_filename:
+                cmd.append('--online-only')
         if offline_installer_filename:
             from brainvisa.installer import version as bvi_ver
             if [int(x) for x in bvi_ver.version.split('.')] >= [1, 2]:
@@ -4115,8 +4117,10 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
             else:
                 print('warning: bv installer version too old to handle '
                       'offline + online installers at the same time.')
+            if not installer_filename:
+                cmd.append('--offline-only')
         if not installer_filename and not offline_installer_filename:
-            cmd.append( '--repository-only' )
+            cmd.append('--repository-only')
         cmd += pack_options + ['-p'] + projects + ['-n'] + components
         return cmd
 

@@ -222,7 +222,7 @@ def get_target_path_system(platform):
         return 'linux'
 
 def system(*args, **kwargs):
-    print(' '.join(args))
+    print('$ ' + ' '.join(args))
     error = None
     try:
         try:
@@ -2827,7 +2827,7 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                 try:
                     self.gitupdate(url, dest_path, git_tag)
                 except GitUpdateError as exc:
-                    status_message = str(exc)
+                    status_message = 'NOT UPDATED (' + str(exc) + ')'
                     git_update_failure = True
                 else:
                     status_message = 'up-to-date'
@@ -2839,7 +2839,7 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
             print('Summary of Git component updates')
             print('================================')
         for status_element in git_update_status_list:
-            print('{1:23} {0}'.format(*status_element))
+            print('{1:30} {0}'.format(*status_element))
 
         components_sources = {}
         for dest_path, bv_version in source_directories:
@@ -2869,34 +2869,6 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
         cmd.extend(svnargs[1:])
         system(*cmd)
 
-    def get_git_remotes(self, dest):
-        cmd_output = str(system_output_on_error(['git', 'remote', '-v'],
-                                                echo=False, cwd=dest))
-        remotes = {}
-        for line in cmd_output.split('\n'):
-            remotere = re.compile('^([^ ]+)[\s|\t]+([^ ]+)\s+([^ ]+)\s*$')
-            m = remotere.match(line)
-            if not m:
-                continue
-            remote, url, io = m.group(1), m.group(2), m.group(3)
-            if remote not in remotes:
-                if url.startswith('git@'):
-                    protocol = 'git'
-                    prefix, address = url.split(':')
-                    prefix += ':'
-                elif url.startswith('https://'):
-                    protocol = 'https'
-                    address = url[8:].split('/')
-                    prefix = url[:8] + address[0] + '/'
-                    address = '/'.join(address[1:])
-                else:
-                    # assume local repository
-                    protocol = ''
-                    prefix = ''
-                    address = url
-                remotes[remote] = protocol, prefix, address
-        return remotes
-
     @classmethod
     def have_git_lfs(cls):
         if not hasattr(cls, '_have_git_lfs'):
@@ -2911,6 +2883,7 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
             src = '%s//%s@%s' % (
                 url_head, self.configuration.username, url_tail)
 
+        print("\n")
         print("Updating git repository {0}".format(dest))
 
         # NOTE: the older "light" mode has been disabled. It used to
@@ -2928,7 +2901,6 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
         #   updated status before working.
 
         # Clone repository if it does not exist yet locally
-        cloned_org = False
         if not os.path.exists(os.path.join(dest, '.git')):
             if os.path.isdir(dest) and os.listdir(dest):
                 print('''
@@ -2945,51 +2917,30 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
                        dest)
                 system('git', 'lfs', 'install', cwd=dest)
             else:
-                # NOTE: disabling older light mode
-                #os.makedirs(dest)
-                ## An error with git init is immediately fatal (raises OSError)
-                #system('git', 'init', '--quiet', cwd=dest)
+                # An error with git clone is immediately fatal (raises OSError)
                 system('git', 'clone', src, '--branch', remote_ref, dest)
-            system('git', 'fetch', '--tags', cwd=dest)
-            cloned_org = True
-
-        remotes = self.get_git_remotes(dest)
-
-        # NOTE: disabling older light mode
-        #if not cloned_org:
-            #if 'origin' in remotes:
-                #remote = remotes['origin']
-                #if src.endswith(remote[2]):
-                        ## user has configured manually a different protocol:
-                        ## respect it.
-                    #src = remote[1] + remote[2]
-            ## Configure a remote for the developer's convenience
-            #retcode = subprocess.call(['git', 'remote', 'set-url', 'origin',
-                                       #src],
-                                      #cwd=dest, stderr=open(os.devnull, 'wb'))
-            #if retcode != 0:
-                #subprocess.call(['git', 'remote', 'add', '--tags', 'origin',
-                                 #src],
-                                #cwd=dest)
-                ## Failure is ignored deliberately (the remote is just for
-                ## convenience)
-
-        # NOTE: the following code still managed detached branches, but
-        # the detached mode is now never initialized, thus it merely handles
-        # repositories built before the light mode has been disabled.
+        else:
+            # Make sure that the origin remote is configure and points to the
+            # URL configured in bv_maker
+            retcode = subprocess.call(['git', 'remote', 'set-url', 'origin',
+                                       src],
+                                      cwd=dest, stderr=open(os.devnull, 'wb'))
+            if retcode != 0:
+                system('git', 'remote', 'add', '--tags', 'origin', src,
+                       cwd=dest)
 
         # Get the SHA-1 identifiers of HEAD and refs/bv_head commits
         try:
             old_head = str(subprocess.check_output(
                 ['git', 'rev-parse', '--quiet', '--verify', 'HEAD^{commit}'],
-                cwd=dest))
+                cwd=dest)).rstrip()
         except subprocess.CalledProcessError:
             old_head = None
         try:
             old_bv_head = str(subprocess.check_output(
                 ['git', 'rev-parse', '--quiet',
                  '--verify', 'refs/bv_head^{commit}'],
-                cwd=dest))
+                cwd=dest)).rstrip()
         except subprocess.CalledProcessError:
             old_bv_head = None
 
@@ -2999,92 +2950,144 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
             # Redirect stderr to stdout since git fetch prints progress on
             # stderr, but bv_build_nightly considers everything printed to
             # stderr to be an error.
-            retcode = subprocess.call(['git', 'remote', 'update'],
-                                      cwd=dest, stderr=subprocess.STDOUT)
-            if retcode != 0:
-                # An error here is not fatal
-                print('{0}: error updating remotes'.format(dest))
+            #
+            # Warning: this assumes that git remote update will indeed fetch
+            # from the 'origin' remote, which can be overridden with remote
+            # groups (but who would use those?)
+            cmd = ['git', 'remote', 'update']
+            print('$ ' + ' '.join(cmd))
+            subprocess.call(cmd, cwd=dest, stderr=subprocess.STDOUT)
+            # An error here is ignored
+        else:
+            system('git', 'fetch', 'origin',
+                   cwd=dest, stderr=subprocess.STDOUT)
+        retcode = subprocess.call(['git', 'show-ref', '--verify', '--quiet',
+                                   'refs/remotes/origin/' + remote_ref],
+                                  cwd=dest)
+        remote_ref_is_a_branch = (retcode == 0)
 
+        # TODO (optimization): if remote_ref is a branch, do not fetch again
+        #
         # Fetch the remote ref specified in bv_maker.cfg into refs/bv_head
         #
-        # Redirect stderr to stdout since git fetch prints progress on
-        # stderr, but other BrainVISA tools consider every print to stderr
-        # to be an error.
-        retcode = subprocess.call(['git', 'fetch', '--tags', src,
-                                   "+" + remote_ref + ":refs/bv_head"],
+        # Redirect stderr to stdout since git fetch prints progress on stderr,
+        # but other BrainVISA tools (e.g. bv_build_nightly) consider every
+        # print to stderr to be an error.
+        cmd = ['git', 'fetch', '--tags', src,
+               "+" + remote_ref + ":refs/bv_head"]
+        print('$ ' + ' '.join(cmd))
+        retcode = subprocess.call(cmd,
                                   cwd=dest, stderr=subprocess.STDOUT)
         if retcode != 0:
-            print('{0}: could not fetch from git repository {1}'
-                  .format(dest, src))
-            raise GitUpdateError('ERROR: cannot fetch')
+            print('^' * 72)
+            print('''\
+Fetching failed. Please check your Internet connection and access rights
+to the remote repository.''')
+            print('=' * 72)
+            raise GitUpdateError('fetch failed')
 
-        # Check if we are in detached HEAD state
+        new_bv_head = str(subprocess.check_output(
+            ['git', 'rev-parse', '--quiet', '--verify',
+             'refs/bv_head^{commit}'], cwd=dest))
+
         retcode = subprocess.call(['git', 'symbolic-ref', '--quiet', 'HEAD'],
                                   cwd=dest, stdout=open(os.devnull, 'wb'))
         detached_head = (retcode != 0)
 
-        if (not old_head) or (detached_head and old_head == old_bv_head):
-            # HEAD is detached, and is the same as left by the previous
-            # bv_maker run: this is "follower mode", the remote ref can be
-            # checked out. This is safe to do even if there are local
-            # uncommitted changes, because in that case "git checkout" will
-            # error out appropriately.
-            retcode = subprocess.call(['git', 'checkout', '--quiet',
-                                       '--detach', 'refs/bv_head', '--'],
-                                      cwd=dest)
-            if retcode != 0:
+
+        if remote_ref_is_a_branch:
+            if detached_head and (old_head == old_bv_head):
+                # NOTE: this code path will upgrade repositories that follow a
+                # branch in detached mode, which were used until May 2019.
+                #
+                # Try to checkout a local branch by that name if it exists,
+                # otherwise create it.
+                cmd = ['git', 'checkout', remote_ref, '--']
+                print('$ ' + ' '.join(cmd))
+                retcode = subprocess.call(cmd, cwd=dest)
+                if retcode != 0:
+                    cmd = ['git', 'checkout', '-b', remote_ref, '--track',
+                           'refs/remotes/origin/' + remote_ref]
+                    print('$ ' + ' '.join(cmd))
+                    retcode = subprocess.call(cmd, cwd=dest)
+                if retcode != 0:
+                    print('^' * 72)
+                    print("""\
+The git repository could not be updated, probably because you have
+uncommitted local changes (see above).""")
+                    print('=' * 72)
+                    raise GitUpdateError('checkout failed')
+                # In case of success, we proceed to do the normal fast-forward
+                # update
+            elif detached_head:
+                print('=' * 72)
                 print("""\
-The git repository at {0} could not be updated,
-please refer to the above error message.
+The Git repository was not updated, because it is in detached HEAD
+state. You can update it manually with:
 
-If you have made local changes, you should keep track of them in a branch:
+  git -C '{dest}' checkout {remote_ref}
+  git pull origin {remote_ref}
 
-  cd '{0}'
-  git checkout -b <my_branch>
-  git add ...
-  git commit
+If that fails, you can force the re-creation of the local branch (beware
+that this could lose local commits on the old '{remote_ref}' branch):
 
-Or, discard your changes and go back to following the upstream version:
+  git -C '{dest}' checkout -B {remote_ref} origin/{remote_ref}\
+""".format(dest=dest, remote_ref=remote_ref))
+                print('=' * 72)
+                raise GitUpdateError('detached')
 
-  git -C '{0}' checkout refs/bv_head
-""".format(dest))
-                raise GitUpdateError('NOT UPDATED (see above)')
-        elif not detached_head:
+            # TODO(ylep) ff-merge from the configured upstream branch
+
             # We are following a branch. Advance the branch if it has not
             # diverged from upstream. If local commits exist, that would
             # require creating a merge commit, and we do not want to do that
-            # behind the back of the developer. The (fetch + merge) command
-            # sequence is equivalent to "git pull --ff-only src remote_ref".
-            # The merge aborts safely if there are local uncommitted changes,
-            # and prints an appropriate message.
-            retcode = subprocess.call(
-                ['git', 'merge', '--ff-only', 'refs/bv_head'],
-                cwd=dest)
+            # behind the back of the developer. The merge aborts safely if
+            # there are local uncommitted changes, and prints an appropriate
+            # message.
+            cmd = ['git', 'merge', '--ff-only', 'refs/bv_head']
+            print('$ ' + ' '.join(cmd))
+            retcode = subprocess.call(cmd, cwd=dest)
             if retcode != 0:
+                # TODO(ylep): fall back to resetting the current branch if
+                # this is sufficiently safe (useful if a branch is
+                # rewritten or rebased).
+                print('^' * 72)
                 print("""\
-Upstream changes could not be merged in {0},
-please refer to the above error message.
+The upstream branch '{remote_ref}' could not be merged, please refer to
+the error message above.""".format(remote_ref=remote_ref))
+                print('=' * 72)
+                raise GitUpdateError('merge failed')
+        else:  # not remote_ref_is_a_branch
+            # If old_head == old_bv_head, it means that the user has not moved
+            # the repository since the last bv_maker run. In this case, we
+            # allow ourselves to reconfigure the repository (e.g. check out a
+            # different commit).
+            if (not old_bv_head) or (old_head == old_bv_head):
+                # If remote_ref is not a branch (i.e. it is a tag or a sha-1),
+                # we want to detach the repository at this precise commit.
+                cmd = ['git', 'checkout', '--detach', 'refs/bv_head', '--']
+                print('$ ' + ' '.join(cmd))
+                retcode = subprocess.call(cmd, cwd=dest)
+                if retcode != 0:
+                    print('^' * 72)
+                    print("""\
+The Git repository could not be updated, probably because you have
+uncommitted local changes (see above).""")
+                    print('=' * 72)
+                    raise GitUpdateError('checkout failed')
+            elif old_head == new_bv_head:
+                return  # success (nothing to do!)
+            else:
+                print('=' * 72)
+                print("""\
+The Git repository was not updated, because a different commit was
+checked out since the last run of bv_maker sources. You can update your
+repository manually using the following command:
 
-If you do not want to develop in this repository anymore, you should first
-decide what to do with your local changes, then leave the branch and
-go back to letting bv_maker update your repository:
-
-  git -C '{0}' checkout refs/bv_head
-""".format(dest, remote_ref))
-                raise GitUpdateError('NOT UPDATED (see above)')
-        else:
-            # HEAD is detached but has been moved since last bv_maker run. The
-            # user has likely checked out a tag manually, do not mess with
-            # their repository.
-            print("""\
-The git repository at {0} will not be updated by bv_maker,
-because it is detached at a commit that does not correspond to bv_head.
-If you want to let bv_maker update your repository to the configured
-remote ref '{1}', you should run:
-
-  git -C '{0}' checkout refs/bv_head
-""".format(dest, remote_ref))
-            raise GitUpdateError('NOT UPDATED (see above)')
+  git -C '{dest}' checkout refs/bv_head\
+""".format(dest=dest, remote_ref=remote_ref))
+                print('=' * 72)
+                raise GitUpdateError('detached')
 
     def info(self):
         print('Source directory: "' + self.directory + '"')

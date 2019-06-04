@@ -107,6 +107,15 @@ Dictionary variables do support both:
 
     env += PATH: $HOME/bin:$PATH, BRAINVISA_TEST_DIR: $HOME/tests-%(hostname)s-%(date)s
 
+Environment variables may be set by the user, or by the system, prior to running bv_maker, or through the ``env`` variables in ``bv_maker.cfg`` sections. Additionally, bv_maker itself sets a few helpful variables:
+
+``NCPU``:
+    number of processor cores in the current machine. Useful to pass build options matching the power of the build machine:
+
+    .. code-block:: bash
+
+        make_options = -j$NCPU
+
 
 .. _general_section:
 

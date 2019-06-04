@@ -54,6 +54,7 @@ import traceback
 from smtplib import SMTP
 import gzip
 import binascii
+import multiprocessing  # for cpu_count()
 
 try:
     # backport of subprocess of python 3
@@ -2140,16 +2141,16 @@ class VarReplacementType:
     ALL = PYTHON | ENV
         
 def replace_vars(value, 
-                 replacement_type = VarReplacementType.ALL,
-                 python_vars = None,
-                 env_vars = None):
+                 replacement_type=VarReplacementType.ALL,
+                 python_vars=None,
+                 env_vars=None):
     result = value
 
     if python_vars and (replacement_type & VarReplacementType.PYTHON):
         # Uses python variable substitutions to allow partial replacements
         #print('replace_vars, replace_python_vars call', value, replacement_type)
         #result = result % python_vars
-        result = pythonVariablesSubstitution(result, python_vars = python_vars)
+        result = pythonVariablesSubstitution(result, python_vars=python_vars)
 
     if env_vars and (replacement_type & VarReplacementType.ENV):
         #print('replace_vars, replace_env_vars call', value, replacement_type)
@@ -4102,6 +4103,8 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                sys.executable, bvi, '-r', directory]
         if installer_filename:
             cmd += ['-i', installer_filename]
+            if not offline_installer_filename:
+                cmd.append('--online-only')
         if offline_installer_filename:
             from brainvisa.installer import version as bvi_ver
             if [int(x) for x in bvi_ver.version.split('.')] >= [1, 2]:
@@ -4118,8 +4121,10 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
             else:
                 print('warning: bv installer version too old to handle '
                       'offline + online installers at the same time.')
+            if not installer_filename:
+                cmd.append('--offline-only')
         if not installer_filename and not offline_installer_filename:
-            cmd.append( '--repository-only' )
+            cmd.append('--repository-only')
         cmd += pack_options + ['-p'] + projects + ['-n'] + components
         return cmd
 
@@ -4934,6 +4939,10 @@ def display_failure_summary(configuration):
     return global_failed
 
 # ---
+
+# export cpu_count() as NCPU env variable so that it can be used in conf file
+# for env replacements
+os.environ['NCPU'] = str(multiprocessing.cpu_count())
 
 commands = {
     'info': InfoCommand,

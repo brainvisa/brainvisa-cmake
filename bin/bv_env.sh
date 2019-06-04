@@ -127,19 +127,21 @@ fi
     return 1
 }
 
-# source any bash_completion scripts
-shell=$(basename "$SHELL")
-if [ "$shell" = "bash" ]; then
-    _x=$(type -t realpath) && bv_env=$(realpath "$bv_env")
-    unset _x
-    base_dir=$(dirname $(dirname "$bv_env"))
-    if [ -d "$base_dir/etc/bash_completion.d" ]; then
-        for d in "$base_dir/etc/bash_completion.d/"*; do
-            if [ -f "$d" ]; then # if the dir is emty, we get an entry with *
-                . "$d"
-            fi
-        done
+# initialize the bash completion compatibility layer in zsh
+if autoload -U bashcompinit >/dev/null 2>&1; then
+    bashcompinit
+fi
+# test the presence of the bash completion functions (compgen and complete)
+if type compgen complete >/dev/null 2>&1; then
+    if type realpath >/dev/null 2>&1; then
+        bv_env=$(realpath "$bv_env")
     fi
+    base_dir=$(dirname -- "$(dirname -- "$bv_env")")
+    for d in "$base_dir/etc/bash_completion.d/"*; do
+        if [ -f "$d" ]; then # if the dir is empty, we get an entry with *
+            . "$d"
+        fi
+    done
 fi
 
 bv_env_cleanup

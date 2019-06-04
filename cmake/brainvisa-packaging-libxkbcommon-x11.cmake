@@ -13,8 +13,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
 
   file( GLOB LIBXKB_LIBRARIES
         /usr/lib/x86_64-linux-gnu/libxkbcommon-x11.so.?
+        /usr/lib64/libxkbcommon-x11.so.?
         /usr/lib/libxkbcommon-x11.so.?
         /usr/lib/x86_64-linux-gnu/libxkbcommon.so.?
+        /usr/lib64/libxkbcommon.so.?
         /usr/lib/libxkbcommon.so.?
       )
   if(LIBXKB_LIBRARIES)

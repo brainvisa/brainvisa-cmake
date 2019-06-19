@@ -3045,7 +3045,25 @@ that this could lose local commits on the old '{remote_ref}' branch):
                 print('=' * 72)
                 raise GitUpdateError('detached')
 
-            # TODO(ylep) ff-merge from the configured upstream branch
+            # Try to do a fast-forward merge from the configured upstream
+            # branch, if there is one. This is useful if, for example, you are
+            # on a feature branch: it will try to pull from the corresponding
+            # remote branch if there is one, before trying to incorporate
+            # changes from the master branch. Failure is ignored because this
+            # is provided for convenience only.
+            #
+            # TODO (optimization): try this only if the current branch has a
+            # configured upstream branch which is not origin/{remote_ref}.
+            # NOTE: if this fails (e.g. because of uncommitted changes or
+            # network error), but the remote branch has advanced, the merge
+            # from origin (below) may make the local branch diverge from the
+            # remote feature branch, in effect forcing the user to merge the
+            # commits from master into their branch.
+            cmd = ['git', 'pull', '--ff-only']
+            print('$ ' + ' '.join(cmd))
+            retcode = subprocess.call(cmd, cwd=dest, stderr=subprocess.STDOUT)
+            if retcode != 0:
+                print('You can safely ignore errors of the above git command')
 
             # We are following a branch. Advance the branch if it has not
             # diverged from upstream. If local commits exist, that would

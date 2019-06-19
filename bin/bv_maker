@@ -2945,35 +2945,38 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
         except subprocess.CalledProcessError:
             old_bv_head = None
 
-        # Update remotes, including the 'origin' remote configured above, only
-        # if the user has explicitly configured update_git_remotes = 'ON'.
-        if self.update_git_remotes.upper() == 'ON':
-            # Redirect stderr to stdout since git fetch prints progress on
-            # stderr, but bv_build_nightly considers everything printed to
-            # stderr to be an error.
-            #
-            # Warning: this assumes that git remote update will indeed fetch
-            # from the 'origin' remote, which can be overridden with remote
-            # groups (but who would use those?)
-            cmd = ['git', 'remote', 'update']
-            print('$ ' + ' '.join(cmd))
-            subprocess.call(cmd, cwd=dest, stderr=subprocess.STDOUT)
-            # An error here is ignored
-        else:
-            system('git', 'fetch', 'origin',
-                   cwd=dest, stderr=subprocess.STDOUT)
+        system('git', 'fetch', '--tags', '--prune', 'origin',
+               '+refs/heads/*:refs/remotes/origin/*',
+               cwd=dest, stderr=subprocess.STDOUT)
         retcode = subprocess.call(['git', 'show-ref', '--verify', '--quiet',
                                    'refs/remotes/origin/' + remote_ref],
                                   cwd=dest)
         remote_ref_is_a_branch = (retcode == 0)
 
-        # TODO (optimization): if remote_ref is a branch, do not fetch again
+        # Update other remotes only if the user has explicitly configured
+        # update_git_remotes = 'ON'.
+        if self.update_git_remotes.upper() == 'ON':
+            # Redirect stderr to stdout since git fetch prints progress on
+            # stderr, but bv_build_nightly considers everything printed to
+            # stderr to be an error.
+            cmd = ['git', '-c', 'remote.origin.skipDefaultUpdate',
+                   'remote', 'update']
+            print('$ ' + ' '.join(cmd))
+            retcode = subprocess.call(cmd, cwd=dest, stderr=subprocess.STDOUT)
+            if retcode != 0:
+                print('You can safely ignore errors of the above git command')
+
+        # TODO remove this fetch step: if remote_ref is a branch or a tag, it
+        # has been fetched above already.
         #
         # Fetch the remote ref specified in bv_maker.cfg into refs/bv_head
         #
         # Redirect stderr to stdout since git fetch prints progress on stderr,
         # but other BrainVISA tools (e.g. bv_build_nightly) consider every
         # print to stderr to be an error.
+        #
+        # FIXME(ylep): what happens if the update below ends with an error?
+        # bv_head is already updated, does that pose a problem?
         cmd = ['git', 'fetch', '--tags', src,
                "+" + remote_ref + ":refs/bv_head"]
         print('$ ' + ' '.join(cmd))
@@ -2991,13 +2994,18 @@ to the remote repository.''')
             ['git', 'rev-parse', '--quiet', '--verify',
              'refs/bv_head^{commit}'], cwd=dest))
 
-        retcode = subprocess.call(['git', 'symbolic-ref', '--quiet', 'HEAD'],
-                                  cwd=dest, stdout=open(os.devnull, 'wb'))
-        detached_head = (retcode != 0)
+        try:
+            local_branch = str(subprocess.check_output(
+                ['git', 'symbolic-ref', '--quiet', 'HEAD'],
+                cwd=dest)).rstrip()
+            if local_branch.startswith('refs/heads/'):
+                local_branch = local_branch[len('refs/heads/'):]
+        except subprocess.CalledProcessError:
+            local_branch = None
 
 
         if remote_ref_is_a_branch:
-            if detached_head and (old_head == old_bv_head):
+            if (not local_branch and old_head == old_bv_head) or old_head is None:
                 # NOTE: this code path will upgrade repositories that follow a
                 # branch in detached mode, which were used until May 2019.
                 #
@@ -3020,7 +3028,7 @@ uncommitted local changes (see above).""")
                     raise GitUpdateError('checkout failed')
                 # In case of success, we proceed to do the normal fast-forward
                 # update
-            elif detached_head:
+            elif not local_branch:
                 print('=' * 72)
                 print("""\
 The Git repository was not updated, because it is in detached HEAD
@@ -3063,7 +3071,7 @@ the error message above.""".format(remote_ref=remote_ref))
             # the repository since the last bv_maker run. In this case, we
             # allow ourselves to reconfigure the repository (e.g. check out a
             # different commit).
-            if (not old_bv_head) or (old_head == old_bv_head):
+            if old_head == old_bv_head or not old_head or not old_bv_head:
                 # If remote_ref is not a branch (i.e. it is a tag or a sha-1),
                 # we want to detach the repository at this precise commit.
                 cmd = ['git', 'checkout', '--detach', 'refs/bv_head', '--']

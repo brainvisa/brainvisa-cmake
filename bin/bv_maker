@@ -1353,14 +1353,17 @@ class StepCommand(object):
                      or configuration.options.disable_jenkins):
             return
         if o.stdout_file or o.stderr_file:
+            # Line buffering is used (buffering=1) because the output from
+            # bv_maker needs to be interspersed correctly with the output of
+            # external commands called through subprocess.
             if o.stdout_file:
-                self.tmp_stdout = open(o.stdout_file, 'w')
+                self.tmp_stdout = open(o.stdout_file, 'w', buffering=1)
                 if o.stderr_file:
-                    self.tmp_stderr = open(o.stderr_file, 'w')
+                    self.tmp_stderr = open(o.stderr_file, 'w', buffering=1)
                 else:
                     self.tmp_stderr = self.tmp_stdout
             else:
-                self.tmp_stdout = open(o.stderr_file, 'w')
+                self.tmp_stdout = open(o.stderr_file, 'w', buffering=1)
                 self.tmp_stderr = self.tmp_stdout
         else:
             tmp_stdout = tempfile.mkstemp(prefix='buildout_')
@@ -1368,7 +1371,7 @@ class StepCommand(object):
             print('redirecting outputs to temporary file:', tmp_stdout[1])
             sys.stdout.flush()
             sys.stderr.flush()
-            self.tmp_stdout = open(tmp_stdout[1], 'w')
+            self.tmp_stdout = open(tmp_stdout[1], 'w', buffering=1)
             self.tmp_stderr = self.tmp_stdout
         self.orig_stdout = os.dup(sys.stdout.fileno())
         self.orig_stderr = os.dup(sys.stderr.fileno())

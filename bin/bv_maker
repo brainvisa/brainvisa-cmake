@@ -132,9 +132,10 @@ try:
 except ImportError:
     # six module not here, assume python2
     class six(object):
-       @staticmethod
-       def iteritems(obj, *args, **kwargs):
-          return obj.iteritems(*args, **kwargs)
+        @staticmethod
+        def iteritems(obj, *args, **kwargs):
+            return obj.iteritems(*args, **kwargs)
+        text_type = unicode
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -1032,13 +1033,16 @@ class JenkinsWrapper(object):
             POST_BUILD_RESULT = \
                 '%(folder_url)sjob/%(short_name)s/postBuildResult'
 
+            if isinstance(message, six.text_type):
+                message = message.encode('utf-8')
+
             config = '''<run>
               <log encoding="hexBinary">%s</log>
               <result>%d</result>
               <duration>%d</duration>
               <displayName>%s</displayName>
               <description>%s</description>
-            </run>''' % (binascii.hexlify(message.encode('utf-8')), int(res),
+            </run>''' % (binascii.hexlify(message), int(res),
                          duration, job_long_name, status)
 
             folder_url, short_name = jen._get_job_folder(job_name)

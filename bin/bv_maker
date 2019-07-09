@@ -472,11 +472,6 @@ def run_and_log_testref(cwd=None, env=None, options=None):
     return logs
 
 
-class GitUpdateError(Exception):
-    """Exception for a non-fatal error updating a Git repository."""
-    pass
-
-
 class GlobalConfiguration(object):
 
     def __init__(self, argv):
@@ -2579,6 +2574,221 @@ class DirectorySection(object):
         pass
 
 
+class GitUpdateError(Exception):
+    """Exception for a non-fatal error updating a Git repository."""
+    pass
+
+
+def cached_property(fget):
+    """Create a read-only attribute that caches its value."""
+    def cached_getter(self):
+        try:
+            return self._cache[fget.__name__]
+        except KeyError:
+            pass
+        value = fget(self)
+        self._cache[fget.__name__] = value
+        return value
+    return property(cached_getter, doc=fget.__doc__)
+
+
+class GitRepository(object):
+    """Class for querying and interacting with a Git repository."""
+    def __init__(self, repo_path):
+        self.path = repo_path
+        self._cache = {}
+
+    def invalidate_cache(self, key=None):
+        """Invalidate a cached property (all properties if key=None)."""
+        if key is None:
+            self._cache.clear()
+        else:
+            try:
+                del self._cache[key]
+            except KeyError:
+                pass
+
+    def call_command(self, args, echo=False, **kwargs):
+        """Call a command in the repository, returning its exit code."""
+        if echo:
+            print('$ ' + ' '.join(args))
+        return subprocess.call(args, cwd=self.path, **kwargs)
+
+    def call_nonessential_command(self, args, echo=True, **kwargs):
+        """Call a command in the repository, ignoring failure."""
+        if echo:
+            print('$ ' + ' '.join(args))
+        retcode = subprocess.call(args, cwd=self.path, **kwargs)
+        if echo and retcode != 0:
+            print('You can safely ignore errors of the above command')
+
+    def call_essential_command(self, args, echo=True, **kwargs):
+        """Call a command in the repository, raise an exception on failure.
+
+        Upon failure subprocess.CalledProcessError is raised.
+        """
+        subprocess.check_call(args, cwd=self.path, **kwargs)
+
+    @cached_property
+    def local_branch(self):
+        """Name of the current branch, or None if detached."""
+        try:
+            head_ref = str(subprocess.check_output(
+                ['git', 'symbolic-ref', '--quiet', 'HEAD'],
+                cwd=self.path)).rstrip()
+        except subprocess.CalledProcessError:
+            return None
+        if head_ref.startswith('refs/heads/'):
+            return head_ref[len('refs/heads/'):]
+
+    def sha1_of_rev(self, rev):
+        """Obtain the full SHA-1 of the commit identified by rev."""
+        try:
+            return str(subprocess.check_output(
+                ['git', 'rev-parse', '--quiet', '--verify', rev + '^{commit}'],
+                cwd=self.path)).rstrip()
+        except subprocess.CalledProcessError:
+            return None
+
+    @cached_property
+    def head_sha1(self):
+        """SHA-1 identifier of the current HEAD commit."""
+        return self.sha1_of_rev('HEAD')
+
+    @cached_property
+    def bv_head_sha1(self):
+        """SHA-1 identifier of the commit referenced by refs/bv_head."""
+        return self.sha1_of_rev('refs/bv_head')
+
+    def update_origin_remote(self):
+        """Fetch all branches and tags from the 'origin' remote."""
+        # Redirect stderr to stdout since git fetch prints progress on stderr,
+        # but other BrainVISA tools (e.g. bv_build_nightly) consider every
+        # print to stderr to be an error.
+        self.call_essential_command(
+            ['git', 'fetch', '--tags', '--prune', 'origin',
+             '+refs/heads/*:refs/remotes/origin/*'], stderr=subprocess.STDOUT)
+
+    def update_other_remotes(self):
+        """Fetch all remotes except 'origin' (errors are non-fatal)."""
+        # Redirect stderr to stdout since git fetch prints progress on
+        # stderr, but bv_build_nightly considers everything printed to
+        # stderr to be an error.
+        self.call_nonessential_command(
+            ['git', '-c', 'remote.origin.skipDefaultUpdate',
+             'remote', 'update'], echo=True)
+
+    def remote_ref_is_a_branch(self, remote_ref, remote='origin'):
+        """Test if remote_ref names a branch on the given remote."""
+        retcode = self.call_command(
+            ['git', 'show-ref', '--verify', '--quiet',
+             'refs/remotes/' + remote + '/' + remote_ref])
+        return (retcode == 0)
+
+    @staticmethod
+    def print_command_failure_message(self, message):
+        """Print a prominent error message referring to the command above."""
+        print('^' * 72)
+        print(message)
+        print('=' * 72)
+
+    def update_bv_head(self, remote_ref, remote='origin'):
+        """Change refs/bv_head to point at the given remote ref."""
+        # TODO remove this fetch step: if remote_ref is a branch or a tag, it
+        # has been fetched above already.
+        #
+        # Redirect stderr to stdout since git fetch prints progress on stderr,
+        # but other BrainVISA tools (e.g. bv_build_nightly) consider every
+        # print to stderr to be an error.
+        retcode = self.call_command(
+            ['git', 'fetch', remote, "+" + remote_ref + ":refs/bv_head"],
+            echo=True, stderr=subprocess.STDOUT)
+        self.invalidate_cache('bv_head_sha1')
+        if retcode != 0:
+            self.print_command_failure_message('''\
+Fetching failed. Please check your Internet connection and access rights
+to the remote repository.''')
+            raise GitUpdateError('fetch failed')
+
+    def checkout_or_create_branch(self, branch, remote='origin'):
+        """Check out a branch, or create it from the remote branch."""
+        retcode = self.call_command(['git', 'checkout', branch, '--'],
+                                    echo=True)
+        self.invalidate_cache('head_sha1')
+        if retcode != 0:
+            retcode = self.call_command(
+                ['git', 'checkout', '-b', branch, '--track',
+                 'refs/remotes/origin/' + branch])
+            if retcode != 0:
+                self.print_command_failure_message("""\
+The git repository could not be updated, probably because you have
+uncommitted local changes (see above).""")
+                raise GitUpdateError('checkout failed')
+
+    def try_ff_pull_from_upstream(self):
+        """Try to fast-forward from the configured upstream of the current branch.
+
+        This is useful e.g. if you are working on a feature branch: it will try
+        to pull from the corresponding remote branch if there is one, before
+        trying to incorporate changes from the master branch. Failure is
+        ignored because this is provided for convenience only.
+        """
+        # TODO (optimization): try this only if the current branch has a
+        # configured upstream branch which is not origin/{remote_ref}.
+        # try:
+        #     branch_pull_remote = str(subprocess.check_output(
+        #         ['git', 'config', '--get',
+        #          'branch.' + self.local_branch + '.remote'])).rstrip()
+        #     branch_pull_merge = str(subprocess.check_output(
+        #         ['git', 'config', '--get',
+        #          'branch.' + self.local_branch + '.merge'])).rstrip()
+        # except subprocess.CalledProcessError:
+        #     branch_pull_remote = None
+        #     branch_pull_merge = None
+        # remote_branch = remote_ref
+        # if remote_branch.startswith('refs/heads/'):
+        #     remote_branch = remote_branch[len('refs/heads/'):]
+        # if not (branch_pull_remote == 'origin' and branch_pull_merge):
+        #
+        # NOTE: if this fails (e.g. because of uncommitted changes or
+        # network error), but the remote branch has advanced, the merge
+        # from origin (below) may make the local branch diverge from the
+        # remote feature branch, in effect forcing the user to merge the
+        # commits from master into their branch.
+
+        # Redirect stderr to stdout since git fetch prints progress on stderr,
+        # but other BrainVISA tools (e.g. bv_build_nightly) consider every
+        # print to stderr to be an error.
+        self.call_nonessential_command(['git', 'pull', '--ff-only'],
+                                       stderr=subprocess.STDOUT)
+        self.invalidate_cache('head_sha1')
+
+    def ff_merge_bv_head(self):
+        """Fast-forward merge refs/bv_head into the current branch."""
+        retcode = self.call_command(
+            ['git', 'merge', '--ff-only', 'refs/bv_head'], echo=True)
+        self.invalidate_cache('head_sha1')
+        if retcode != 0:
+            # TODO(ylep): fall back to resetting the current branch if
+            # this is sufficiently safe (useful if a branch is
+            # rewritten or rebased).
+            self.print_command_failure_message("""\
+The upstream branch could not be merged, please refer to the error message
+above.""")
+            raise GitUpdateError('merge failed')
+
+    def detach_at_bv_head(self):
+        """Put the repository in detached state, pointing at refs/bv_head."""
+        retcode = self.call_command(
+            ['git', 'checkout', '--detach', 'refs/bv_head', '--'], echo=True)
+        self.invalidate_cache('head_sha1')
+        if retcode != 0:
+            self.print_command_failure_message("""\
+The Git repository could not be updated, probably because you have
+uncommitted local changes (see above).""")
+            raise GitUpdateError('checkout failed')
+
+
 class SourceDirectory(DirectorySection, ConfigVariableParser):
 
     _variables_with_replacements = set(('directory_id',  'cross_compiling_dirs'))
@@ -2884,7 +3094,7 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                   = bool(distutils.spawn.find_executable('git-lfs'))
         return cls._have_git_lfs
 
-    def gitupdate(self, src, dest, remote_ref="HEAD"):
+    def gitupdate(self, src, dest, remote_ref):
         # Set a username in src if necessary
         if '@' not in src and self.configuration.username:
             url_head, url_tail = src.split('//', 1)
@@ -2908,6 +3118,8 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
         #   developers, we often forget to check all branches and their
         #   updated status before working.
 
+        gr = GitRepository(dest)
+
         # Clone repository if it does not exist yet locally
         if not os.path.exists(os.path.join(dest, '.git')):
             if os.path.isdir(dest) and os.listdir(dest):
@@ -2928,114 +3140,42 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
                 # An error with git clone is immediately fatal (raises OSError)
                 system('git', 'clone', src, '--branch', remote_ref, dest)
         else:
-            # Make sure that the origin remote is configure and points to the
+            # Make sure that the origin remote is configured and points to the
             # URL configured in bv_maker
-            retcode = subprocess.call(['git', 'remote', 'set-url', 'origin',
-                                       src],
-                                      cwd=dest, stderr=open(os.devnull, 'wb'))
+            retcode = gr.call_command(
+                ['git', 'remote', 'set-url', 'origin', src],
+                stderr=open(os.devnull, 'wb')
+            )
             if retcode != 0:
-                system('git', 'remote', 'add', '--tags', 'origin', src,
-                       cwd=dest)
+                retcode = gr.call_command(['git', 'remote', 'add', '--tags',
+                                           'origin', src], echo=True)
+                if retcode == 0:
+                    raise GitUpdateError('remote set-up')
 
-        # Get the SHA-1 identifiers of HEAD and refs/bv_head commits
-        try:
-            old_head = str(subprocess.check_output(
-                ['git', 'rev-parse', '--quiet', '--verify', 'HEAD^{commit}'],
-                cwd=dest)).rstrip()
-        except subprocess.CalledProcessError:
-            old_head = None
-        try:
-            old_bv_head = str(subprocess.check_output(
-                ['git', 'rev-parse', '--quiet',
-                 '--verify', 'refs/bv_head^{commit}'],
-                cwd=dest)).rstrip()
-        except subprocess.CalledProcessError:
-            old_bv_head = None
-
-        system('git', 'fetch', '--tags', '--prune', 'origin',
-               '+refs/heads/*:refs/remotes/origin/*',
-               cwd=dest, stderr=subprocess.STDOUT)
-        retcode = subprocess.call(['git', 'show-ref', '--verify', '--quiet',
-                                   'refs/remotes/origin/' + remote_ref],
-                                  cwd=dest)
-        remote_ref_is_a_branch = (retcode == 0)
+        gr.update_origin_remote()
+        remote_ref_is_a_branch = gr.remote_ref_is_a_branch(remote_ref)
 
         # Update other remotes only if the user has explicitly configured
         # update_git_remotes = 'ON'.
         if self.update_git_remotes.upper() == 'ON':
-            # Redirect stderr to stdout since git fetch prints progress on
-            # stderr, but bv_build_nightly considers everything printed to
-            # stderr to be an error.
-            cmd = ['git', '-c', 'remote.origin.skipDefaultUpdate',
-                   'remote', 'update']
-            print('$ ' + ' '.join(cmd))
-            retcode = subprocess.call(cmd, cwd=dest, stderr=subprocess.STDOUT)
-            if retcode != 0:
-                print('You can safely ignore errors of the above git command')
+            gr.update_other_remotes()
 
-        # TODO remove this fetch step: if remote_ref is a branch or a tag, it
-        # has been fetched above already.
-        #
         # Fetch the remote ref specified in bv_maker.cfg into refs/bv_head
-        #
-        # Redirect stderr to stdout since git fetch prints progress on stderr,
-        # but other BrainVISA tools (e.g. bv_build_nightly) consider every
-        # print to stderr to be an error.
         #
         # FIXME(ylep): what happens if the update below ends with an error?
         # bv_head is already updated, does that pose a problem?
-        cmd = ['git', 'fetch', '--tags', src,
-               "+" + remote_ref + ":refs/bv_head"]
-        print('$ ' + ' '.join(cmd))
-        retcode = subprocess.call(cmd,
-                                  cwd=dest, stderr=subprocess.STDOUT)
-        if retcode != 0:
-            print('^' * 72)
-            print('''\
-Fetching failed. Please check your Internet connection and access rights
-to the remote repository.''')
-            print('=' * 72)
-            raise GitUpdateError('fetch failed')
-
-        new_bv_head = str(subprocess.check_output(
-            ['git', 'rev-parse', '--quiet', '--verify',
-             'refs/bv_head^{commit}'], cwd=dest))
-
-        try:
-            local_branch = str(subprocess.check_output(
-                ['git', 'symbolic-ref', '--quiet', 'HEAD'],
-                cwd=dest)).rstrip()
-            if local_branch.startswith('refs/heads/'):
-                local_branch = local_branch[len('refs/heads/'):]
-        except subprocess.CalledProcessError:
-            local_branch = None
-
+        # Get the SHA-1 identifiers of HEAD and refs/bv_head commits
+        old_bv_head = gr.bv_head_sha1
+        gr.update_bv_head(remote_ref)
 
         if remote_ref_is_a_branch:
-            if (not local_branch and old_head == old_bv_head) or old_head is None:
+            if (not gr.local_branch and gr.head_sha1 == old_bv_head) or gr.head_sha1 is None:
                 # NOTE: this code path will upgrade repositories that follow a
                 # branch in detached mode, which were used until May 2019.
-                #
-                # Try to checkout a local branch by that name if it exists,
-                # otherwise create it.
-                cmd = ['git', 'checkout', remote_ref, '--']
-                print('$ ' + ' '.join(cmd))
-                retcode = subprocess.call(cmd, cwd=dest)
-                if retcode != 0:
-                    cmd = ['git', 'checkout', '-b', remote_ref, '--track',
-                           'refs/remotes/origin/' + remote_ref]
-                    print('$ ' + ' '.join(cmd))
-                    retcode = subprocess.call(cmd, cwd=dest)
-                if retcode != 0:
-                    print('^' * 72)
-                    print("""\
-The git repository could not be updated, probably because you have
-uncommitted local changes (see above).""")
-                    print('=' * 72)
-                    raise GitUpdateError('checkout failed')
+                gr.checkout_or_create_branch(remote_ref)
                 # In case of success, we proceed to do the normal fast-forward
                 # update
-            elif not local_branch:
+            elif not gr.local_branch:
                 print('=' * 72)
                 print("""\
 The Git repository was not updated, because it is in detached HEAD
@@ -3052,25 +3192,7 @@ that this could lose local commits on the old '{remote_ref}' branch):
                 print('=' * 72)
                 raise GitUpdateError('detached')
 
-            # Try to do a fast-forward merge from the configured upstream
-            # branch, if there is one. This is useful if, for example, you are
-            # on a feature branch: it will try to pull from the corresponding
-            # remote branch if there is one, before trying to incorporate
-            # changes from the master branch. Failure is ignored because this
-            # is provided for convenience only.
-            #
-            # TODO (optimization): try this only if the current branch has a
-            # configured upstream branch which is not origin/{remote_ref}.
-            # NOTE: if this fails (e.g. because of uncommitted changes or
-            # network error), but the remote branch has advanced, the merge
-            # from origin (below) may make the local branch diverge from the
-            # remote feature branch, in effect forcing the user to merge the
-            # commits from master into their branch.
-            cmd = ['git', 'pull', '--ff-only']
-            print('$ ' + ' '.join(cmd))
-            retcode = subprocess.call(cmd, cwd=dest, stderr=subprocess.STDOUT)
-            if retcode != 0:
-                print('You can safely ignore errors of the above git command')
+            gr.try_ff_pull_from_upstream()
 
             # We are following a branch. Advance the branch if it has not
             # diverged from upstream. If local commits exist, that would
@@ -3078,38 +3200,17 @@ that this could lose local commits on the old '{remote_ref}' branch):
             # behind the back of the developer. The merge aborts safely if
             # there are local uncommitted changes, and prints an appropriate
             # message.
-            cmd = ['git', 'merge', '--ff-only', 'refs/bv_head']
-            print('$ ' + ' '.join(cmd))
-            retcode = subprocess.call(cmd, cwd=dest)
-            if retcode != 0:
-                # TODO(ylep): fall back to resetting the current branch if
-                # this is sufficiently safe (useful if a branch is
-                # rewritten or rebased).
-                print('^' * 72)
-                print("""\
-The upstream branch '{remote_ref}' could not be merged, please refer to
-the error message above.""".format(remote_ref=remote_ref))
-                print('=' * 72)
-                raise GitUpdateError('merge failed')
+            gr.ff_merge_bv_head()
         else:  # not remote_ref_is_a_branch
-            # If old_head == old_bv_head, it means that the user has not moved
+            # If gr.head_sha1 == old_bv_head, it means that the user has not moved
             # the repository since the last bv_maker run. In this case, we
             # allow ourselves to reconfigure the repository (e.g. check out a
             # different commit).
-            if old_head == old_bv_head or not old_head or not old_bv_head:
+            if gr.head_sha1 == old_bv_head or not gr.head_sha1 or not old_bv_head:
                 # If remote_ref is not a branch (i.e. it is a tag or a sha-1),
                 # we want to detach the repository at this precise commit.
-                cmd = ['git', 'checkout', '--detach', 'refs/bv_head', '--']
-                print('$ ' + ' '.join(cmd))
-                retcode = subprocess.call(cmd, cwd=dest)
-                if retcode != 0:
-                    print('^' * 72)
-                    print("""\
-The Git repository could not be updated, probably because you have
-uncommitted local changes (see above).""")
-                    print('=' * 72)
-                    raise GitUpdateError('checkout failed')
-            elif old_head == new_bv_head:
+                gr.detach_at_bv_head()
+            elif gr.head_sha1 == gr.bv_head_sha1:
                 return  # success (nothing to do!)
             else:
                 print('=' * 72)

@@ -2622,13 +2622,6 @@ class GitRepository(object):
         if echo and retcode != 0:
             print('You can safely ignore errors of the above command')
 
-    def call_essential_command(self, args, echo=True, **kwargs):
-        """Call a command in the repository, raise an exception on failure.
-
-        Upon failure subprocess.CalledProcessError is raised.
-        """
-        subprocess.check_call(args, cwd=self.path, **kwargs)
-
     @cached_property
     def local_branch(self):
         """Name of the current branch, or None if detached."""
@@ -2665,9 +2658,15 @@ class GitRepository(object):
         # Redirect stderr to stdout since git fetch prints progress on stderr,
         # but other BrainVISA tools (e.g. bv_build_nightly) consider every
         # print to stderr to be an error.
-        self.call_essential_command(
+        retcode = self.call_command(
             ['git', 'fetch', '--tags', '--prune', 'origin',
-             '+refs/heads/*:refs/remotes/origin/*'], stderr=subprocess.STDOUT)
+             '+refs/heads/*:refs/remotes/origin/*'],
+            echo=True, stderr=subprocess.STDOUT)
+        if retcode != 0:
+            self.print_command_failure_message('''\
+Fetching failed. Please check your Internet connection and access rights
+to the origin repository.''')
+            raise GitUpdateError('fetch failed')
 
     def update_other_remotes(self):
         """Fetch all remotes except 'origin' (errors are non-fatal)."""

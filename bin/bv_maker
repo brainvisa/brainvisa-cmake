@@ -2686,7 +2686,7 @@ class GitRepository(object):
         return (retcode == 0)
 
     @staticmethod
-    def print_command_failure_message(self, message):
+    def print_command_failure_message(message):
         """Print a prominent error message referring to the command above."""
         print('^' * 72)
         print(message)

@@ -142,6 +142,10 @@ In case of problems
 Git repositories and bv_maker
 =============================
 
+.. note::
+
+    See also the `contributors doc <https://brainvisa.github.io/contributing.html>`_ of the `BrainVisa developers doc <https://brainvisa.github.io>`_ project
+
 in the ``[source]`` section of ``bv_maker.cfg``:
 
 .. code-block:: bash
@@ -152,41 +156,12 @@ in the ``[source]`` section of ``bv_maker.cfg``:
 Remotes and forks
 -----------------
 
-Git repos are normally linked to the main "origin" repository. When personal forks are used, the local repository has to be linked to this indirect personal fork. Connecting to personal forks can be done in each client repository once it is setup once:
-
-.. code-block:: bash
-
-    git remote add -f perso git@github.com:<login>/morphologist.git
-    git branch --set-upstream-to perso/master master
-
-You can use any other name instead of "perso".
-
-This way later *pulls* (as done by ``bv_maker sources``) will pull from the personal fork.
-
-The way bv_maker handles git repositories has changed in bv_maker 3:
-
-* in bv_maker >= 3, repositories are full clones. All remotes are fetched by default when ``bv_maker sources`` is invoked (:ref:`see the config option <source_directory>` ``update_git_remotes``). The default branch (``master``, ``integration``) is checked out according to the target branch. If `git-lfs <https://git-lfs.github.com/>`_ is installed on the system, it is used to clone repositories which might use it, and initialized on new repositories (the ``git lfs install`` comamnd is run on newly cloned directories). The new behavior is havier in terms of network traffic and disk space occupation, but easier to use for developers, and more closely corresponds to the standard git use workflow. Moreover it seemed necessary to perform a "full clone" to be able to use git-lfs properly.
-
-* in bv_maker < 3, repositories were in "light" mode: remotes were not fetched at first, and a detached branch was used to follow the movements of the default remote branch. On later updates, only the current branch was fast-forwarded, and by default remotes were not fetched at all (:ref:`see the config option <source_directory>` ``update_git_remotes``).
+see `the BrainVISA developers doc here <https://brainvisa.github.io/contributing.html#feature_branch>`_.
 
 
 Credentials
 -----------
 
-GitHub may use either https or git (ssh) protocols. Https is likely to ask username and password at each push operation. git/ssh protocol uses a ssh key, which avoids the needs to type a password every time. This key has to be registered by users on the GitHub web site.
-You may swich to git/ssh protocol by changing a remote URL in a repository directory (which has to be done for each repository client directory):
+see `the password issue in the developers doc <https://brainvisa.github.io/contributing.html#remote_credentials>`_.
 
-.. code-block:: bash
-
-    git remote set-url origin git@github.com:brainvisa/brainvisa-cmake.git
-
-Brainvisa-cmake provides the https version by default because we cannot know if users have registered a ssh key on GitHub (or even if users actually have an account on GitHub or are using the anonymous read access).
-
-BioProj projects which are under git (there are a few) always use https, and moreover need credentials even at read time (on fetch / pull operations), which is even more annoying. Consider storing permanently credential information in the git config:
-
-.. code-block:: bash
-
-    git config credential.helper store
-
-This will allow git to store username and password **unencrypted** in the .git directory of the project. You have to do so for each project, and in brainvisa-cmake, each declared branch (bug_fix / trunk etc.) since each is a separate clone of the git repos. Then on the next update (``bv_maker sources``) git will ask for username and password, still for each project directory, and then store them and don't ask again the next time.
 

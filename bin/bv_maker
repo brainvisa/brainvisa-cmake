@@ -511,7 +511,7 @@ Commands:
 * info: Just output info about configured components.
 * sources: Create or updated selected sources directories from Subversion
   repository.
-* source_status: Display a summary of the status of all source repositories.
+* status: Display a summary of the status of all source repositories.
 * configure: Create and configure selected build directories with CMake.
 * build: compile all selected build directories.
 * doc: Generate documentation (sphinx, doxygen, docbook, epydoc).
@@ -1696,7 +1696,7 @@ class SourcesCommand(StepCommand):
 class SourceStatusCommand(StepCommand):
 
     def __init__(self, argv, configuration):
-        usage = '''%prog [global options] source_status [options]
+        usage = '''%prog [global options] status [options]
 
     Display a summary of the status of all source repositories.'''
         parser = OptionParser(usage=usage)
@@ -1723,7 +1723,7 @@ class SourceStatusCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('source_status',
+        self.process('status',
                      configuration.sourcesDirectories.values(),
                      'source_status', self.options, self.args)
 
@@ -5352,7 +5352,7 @@ os.environ['NCPU'] = str(multiprocessing.cpu_count())
 commands = {
     'info': InfoCommand,
     'sources': SourcesCommand,
-    'source_status': SourceStatusCommand,
+    'status': SourceStatusCommand,
     'configure': ConfigureCommand,
     'build': BuildCommand,
     'doc': DocCommand,
@@ -5393,7 +5393,7 @@ if not jenkins_wrapper:
 jenkins_wrapper.jenkins_global_notify_running()
 
 # Ordered command list
-for command in ['info', 'source_status', 'sources', 'configure', 'build',
+for command in ['info', 'status', 'sources', 'configure', 'build',
                 'doc', 'test', 'testref', 'pack', 'install_pack', 'test_pack',
                 'testref_pack', 'publish_pack']:
     if command in options_by_command:

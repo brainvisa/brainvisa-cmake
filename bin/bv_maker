@@ -2655,8 +2655,11 @@ def cached_property(fget):
 
 class GitRepository(object):
     """Class for querying and interacting with a Git repository."""
-    def __init__(self, repo_path, remote_url=None, remote_ref=None):
-        self.path = repo_path
+    def __init__(self, source_directory, dest_directory,
+                 remote_url=None, remote_ref=None):
+        self.source_directory = source_directory
+        self.dest_directory = dest_directory
+        self.path = os.path.join(source_directory, dest_directory)
         self.remote_url = remote_url
         self.remote_ref = remote_ref
         self._cache = {}
@@ -2977,6 +2980,127 @@ uncommitted local changes (see above).""")
             upstream_info += '-{0}'.format(behind)
         return upstream_info
 
+    @classmethod
+    def have_git_lfs(cls):
+        """Test if git-lfs is available."""
+        if not hasattr(cls, '_have_git_lfs'):
+            cls._have_git_lfs = bool(
+                distutils.spawn.find_executable('git-lfs')
+            )
+        return cls._have_git_lfs
+
+    def update_or_clone(self, source_dir):
+        """Update or clone the repository."""
+        print("\n")
+        print("Updating git repository {0}".format(self.path))
+
+        # Clone repository if it does not exist yet locally
+        if not os.path.exists(os.path.join(self.path, '.git')):
+            if os.path.isdir(self.path) and os.listdir(self.path):
+                print('''
+ERROR: directory "%s" is not empty, Git will not be able to clone into it.
+This error may be due to a repository change for a component (typically
+going from Subversion to Git). You must check yourself that you have nothing
+to keep in this directory and delete it to make "bv_maker sources" work.'''
+                       % self.path)
+            # TODO(ylep) clone without LFS first, then do git lfs pull (git lfs
+            # clone is deprecated with recent Git versions).
+            if self.have_git_lfs():
+                system('git', 'lfs', 'clone', '--branch', self.remote_ref,
+                       self.remote_url, self.path)
+                system('git', 'lfs', 'install', cwd=self.path)
+            else:
+                # An error with git clone is immediately fatal (raises OSError)
+                system('git', 'clone', '--branch', self.remote_ref,
+                       self.remote_url, self.path)
+        else:
+            # Make sure that the origin remote is configured and points to the
+            # URL configured in bv_maker
+            retcode = self.call_command(
+                ['git', 'remote', 'set-url', 'origin', self.remote_url],
+                stderr=open(os.devnull, 'wb')
+            )
+            if retcode != 0:
+                retcode = self.call_command(
+                    ['git', 'remote', 'add', '--tags',
+                     'origin', self.remote_url], echo=True)
+                if retcode == 0:
+                    raise GitUpdateError('remote set-up')
+
+        self.update_origin_remote()
+
+        # Update other remotes only if the user has explicitly configured
+        # update_git_remotes = 'ON'.
+        if source_dir.update_git_remotes.upper() == 'ON':
+            self.update_other_remotes()
+
+        # Fetch the remote ref specified in bv_maker.cfg into refs/bv_head
+        #
+        # FIXME(ylep): what happens if the update below ends with an error?
+        # bv_head is already updated, does that pose a problem?
+        # Get the SHA-1 identifiers of HEAD and refs/bv_head commits
+        old_bv_head = self.bv_head_sha1
+        self.update_bv_head()
+
+        if self.remote_ref_is_a_branch:
+            if ((not self.local_branch and self.head_sha1 == old_bv_head)
+                    or self.head_sha1 is None):
+                # NOTE: this code path will upgrade repositories that follow a
+                # branch in detached mode, which were used until May 2019.
+                self.checkout_or_create_branch(self.remote_ref)
+                # In case of success, we proceed to do the normal fast-forward
+                # update
+            elif not self.local_branch:
+                print('=' * 72)
+                print("""\
+The Git repository was not updated, because it is in detached HEAD
+state. You can update it manually with:
+
+  git -C '{path}' checkout {remote_ref}
+  git pull origin {remote_ref}
+
+If that fails, you can force the re-creation of the local branch (beware
+that this could lose local commits on the old '{remote_ref}' branch):
+
+  git -C '{path}' checkout -B {remote_ref} origin/{remote_ref}\
+""".format(path=self.path, remote_ref=self.remote_ref))
+                print('=' * 72)
+                raise GitUpdateError('detached')
+
+            self.try_ff_pull_from_upstream()
+
+            # We are following a branch. Advance the branch if it has not
+            # diverged from upstream. If local commits exist, that would
+            # require creating a merge commit, and we do not want to do that
+            # behind the back of the developer. The merge aborts safely if
+            # there are local uncommitted changes, and prints an appropriate
+            # message.
+            self.ff_merge_bv_head()
+        else:  # not self.remote_ref_is_a_branch
+            # If self.head_sha1 == old_bv_head, it means that the user has not
+            # moved the repository since the last bv_maker run. In this case,
+            # we allow ourselves to reconfigure the repository (e.g. check out
+            # a different commit).
+            if (self.head_sha1 == old_bv_head
+                    or not self.head_sha1
+                    or not old_bv_head):
+                # If remote_ref is not a branch (i.e. it is a tag or a sha-1),
+                # we want to detach the repository at this precise commit.
+                self.detach_at_bv_head()
+            elif self.head_sha1 == self.bv_head_sha1:
+                return  # success (nothing to do!)
+            else:
+                print('=' * 72)
+                print("""\
+The Git repository was not updated, because a different commit was
+checked out since the last run of bv_maker sources. You can update your
+repository manually using the following command:
+
+  git -C '{path}' checkout refs/bv_head\
+""".format(path=self.path, remote_ref=self.remote_ref))
+                print('=' * 72)
+                raise GitUpdateError('detached')
+
 
 class SourceDirectory(DirectorySection, ConfigVariableParser):
 
@@ -3229,22 +3353,24 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                 dest_directory = url.rsplit('/', 1)[-1]
                 if dest_directory.endswith('.git'):
                     dest_directory = dest_directory[:-4]
-            dest_path = os.path.join(self.directory, dest_directory)
             if use_rcs and options.git:
+                gr = GitRepository(self.directory, dest_directory,
+                                   remote_url=url, remote_ref=git_tag)
                 try:
-                    self.gitupdate(url, dest_path, git_tag)
+                    gr.update_or_clone(source_dir=self)
                 except GitUpdateError as exc:
                     status_message = 'NOT UPDATED (' + str(exc) + ')'
                     git_update_failure = True
                 else:
                     status_message = 'up-to-date'
-                git_update_status_list.append((dest_path, status_message))
-                source_directories.append((dest_path, bv_version))
+                git_update_status_list.append((dest_directory, status_message))
+                source_directories.append((dest_directory, bv_version))
 
         if git_update_status_list:
             print()
-            print('Summary of Git component updates')
-            print('================================')
+            header = 'Summary of Git component updates in ' + self.directory
+            print(header)
+            print('=' * len(header))
         for status_element in git_update_status_list:
             print('{1:30} {0}'.format(*status_element))
 
@@ -3290,14 +3416,16 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                     dest_directory = dest_directory[:-4]
             dest_path = os.path.join(self.directory, dest_directory)
             if use_rcs and options.git:
-                gr = GitRepository(dest_path, remote_ref=git_tag)
+                gr = GitRepository(self.directory, dest_directory,
+                                   remote_url=url, remote_ref=git_tag)
                 short_status = gr.status()
-                git_status_list.append((dest_path, short_status))
+                git_status_list.append((dest_directory, short_status))
 
         if git_status_list:
             print()
-            print('Summary of Git repository status')
-            print('================================')
+            header = 'Summary of Git repositories in ' + self.directory
+            print(header)
+            print('=' * len(header))
         for status_element in git_status_list:
             print('{1:30} {0}'.format(*status_element))
 
@@ -3309,128 +3437,6 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                 cmd += ['--password', 'Soma2009']
         cmd.extend(svnargs[1:])
         system(*cmd)
-
-    @classmethod
-    def have_git_lfs(cls):
-        if not hasattr(cls, '_have_git_lfs'):
-            cls._have_git_lfs \
-                  = bool(distutils.spawn.find_executable('git-lfs'))
-        return cls._have_git_lfs
-
-    def gitupdate(self, src, dest, remote_ref):
-        # Set a username in src if necessary
-        if '@' not in src and self.configuration.username:
-            url_head, url_tail = src.split('//', 1)
-            src = '%s//%s@%s' % (
-                url_head, self.configuration.username, url_tail)
-
-        print("\n")
-        print("Updating git repository {0}".format(dest))
-
-        gr = GitRepository(dest, remote_url=src, remote_ref=remote_ref)
-
-        # Clone repository if it does not exist yet locally
-        if not os.path.exists(os.path.join(dest, '.git')):
-            if os.path.isdir(dest) and os.listdir(dest):
-                print('''
-ERROR: directory "%s" is not empty, Git will not be able to clone into it.
-This error may be due to a repository change for a component (typically
-going from Subversion to Git). You must check yourself that you have nothing
-to keep in this directory and delete it to make "bv_maker sources" work.'''
-                       % dest)
-            if self.configuration.verbose:
-                print('directory %s is not a git repository => clone from git %s'
-                      % (dest, src))
-            if self.have_git_lfs():
-                system('git', 'lfs', 'clone', src, '--branch', remote_ref,
-                       dest)
-                system('git', 'lfs', 'install', cwd=dest)
-            else:
-                # An error with git clone is immediately fatal (raises OSError)
-                system('git', 'clone', src, '--branch', remote_ref, dest)
-        else:
-            # Make sure that the origin remote is configured and points to the
-            # URL configured in bv_maker
-            retcode = gr.call_command(
-                ['git', 'remote', 'set-url', 'origin', src],
-                stderr=open(os.devnull, 'wb')
-            )
-            if retcode != 0:
-                retcode = gr.call_command(['git', 'remote', 'add', '--tags',
-                                           'origin', src], echo=True)
-                if retcode == 0:
-                    raise GitUpdateError('remote set-up')
-
-        gr.update_origin_remote()
-
-        # Update other remotes only if the user has explicitly configured
-        # update_git_remotes = 'ON'.
-        if self.update_git_remotes.upper() == 'ON':
-            gr.update_other_remotes()
-
-        # Fetch the remote ref specified in bv_maker.cfg into refs/bv_head
-        #
-        # FIXME(ylep): what happens if the update below ends with an error?
-        # bv_head is already updated, does that pose a problem?
-        # Get the SHA-1 identifiers of HEAD and refs/bv_head commits
-        old_bv_head = gr.bv_head_sha1
-        gr.update_bv_head()
-
-        if gr.remote_ref_is_a_branch:
-            if (not gr.local_branch and gr.head_sha1 == old_bv_head) or gr.head_sha1 is None:
-                # NOTE: this code path will upgrade repositories that follow a
-                # branch in detached mode, which were used until May 2019.
-                gr.checkout_or_create_branch(remote_ref)
-                # In case of success, we proceed to do the normal fast-forward
-                # update
-            elif not gr.local_branch:
-                print('=' * 72)
-                print("""\
-The Git repository was not updated, because it is in detached HEAD
-state. You can update it manually with:
-
-  git -C '{dest}' checkout {remote_ref}
-  git pull origin {remote_ref}
-
-If that fails, you can force the re-creation of the local branch (beware
-that this could lose local commits on the old '{remote_ref}' branch):
-
-  git -C '{dest}' checkout -B {remote_ref} origin/{remote_ref}\
-""".format(dest=dest, remote_ref=remote_ref))
-                print('=' * 72)
-                raise GitUpdateError('detached')
-
-            gr.try_ff_pull_from_upstream()
-
-            # We are following a branch. Advance the branch if it has not
-            # diverged from upstream. If local commits exist, that would
-            # require creating a merge commit, and we do not want to do that
-            # behind the back of the developer. The merge aborts safely if
-            # there are local uncommitted changes, and prints an appropriate
-            # message.
-            gr.ff_merge_bv_head()
-        else:  # not gr.remote_ref_is_a_branch
-            # If gr.head_sha1 == old_bv_head, it means that the user has not moved
-            # the repository since the last bv_maker run. In this case, we
-            # allow ourselves to reconfigure the repository (e.g. check out a
-            # different commit).
-            if gr.head_sha1 == old_bv_head or not gr.head_sha1 or not old_bv_head:
-                # If remote_ref is not a branch (i.e. it is a tag or a sha-1),
-                # we want to detach the repository at this precise commit.
-                gr.detach_at_bv_head()
-            elif gr.head_sha1 == gr.bv_head_sha1:
-                return  # success (nothing to do!)
-            else:
-                print('=' * 72)
-                print("""\
-The Git repository was not updated, because a different commit was
-checked out since the last run of bv_maker sources. You can update your
-repository manually using the following command:
-
-  git -C '{dest}' checkout refs/bv_head\
-""".format(dest=dest, remote_ref=remote_ref))
-                print('=' * 72)
-                raise GitUpdateError('detached')
 
     def info(self):
         print('Source directory: "' + self.directory + '"')

@@ -165,6 +165,11 @@ class GitUpdateTestCase(unittest.TestCase):
                                          cwd=self.clone_path).rstrip()
         self.assertEqual(output, new_commit, 'fast-forward failed')
 
+        retcode = subprocess.call(['bv_maker', '-c', self.bv_maker_cfg,
+                                   'status', '--no-svn'])
+        self.assertEqual(retcode, 0, 'bv_maker status failed')
+
+
     def test_dirty_repository_update(self):
         # Test fresh clone of the master branch
         retcode = subprocess.call(['bv_maker', '-c', self.bv_maker_cfg,

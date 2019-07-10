@@ -238,6 +238,29 @@ def ensure_str(s, encoding='utf-8', errors='strict'):
         s = s.decode(encoding, errors)
     return s
 
+# This function is copied from the 'six' library, where it was introduced in
+# version 1.12.0, because we do not want to depend on such a recent version.
+#
+# This function is Copyright (c) 2010-2018 Benjamin Peterson, released under
+# the Expat licence.
+def ensure_text(s, encoding='utf-8', errors='strict'):
+    """Coerce *s* to six.text_type.
+
+    For Python 2:
+      - `unicode` -> `unicode`
+      - `str` -> `unicode`
+
+    For Python 3:
+      - `str` -> `str`
+      - `bytes` -> decoded to `str`
+    """
+    if isinstance(s, six.binary_type):
+        return s.decode(encoding, errors)
+    elif isinstance(s, six.text_type):
+        return s
+    else:
+        raise TypeError("not expecting type '%s'" % type(s))
+
 
 def get_target_path_system(platform):
     if platform.startswith('win'):
@@ -3034,7 +3057,7 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
                     ['git', 'remote', 'add', '--tags',
                      'origin', self.remote_url], echo=True)
                 if retcode == 0:
-                    raise GitUpdateError('remote set-up')
+                    raise GitUpdateError('remote set-up failed')
 
         self.update_origin_remote()
 
@@ -3130,40 +3153,55 @@ def print_git_status_summary(source_directory, status_list):
         bv_upstream_format = ''
     git_upstream_width = max(len(d['git_upstream_info']) for d in status_list)
     if git_upstream_width != 0:
-        git_upstream_format = '{{git_upstream:{0}s}}'.format(git_upstream_width)
+        git_upstream_format = '{{git_upstream:{0}s}}'.format(
+            git_upstream_width)
     else:
         git_upstream_format = ''
+    update_message_width = max(len(d.get('update_message', u''))
+                               for d in status_list)
+    if update_message_width != 0:
+        update_message_format = '{{update_message:{0}s}} '.format(
+            update_message_width)
+        update_message_width += 1
+    else:
+        update_message_format = ''
 
     print('┌───── * uncommitted working tree changes')
     print('│┌──── + uncommitted index changes')
     print('││┌─── $ stash present')
     print('│││┌── % untracked files')
     print('││││ ┌ HEAD')
-    print('││││ │' + ' ' * head_width + '┌ bv_maker upstream state')
-    print('││││ │' + ' ' * head_width + '│' + ' ' * bv_upstream_width
-                  + '┌ Git upstream state')
-    print('││││ │' + ' ' * head_width + '│' + ' ' * bv_upstream_width
-                  + '│' + ' ' * git_upstream_width + '┌ Directory')
+    prefix = '││││ │' + ' ' * head_width
+    if update_message_width != 0:
+        print(prefix + '┌ update status')
+        prefix += '│' + ' ' * (update_message_width - 1)
+    print(prefix + '┌ bv_maker upstream state')
+    print(prefix + '│' + ' ' * bv_upstream_width + '┌ Git upstream state')
+    print(prefix + '│' + ' ' * bv_upstream_width + '│'
+          + ' ' * git_upstream_width + '┌ Directory')
 
     for status_dict in status_list:
         print('{{tree_dirty}}{{index_dirty}}{{stash}}{{untracked}} '
               '{{head:{head_width}s}} '
+              '{update_message_format}'
               '{bv_upstream_format} {git_upstream_format} '
               '{{dest_directory}}'
               .format(
                   head_width=head_width,
                   bv_upstream_format=bv_upstream_format,
                   git_upstream_format=git_upstream_format,
+                  update_message_format=update_message_format,
               )
               .format(
                   dest_directory=status_dict['dest_directory'],
-                  head=status_dict['head'],
+                  head=status_dict.get('head', ''),
                   tree_dirty='*' if status_dict.get('tree_dirty') else ' ',
                   index_dirty='+' if status_dict.get('index_dirty') else ' ',
                   stash='$' if status_dict.get('stash') else ' ',
                   untracked='%' if status_dict.get('untracked') else ' ',
-                  bv_upstream=status_dict['bv_upstream_info'],
-                  git_upstream=status_dict['git_upstream_info'],
+                  bv_upstream=status_dict.get('bv_upstream_info', ''),
+                  git_upstream=status_dict.get('git_upstream_info', ''),
+                  update_message=status_dict.get('update_message', ''),
               ))
 
 
@@ -3424,16 +3462,15 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                 try:
                     gr.update_or_clone(source_dir=self)
                 except GitUpdateError as exc:
-                    update_message = 'NOT UPDATED (' + str(exc) + ')'
+                    update_message = u'✗ ' + ensure_text(str(exc))
                     git_update_failure = True
                 else:
-                    update_message = 'up-to-date'
+                    update_message = u'✓'
                 status_dict = gr.get_status_dict()
                 status_dict['update_message'] = update_message
                 git_status_list.append(status_dict)
                 source_directories.append((dest_directory, bv_version))
 
-        # TODO(ylep): ensure that update message is displayed
         print_git_status_summary(self.directory, git_status_list)
 
         components_sources = {}

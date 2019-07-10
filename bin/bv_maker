@@ -2878,42 +2878,38 @@ The Git repository could not be updated, probably because you have
 uncommitted local changes (see above).""")
             raise GitUpdateError('checkout failed')
 
-    def status(self):
+    def print_short_status(self):
         print("\nStatus of {0}:".format(self.path))
         self.call_command(['git', 'status', '--short', '--branch'])
 
-        # Build a short status string. This is inspired by
-        # git/contrib/completion/git-prompt.sh from the Git official source
-        # repository.
+    def get_status_dict(self):
+        # Collect information that can be used to build a short status string.
+        # This is inspired by git/contrib/completion/git-prompt.sh from the Git
+        # official source repository.
         #
         # Get the name of the current branch or description of commit
-        head_info = self.local_branch
-        if head_info is None:
+        head = self.local_branch
+        if head is None:
             try:
-                head_info = ensure_str(subprocess.check_output(
+                head = ensure_str(subprocess.check_output(
                     ['git', 'describe', '--always'], cwd=self.path).rstrip())
             except subprocess.CalledProcessError:
-                head_info = ''
+                head = ''
 
         # Get the dirty state of the repository
-        dirty_info = ''
         retcode = self.call_command(['git', 'diff', '--no-ext-diff',
                                      '--quiet'])
-        if retcode != 0:
-            dirty_info += '*'
+        tree_dirty = (retcode != 0)
         retcode = self.call_command(['git', 'diff', '--no-ext-diff',
                                      '--cached', '--quiet'])
-        if retcode != 0:
-            dirty_info += '+'
-        if not head_info and not dirty_info:
-            dirty_info = '#'
+        index_dirty = (retcode != 0)
 
         # Show the stash state of the repository
         retcode = self.call_command(['git', 'rev-parse', '--verify', '--quiet',
                                      'refs/stash'],
                                     stdout=open(os.devnull, 'wb'))
 
-        stash_info = '$' if retcode == 0 else ''
+        stash = (retcode == 0)
 
         # Show a marker if there are untracked files
         retcode = self.call_command(['git', 'ls-files', '--others',
@@ -2922,25 +2918,38 @@ uncommitted local changes (see above).""")
                                      '--', ':/*'],
                                     stdout=open(os.devnull, 'wb'),
                                     stderr=open(os.devnull, 'wb'))
-        untracked_info = '%' if retcode == 0 else ''
+        untracked = (retcode == 0)
 
         # Show upstream info for bv_maker-configured and git-configured
         # upstream
-        upstream_info = ''
         bv_maker_upstream_ref = self.full_remote_ref
         git_upstream_ref = self.git_upstream_full_ref
         if bv_maker_upstream_ref:
-            upstream_info += ' U' + self.behind_ahead_upstream_suffix(
+            bv_upstream_info = 'U' + self.behind_ahead_upstream_suffix(
                 bv_maker_upstream_ref)
+        else:
+            bv_upstream_info = ''
 
         if git_upstream_ref and git_upstream_ref != bv_maker_upstream_ref:
-            upstream_info += (
-                ' u' + self.behind_ahead_upstream_suffix('@{upstream}')
-                + ' (' + self.git_upstream_abbrev_ref + ')'
-            )
+            git_upstream_info = 'u' + self.behind_ahead_upstream_suffix(
+                '@{upstream}')
+            git_upstream_name = self.git_upstream_abbrev_ref
+        else:
+            git_upstream_info = ''
+            git_upstream_name = ''
 
-        return '{0:15s} {1:2s}{2:1s}{3:1s}{4}'.format(
-            head_info, dirty_info, stash_info, untracked_info, upstream_info)
+        return {
+            'source_directory': self.source_directory,
+            'dest_directory': self.dest_directory,
+            'head': head,
+            'tree_dirty': tree_dirty,
+            'index_dirty': index_dirty,
+            'stash': stash,
+            'untracked': untracked,
+            'bv_upstream_info': bv_upstream_info,
+            'git_upstream_info': git_upstream_info,
+            'git_upstream_name': git_upstream_name,
+        }
 
     def behind_ahead_upstream(self, upstream='@{upstream}'):
         """Get the number of local commits behind and ahead of the upstream.
@@ -3100,6 +3109,62 @@ repository manually using the following command:
 """.format(path=self.path, remote_ref=self.remote_ref))
                 print('=' * 72)
                 raise GitUpdateError('detached')
+
+
+def print_git_status_summary(source_directory, status_list):
+    if not status_list:
+        return
+
+    print()
+    header = 'Summary of Git repositories in ' + source_directory
+    print(header)
+    print('=' * len(header))
+
+    # Calculate optimal field widths
+    head_width = max(max(len(d['head']) for d in status_list),
+                     len('integration'))
+    bv_upstream_width = max(len(d['bv_upstream_info']) for d in status_list)
+    if bv_upstream_width != 0:
+        bv_upstream_format = '{{bv_upstream:{0}s}}'.format(bv_upstream_width)
+    else:
+        bv_upstream_format = ''
+    git_upstream_width = max(len(d['git_upstream_info']) for d in status_list)
+    if git_upstream_width != 0:
+        git_upstream_format = '{{git_upstream:{0}s}}'.format(git_upstream_width)
+    else:
+        git_upstream_format = ''
+
+    print('┌───── * uncommitted working tree changes')
+    print('│┌──── + uncommitted index changes')
+    print('││┌─── $ stash present')
+    print('│││┌── % untracked files')
+    print('││││ ┌ HEAD')
+    print('││││ │' + ' ' * head_width + '┌ bv_maker upstream state')
+    print('││││ │' + ' ' * head_width + '│' + ' ' * bv_upstream_width
+                  + '┌ Git upstream state')
+    print('││││ │' + ' ' * head_width + '│' + ' ' * bv_upstream_width
+                  + '│' + ' ' * git_upstream_width + '┌ Directory')
+
+    for status_dict in status_list:
+        print('{{tree_dirty}}{{index_dirty}}{{stash}}{{untracked}} '
+              '{{head:{head_width}s}} '
+              '{bv_upstream_format} {git_upstream_format} '
+              '{{dest_directory}}'
+              .format(
+                  head_width=head_width,
+                  bv_upstream_format=bv_upstream_format,
+                  git_upstream_format=git_upstream_format,
+              )
+              .format(
+                  dest_directory=status_dict['dest_directory'],
+                  head=status_dict['head'],
+                  tree_dirty='*' if status_dict.get('tree_dirty') else ' ',
+                  index_dirty='+' if status_dict.get('index_dirty') else ' ',
+                  stash='$' if status_dict.get('stash') else ' ',
+                  untracked='%' if status_dict.get('untracked') else ' ',
+                  bv_upstream=status_dict['bv_upstream_info'],
+                  git_upstream=status_dict['git_upstream_info'],
+              ))
 
 
 class SourceDirectory(DirectorySection, ConfigVariableParser):
@@ -3345,7 +3410,7 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
 
         # update Git Repositories
 
-        git_update_status_list = []
+        git_status_list = []
         git_update_failure = False
         for component_version, url, git_tag, dest_directory, bv_version \
                 in self.gitComponents:
@@ -3359,20 +3424,17 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                 try:
                     gr.update_or_clone(source_dir=self)
                 except GitUpdateError as exc:
-                    status_message = 'NOT UPDATED (' + str(exc) + ')'
+                    update_message = 'NOT UPDATED (' + str(exc) + ')'
                     git_update_failure = True
                 else:
-                    status_message = 'up-to-date'
-                git_update_status_list.append((dest_directory, status_message))
+                    update_message = 'up-to-date'
+                status_dict = gr.get_status_dict()
+                status_dict['update_message'] = update_message
+                git_status_list.append(status_dict)
                 source_directories.append((dest_directory, bv_version))
 
-        if git_update_status_list:
-            print()
-            header = 'Summary of Git component updates in ' + self.directory
-            print(header)
-            print('=' * len(header))
-        for status_element in git_update_status_list:
-            print('{1:30} {0}'.format(*status_element))
+        # TODO(ylep): ensure that update message is displayed
+        print_git_status_summary(self.directory, git_status_list)
 
         components_sources = {}
         for dest_path, bv_version in source_directories:
@@ -3418,16 +3480,11 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
             if use_rcs and options.git:
                 gr = GitRepository(self.directory, dest_directory,
                                    remote_url=url, remote_ref=git_tag)
-                short_status = gr.status()
-                git_status_list.append((dest_directory, short_status))
+                gr.print_short_status()
+                status_dict = gr.get_status_dict()
+                git_status_list.append(status_dict)
 
-        if git_status_list:
-            print()
-            header = 'Summary of Git repositories in ' + self.directory
-            print(header)
-            print('=' * len(header))
-        for status_element in git_status_list:
-            print('{1:30} {0}'.format(*status_element))
+        print_git_status_summary(self.directory, git_status_list)
 
     def svncommand(self, *svnargs):
         cmd = ['svn', svnargs[0]]

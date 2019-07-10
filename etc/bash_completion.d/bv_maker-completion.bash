@@ -4,7 +4,7 @@ function _complete_bv_maker_()
 {
     local word=${COMP_WORDS[COMP_CWORD]}
     local line=${COMP_LINE}
-    local cmd_list="info sources configure build doc testref test pack install_pack testref_pack test_pack publish_pack"
+    local cmd_list="info sources configure build doc testref test pack install_pack testref_pack test_pack publish_pack source_status"
     local opt_list="-c -h -d -s -b --username -e --email --disable-jenkins --def --only-if-default -v --verbose --version"
 
     # get last subcommand
@@ -60,6 +60,9 @@ function _complete_bv_maker_()
         ;;
     test_pack)
         opt_list="-h --help --only-if-default -t --ctest_options --package-date --package-time --package-version"
+        ;;
+    source_status)
+        opt_list="-h --help --only-if-default --no-svn --no-git"
         ;;
     *)
         ;;

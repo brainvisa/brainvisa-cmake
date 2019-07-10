@@ -9,6 +9,7 @@ Commands:
 * info: Just output info about configured components.
 * sources: Create or updated selected sources directories from Subversion
   repository.
+* status: Display a summary of the status of all source repositories.
 * configure: Create and configure selected build directories with CMake.
 * build: compile all selected build directories.
 * doc: Generate documentation (sphinx, doxygen, docbook, epydoc).

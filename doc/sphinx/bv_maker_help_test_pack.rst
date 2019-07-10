@@ -14,3 +14,15 @@ Options:
                         the configuration option ctest_options but specified
                         at runtime. The commandline option here overrides the
                         bv_maker.cfg options.
+  --package-date=PACKAGE_DATE
+                        sets the date of the pack to install. This is only
+                        useful if a %(date)s pattern has been used in the
+                        package directory sections of bv_maker.cfg.
+  --package-time=PACKAGE_TIME
+                        sets the time of the pack to install. This is only
+                        useful if a %(time)s pattern has been used in the
+                        package directory sections of bv_maker.cfg.
+  --package-version=PACKAGE_VERSION
+                        sets the version of the pack to install. This is only
+                        useful if a %(version)s pattern has been used in the
+                        package directory sections of bv_maker.cfg.

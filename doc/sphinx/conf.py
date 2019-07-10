@@ -14,6 +14,8 @@
 from __future__ import print_function
 import sys, os
 import datetime
+import distutils.spawn
+import subprocess
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -250,3 +252,24 @@ extlinks = {
   #'python': ('http://docs.python.org/2.7', None),
 #}
 
+# ---- build help pages ---
+bv_maker = distutils.spawn.find_executable('bv_maker')
+for subcmd in ('', 'info', 'sources', 'status', 'configure', 'build', 'doc', 'testref', 'test', 'pack', 'install_pack', 'testref_pack', 'test_pack', 'publish_pack'):
+    cmd = [bv_maker]
+    if subcmd == '':
+        fname = 'bv_maker_help.rst'
+    else:
+        fname = 'bv_maker_help_%s.rst' % subcmd
+        cmd.append(subcmd)
+    cmd.append('-h')
+    fname = os.path.join(os.path.dirname(__file__), fname)
+    if sys.version_info[0] >= 3:
+        ofile = open(fname, 'w', encoding='utf-8')
+    else:
+        ofile = open(fname, 'w')
+    try:
+        print('generate:', fname)
+        subprocess.call(cmd, stdout=ofile)
+    finally:
+        ofile.close()
+del ofile, cmd, subcmd, fname

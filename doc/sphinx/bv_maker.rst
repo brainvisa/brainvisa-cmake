@@ -3,13 +3,24 @@
 bv_maker
 ========
 
-Just run:
+Once its configuration file is setup, just run:
 
 .. code-block:: bash
 
     bv_maker
 
-should be enough in most cases.
+This should be enough in most cases.
+
+.. note::
+
+    that *brainvisa-cmake* provides a *bash_completion* script which helps and speeds up the use of ``bv_maker``. It can be used **in a bash shell** by *sourcing* the script:
+
+    .. code-block:: bash
+
+        . $(dirname $(which bv_maker))/../etc/bash_completion.d/bv_maker-completion.bash
+
+    You may copy this line in your ``~/.bashrc`` file.
+
 
 Help of the commandline
 =======================
@@ -31,6 +42,14 @@ Sources step
 ------------
 
 .. include:: bv_maker_help_sources.rst
+
+
+.. _status_step:
+
+Status step
+------------
+
+.. include:: bv_maker_help_status.rst
 
 
 .. _configure_step:

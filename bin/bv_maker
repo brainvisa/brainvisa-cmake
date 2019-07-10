@@ -214,6 +214,31 @@ if this_script:
     #print('cmake_root:', cmake_root)
 
 
+# This function is copied from the 'six' library, where it was introduced in
+# version 1.12.0, because we do not want to depend on such a recent version.
+#
+# This function is Copyright (c) 2010-2018 Benjamin Peterson, released under
+# the Expat licence.
+def ensure_str(s, encoding='utf-8', errors='strict'):
+    """Coerce *s* to `str`.
+
+    For Python 2:
+      - `unicode` -> encoded to `str`
+      - `str` -> `str`
+
+    For Python 3:
+      - `str` -> `str`
+      - `bytes` -> decoded to `str`
+    """
+    if not isinstance(s, (six.text_type, six.binary_type)):
+        raise TypeError("not expecting type '%s'" % type(s))
+    if six.PY2 and isinstance(s, six.text_type):
+        s = s.encode(encoding, errors)
+    elif six.PY3 and isinstance(s, six.binary_type):
+        s = s.decode(encoding, errors)
+    return s
+
+
 def get_target_path_system(platform):
     if platform.startswith('win'):
         # We prefer alternative windows path i.e. pathes separated 
@@ -2664,9 +2689,9 @@ class GitRepository(object):
     def local_branch(self):
         """Name of the current branch, or None if detached."""
         try:
-            head_ref = str(subprocess.check_output(
+            head_ref = ensure_str(subprocess.check_output(
                 ['git', 'symbolic-ref', '--quiet', 'HEAD'],
-                cwd=self.path)).rstrip()
+                cwd=self.path).rstrip())
         except subprocess.CalledProcessError:
             return None
         if head_ref.startswith('refs/heads/'):
@@ -2675,9 +2700,9 @@ class GitRepository(object):
     def sha1_of_rev(self, rev):
         """Obtain the full SHA-1 of the commit identified by rev."""
         try:
-            return str(subprocess.check_output(
+            return ensure_str(subprocess.check_output(
                 ['git', 'rev-parse', '--quiet', '--verify', rev + '^{commit}'],
-                cwd=self.path)).rstrip()
+                cwd=self.path).rstrip())
         except subprocess.CalledProcessError:
             return None
 
@@ -2698,9 +2723,9 @@ class GitRepository(object):
         None is returned if there is no @{upstream}.
         """
         try:
-            return str(subprocess.check_output(
+            return ensure_str(subprocess.check_output(
                 ['git', 'rev-parse', '--symbolic-full-name', '@{upstream}'],
-                stderr=open(os.devnull, 'wb'), cwd=self.path)).rstrip()
+                stderr=open(os.devnull, 'wb'), cwd=self.path).rstrip())
         except subprocess.CalledProcessError:
             return None
 
@@ -2711,9 +2736,9 @@ class GitRepository(object):
         None is returned if there is no @{upstream}.
         """
         try:
-            return str(subprocess.check_output(
+            return ensure_str(subprocess.check_output(
                 ['git', 'rev-parse', '--abbrev-ref', '@{upstream}'],
-                stderr=open(os.devnull, 'wb'), cwd=self.path)).rstrip()
+                stderr=open(os.devnull, 'wb'), cwd=self.path).rstrip())
         except subprocess.CalledProcessError:
             return None
 
@@ -2723,10 +2748,10 @@ class GitRepository(object):
         if self.remote_ref is None:
             return None
         try:
-            return str(subprocess.check_output(
+            return ensure_str(subprocess.check_output(
                 ['git', 'rev-parse', '--symbolic-full-name',
                  'refs/remotes/origin/' + self.remote_ref],
-                stderr=open(os.devnull, 'wb'), cwd=self.path)).rstrip()
+                stderr=open(os.devnull, 'wb'), cwd=self.path).rstrip())
         except subprocess.CalledProcessError:
             return None
 
@@ -2874,8 +2899,8 @@ uncommitted local changes (see above).""")
         head_info = self.local_branch
         if head_info is None:
             try:
-                head_info = str(subprocess.check_output(
-                    ['git', 'describe', '--always'], cwd=self.path)).rstrip()
+                head_info = ensure_str(subprocess.check_output(
+                    ['git', 'describe', '--always'], cwd=self.path).rstrip())
             except subprocess.CalledProcessError:
                 head_info = ''
 

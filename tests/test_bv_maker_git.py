@@ -152,7 +152,7 @@ class GitUpdateTestCase(unittest.TestCase):
         self.assertEqual(output, self.master_sha1, 'invalid HEAD after clone')
         output = subprocess.check_output(['git', 'symbolic-ref', 'HEAD'],
                                          cwd=self.clone_path).rstrip()
-        self.assertEqual(output, 'refs/heads/master',
+        self.assertEqual(output, b'refs/heads/master',
                          'HEAD should point to the master branch after clone')
 
         # Test fast-forwarding of branch
@@ -228,7 +228,7 @@ class GitUpdateTestCase(unittest.TestCase):
         self.assertEqual(output, self.master_sha1, 'invalid HEAD after clone')
         output = subprocess.check_output(['git', 'symbolic-ref', 'HEAD'],
                                          cwd=self.clone_path).rstrip()
-        self.assertEqual(output, 'refs/heads/master',
+        self.assertEqual(output, b'refs/heads/master',
                          'HEAD should point to the master branch after clone')
 
         # Then, switch to following a tag
@@ -256,7 +256,7 @@ class GitUpdateTestCase(unittest.TestCase):
                          'HEAD should point at master')
         output = subprocess.check_output(['git', 'symbolic-ref', 'HEAD'],
                                          cwd=self.clone_path).rstrip()
-        self.assertEqual(output, 'refs/heads/master',
+        self.assertEqual(output, b'refs/heads/master',
                          'HEAD should point to the master branch after clone')
 
     def test_upgrade_old_repos(self):
@@ -281,7 +281,7 @@ class GitUpdateTestCase(unittest.TestCase):
                          'invalid HEAD after upgrade from detached mode')
         output = subprocess.check_output(['git', 'symbolic-ref', 'HEAD'],
                                          cwd=self.clone_path).rstrip()
-        self.assertEqual(output, 'refs/heads/master',
+        self.assertEqual(output, b'refs/heads/master',
                          'HEAD should point to the master branch after '
                          'upgrade from detached mode')
 

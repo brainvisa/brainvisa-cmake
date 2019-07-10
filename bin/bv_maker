@@ -2813,7 +2813,7 @@ to the remote repository.''')
         """Check out a branch, or create it from the remote branch."""
         retcode = self.call_command(['git', 'checkout', branch, '--'],
                                     echo=True)
-        self.invalidate_cache('head_sha1')
+        self.invalidate_cache()
         if retcode != 0:
             retcode = self.call_command(
                 ['git', 'checkout', '-b', branch, '--track',
@@ -2880,7 +2880,7 @@ above.""")
         """Put the repository in detached state, pointing at refs/bv_head."""
         retcode = self.call_command(
             ['git', 'checkout', '--detach', 'refs/bv_head', '--'], echo=True)
-        self.invalidate_cache('head_sha1')
+        self.invalidate_cache()
         if retcode != 0:
             self.print_command_failure_message("""\
 The Git repository could not be updated, probably because you have

@@ -2825,42 +2825,30 @@ uncommitted local changes (see above).""")
                 raise GitUpdateError('checkout failed')
 
     def try_ff_pull_from_upstream(self):
-        """Try to fast-forward from the configured upstream of the current branch.
+        """Try to fast-forward from the git-configured @{upstream}.
+
+        This fast-forward is attempted only if @{upstream} is set and is
+        different from the remote_ref that bv_maker uses to update the
+        repository.
 
         This is useful e.g. if you are working on a feature branch: it will try
         to pull from the corresponding remote branch if there is one, before
         trying to incorporate changes from the master branch. Failure is
         ignored because this is provided for convenience only.
         """
-        # TODO (optimization): try this only if the current branch has a
-        # configured upstream branch which is not origin/{remote_ref}.
-        # try:
-        #     branch_pull_remote = str(subprocess.check_output(
-        #         ['git', 'config', '--get',
-        #          'branch.' + self.local_branch + '.remote'])).rstrip()
-        #     branch_pull_merge = str(subprocess.check_output(
-        #         ['git', 'config', '--get',
-        #          'branch.' + self.local_branch + '.merge'])).rstrip()
-        # except subprocess.CalledProcessError:
-        #     branch_pull_remote = None
-        #     branch_pull_merge = None
-        # remote_branch = remote_ref
-        # if remote_branch.startswith('refs/heads/'):
-        #     remote_branch = remote_branch[len('refs/heads/'):]
-        # if not (branch_pull_remote == 'origin' and branch_pull_merge):
-        #
         # NOTE: if this fails (e.g. because of uncommitted changes or
         # network error), but the remote branch has advanced, the merge
         # from origin (below) may make the local branch diverge from the
-        # remote feature branch, in effect forcing the user to merge the
+        # remote feature branch, which effectively forces the user to merge the
         # commits from master into their branch.
-
-        # Redirect stderr to stdout since git fetch prints progress on stderr,
-        # but other BrainVISA tools (e.g. bv_build_nightly) consider every
-        # print to stderr to be an error.
-        self.call_nonessential_command(['git', 'pull', '--ff-only'],
-                                       stderr=subprocess.STDOUT)
-        self.invalidate_cache('head_sha1')
+        if (self.git_upstream_full_ref is not None
+                and self.git_upstream_full_ref != self.full_remote_ref):
+            # Redirect stderr to stdout since git fetch prints progress on
+            # stderr, but other BrainVISA tools (e.g. bv_build_nightly)
+            # consider every print to stderr to be an error.
+            self.call_nonessential_command(['git', 'pull', '--ff-only'],
+                                           stderr=subprocess.STDOUT)
+            self.invalidate_cache('head_sha1')
 
     def ff_merge_bv_head(self):
         """Fast-forward merge refs/bv_head into the current branch."""
@@ -3338,20 +3326,6 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
 
         print("\n")
         print("Updating git repository {0}".format(dest))
-
-        # NOTE: the older "light" mode has been disabled. It used to
-        # create an empty repository, then selectively add a remote
-        # which was not fetched at start, and then update only a
-        # detached branch.
-        # It was removed because:
-        # * I cannot make it work with git-lfs, which really needs to
-        #   initialize its repositories using "git lfs clone" otherwise
-        #   things are not working well
-        # * it used to confuse a lot non-expert developers who did not
-        #   understand the detached branch thing, and needs to manually
-        #   create/checkout a branch before developing. Even for experienced
-        #   developers, we often forget to check all branches and their
-        #   updated status before working.
 
         gr = GitRepository(dest, remote_url=src, remote_ref=remote_ref)
 

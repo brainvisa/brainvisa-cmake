@@ -2781,20 +2781,27 @@ class GitRepository(object):
         except subprocess.CalledProcessError:
             return None
 
-    def update_origin_remote(self):
+    def update_origin_and_bv_head(self):
         """Fetch all branches and tags from the 'origin' remote."""
         # Redirect stderr to stdout since git fetch prints progress on stderr,
         # but other BrainVISA tools (e.g. bv_build_nightly) consider every
         # print to stderr to be an error.
-        retcode = self.call_command(
-            ['git', 'fetch', '--tags', '--prune', 'origin',
-             '+refs/heads/*:refs/remotes/origin/*'],
-            echo=True, stderr=subprocess.STDOUT)
+        retcode = self.call_command([
+            'git', 'fetch', '--tags', '--prune', 'origin',
+            '+refs/heads/*:refs/remotes/origin/*',
+            # Unfortunately we cannot combine this fetch with fetching
+            # remote_ref into refs/bv_head, because this conflicts with --prune
+            # (refs/bv_head gets pruned). Confirmed with git version 2.7.4.
+            #
+            # '+' + self.remote_ref + ':refs/bv_head',
+        ], echo=True, stderr=subprocess.STDOUT)
+        self.invalidate_cache('full_remote_ref')
         if retcode != 0:
             self.print_command_failure_message('''\
 Fetching failed. Please check your Internet connection and access rights
 to the origin repository.''')
             raise GitUpdateError('fetch failed')
+        self.update_bv_head()
 
     def update_other_remotes(self):
         """Fetch all remotes except 'origin' (errors are non-fatal)."""
@@ -2805,7 +2812,7 @@ to the origin repository.''')
             ['git', '-c', 'remote.origin.skipDefaultUpdate',
              'remote', 'update'], echo=True)
 
-    @cached_property
+    @property
     def remote_ref_is_a_branch(self):
         """Test if remote_ref names a branch on the given remote."""
         return self.full_remote_ref is not None
@@ -2818,22 +2825,41 @@ to the origin repository.''')
         print('=' * 72)
 
     def update_bv_head(self):
-        """Change refs/bv_head to point at the given remote ref."""
-        # TODO remove this fetch step: if remote_ref is a branch or a tag, it
-        # has been fetched above already.
-        #
-        # Redirect stderr to stdout since git fetch prints progress on stderr,
-        # but other BrainVISA tools (e.g. bv_build_nightly) consider every
-        # print to stderr to be an error.
-        retcode = self.call_command(['git', 'fetch', 'origin',
-                                     "+" + self.remote_ref + ":refs/bv_head"],
-                                    echo=True, stderr=subprocess.STDOUT)
-        self.invalidate_cache('bv_head_sha1')
-        if retcode != 0:
-            self.print_command_failure_message('''\
+        """Change refs/bv_head to point to the given remote ref."""
+
+        if self.remote_ref_is_a_branch:
+            # Case 1: if remote_ref points to a branch, use the corresponding
+            # remote-tracking branch.
+            ref = 'refs/remotes/origin/' + self.remote_ref
+        elif self.sha1_of_rev('refs/tags/' + self.remote_ref) is not None:
+            # Case 2: if remote_ref points to a tag, use it
+            ref = 'refs/tags/' + self.remote_ref
+        else:
+            # Case 3: neither of the above is true, fall back to using 'git
+            # fetch' to fetch the remote ref.
+            ref = None
+
+        if ref is not None:
+            retcode = self.call_command(['git', 'update-ref', '--no-deref',
+                                         'refs/bv_head', ref], echo=True)
+            if retcode != 0:
+                self.print_command_failure_message(
+                    'Failed to update refs/bv_head.')
+                raise GitUpdateError('bv_head update failed')
+        else:
+            # Redirect stderr to stdout since git fetch prints progress on stderr,
+            # but other BrainVISA tools (e.g. bv_build_nightly) consider every
+            # print to stderr to be an error.
+            retcode = self.call_command([
+                'git', 'fetch', 'origin',
+                "+" + self.remote_ref + ":refs/bv_head"
+            ], echo=True, stderr=subprocess.STDOUT)
+            self.invalidate_cache('bv_head_sha1')
+            if retcode != 0:
+                self.print_command_failure_message('''\
 Fetching failed. Please check your Internet connection and access rights
 to the remote repository.''')
-            raise GitUpdateError('fetch failed')
+                raise GitUpdateError('fetch failed')
 
     def checkout_or_create_branch(self, branch, remote='origin'):
         """Check out a branch, or create it from the remote branch."""
@@ -3059,20 +3085,18 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
                 if retcode == 0:
                     raise GitUpdateError('remote set-up failed')
 
-        self.update_origin_remote()
-
-        # Update other remotes only if the user has explicitly configured
-        # update_git_remotes = 'ON'.
-        if source_dir.update_git_remotes.upper() == 'ON':
-            self.update_other_remotes()
-
         # Fetch the remote ref specified in bv_maker.cfg into refs/bv_head
         #
         # FIXME(ylep): what happens if the update below ends with an error?
         # bv_head is already updated, does that pose a problem?
         # Get the SHA-1 identifiers of HEAD and refs/bv_head commits
         old_bv_head = self.bv_head_sha1
-        self.update_bv_head()
+        self.update_origin_and_bv_head()
+
+        # Update other remotes only if the user has explicitly configured
+        # update_git_remotes = 'ON'.
+        if source_dir.update_git_remotes.upper() == 'ON':
+            self.update_other_remotes()
 
         if self.remote_ref_is_a_branch:
             if ((not self.local_branch and self.head_sha1 == old_bv_head)

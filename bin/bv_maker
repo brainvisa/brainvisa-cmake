@@ -3452,9 +3452,7 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
 
         # Update SVN repositories
 
-        current_dir = os.getcwd()
         # Go to the sources directory
-        os.chdir(self.directory)
         externalsFileName = os.path.join(self.directory, 'bv_maker.externals')
         externalsFile = open(externalsFileName, 'w')
         for component_version, url, dest_directory, bv_version in set(self.svnComponents):
@@ -3463,12 +3461,13 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
         externalsFile.close()
         if use_rcs and options.svn:
             if options.cleanup:
-                self.svncommand('cleanup', self.directory)
+                self.svncommand('cleanup', self.directory, cwd=self.directory)
             self.svncommand('propset', 'svn:externals',
-                            '--file', externalsFileName, self.directory)
-            self.svncommand('commit', '-m', '', self.directory)
-            self.svncommand('update', self.directory)
-        os.chdir(current_dir)
+                            '--file', externalsFileName, self.directory,
+                            cwd=self.directory)
+            self.svncommand('commit', '-m', '', self.directory,
+                            cwd=self.directory)
+            self.svncommand('update', self.directory, cwd=self.directory)
 
         # update Git Repositories
 
@@ -3522,12 +3521,9 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
 
         # Display status of SVN repositories
 
-        current_dir = os.getcwd()
         # Go to the sources directory
-        os.chdir(self.directory)
         if use_rcs and options.svn:
-            self.svncommand('status', self.directory)
-        os.chdir(current_dir)
+            self.svncommand('status', self.directory, cwd=self.directory)
 
         # Display status of Git Repositories
 
@@ -3547,14 +3543,14 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
 
         print_git_status_summary(self.directory, git_status_list)
 
-    def svncommand(self, *svnargs):
+    def svncommand(self, *svnargs, **subprocess_kwargs):
         cmd = ['svn', svnargs[0]]
         if self.configuration.username:
             cmd += ['--username', self.configuration.username]
             if self.configuration.username == 'brainvisa':
                 cmd += ['--password', 'Soma2009']
         cmd.extend(svnargs[1:])
-        system(*cmd)
+        system(*cmd, **subprocess_kwargs)
 
     def info(self):
         print('Source directory: "' + self.directory + '"')

@@ -138,6 +138,7 @@ if type compgen complete >/dev/null 2>&1; then
             . "$d" || :  # an error in the completion script is not fatal
         fi
     done
+    unset base_dir
 fi
 
 bv_env_cleanup

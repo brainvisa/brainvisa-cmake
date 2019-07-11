@@ -104,15 +104,11 @@ fi
 
 # Method 4: see if bv_env can be found in $PATH, which is the case if this
 # script was found during a PATH lookup, i.e. called as ". bv_env.sh".
-type bv_env > /dev/null 2>&1
-in_path=$?
-if [ ! -x "$bv_env" ] && [ "$in_path" = "0" ]
+if [ ! -x "$bv_env" ] && type bv_env > /dev/null 2>&1
 then
     bv_env=$(which bv_env)
-    unset in_path
 elif [ ! -x "$bv_env" ]
 then
-    unset in_path
     # No method could find bv_env, give up.
     echo 'bv_env.sh: Error: cannot find the bv_env executable.' >&2
     echo 'bv_env.sh: Please pass the path to the BrainVISA pack:' >&2

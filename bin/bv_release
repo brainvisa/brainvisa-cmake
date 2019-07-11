@@ -32,6 +32,9 @@
 #
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
+
+from __future__ import print_function
+
 import sys
 from optparse import OptionParser
 
@@ -128,7 +131,7 @@ for arg in args[1:]:
     components.update(find_components(arg))
 
 #if options.verbose:
-    #print 'Selected components : ', components
+    #print('Selected components : ', components)
 
 if options.version:
     version_numbers = options.version.split( '.' )
@@ -150,13 +153,13 @@ if options.update:
         ## that are not yet integrated in the trunk branch, these revision would
         ## be also marked as merged but not really reported. So the user is
         ## warned and asked about what he wants to do.
-        #print '\n*BE CAREFUL*: This script can automatically mark the trunk ' \
+        #print('\n*BE CAREFUL*: This script can automatically mark the trunk ' \
             #+ 'branch as merged with the bug_fix branch to avoid reporting ' \
             #+ 'the version number change of the bug_fix branch in the trunk ' \
             #+ 'branch in the future merges. But before doing that you should ' \
             #+ 'check that all revisions of bug_fix branch are correctly ' \
             #+ 'merged in the trunk version. \nAre you sure you want to do ' \
-            #+ 'this automatic merge ? (y/n)'
+            #+ 'this automatic merge ? (y/n)')
         #line = sys.stdin.readline()[:-1] # This may not work on windows
         #if line == "y":
             #auto_merge = True
@@ -184,7 +187,7 @@ for component in components:
                       trunk_client_info
                   )
     if options.verbose:
-        print 'Component:', project + ':' + component
+        print('Component:', project + ':' + component)
 
     # Processes source branch type
     if branch_type_dest == BranchType.RELEASE:
@@ -199,12 +202,12 @@ for component in components:
     if options.version is None:
 
         # Get the maximum source version
-        print 'Retrieving maximum version for', branch_type_src, '...',
+        print('Retrieving maximum version for', branch_type_src, '...', end='')
         sys.stdout.flush()
         version_max_src, branch_name_max_src = client_comp.branch_version_max(
                                                    branch_type_src
                                                )
-        print 'OK'
+        print('OK')
         version_src = version_max_src
         branch_name_src = branch_name_max_src
 
@@ -240,27 +243,27 @@ for component in components:
                        )
 
     if options.verbose:
-        print 'branch_type_src:', branch_type_src, ',', \
+        print('branch_type_src:', branch_type_src, ',', \
               'branch_name_src:', branch_name_src, ',', \
-              'version_src:', str(version_src)
+              'version_src:', str(version_src))
 
     if ( not client_comp.branch_exists( branch_type_src, branch_name_src ) ):
-        print 'WARNING:', project + ':' + component, \
-              'no', branch_type_src, 'branch found',
+        print('WARNING:', project + ':' + component, \
+              'no', branch_type_src, 'branch found', end=' ')
 
         if branch_name_src:
-            print 'with name:', branch_name_src,
+            print('with name:', branch_name_src, end=' ')
 
         if version_src:
-            print 'for version:', str(version_src),
+            print('for version:', str(version_src), end=' ')
 
-        print
+        print()
         continue
 
     if options.verbose:
-        print 'branch_type_dest:', branch_type_dest, ',', \
+        print('branch_type_dest:', branch_type_dest, ',', \
               'branch_name_dest:', branch_name_dest, ',', \
-              'version_dest:', str(version_dest)
+              'version_dest:', str(version_dest))
 
     # Get the maximum branch name and version
     # for destination branch type. It will allow to check
@@ -274,7 +277,7 @@ for component in components:
         # relelase branches
         version_dest_len = 2
 
-    print 'Retrieving maximum version for', branch_type_dest, '...',
+    print('Retrieving maximum version for', branch_type_dest, '...', end=' ')
     sys.stdout.flush()
     version_max_dest, \
     branch_name_max_dest = client_comp.branch_version_max(
@@ -283,20 +286,20 @@ for component in components:
                                    version_dest[:version_dest_len]
                                ) + version_dest._format.separator() + '*'
                            )
-    print 'OK'
+    print('OK')
 
     if (not options.force):
         #if client_comp.branch_exists(
                                    #branch_type_dest,
                                    #branch_name_dest
                                #):
-            #print project + ':' + component, \
+            #print(project + ':' + component, \
                 #'destination branch:', client_comp.branch_url(
                                         #branch_type_dest,
                                         #branch_name_dest
                                     #), \
                 #'already exists. To force branch override' \
-                #+ ' uses --force option'
+                #+ ' uses --force option')
             #sys.exit(1)
 
         if ( version_src > version_dest) \
@@ -307,7 +310,7 @@ for component in components:
             # always be created from a trunk source branch with trunk with X
             # version and a release branch with version X.Y.Z should always be
             # created from a source branch with version X.Y.
-            print project + ':' + component, \
+            print(project + ':' + component, \
                 'destination branch:', \
                                     client_comp.branch_url(
                                         branch_type_dest,
@@ -324,7 +327,7 @@ for component in components:
                 + ' destination branch version must both start with ' \
                 + str(version_dest[:version_dest_len]) + '. Version' \
                 + ' inconsistencies may exist in project info file.' \
-                + '\nUse --force option to force branche creation.'
+                + '\nUse --force option to force branche creation.')
             sys.exit(1)
 
         if (version_src <= version_max_dest):
@@ -332,7 +335,7 @@ for component in components:
             # destination branch type and its matching source version.
             # This can occurs when project info file was not correctly
             # updated after a branch creation.
-            print project + ':' + component, \
+            print(project + ':' + component, \
                 'source branch:', client_comp.branch_url(
                                         branch_type_src,
                                         branch_name_src
@@ -346,7 +349,7 @@ for component in components:
                 'version (' + str(version_max_dest) + '). The source version' \
                 + ' should always be greater than the existing maximum' \
                 + ' destination version.' \
-                + '\nUse --force option to force branche creation.'
+                + '\nUse --force option to force branche creation.')
             sys.exit(1)
 
     if version_dest >= version_src:
@@ -450,13 +453,13 @@ for component in components:
 # Execute svn commands
 if options.branch:
     if options.verbose:
-        print "\n\n** Create branches **"
+        print("\n\n** Create branches **")
     for action_type, action_client, action_params in branch_create_actions:
         execute_action( action_type, action_client, action_params )
 
 if options.update:
     if options.verbose:
-        print "\n\n** Update branches version info **"
+        print("\n\n** Update branches version info **")
     for action_type, action_client, action_params \
         in branch_update_version_info_actions:
         execute_action( action_type, action_client, action_params )

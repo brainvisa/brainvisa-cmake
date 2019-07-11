@@ -148,7 +148,8 @@ endif()
 # as they are not always defined in FindBoost.cmake. It probably
 # has to move to another file.
 set( Boost_ADDITIONAL_VERSIONS
-     "1.66.0" "1.66" "1.65.1" "1.65.0" "1.65"
+     "1.70.0" "1.70" "1.69.0" "1.69" "1.68.0" "1.68"
+     "1.67.0" "1.67" "1.66.0" "1.66" "1.65.1" "1.65.0" "1.65"
      "1.64.0" "1.64" "1.63.0" "1.63" "1.62.0" "1.62" "1.61.0" "1.61"
      "1.60.0" "1.60" "1.59.0" "1.59" "1.58.0" "1.58" "1.57.0" "1.57"
      "1.56.0" "1.56" "1.55.0" "1.55" "1.54.0" "1.54" "1.53.0" "1.53"
@@ -179,6 +180,33 @@ function( BRAINVISA_SYSTEM_PATH_TO_LIST  result_variable_name system_path )
   set( ${result_variable_name} "${system_path}" PARENT_SCOPE )
 endfunction( BRAINVISA_SYSTEM_PATH_TO_LIST  result_variable_name system_path )
 
+#
+# BRAINVISA_TARGET_SYSTEM_COMMAND
+#   Get a usable command to run on the target system (mainly for cross 
+#   compilation).
+#
+# Usage:
+#  BRAINVISA_TARGET_SYSTEM_COMMAND( <output variable> <command> [<arg1> ... <argn>] )
+#
+# Example:
+#   BRAINVISA_TARGET_SYSTEM_COMMAND( TARGET_COMMAND "program.exe" "--help" )
+#   message( ${p} )
+function(BRAINVISA_TARGET_SYSTEM_COMMAND variable)
+  set(__command "${ARGN}")
+  if(CMAKE_CROSSCOMPILING)
+    if(WIN32)
+      find_package(Wine)
+      if(WINE_FOUND)
+        set(__command "${WINE_RUNTIME}" ${__command})
+      else()
+        message(SEND_ERROR "Unable to build command for target system wine, because wine was not found")
+      endif()
+    endif()
+  endif()
+  message("===== TARGET COMMAND: ${__command}")
+  set(${variable} ${__command} PARENT_SCOPE)
+  unset(__command)
+endfunction()
 
 macro( BRAINVISA_FIND_PACKAGE component )
   if( ${component}_IS_BEING_COMPILED AND NOT ${component}_BINARY_DIR )
@@ -1008,10 +1036,12 @@ endfunction()
 
 # BRAINVISA_COPY_DIRECTORY
 #  Recursively copy and install all files in <source directory> except files named
-#  CMakeLists.txt, *~ or */.svn/*.
+#  CMakeLists.txt, *~, */.svn/*, *.od[tp], *.doc, *.s[dx]w.
 #
 # Usage:
-#  BRAINVISA_COPY_DIRECTORY( <source directory> <destination directory> <component> [IMMEDIATE] [GET_TARGET <target variable>] [NO_SYMLINKS] )
+#  BRAINVISA_COPY_DIRECTORY( <source directory> <destination directory> <component> [IMMEDIATE] [GET_TARGET <target variable>] [NO_SYMLINKS] [COPY_DOCS] )
+#
+#   if COPY_DOCS is used, files with extention *.od[tp], *.doc, *.s[dx]w are copied
 #
 function( BRAINVISA_COPY_DIRECTORY _directory _destination _component )
   set( _argn "${ARGN}" )
@@ -1044,13 +1074,26 @@ function( BRAINVISA_COPY_DIRECTORY _directory _destination _component )
     list( REMOVE_AT _argn ${result} )
   endif()
 
+  # Read COPY_DOCS option
+  list( FIND _argn COPY_DOCS result )
+  if( result EQUAL -1 )
+    set( copy_docs FALSE )
+  else()
+    set( copy_docs TRUE )
+    list( REMOVE_AT _argn ${result} )
+  endif()
+
   file( GLOB_RECURSE _selectedFiles RELATIVE "${_directory}" "${_directory}/*" )
   set( i 0 )
   list( LENGTH _selectedFiles l )
   while( ${i} LESS ${l} )
     list( GET _selectedFiles ${i} file )
     get_filename_component( f "${file}" NAME )
-    string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*#.*)|(.*\\.svn/.*)|(.*\\.od[tp])|(.*\\.doc)|(.*\\.s[dx]w)|(.*\\..*swp)$" _match "${file}" )
+    if ( copy_docs )
+        string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*#.*)|(.*\\..*swp)$" _match "${file}" )
+    else()
+        string( REGEX MATCH "(CMakeLists\\.txt)|(.*~)|(.*#.*)|(.*\\.svn/.*)|(.*\\.od[tp])|(.*\\.doc)|(.*\\.s[dx]w)|(.*\\..*swp)$" _match "${file}" )
+    endif()
     if( _match )
       list( REMOVE_AT _selectedFiles ${i} )
       math( EXPR l "${l} - 1" )
@@ -1391,8 +1434,21 @@ function( BRAINVISA_GENERATE_COMMANDS_HELP_INDEX )
 #     message("--BRAINVISA_ADD_COMMAND_HELP_INDEX - _depends : ${_depends}")
 #     message("--BRAINVISA_ADD_COMMAND_HELP_INDEX - _dirs : ${_dirs}")
 
+#     brainvisa_target_system_command(__target_cmd 
+#         "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
+#             "${PYTHON_EXECUTABLE}"
+#             ${CREATE_COMMANDS_DOC}
+#             -t "${_helppath}"
+#             -v 0
+#             ${_cmd_options}
+#             "${_output_directory}/${_index_file}")
+#     message("===== TARGET SYSTEM COMMAND: ${__target_cmd}")
+    if(CMAKE_CROSSCOMPILING AND WINE32)
+        find_package(Wine)
+    endif()
     add_custom_command( OUTPUT "${_output_directory}/${_index_file}"
-                        COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
+                        COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX}
+                                "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
                                 "${PYTHON_EXECUTABLE}"
                                 ${CREATE_COMMANDS_DOC}
                                 -t "${_helppath}"
@@ -1532,10 +1588,15 @@ function( BRAINVISA_ADD_COMMAND_HELP name)
   if(TARGET "${name}-help")
     message( FATAL_ERROR "Target: ${name}-help already exists. Impossible to use it for BRAINVISA_ADD_COMMAND_HELP" )
   else()
+    if(CMAKE_CROSSCOMPILING AND WINE32)
+      find_package(Wine)
+    endif()
     # Add help generation target
     add_custom_command( OUTPUT "${_component_help_directory}/${name}"
                         COMMAND "${CMAKE_COMMAND}" -E make_directory "${_component_help_directory}"
-                        COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}" "${PYTHON_EXECUTABLE}" -c "import sys, subprocess; subprocess.call( ['${_command}'], stdout = sys.stdout, stderr = sys.stdout )" > ${_component_help_directory}/${name}
+                        COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX}
+                                "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}" 
+                                "${PYTHON_EXECUTABLE}" -c "import sys, subprocess; subprocess.call( ['${_command}'], stdout = sys.stdout, stderr = sys.stdout )" > ${_component_help_directory}/${name}
                         DEPENDS ${_depends}
                         COMMENT "Generating ${name} help file ..."
                         VERBATIM )
@@ -1861,7 +1922,7 @@ function( BRAINVISA_ADD_TEST )
     get_filename_component(_python_executable "${PYTHON_HOST_EXECUTABLE}" REALPATH)
 
     # Get target python interpreter name
-    get_filename_component(_python_test "${CROSSCOMPILING_PYTHON_EXECUTABLE}" NAME)
+    get_filename_component(_python_test "${PYTHON_EXECUTABLE}" NAME)
     foreach( _arg ${_command_args} )
       list( GET _command_args ${_arg_index} result )
       if(EXISTS "${result}")
@@ -2207,10 +2268,14 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
     if( NOT target )
       set( target ${PROJECT_NAME}-${default_target} )
     endif()
+    if(CMAKE_CROSSCOMPILING AND WINE32)
+      find_package(Wine)
+    endif()
     add_custom_target( ${target}
                       COMMAND "${CMAKE_COMMAND}" -E make_directory
                         "${output_directory}"
-                      COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
+                      COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX}
+                        "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
                         "${SPHINXBUILD_EXECUTABLE}"
                         ${source_directory}
                         ${output_directory}
@@ -2551,7 +2616,7 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
       # command make sure that all the files are created (necessary)
       # for dependencies).
       COMMAND "${CMAKE_COMMAND}" -E remove ${_sipOutputFiles}
-      COMMAND "${SIP4MAKE_EXECUTABLE}"
+      COMMAND "${SIP_EXECUTABLE}"
               -j ${_sipSplitGeneratedCode}
               ${_sipIncludeOptions}
               -c "${CMAKE_CURRENT_BINARY_DIR}"
@@ -2568,6 +2633,7 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
     add_custom_command(
       OUTPUT ${_sipOutputFiles}
       COMMAND "${SIP4MAKE_EXECUTABLE}"
+              -S "${SIP_EXECUTABLE}"
               -j ${_sipSplitGeneratedCode}
               ${_sipIncludeOptions}
               -c "${CMAKE_CURRENT_BINARY_DIR}"

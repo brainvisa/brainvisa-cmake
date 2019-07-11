@@ -1,4 +1,4 @@
-#! /usr/bin/env python2
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 #  This software and supporting documentation are distributed by
@@ -32,6 +32,9 @@
 #
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
+
+from __future__ import print_function
+
 import sys, os, time, tempfile, platform, shutil, string
 from brainvisa.config import fullVersion
 
@@ -61,7 +64,7 @@ elif platf[:6] == 'darwin':
 elif platf[:6] == 'cygwin':
   platf = 'cygwin'
 else:
-  print >> sys.stderr, 'WARNING: Unsupported platform', platf
+  print('WARNING: Unsupported platform', platf, file=sys.stderr)
 
 
 home = os.environ.get( 'BRAINVISA_SOURCES', None )
@@ -123,7 +126,7 @@ else:
 count = 0
 packName0 = packBaseName + '-' + packVersion
 while os.path.exists( os.path.join( packDir, packName ) ):
-  print >> sys.stderr, 'Warning: package "' + os.path.join( packDir, packName ) + '" exists'
+  print('Warning: package "' + os.path.join( packDir, packName ) + '" exists', file=sys.stderr)
   count += 1
   packName = packName0 + '-' + str( count )
   if options.i2bm:
@@ -135,20 +138,20 @@ lock = open( os.path.join( packDir, packName+'_info.txt' ), 'w' )
 
 if options.verbose:
   for n in ( 'packName', 'packDir' ):
-    print n, '=', repr( locals()[ n ] )
+    print(n, '=', repr( locals()[ n ] ))
 try:
-  print >> lock, 'package name:', packName
-  print >> lock, 'user:', whoIsLogged()
-  print >> lock, 'starting time:', time.asctime()
-  print >> lock, 'host:', os.environ.get( 'HOSTNAME', '<unknown>' )
-  print >> lock, 'system:', system
+  print('package name:', packName, file=lock)
+  print('user:', whoIsLogged(), file=lock)
+  print('starting time:', time.asctime(), file=lock)
+  print('host:', os.environ.get( 'HOSTNAME', '<unknown>' ), file=lock)
+  print('system:', system, file=lock)
   try:
-    print >> lock, 'packager:', parser.expand_prog_name( parser.version )
+    print('packager:', parser.expand_prog_name( parser.version ), file=lock)
   except AttributeError:
-    print >> lock, 'packager:', sys.argv[0], parser.version
-  print >> lock, 'options:', ' '.join( [repr(i) for i in sys.argv[1:] ] )
-  print >> lock, 'package directory:', packDir
-  print >> lock, '-' * 80
+    print('packager:', sys.argv[0], parser.version, file=lock)
+  print('options:', ' '.join( [repr(i) for i in sys.argv[1:] ] ), file=lock)
+  print('package directory:', packDir, file=lock)
+  print('-' * 80, file=lock)
   lock.flush()
   
   # Create package with bv_packaging
@@ -171,8 +174,8 @@ try:
   command = command + ' -o ' + dest + " --bv_env " + packages
   
   if lock is not None:
-    print >> lock, command
-  print command
+    print(command, file=lock)
+  print(command)
   sys.stdout.flush()
   
   os.system( command )

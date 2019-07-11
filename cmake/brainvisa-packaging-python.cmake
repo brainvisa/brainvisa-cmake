@@ -223,6 +223,9 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           list( REVERSE _inv_pypath )
         endif()
 
+        # get python main version
+        string( REGEX MATCH "([^.]+)" py_version ${PYTHON_SHORT_VERSION} )
+
         set( _toinstall )
         set( _uicpdir )
         set( _pyside1 )
@@ -300,10 +303,53 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           endif()
         endforeach()
         set( i 0 )
+        set( bv_copy_options1 "" )
+        set( bv_copy_options2 "" )
+        # we must erase any previous numpy installation before installing it
+        # again because some C libs may be installed with non-overlapping
+        # names and end-up conflicting:
+        # numpy/core/*.x86_64-linux-gnu.so are named without the
+        # .x86_64-linux-gnu extension in the newer module, but the former
+        # ones are loaded.
+        # Same for PyQt, sip, zmq, scipy when they are re-installed manually
+        #
+        # BUT
+        #
+        # we mustn't do that systematically on Ubuntu 12.04 since there, we
+        # actually must install a mixup of /usr/lib/pythonxx,
+        # /usr/lib/pyshared and others which overlap (and even symlink each
+        # other...)
+        # In fact it depends on the modules and the way they were installed
+        # (system modules or upgraded using pip)
+        #
+        if( NOT LSB_DISTRIB STREQUAL "ubuntu"
+            OR LSB_DISTRIB_RELEASE VERSION_GREATER "14.0" )
+          set( removed_packages "numpy" "PyQt5" "PyQt4" "zmq" "scipy" )
+        else()
+          # on our ubuntu 12 we have upgraded numpy, scipy and zmq using pip.
+          # this is specific to our own install, I know.
+          set( removed_packages "numpy" "scipy" "zmq" )
+        endif()
+        set( bv_copy_options1 "" )
+        set( bv_copy_options2 "" )
+        foreach( p in ${removed_packages} )
+          list( APPEND bv_copy_options1
+            "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/${p}"
+            "-d" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/${p}" )
+          list( APPEND bv_copy_options2
+            "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages/${p}"
+            "-d" "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/${p}" )
+        endforeach()
+
+        # make a symlink lib/python3 -> lib/python3.6 to avoid duplicating modules
+        # in ubuntu installs
+        add_custom_command( TARGET install-${component} PRE_BUILD
+          COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${CMAKE_COMMAND} -E create_symlink "python${PYTHON_SHORT_VERSION}" "$(BRAINVISA_INSTALL_PREFIX)/lib/python${py_version}" \; else ${CMAKE_COMMAND} -E create_symlink "python${PYTHON_SHORT_VERSION}" "${CMAKE_INSTALL_PREFIX}/lib/python${py_version}" \; fi )
+
         foreach( _pypath ${_toinstall} )
           list( GET _dirs ${i} _dir )
           add_custom_command( TARGET install-${component} PRE_BUILD
-            COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${CMAKE_COMMAND} -E make_directory "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${_exclude} ${_pypath} "$(BRAINVISA_INSTALL_PREFIX)/${_dir}" \;else ${CMAKE_COMMAND} -E make_directory "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${_exclude} ${_pypath} "${CMAKE_INSTALL_PREFIX}/${_dir}" \;fi )
+            COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${CMAKE_COMMAND} -E make_directory "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${bv_copy_options1} ${_exclude} ${_pypath} "$(BRAINVISA_INSTALL_PREFIX)/${_dir}" \; if [ -f "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/sip.x86_64-linux-gnu.so" -a -f "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/sip.so" ] \; then rm "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/site-packages/sip.x86_64-linux-gnu.so" \; fi \; if [ -f "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/sip.x86_64-linux-gnu.so" -a -f "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/sip.so" ] \; then rm "$(BRAINVISA_INSTALL_PREFIX)/lib/python${PYTHON_SHORT_VERSION}/dist-packages/sip.x86_64-linux-gnu.so" \; fi \;else ${CMAKE_COMMAND} -E make_directory "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages" \; ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${bv_copy_options2} ${_exclude} ${_pypath} "${CMAKE_INSTALL_PREFIX}/${_dir}" \; if [ -f "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/sip.x86_64-linux-gnu.so" -a -f "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/sip.so" ] \; then rm "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/site-packages/sip.x86_64-linux-gnu.so" \; fi \; if [ -f "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages/sip.x86_64-linux-gnu.so" -a -f "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages/sip.so" ] \; then rm "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_SHORT_VERSION}/dist-packages/sip.x86_64-linux-gnu.so" \; fi \; fi )
           math( EXPR i "${i} + 1" )
         endforeach()
 
@@ -329,11 +375,17 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
 
       else() # "${PYTHON_BIN_DIR}" STREQUAL "/usr/bin"
 
-        BRAINVISA_INSTALL(DIRECTORY "${PYTHON_MODULES_PATH}"
-          DESTINATION "lib"
-          USE_SOURCE_PERMISSIONS
-          COMPONENT "${component}"
-        )
+#         BRAINVISA_INSTALL(DIRECTORY "${PYTHON_MODULES_PATH}"
+#           DESTINATION "lib"
+#           USE_SOURCE_PERMISSIONS
+#           COMPONENT "${component}"
+#         )
+        # the previous cmake-based copy cannot copy a symlink going outside the
+        # copied tree, which happens on Mac for python installed using brew
+
+        add_custom_command( TARGET install-${component} PRE_BUILD
+          COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ]\;then ${CMAKE_COMMAND} -E make_directory "$(BRAINVISA_INSTALL_PREFIX)/lib" \;${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${PYTHON_MODULES_PATH} "$(BRAINVISA_INSTALL_PREFIX)/lib" \;else ${CMAKE_COMMAND} -E make_directory "${CMAKE_INSTALL_PREFIX}/lib" \; ${PYTHON_HOST_EXECUTABLE} "${CMAKE_BINARY_DIR}/bin/bv_copy_tree" ${PYTHON_MODULES_PATH} "${CMAKE_INSTALL_PREFIX}/lib" \;fi )
+
       endif() # "${PYTHON_BIN_DIR}" STREQUAL "/usr/bin"
       
     

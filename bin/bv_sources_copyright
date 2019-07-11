@@ -32,8 +32,10 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
+from __future__ import print_function
 import sys, os, re
 from optparse import OptionParser
+import six
 
 parser = OptionParser( version="%prog 1.1",
   usage="usage: %prog [options] -t <file_type> <files_or_directories>" )
@@ -130,17 +132,17 @@ class HeaderClassifier:
     return result
   
   def printHeaders( headers, file=sys.stdout ):
-    for header, fileInfos in headers.iteritems():
-      print '-=' * 40
-      print header
-      print '-=' * 40
-      print '-->', ' '.join( ["'" + x[0] + "'" for x in fileInfos] )
-      print
+    for header, fileInfos in six.iteritems(headers):
+      print('-=' * 40)
+      print(header)
+      print('-=' * 40)
+      print('-->', ' '.join( ["'" + x[0] + "'" for x in fileInfos] ))
+      print()
   printHeaders = staticmethod( printHeaders )
 
   def replaceHeaders( headers, newHeaderFileName ):
     newHeader = open( newHeaderFileName ).read()
-    for header, fileInfos in headers.iteritems():
+    for header, fileInfos in six.iteritems(headers):
       for f, headerStart in fileInfos:
         newFile = ''
         file = open( f )
@@ -158,9 +160,9 @@ class HeaderClassifier:
           file2.close()
           file.close()
         if options.perforce:
-          print '!before!', "p4 open '" + f + "'"
+          print('!before!', "p4 open '" + f + "'")
           os.system( "p4 open '" + f + "'" )
-          print '!after!', "p4 open '" + f + "'"
+          print('!after!', "p4 open '" + f + "'")
         file = open( f, 'w' )
         file.write( newFile )
   replaceHeaders = staticmethod( replaceHeaders )
@@ -201,7 +203,7 @@ class CppOldHeaderClassifier( CppHeaderClassifier ):
   def separateHeaders( self, fileNames ):
     aimsHeader = re.compile( r'^[ \t\n]*/\*[ \t\n]*\*[ \t\n]*Copyright[^\n]*CEA.*' )
     result = {}
-    for header, fileInfos in CppHeaderClassifier.separateHeaders( self, fileNames ).iteritems():
+    for header, fileInfos in six.iteritems(CppHeaderClassifier.separateHeaders(self, fileNames)):
       if aimsHeader.match( header ):
         result[ header ] = fileInfos
     return result
@@ -214,7 +216,7 @@ class CppOldHeaderClassifier( CppHeaderClassifier ):
       commentLine = re.compile( r'^\s*\*\s*[^\s].*$' )
       emptyCommentLine = re.compile( r'^\s*\*/?\s*$' )
       franceLine = re.compile( r'^\s*\*\s*France\s*$' )
-      for header, fileInfos in CppHeaderClassifier.separateHeaders( self, fileNames ).iteritems():
+      for header, fileInfos in six.iteritems(CppHeaderClassifier.separateHeaders( self, fileNames)):
         headerSize = len( header )
         if aimsHeader.match( header ):
           l = header.split( '\n' )
@@ -252,26 +254,26 @@ class CppOldHeaderClassifier( CppHeaderClassifier ):
       return result
   
     def printHeaders( headers, file=sys.stdout ):
-      for header, commentsAndfileInfos in headers.iteritems():
-        print '-=' * 40
-        print header
-        print '-=' * 40
+      for header, commentsAndfileInfos in six.iteritems(headers):
+        print('-=' * 40)
+        print(header)
+        print('-=' * 40)
         first = True
-        for comment, fileInfos in commentsAndfileInfos.iteritems():
+        for comment, fileInfos in six.iteritems(commentsAndfileInfos):
           if not first:
-            print '- ' * 40
+            print('- ' * 40)
           if comment:
-            print comment
-          print '-->', ' '.join( ["'" + x[0] + "'" for x in fileInfos] )
+            print(comment)
+          print('-->', ' '.join( ["'" + x[0] + "'" for x in fileInfos] ))
           first = False
-        print
+        print()
     printHeaders = staticmethod( printHeaders )
   
     def replaceHeaders( headers, newHeaderFileName ):
       newHeader = open( newHeaderFileName ).read()
-      for header, commentsAndfileInfos in headers.iteritems():
+      for header, commentsAndfileInfos in six.iteritems(headers):
         if header is None: continue
-        for comment, fileInfos in commentsAndfileInfos.iteritems():
+        for comment, fileInfos in six.iteritems(commentsAndfileInfos):
           for f, headerStart, headerSize in fileInfos:
             newFile = ''
             file = open( f )

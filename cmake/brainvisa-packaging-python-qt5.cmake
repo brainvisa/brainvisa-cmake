@@ -17,7 +17,10 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5opengl RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5sql RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5svg RUN )
-  BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5webkit RUN )
+  if( NOT APPLE )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN
+                                     DEPENDS libqt5webkit RUN )
+  endif()
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5xml RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5xmlpatterns RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libgcc1 RUN )

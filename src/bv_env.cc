@@ -589,7 +589,36 @@ int main( int argc, char *argv[] )
     path_prepend[ "PYTHONPATH" ].push_back( site_packages + PATH_SEP + "win32"+ PATH_SEP + "lib" );
 #endif
   }
-  
+
+#ifdef __APPLE__
+  /* On MacOS >= 10.10, DYLD_LIBRARY_PATH variables are not inherited by
+     processes whose executable resides in a protected system directory (/usr,
+     /bin, /sbin, or /System). This affects scripts that use /bin/sh, or
+     /usr/bin/env in their shebang.
+
+     Here we restore the values of these DYLD_* variables from the backup
+     variables BV_MAC_*_PATH, which are set below.
+
+     These variables are not added to set_variables because:
+     1. we do not need to back up their old values at this point, which are
+        empty;
+     2. they will be included in path_prepend if needed, so they will be
+        exported correctly and a backup of their restored value will be made.
+  */
+  if( ! getenv( "DYLD_LIBRARY_PATH" ) && getenv( "BV_MAC_LIB_PATH" ) )
+  {
+    set_env( "DYLD_LIBRARY_PATH", getenv( "BV_MAC_LIB_PATH" ) );
+  }
+  if( !getenv( "DYLD_FRAMEWORK_PATH" ) && getenv( "BV_MAC_FWK_PATH" ) )
+  {
+    set_env( "DYLD_FRAMEWORK_PATH", getenv( "BV_MAC_FWK_PATH" ) );
+  }
+  if( ! getenv( "DYLD_FALLBACK_LIBRARY_PATH" ) && getenv( "BV_MAC_FBL_PATH" ) )
+  {
+    set_env( "DYLD_FALLBACK_LIBRARY_PATH", getenv( "BV_MAC_FBL_PATH" ) );
+  }
+#endif
+
   map< string, vector< string > >::iterator pit = path_prepend.find( LD_LIBRARY_PATH );
   if ( pit != path_prepend.end())
      pit->second.insert( pit->second.begin(), libpath.begin(), libpath.end() );
@@ -666,10 +695,13 @@ int main( int argc, char *argv[] )
   }
 
 #ifdef __APPLE__
-  /* On MacOS >= 10.10, DYLD_LIBRARY_PATH variables are erased when in a
-     script (shell/bash script, or python or other script run via a shebang).
-     We set different variables to copy their values, so that scripts knowing
-     this can retreive them if needed.
+  /* On MacOS >= 10.10, DYLD_LIBRARY_PATH variables are not inherited by
+     processes whose executable resides in a protected system directory (/usr,
+     /bin, /sbin, or /System). This affects scripts that use /bin/sh, or
+     /usr/bin/env in their shebang.
+
+     Here we save the values of these DYLD_* variables into backup variables,
+     so that children processes can restore them if needed.
   */
   if( getenv( "DYLD_LIBRARY_PATH" ) )
   {

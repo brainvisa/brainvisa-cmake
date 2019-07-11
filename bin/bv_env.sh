@@ -14,17 +14,6 @@
 #   . /somewhere/bin/bv_env.sh /somewhere
 #   PATH=/somewhere/bin:$PATH . bv_env.sh
 
-# first, on Mac, re-set DYLD_*_PATH variables because MacOS 10.10+ erases them.
-if [ -z "${DYLD_LIBRARY_PATH}" -a -n "${BV_MAC_LIB_PATH}" ]; then
-  export DYLD_LIBRARY_PATH=${BV_MAC_LIB_PATH}
-fi
-if [ -z "${DYLD_FRAMEWORK_PATH}" -a -n "${BV_MAC_FWK_PATH}" ]; then
-  export DYLD_FRAMEWORK_PATH=${BV_MAC_FWK_PATH}
-fi
-if [ -z "${DYLD_FALLBACK_LIBRARY_PATH}" -a -n "${BV_MAC_FBL_PATH}" ]; then
-  export DYLD_FALLBACK_LIBRARY_PATH=${BV_MAC_FBL_PATH}
-fi
-
 # Create a temporary file with mktemp if available
 bv_env_tempfile=$(mktemp -t bv_env.XXXXXXXXXX 2>/dev/null)
 
@@ -133,6 +122,23 @@ fi
     hash -r
     return 1
 }
+
+# initialize the bash completion compatibility layer in zsh
+if autoload -U bashcompinit >/dev/null 2>&1; then
+    bashcompinit
+fi
+# test the presence of the bash completion functions (compgen and complete)
+if type compgen complete >/dev/null 2>&1; then
+    if type realpath >/dev/null 2>&1; then
+        bv_env=$(realpath "$bv_env")
+    fi
+    base_dir=$(dirname -- "$(dirname -- "$bv_env")")
+    for d in "$base_dir/etc/bash_completion.d/"*; do
+        if [ -f "$d" ]; then # if the dir is empty, we get an entry with *
+            . "$d"
+        fi
+    done
+fi
 
 bv_env_cleanup
 

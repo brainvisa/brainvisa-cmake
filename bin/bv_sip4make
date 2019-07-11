@@ -40,6 +40,10 @@ import shutil
 import tempfile
 import string
 import re
+try:
+    import subprocess32 as subprocess
+except:
+    import subprocess
 
 # print('SIP options:', sys.argv)
 sys.stdout.flush()
@@ -53,7 +57,7 @@ if sipopt == len(sys.argv) - 1:
     sipopt = -1
 if sipopt >= 0:
     sipcmd = sys.argv[sipopt + 1]
-    del sys.argv[sipopt], sys.argv[sipopt + 1]
+    del sys.argv[sipopt + 1], sys.argv[sipopt]
 elif sys.platform.startswith('win'):
     sipcmd = 'sip.exe'
 else:
@@ -88,8 +92,7 @@ except:
     listingOnly = -1
 
 if copt < 0:
-    sys.exit(os.system(sipcmd + ' "' + string.join(sys.argv[1:], '" "')
-                       + '"') >> 8)
+    sys.exit(subprocess.call([sipcmd] + sys.argv[1:]) >> 8)
 
 outdir = sys.argv[copt + 1]
 
@@ -100,7 +103,7 @@ sys.argv[copt + 1] = tdir
 
 # call SIP
 # print(sipcmd + ' "' + string.join( sys.argv[1:], '" "' ) + '"')
-res = os.system(sipcmd + ' "' + string.join(sys.argv[1:], '" "') + '"')
+res = subprocess.call([sipcmd] + sys.argv[1:])
 if not os.path.exists(outdir):
     os.mkdir(outdir)
 
@@ -150,7 +153,7 @@ if res == 0:
             if i not in indices:
                 # write an empty file
                 fname = base + str(i) + '.' + ext
-                print('adding empty file', fname)
+                # print('adding empty file', fname)
                 open(os.path.join(tdir, fname), 'w')
                 tlist.append(fname)
 
@@ -191,6 +194,8 @@ if res == 0:
                 print(x, 'differs')
                 shutil.copyfile(
                     os.path.join(tdir, x), os.path.join(outdir, x))
+            # else:
+            #     print(x, 'is the same.')
 
     # cleanup obsolete files
     for x in olist:
@@ -199,26 +204,6 @@ if res == 0:
             # keep files of size 0 since they may be here intentionnally.
             print(x, 'is obsolete')
             os.unlink(os.path.join(outdir, x))
-
-    # create empty files if -j option is used and not enough files were
-    # generated
-    if jopt > 0:
-        r = re.compile('^(.*part)([0-9]+)\.(cpp|cc)$')
-        indices = set()
-        base = ''
-        ext = ''
-        for x in ccfiles:
-            m = r.match(x)
-            if m:
-                i = int(m.group(2))
-                indices.add(i)
-                if base == '':
-                    base = m.group(1)
-                    ext = m.group(3)
-        for i in range(jopt):
-            if i not in indices:
-                # write an empty file
-                open(os.path.join(outdir, base + str(i) + '.' + ext), 'w')
 
 # delete temp directory
 for x in tlist:

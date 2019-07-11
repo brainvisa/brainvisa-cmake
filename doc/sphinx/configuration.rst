@@ -6,11 +6,13 @@ You must create this file in the following directory: ``$HOME/.brainvisa/bv_make
 
 In this file you can configure several types of directories:
 
-* **source directory**: A source directory contains the source code of a set of selected projects. This source code will be updated (to reflect the changes that occured on BioProj server) each time you use bv_maker configure. You can define as many source directory as you want. In a source directory configuration you can select any project and combine several versions of the same project.
+* **source directory**: A source directory contains the source code of a set of selected projects. This source code will be updated (to reflect the changes that occured on BioProj or GitHub servers) each time you use bv_maker sources. You can define as many source directories as you want. In a source directory configuration you can select any project and combine several versions of the same project.
 
 * **build directory**: A build directory will contain compiled version of the projects. A build directory can contain any project but only one version per project is allowed. You can define as many source directory as you want.
 
 * **package directory**: A package directory is an installer repository directory. It is built from a build directory, and can be used to make a repository, to install the package, and to run tests on the installed packages.
+
+* **publication directory**: A publication directory is where a "finished" package will be copied to be published. Several operations can be performed during this step (like ploading to a web server etc).
 
 A section may also contain conditional parts. See the `Conditional subsections`_ section for details.
 
@@ -105,6 +107,15 @@ Dictionary variables do support both:
 
     env += PATH: $HOME/bin:$PATH, BRAINVISA_TEST_DIR: $HOME/tests-%(hostname)s-%(date)s
 
+Environment variables may be set by the user, or by the system, prior to running bv_maker, or through the ``env`` variables in ``bv_maker.cfg`` sections. Additionally, bv_maker itself sets a few helpful variables:
+
+``NCPU``:
+    number of processor cores in the current machine. Useful to pass build options matching the power of the build machine:
+
+    .. code-block:: bash
+
+        make_options = -j$NCPU
+
 
 .. _general_section:
 
@@ -121,6 +132,7 @@ The general section definition starts with a line with the following syntax:
 
 Option variables are stored in this section using the syntax ``option = value``. The following options are supported:
 
+* ``env``: environment variables dictionary. Note that the ``env`` dictionary in the general section is handled a bit differently than the one in the other sections: in other sections variables defined this way are local to the current section, and only passed to the actual environment when a commandline is run (such as ``cmake``, ``make`` etc.). In the general sections variables are actually set globally to the environment, thus they are available all along the bv_maker session, including within the run of bv_maker: this means that variables which are to be used during path substitutions inside ``bv_maker.cfg`` should be defined here.
 * ``email_notification_by_default``: ``ON```or ``OFF`` (default). If set to ``ON``, email notification will always be used if ``failure_email`` or ``success_email`` are provided. Otherwise, the default behavior is to use email notification only when the ``bv_maker`` commandline is invoked with the ``--email`` option.
 * ``global_status_file``: if this file is specified, a line will be appended to it for each source/build/package directory. This line will log the build status for the given directory: OK/FAILED, last step executed, directory, start and stop date and time, machine and system. It can be parsed and displayed using the command ``bv_show_build_log``.
 * ``failure_email``: email address where bv_maker outputs are sent in case of failure. If not specified, no email will be sent and bv_maker outputs will be sent to the standard output. One email will be sent for each directory and build step that fail.
@@ -170,11 +182,14 @@ In the source section, it is also possible to define some option variables, delc
 * ``cross_compiling_dirs``: dictionary of directories. ``cross_compiling_dirs`` contains toolchain substitutions for source directory. This is used when execution needs different path to access sources (i.e.: in windows cross compilation, for pure python components, it is necessary to access source directories through network shares, instead of NFS mount point). For instance, the following configuration line: ``i686-w64-mingw32://computer/basedir`` will replace the source directory path with the UNC path ``//computer/basedir`` in a build directory that uses the i686-w64-mingw32 ``cross_compiling_prefix``. The network share ``//computer/basedir`` must have been properly configured on ``computer`` to be accessible.
 * ``directory_id``: used in Jenkins notification
 * ``revision_control``: ``ON`` (default) or ``OFF``. If enabled, revision control systems (*svn*, *git*) will be used to update the sources. If OFF, the sources directory will be left as is as a fixed sources tree.
+* ``default_source_dir``: ? I don't know... **FIXME**
 * ``default_steps``: steps performed for this build directory when bv_maker is invoked without specifying steps (typically just ``bv_maker``). Defaults to: ``sources``.
 * ``env``: environment variables dictionary
+* ``ignore_git_failure``: don't stop after the sources step if one or more git repositories cannot be updated in fast-forward mode (which also occurs when working on a non-principal branch). Later steps will thus be performed, but the source step will still be reported as failed.
 * ``revision_control``: ``ON`` (default) or ``OFF``. When ON, sources components will be updated using revision control systems (RCS) (svn, git...), and a list of valid components will be generated during the :ref:`sources step <sources_step>` and saved in a file, named ``components_sources.json`` in the main sources directory. If sources are only local, turning ``revision_control`` to OFF will avoid using RCS, but will still generate the list of components for building.
 * ``stderr_file``: file used to redirect the standard error stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If not specified, it will be mixed with standard output.
 * ``stdout_file``: file used to redirect the standard output stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If neither it nor ``stderr_file`` are specified, then a temporary file will be used, and erased when each step is finished.
+* ``update_git_remotes``: ``ON`` (default) or ``OFF``. If ON, all git remotes will be fetched, otherwise only the current active branch in a component will be fast-forwarded. The default value in brainvisa-cmake < 3 used to be ``OFF``, but this was changed in order to make things clearer/easier and to handle git-lfs projects. The former "light" mode (no fetch + detached branch mode) has been deprecated also: it still works for repositories created usinbg bv_maker 2.x but new repositories are not initialized this way any longer. See :ref:`git_repositories`
 
 
 Add components to the list
@@ -200,9 +215,18 @@ A line starting with a minus is has the same syntax as the previous action but r
 Add directories to the list
 ---------------------------
 
+subversion components
++++++++++++++++++++++
+
 .. code-block:: bash
 
     + repository_directory local_directory
+
+or:
+
+.. code-block:: bash
+
+    brainvisa repository_directory local_directory
 
 In order to include some directories that do not correspond to registered BrainVISA components, one can directly give the directory name in ``repository_directory``. This directory name must be given relatively to the main BrainVISA repository URL: https://bioproj.extra.cea.fr/neurosvn/brainvisa. By default, ``repository_directory`` is also used to define where this directory will be in the source directory. It is not mandatory to provide a value for local_directory. If it is given, it is used instead of repositor_directory to define the directory location relatively to the source directory.
 
@@ -219,6 +243,15 @@ Whereas the following configuration will link the same repository directory with
 
     [ source /home/myself/brainvisa ]
       + perso/myself/myproject myproject
+
+git components
+++++++++++++++
+
+See also :ref:`git_repositories`
+
+.. code-block:: bash
+
+    git https://github.com/neurospin/highres-cortex.git master highres-cortex/master
 
 
 .. _build_directory:
@@ -301,7 +334,7 @@ A package directory definition section starts with a line with the following syn
 
 where ``<directory>`` is the name of the directory where the packaging results will be written (packages repository). As the source and build directories, the package directory name can contain environment variable substitution.
 
-The package section allows 4 additional steps :doc:`bv_maker`: ``pack``, ``install_pack``, ``testref_pack`` and ``test_pack``
+The package section allows 4 additional steps in :doc:`bv_maker`: ``pack``, ``install_pack``, ``testref_pack`` and ``test_pack``
 
 * :ref:`pack <pack_step>` will build a packages repository and an installer program
 * :ref:`install_pack <install_pack_step>` will install the previously built installer, possibly on a remote machine or docker machine
@@ -381,12 +414,46 @@ Variables substitution in the form ``$(variable)s`` can replace the following va
       - web
 
 
+Definition of a publication directory
+=====================================
+
+A publication directory definition section starts with a line with the following syntax:
+
+.. code-block:: bash
+
+    [ package_publication <directory> ]
+
+where ``<directory>`` is the name of the directory where the package publication results will be written. As the source, build and package directories, the publicatioon directory name can contain environment variable substitution.
+
+The package_publication section allows a dedicated step in :doc:`bv_maker`: ``publish_pack``.
+
+* :ref:`publish_pack <publish_pack_step>` will copy a packages repository to a given location
+
+The package_publication section must define some variables which specify which package directory will be published and how.
+
+* ``package_directory``: references a package directory, which must exist in the configuration file. It is mandatory.
+* ``directory_id``: used in Jenkins notification
+* ``env``: environment variables dictionary
+* ``build_condition``: As in build sections, condition when the package section steps are performed.
+* ``publication_commands``: commands to be performed to actually do the "publication" work. If not specified, the default publication commands will copy the package repository and installers to the publication directory.
+* ``stderr_file``: file used to redirect the standard error stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If not specified, it will be mixed with standard output.
+* ``stdout_file``: file used to redirect the standard output stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If neither it nor ``stderr_file`` are specified, then a temporary file will be used, and erased when each step is finished.
+
+**Example**
+
+.. code-block:: bash
+
+    [ package_publication /home/local/brainvisa_release ]
+      package_directory = $HOME/brainvisa/brainvisa_packages/test_repository
+      build_condition = sys.platform == "linux2"
+
+
 Syntax for components selection
 ===============================
 
 Components can be selected according to their name and (in some context) to their version. This paragraph explain how to use component_selection and version_selection and gives some examples of their usage.
 
-Information about the components, components groups and versions are extracted from svn repository and stored in the following file: https://bioproj.extra.cea.fr/redmine/projects/brainvisa-devel/repository/entry/brainvisa-cmake/bug_fix/python/brainvisa/maker/components_definition.py
+Information about the components, components groups and versions are extracted from git repository and stored in the following file: https://github.com/brainvisa/brainvisa-cmake/blob/master/python/brainvisa/maker/components_definition.py
 
 
 Component selection

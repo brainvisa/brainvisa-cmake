@@ -1,4 +1,4 @@
-#! /usr/bin/env python2
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 #  This software and supporting documentation are distributed by
@@ -33,7 +33,9 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
-from __future__ import print_function
+from __future__ import (absolute_import, division,
+                        print_function, unicode_literals)
+import io
 import sys
 import os
 import re
@@ -45,7 +47,7 @@ import json
 from optparse import OptionParser
 from fnmatch import fnmatchcase
 import tempfile
-from dateutil import parser as date_parser
+import datetime
 import distutils.spawn
 import platform
 import shlex
@@ -53,12 +55,15 @@ import time
 import traceback
 from smtplib import SMTP
 import gzip
+import binascii
+import multiprocessing  # for cpu_count()
 
 try:
     # backport of subprocess of python 3
     import subprocess32
 except ImportError:
     subprocess32 = None
+
 try:
     import jenkins
     if '_get_job_folder' not in jenkins.Jenkins.__dict__:
@@ -129,9 +134,10 @@ try:
 except ImportError:
     # six module not here, assume python2
     class six(object):
-       @staticmethod
-       def iteritems(obj, *args, **kwargs):
-          return obj.iteritems(*args, **kwargs)
+        @staticmethod
+        def iteritems(obj, *args, **kwargs):
+            return obj.iteritems(*args, **kwargs)
+        text_type = unicode
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -188,6 +194,14 @@ from brainvisa.maker.version import version as brainvisa_cmake_version
 from brainvisa.maker.version_number import VersionNumber
 from brainvisa.maker.version_number import version_format_short
 
+if sys.version_info[:2] < (2, 7):
+    # in python 2.6, shlex.split() does not work correctly using
+    # unicode strings
+    def shlex_split(s, *args, **kwargs):
+        return shlex.split(s.encode('utf-8'), *args, **kwargs)
+else:
+    shlex_split = shlex.split
+
 IGNORED_STEP = 'ignored'
 jenkins_cli = None
 jenkins_wrapper = None
@@ -202,6 +216,54 @@ if this_script:
     #print('cmake_root:', cmake_root)
 
 
+# This function is copied from the 'six' library, where it was introduced in
+# version 1.12.0, because we do not want to depend on such a recent version.
+#
+# This function is Copyright (c) 2010-2018 Benjamin Peterson, released under
+# the Expat licence.
+def ensure_str(s, encoding='utf-8', errors='strict'):
+    """Coerce *s* to `str`.
+
+    For Python 2:
+      - `unicode` -> encoded to `str`
+      - `str` -> `str`
+
+    For Python 3:
+      - `str` -> `str`
+      - `bytes` -> decoded to `str`
+    """
+    if not isinstance(s, (six.text_type, six.binary_type)):
+        raise TypeError("not expecting type '%s'" % type(s))
+    if six.PY2 and isinstance(s, six.text_type):
+        s = s.encode(encoding, errors)
+    elif six.PY3 and isinstance(s, six.binary_type):
+        s = s.decode(encoding, errors)
+    return s
+
+# This function is copied from the 'six' library, where it was introduced in
+# version 1.12.0, because we do not want to depend on such a recent version.
+#
+# This function is Copyright (c) 2010-2018 Benjamin Peterson, released under
+# the Expat licence.
+def ensure_text(s, encoding='utf-8', errors='strict'):
+    """Coerce *s* to six.text_type.
+
+    For Python 2:
+      - `unicode` -> `unicode`
+      - `str` -> `unicode`
+
+    For Python 3:
+      - `str` -> `str`
+      - `bytes` -> decoded to `str`
+    """
+    if isinstance(s, six.binary_type):
+        return s.decode(encoding, errors)
+    elif isinstance(s, six.text_type):
+        return s
+    else:
+        raise TypeError("not expecting type '%s'" % type(s))
+
+
 def get_target_path_system(platform):
     if platform.startswith('win'):
         # We prefer alternative windows path i.e. pathes separated 
@@ -212,21 +274,32 @@ def get_target_path_system(platform):
         return 'linux'
 
 def system(*args, **kwargs):
-    print(' '.join(args))
-    if subprocess32 is not None:
-        popen = subprocess32.Popen(args, **kwargs)
-    else:
-        if 'timeout' in kwargs:
-            # timeout not supported in python2.subprocess
-            kwargs = dict(kwargs)
-            del kwargs['timeout']
-        popen = subprocess.Popen(args, **kwargs)
-    popen.communicate()
-    if popen.returncode != 0:
-        txt = 'Command failed: %s' % ' '.join((repr(i) for i in args))
-        if 'cwd' in kwargs:
-            txt = '%s\nFrom directory: %s' % (txt, kwargs['cwd'])
-        raise OSError(txt)
+    print('$ ' + ' '.join(args))
+    error = None
+    try:
+        try:
+            if subprocess32 is not None:
+                popen = subprocess32.Popen(args, **kwargs)
+            else:
+                if 'timeout' in kwargs:
+                    # timeout not supported in python2.subprocess
+                    kwargs = dict(kwargs)
+                    del kwargs['timeout']
+                popen = subprocess.Popen(args, **kwargs)
+            popen.communicate()
+            if popen.returncode != 0:
+                raise OSError()
+        except Exception as e:
+            error = (type(e), e, sys.exc_info()[2])
+    finally:
+        if error:
+            txt = 'Command failed: %s' % ' '.join((repr(i) for i in args))
+            if 'cwd' in kwargs:
+                txt = '%s\nFrom directory: %s' % (txt, kwargs['cwd'])
+            if error[1].args:
+                txt += '\n%s' % error[1].args[0]
+            error = (error[0], error[0](txt, *error[1].args[1:]), error[2])
+            six.reraise(*error)
 
 def system_output_on_error(*args, **kwargs):
     # system_output_on_error is a bit strange currently:
@@ -234,7 +307,9 @@ def system_output_on_error(*args, **kwargs):
     # to the caller. Only stdout is used in this case, when the output
     # strings is actally useful in this situation.
     # However it should be in the exception e.output
-    print(' '.join([str(x) for x in args]))
+    echo = kwargs.pop('echo', True)
+    if echo:
+        print(' '.join([str(x) for x in args]))
     try:
         if subprocess32 is not None:
             # !!! Redirecting STDERR to STDOUT is a burden on Windows OS and 
@@ -310,6 +385,15 @@ def normalize_path(path):
         path = file_scheme + path
     
     return path
+
+def get_matching_dirs(directories, pattern):
+    dirs = []
+    for d in directories:
+        if normalize_path(
+            d.replace_vars(pattern)) == d.directory:
+            dirs.append(d)
+            
+    return dirs
     
 env_vars_regex = re.compile(r'\$([A-Za-z0-9_]*)')
 python_vars_regex = re.compile(r'\%\(([A-Za-z0-9_]*)\)s')
@@ -340,10 +424,10 @@ def environmentVariablesSubstitution(value, env=None):
 def environmentPathVariablesSubstitution(path, env=None):
     return normalize_path(environmentVariablesSubstitution(path, env))
 
-def run_and_log_tests(cwd=None, env=None, options=None):
+def run_and_log_tests(cwd=None, env=None, options=None, projects=None):
     # get test labels to assign them to projects
     test_labels = system_output_on_error(
-        ['ctest', '--print-labels'] + options, cwd=cwd)
+        ['ctest', '--print-labels'] + options, echo=False, cwd=cwd)
     lines = test_labels.strip().split('\n')
     if 'All Labels:' in lines:
         labels_index = lines.index('All Labels:')
@@ -356,6 +440,9 @@ def run_and_log_tests(cwd=None, env=None, options=None):
             + '\n'.join(lines))
     logs = {}
     for label in labels:
+        if projects is not None and label not in projects:
+            # skip this test, it's not part of the packaging/build config
+            continue
         logfile = tempfile.mkstemp(prefix='bv_test_%s' % label, suffix='.log')
         os.close(logfile[0])
         start_time = time.localtime()
@@ -378,11 +465,32 @@ def run_and_log_tests(cwd=None, env=None, options=None):
             logitem['stop_time'] = time.localtime()
             logs[label] = logitem
             #os.unlink(logfile[1])
+        # FIXME DEBUG
+        print('-------------------------------------',
+              file=open(logfile[1], 'a'))
+        print('projects to test: %s' % repr(projects),
+              file=open(logfile[1], 'a'))
+        print('labels to test: %s' % repr(labels),
+              file=open(logfile[1], 'a'))
+        print('current label: %s' % label,
+              file=open(logfile[1], 'a'))
     return logs
 
 
 def run_and_log_testref(cwd=None, env=None, options=None):
     logs = {}
+
+    if ((configuration.general_section.email_notification_by_default. \
+            upper() != 'ON' and not configuration.options.email) \
+            or (configuration.general_section.failure_email == ''
+                and configuration.general_section.success_email == ''
+                and configuration.general_section.failure_email_by_project
+                    == {})) \
+            and (not configuration.general_section.jenkins_server_url
+                  or configuration.options.disable_jenkins):
+        print_output = True
+    else:
+        print_output = False
     logfile = tempfile.mkstemp(prefix='bv_testref', suffix='.log')
     os.close(logfile[0])
     start_time = time.localtime()
@@ -392,6 +500,8 @@ def run_and_log_testref(cwd=None, env=None, options=None):
     except Exception as e:
         if hasattr(e, 'output'):
             open(logfile[1], 'w').write(e.output)
+            if print_output:
+                print(e.output)
         logitem = {}
         logitem['log_file'] = logfile[1]
         logitem['exception'] = e
@@ -407,6 +517,8 @@ def run_and_log_testref(cwd=None, env=None, options=None):
         logitem['stop_time'] = time.localtime()
         logs['testref'] = logitem
         #os.unlink(logfile[1])
+        if print_output:
+            print(output)
     return logs
 
 
@@ -424,6 +536,7 @@ Commands:
 * info: Just output info about configured components.
 * sources: Create or updated selected sources directories from Subversion
   repository.
+* status: Display a summary of the status of all source repositories.
 * configure: Create and configure selected build directories with CMake.
 * build: compile all selected build directories.
 * doc: Generate documentation (sphinx, doxygen, docbook, epydoc).
@@ -480,6 +593,12 @@ http://brainvisa.info/brainvisa-cmake/
         parser.add_option('--disable-jenkins', action='store_true',
                           dest='disable_jenkins', default=False,
                           help='disable Jenkins server logging')
+        parser.add_option('--def', '--only-if-default', action='store_true',
+                          dest='in_config', default=False,
+                          help='apply only steps which are defined as default '
+                          'steps in the bv_maker.cfg config file. Equivalent '
+                          'to passing --only-if-default to every substep '
+                          'which supports it.')
         parser.add_option(
             '-v', '--verbose', dest='verbose', action='store_true',
             help='show as much information as possible')
@@ -544,9 +663,13 @@ http://brainvisa.info/brainvisa-cmake/
         if options.configuration_file:
 
             # Read configuration file
-            for line in open(options.configuration_file):
+            for line in open(options.configuration_file, 'rb'):
                 lineCount += 1
                 line = line.strip()
+                try:
+                    line = line.decode()
+                except:
+                    line = line.decode('utf-8')
                 # skip comments
                 if not line or line[0] == '#' or line.startswith('//'):
                     continue
@@ -558,12 +681,26 @@ http://brainvisa.info/brainvisa-cmake/
                         if len(l) != 2 and l[0] not in ('if', 'endif', 'else', 
                                                         'general'):
                             raise SyntaxError()
-                        
+
                         if l[0] == 'if' \
                                 and currentDirectoryObject is not None \
                                 and len(l) >= 2:
-                            condition_stack.append(
-                                check_filter_condition(l[1:]))
+                            if len(condition_stack) != 0 \
+                                    and condition_stack[-1] is False:
+                                # if an upstream condition is already false,
+                                # all the subtree is false (but we still have
+                                # to parse it to count if/endif/else
+                                # occurrences in it)
+                                condition_stack.append(False)
+                            else:
+                                try:
+                                    condition_stack.append(
+                                        check_filter_condition(l[1:]))
+                                except:
+                                    print('error in condition, line %d:'
+                                          % lineCount, file=sys.stderr)
+                                    print(line, file=sys.stderr)
+                                    raise
                         elif l[0] == 'endif' and len(l) == 1:
                             if len(condition_stack) > 0:
                                 # ends the filtered section
@@ -573,8 +710,12 @@ http://brainvisa.info/brainvisa-cmake/
                                             'by [if] clause.')
                         elif l[0] == 'else' and len(l) == 1:
                             if len(condition_stack) > 0:
-                                # inverts the filtered section
-                                condition_stack[-1] = not condition_stack[-1]
+                                # inverts the filtered section, only if its
+                                # parent condition is True
+                                if len(condition_stack) == 1 \
+                                        or condition_stack[-2]:
+                                    condition_stack[-1] \
+                                        = not condition_stack[-1]
                             else:
                                 SyntaxError('[else] clause is not preceded by '
                                             '[if] clause.')
@@ -619,6 +760,7 @@ http://brainvisa.info/brainvisa-cmake/
                                 currentDirectoryObject = self.general_section
                             else:
                                 raise SyntaxError()
+
                     elif len(condition_stack) == 0 \
                         or False not in condition_stack:
                         if currentDirectoryObject is None:
@@ -651,19 +793,20 @@ http://brainvisa.info/brainvisa-cmake/
                             ('publicationDirectories', publication_dirs)):
             for s in sections:
                 # Variable initialization is done after parsing of sections
-                # because it may depends on the complete parsing of other 
+                # because it may depend on the complete parsing of other
                 # sections
-                s.init_vars()
-                
-                registry = getattr(self, r, None) if r else None               
-                if registry is not None:
-                     # Register section
-                    registry[s.directory] = s
-                
-                if isinstance(s, SourceDirectory):
-                    # Parses source configuration
-                    s.parseSourceConfiguration()
-                    
+                if not hasattr(s, '_initialized') or not s._initialized:
+                    s.init_vars()
+
+                    registry = getattr(self, r, None) if r else None
+                    if registry is not None:
+                        # Register section
+                        registry[s.directory] = s
+
+                    if isinstance(s, SourceDirectory):
+                        # Parses source configuration
+                        s.parseSourceConfiguration()
+
                 if options.verbose:
                     print(s.directory if hasattr(s, 'directory') else 'general', 
                         'options:')
@@ -732,20 +875,23 @@ def get_pack_host_system_name():
         Get system name to use for packaging.
         Because linux compatibility for packs depends on libc version, the
         libc version is integrated to the system name.
+        On Mac, the version of OSX is also appended.
     '''
     pack_system = get_host_system_name()
     if pack_system.startswith('linux'):
         libc_version = get_host_libc_version()
         pack_system += '-glibc-'+ '.'.join(libc_version[:2])  
-        
+    elif pack_system.startswith('osx'):
+        pack_system += '-' + '.'.join(platform.mac_ver()[0].split('.')[:2])
+
     return pack_system
 
 
 def installer_parse_date(value):
-    return date_parser.parse(value.replace('_', '-')).timetuple()[:3]
+    return datetime.datetime.strptime(value, '%Y_%m_%d').timetuple()[:3]
 
 def installer_parse_time(value):
-    return date_parser.parse(value).timetuple()[3:6]
+    return datetime.datetime.strptime(value, '%H:%M:%S').timetuple()[3:6]
 
 def installer_format_date(date):
     return '%04d_%02d_%02d' % date
@@ -887,9 +1033,9 @@ class JenkinsWrapper(object):
 
         job_name = self.jenkins_job_name(o, step)
         job_long_name = self.jenkins_long_job_name(o, step)
-        duration_t = [y - x
-                      for x, y in zip(o.start_time[step],
-                                      o.stop_time[step])]
+        duration_t = tuple([y - x
+                            for x, y in zip(o.start_time[step],
+                                            o.stop_time[step])])
         # duration in seconds
         duration = int(time.mktime(duration_t) - time.mktime((0, ) * 9)) \
             * 1000
@@ -907,9 +1053,8 @@ class JenkinsWrapper(object):
             zlog_f = tempfile.mkstemp(prefix='log_%s' %step, suffix='.gz')
             os.close(zlog_f[0])
             zlog = zlog_f[1]
-            gf = gzip.GzipFile(zlog, 'wb')
-            gf.write(message)
-            gf.close()
+            with gzip.GzipFile(zlog, 'wb') as gf:
+                gf.write(message.encode())
             try:
                 jkn_cmd = ['java', '-jar', jenkins_cli_path] \
                     + self.jenkins_cli_options \
@@ -939,8 +1084,8 @@ class JenkinsWrapper(object):
               <duration>%d</duration>
               <displayName>%s</displayName>
               <description>%s</description>
-            </run>''' % (message.encode('hex'), int(res), duration,
-                         job_long_name, status)
+            </run>''' % (binascii.hexlify(message.encode('utf-8')), int(res),
+                         duration, job_long_name, status)
 
             folder_url, short_name = jen._get_job_folder(job_name)
             jen.jenkins_open(jenkins.Request(
@@ -963,7 +1108,7 @@ class JenkinsWrapper(object):
         if start_time is None or stop_time is None:
             duration = 0
         else:
-            duration_t = [y - x for x, y in zip(start_time, stop_time)]
+            duration_t = tuple([y - x for x, y in zip(start_time, stop_time)])
             duration = int(time.mktime(duration_t) - time.mktime((0, ) * 9)) \
                 * 1000
 
@@ -1162,9 +1307,9 @@ class StepCommand(object):
         super(StepCommand, self).__init__()
         self.python_vars = {}
 
-    def process(self, step, directories_dict, method, *meth_args,
+    def process(self, step, directories_list, method, *meth_args,
                 **meth_kwargs):
-        for o in directories_dict.values():
+        for o in directories_list:
             # Update directory python variables by those coming from the command
             # line (package date and version)
             o.update_python_vars(self.python_vars)
@@ -1184,7 +1329,9 @@ class StepCommand(object):
                         if configuration.directories else []
                         
             if (not conf_dirs or d in conf_dirs) and o.conditional_build():
-                if not self.options.in_config or step in o.default_steps:
+                if (not self.options.in_config
+                    and not configuration.options.in_config) \
+                        or step in o.default_steps:
                     if o.has_satisfied_dependencies(step):
                         self.redirect_stdout(d, o, step)
                         logs = None
@@ -1252,14 +1399,17 @@ class StepCommand(object):
                      or configuration.options.disable_jenkins):
             return
         if o.stdout_file or o.stderr_file:
+            # Line buffering is used (buffering=1) because the output from
+            # bv_maker needs to be interspersed correctly with the output of
+            # external commands called through subprocess.
             if o.stdout_file:
-                self.tmp_stdout = open(o.stdout_file, 'w')
+                self.tmp_stdout = open(o.stdout_file, 'w', buffering=1)
                 if o.stderr_file:
-                    self.tmp_stderr = open(o.stderr_file, 'w')
+                    self.tmp_stderr = open(o.stderr_file, 'w', buffering=1)
                 else:
                     self.tmp_stderr = self.tmp_stdout
             else:
-                self.tmp_stdout = open(o.stderr_file, 'w')
+                self.tmp_stdout = open(o.stderr_file, 'w', buffering=1)
                 self.tmp_stderr = self.tmp_stdout
         else:
             tmp_stdout = tempfile.mkstemp(prefix='buildout_')
@@ -1267,7 +1417,7 @@ class StepCommand(object):
             print('redirecting outputs to temporary file:', tmp_stdout[1])
             sys.stdout.flush()
             sys.stderr.flush()
-            self.tmp_stdout = open(tmp_stdout[1], 'w')
+            self.tmp_stdout = open(tmp_stdout[1], 'w', buffering=1)
             self.tmp_stderr = self.tmp_stdout
         self.orig_stdout = os.dup(sys.stdout.fileno())
         self.orig_stderr = os.dup(sys.stderr.fileno())
@@ -1370,7 +1520,8 @@ class StepCommand(object):
             env = os.environ
         start_time = '%04d/%02d/%02d %02d:%02d' % o.start_time[step][:5]
         stop_time = '%04d/%02d/%02d %02d:%02d' % o.stop_time[step][:5]
-        message = '''========================================='
+        message = '''\
+=========================================
 == directory: %s%s ==
 == step:      %s%s ==
 == status:    %s%s ==
@@ -1424,12 +1575,16 @@ Subject: %s - %s %s on %s (%s)
         message += self.message_header(d, o, step, status)
         message += self.log_message_content()
 
+        # Normalize all end-of-lines to use CRLF as required in Internet
+        # messages (taken from smtplib).
+        message = re.sub(r'(?:\r\n|\n|\r(?!\n))', '\r\n', message)
+
         if configuration.general_section.smtp_server != '':
             smtp_server = configuration.general_section.smtp_server
         else:
             smtp_server = 'mx.intra.cea.fr'
         server = SMTP(smtp_server)
-        server.sendmail(from_address, to_address, message)
+        server.sendmail(from_address, to_address, message.encode('utf-8'))
         server.quit()
 
     def log_message_content(self):
@@ -1438,14 +1593,14 @@ Subject: %s - %s %s on %s (%s)
         else:
             message = '====== output ======\n\n'
         # Read message from file
-        file = open(self.tmp_stdout.name)
-        message += file.read()
-        file.close()
+        with io.open(self.tmp_stdout.name, mode='rt', errors='replace',
+                     newline='') as file:
+            message += file.read()
         if self.tmp_stderr is not self.tmp_stdout:
             message += '====== standard error ======\n\n'
-            file = open(self.tmp_stderr.name)
-            message += file.read()
-            file.close()
+            with io.open(self.tmp_stderr.name, mode='rt', errors='replace',
+                         newline='') as file:
+                message += file.read()
         return message
 
     def log_in_global_log_file(self, d, o, step, status):
@@ -1520,7 +1675,7 @@ class InfoCommand(StepCommand):
         dirs.update(configuration.buildDirectories)
         dirs.update(configuration.packageDirectories)
         dirs.update(configuration.publicationDirectories)
-        self.process('info', dirs, 'info')
+        self.process('info', dirs.values(), 'info')
 
 
 class SourcesCommand(StepCommand):
@@ -1547,6 +1702,10 @@ class SourcesCommand(StepCommand):
                           'of bv_maker.cfg config file. Default steps are '
                           'normally "sources" for source sections, and '
                           '"configure build" for build sections')
+        parser.add_option('--ignore-git-failure', dest='ignore_git_failure',
+                          action='store_true', default=False,
+                          help='ignore git update failures, useful when '
+                          'working on a feature branch')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
@@ -1556,8 +1715,43 @@ class SourcesCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('sources', configuration.sourcesDirectories,
+        self.process('sources', configuration.sourcesDirectories.values(),
                      'process', self.options, self.args)
+
+
+class SourceStatusCommand(StepCommand):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] status [options]
+
+    Display a summary of the status of all source repositories.'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('--no-svn', dest='svn', action='store_false',
+                          default=True,
+                          help="don't display the status of svn sources")
+        parser.add_option('--no-git', dest='git', action='store_false',
+                          default=True,
+                          help="don't display the status of git sources")
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, and '
+                          '"configure build" for build sections')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+
+        super(SourceStatusCommand, self).__init__(argv, configuration)
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        self.process('status',
+                     configuration.sourcesDirectories.values(),
+                     'source_status', self.options, self.args)
 
 
 class ConfigureCommand(StepCommand):
@@ -1588,7 +1782,7 @@ class ConfigureCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('configure', configuration.buildDirectories,
+        self.process('configure', configuration.buildDirectories.values(),
                      'configure', self.options, self.args)
 
 class BuildCommand(StepCommand):
@@ -1619,7 +1813,7 @@ class BuildCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('build', configuration.buildDirectories,
+        self.process('build', configuration.buildDirectories.values(),
                      'build', self.options, self.args)
 
 
@@ -1647,7 +1841,7 @@ class DocCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('doc', configuration.buildDirectories, 'doc')
+        self.process('doc', configuration.buildDirectories.values(), 'doc')
 
 
 class TestCommand(StepCommand):
@@ -1680,7 +1874,7 @@ class TestCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('test', configuration.buildDirectories, 'test',
+        self.process('test', configuration.buildDirectories.values(), 'test',
                      self.options, self.args)
 
 
@@ -1715,7 +1909,7 @@ class TestrefCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('testref', configuration.buildDirectories, 'testref',
+        self.process('testref', configuration.buildDirectories.values(), 'testref',
                      self.options, self.args)
 
 
@@ -1744,7 +1938,26 @@ class PackCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('pack', configuration.packageDirectories,
+        # First, we need to order packages to manage dependencies between 
+        # them (especially for offline installer that refer to data package, 
+        # because in this case, it is necessary to update data package  
+        # repository before software package has been packaged)
+        def __getPackageDirectoriesByDepth():
+            def __getDepth(package_dir):
+                data_dir = package_dir.get_data_dir()
+                if not data_dir:
+                    return 0
+                else:
+                    return __getDepth(data_dir) + 1
+                
+            dirs=[]
+            for o in configuration.packageDirectories.values():
+                dirs.append((__getDepth(o), o))
+            
+            #print([(o, d.directory) for o, d in sorted(dirs)])
+            return [d for o, d in sorted(dirs, key=lambda x: x[0])]
+        
+        self.process('pack', __getPackageDirectoriesByDepth(),
                      'package', self.options, self.args)
 
 
@@ -1794,6 +2007,12 @@ class InstallPackCommand(StepCommand):
                           default=False,
                           help='True if the installation must be done using ' \
                                'offline installer. Default is False.')
+        parser.add_option('--debug', dest='debug',
+                          action='store_true',
+                          default=False,
+                          help='True if the installation must be done in debug ' \
+                               'mode (i.e. generated files must not be deleted). ' \
+                               'Default is False.')
         (options, args) = parser.parse_args(argv)
         if args:
             raise ValueError('Invalid option: %s' % args[0])
@@ -1813,7 +2032,7 @@ class InstallPackCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('install_pack', configuration.packageDirectories,
+        self.process('install_pack', configuration.packageDirectories.values(),
                      'install_package', self.options, self.args)
 
 
@@ -1875,7 +2094,7 @@ class TestPackCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('test_pack', configuration.packageDirectories,
+        self.process('test_pack', configuration.packageDirectories.values(),
                      'test_package', self.options, self.args)
 
 
@@ -1938,7 +2157,7 @@ class TestrefPackCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('testref_pack', configuration.packageDirectories,
+        self.process('testref_pack', configuration.packageDirectories.values(),
                      'testref_package', self.options, self.args)
 
 
@@ -2001,7 +2220,7 @@ class PublishPackCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('publish_pack', configuration.publicationDirectories,
+        self.process('publish_pack', configuration.publicationDirectories.values(),
                      'publish_package', self.options, self.args)
 
 class VarReplacementType:
@@ -2011,22 +2230,22 @@ class VarReplacementType:
     ALL = PYTHON | ENV
         
 def replace_vars(value, 
-                 replacement_type = VarReplacementType.ALL,
-                 python_vars = None,
-                 env_vars = None):   
+                 replacement_type=VarReplacementType.ALL,
+                 python_vars=None,
+                 env_vars=None):
     result = value
-    
+
     if python_vars and (replacement_type & VarReplacementType.PYTHON):
         # Uses python variable substitutions to allow partial replacements
         #print('replace_vars, replace_python_vars call', value, replacement_type)
         #result = result % python_vars
-        result = pythonVariablesSubstitution(result, python_vars = python_vars)
-        
+        result = pythonVariablesSubstitution(result, python_vars=python_vars)
+
     if env_vars and (replacement_type & VarReplacementType.ENV):
         #print('replace_vars, replace_env_vars call', value, replacement_type)
         # Replaces only environment variables
         result = environmentVariablesSubstitution(result, env = env_vars)
-        
+
     return result
     
 class ConfigVariableParser(object):
@@ -2170,7 +2389,7 @@ class ConfigVariableParser(object):
             if hasattr(self, option):
                 var_type = type(getattr(self, option))
                 if var_type in (list, tuple):
-                    value = shlex.split(value)
+                    value = shlex_split(value)
                 elif var_type is dict:
                     if value.startswith('{') and value.endswith('}'):
                         try:
@@ -2199,8 +2418,13 @@ class ConfigVariableParser(object):
             elif oper == '-':
                 self.property_remove(option, value)
                 
+            self.validate_option(option)
             return True # parsed
         return False # not parsed
+
+    def validate_option(self, option):
+        # by default nothing more is done
+        pass
 
     def is_path(self, var):
         return var in getattr(self, '_path_variables', set())
@@ -2316,7 +2540,8 @@ class GeneralSection(ConfigVariableParser):
         set(('directory_id_by_default',
              'jenkins_global_job_name_step_by_default',
              'jenkins_server_url'))
-    _variables_with_env_only_replacements = set(('jenkins_build_name',))
+    _variables_with_env_only_replacements = set(('jenkins_build_name', 'env'))
+    _validAdditiveOptions = set(('env', ))
     _path_variables = set(('global_status_file', ))
     _validOptions = set(('failure_email', 'success_email', 'smtp_server',
                          'from_email', 'reply_to_email',
@@ -2328,7 +2553,6 @@ class GeneralSection(ConfigVariableParser):
     _validOptions.update(_variables_with_replacements)
     _validOptions.update(_path_variables)
     _validOptions.update(_variables_with_env_only_replacements)
-    
 
     def __init__(self, configuration):
         super(GeneralSection, self).__init__()
@@ -2349,12 +2573,25 @@ class GeneralSection(ConfigVariableParser):
         self.jenkins_username = None
         self.jenkins_token = None
         self.directory_id_by_default = ''
+        self.env = {}
 
     def addConfigurationLine(self, line):
         if ConfigVariableParser.addConfigurationLine(self, line):
             pass
         else:
             raise SyntaxError()
+
+    def validate_option(self, option):
+        if option == 'env':
+            # env variables are set immediately
+            self.init_vars()
+
+    def init_vars(self):
+        super(GeneralSection, self).init_vars()
+        # actually add env vars to os.environ
+        for var, value in six.iteritems(self._env_vars):
+            if var not in os.environ or os.environ[var] != value:
+                os.environ[var] = value
 
 
 class DirectorySection(object):
@@ -2385,10 +2622,16 @@ class DirectorySection(object):
             self.set_dependencies()
             self.deps_set = True
 
-        for dep, dep_step in self.depend_on_sections.get(step, []):
-            if dep.has_failed(dep_step):
-                self.status[step] = 'unmet dependency'
-                return False
+        for dep_sec in self.depend_on_sections.get(step, []):
+            dep, dep_step = dep_sec[:2]
+            if len(dep_sec) >= 3: # function to test dependency
+                if not dep_sec[2](self, dep, dep_step):
+                    self.status[step] = 'unmet dependency'
+                    return False
+            else:
+                if dep.has_failed(dep_step):
+                    self.status[step] = 'unmet dependency'
+                    return False
         return True
 
     def set_dependencies(self):
@@ -2414,6 +2657,580 @@ class DirectorySection(object):
             raise
         return cond
 
+    def process_configuration_lines(self):
+        pass
+
+
+class GitUpdateError(Exception):
+    """Exception for a non-fatal error updating a Git repository."""
+    pass
+
+
+def cached_property(fget):
+    """Create a read-only attribute that caches its value."""
+    def cached_getter(self):
+        try:
+            return self._cache[fget.__name__]
+        except KeyError:
+            pass
+        value = fget(self)
+        self._cache[fget.__name__] = value
+        return value
+    return property(cached_getter, doc=fget.__doc__)
+
+
+class GitRepository(object):
+    """Class for querying and interacting with a Git repository."""
+    def __init__(self, source_directory, dest_directory,
+                 remote_url=None, remote_ref=None):
+        self.source_directory = source_directory
+        self.dest_directory = dest_directory
+        self.path = os.path.join(source_directory, dest_directory)
+        self.remote_url = remote_url
+        self.remote_ref = remote_ref
+        self._cache = {}
+
+    def invalidate_cache(self, key=None):
+        """Invalidate a cached property (all properties if key=None)."""
+        if key is None:
+            self._cache.clear()
+        else:
+            try:
+                del self._cache[key]
+            except KeyError:
+                pass
+
+    def call_command(self, args, echo=False, **kwargs):
+        """Call a command in the repository, returning its exit code."""
+        if echo:
+            print('$ ' + ' '.join(args))
+        return subprocess.call(args, cwd=self.path, **kwargs)
+
+    def call_nonessential_command(self, args, echo=True, **kwargs):
+        """Call a command in the repository, ignoring failure."""
+        if echo:
+            print('$ ' + ' '.join(args))
+        retcode = subprocess.call(args, cwd=self.path, **kwargs)
+        if echo and retcode != 0:
+            print('You can safely ignore errors of the above command')
+
+    @cached_property
+    def local_branch(self):
+        """Name of the current branch, or None if detached."""
+        try:
+            head_ref = ensure_str(subprocess.check_output(
+                ['git', 'symbolic-ref', '--quiet', 'HEAD'],
+                cwd=self.path).rstrip())
+        except subprocess.CalledProcessError:
+            return None
+        if head_ref.startswith('refs/heads/'):
+            return head_ref[len('refs/heads/'):]
+
+    def sha1_of_rev(self, rev):
+        """Obtain the full SHA-1 of the commit identified by rev."""
+        try:
+            return ensure_str(subprocess.check_output(
+                ['git', 'rev-parse', '--quiet', '--verify', rev + '^{commit}'],
+                cwd=self.path).rstrip())
+        except subprocess.CalledProcessError:
+            return None
+
+    @cached_property
+    def head_sha1(self):
+        """SHA-1 identifier of the current HEAD commit."""
+        return self.sha1_of_rev('HEAD')
+
+    @cached_property
+    def bv_head_sha1(self):
+        """SHA-1 identifier of the commit referenced by refs/bv_head."""
+        return self.sha1_of_rev('refs/bv_head')
+
+    @cached_property
+    def git_upstream_full_ref(self):
+        """Full ref of the current branch's @{upstream}.
+
+        None is returned if there is no @{upstream}.
+        """
+        try:
+            return ensure_str(subprocess.check_output(
+                ['git', 'rev-parse', '--symbolic-full-name', '@{upstream}'],
+                stderr=open(os.devnull, 'wb'), cwd=self.path).rstrip())
+        except subprocess.CalledProcessError:
+            return None
+
+    @cached_property
+    def git_upstream_abbrev_ref(self):
+        """Abbreviated ref of the current branch's @{upstream}.
+
+        None is returned if there is no @{upstream}.
+        """
+        try:
+            return ensure_str(subprocess.check_output(
+                ['git', 'rev-parse', '--abbrev-ref', '@{upstream}'],
+                stderr=open(os.devnull, 'wb'), cwd=self.path).rstrip())
+        except subprocess.CalledProcessError:
+            return None
+
+    @cached_property
+    def full_remote_ref(self):
+        """Full ref of the remote-tracking branch representing remote_ref."""
+        if self.remote_ref is None:
+            return None
+        try:
+            return ensure_str(subprocess.check_output(
+                ['git', 'rev-parse', '--symbolic-full-name',
+                 'refs/remotes/origin/' + self.remote_ref],
+                stderr=open(os.devnull, 'wb'), cwd=self.path).rstrip())
+        except subprocess.CalledProcessError:
+            return None
+
+    def update_origin_and_bv_head(self):
+        """Fetch all branches and tags from the 'origin' remote."""
+        # Redirect stderr to stdout since git fetch prints progress on stderr,
+        # but other BrainVISA tools (e.g. bv_build_nightly) consider every
+        # print to stderr to be an error.
+        retcode = self.call_command([
+            'git', 'fetch', '--tags', '--prune', 'origin',
+            '+refs/heads/*:refs/remotes/origin/*',
+            # Unfortunately we cannot combine this fetch with fetching
+            # remote_ref into refs/bv_head, because this conflicts with --prune
+            # (refs/bv_head gets pruned). Confirmed with git version 2.7.4.
+            #
+            # '+' + self.remote_ref + ':refs/bv_head',
+        ], echo=True, stderr=subprocess.STDOUT)
+        self.invalidate_cache('full_remote_ref')
+        if retcode != 0:
+            self.print_command_failure_message('''\
+Fetching failed. Please check your Internet connection and access rights
+to the origin repository.''')
+            raise GitUpdateError('fetch failed')
+        self.update_bv_head()
+
+    def update_other_remotes(self):
+        """Fetch all remotes except 'origin' (errors are non-fatal)."""
+        # Redirect stderr to stdout since git fetch prints progress on
+        # stderr, but bv_build_nightly considers everything printed to
+        # stderr to be an error.
+        self.call_nonessential_command(
+            ['git', '-c', 'remote.origin.skipDefaultUpdate',
+             'remote', 'update'], echo=True)
+
+    @property
+    def remote_ref_is_a_branch(self):
+        """Test if remote_ref names a branch on the given remote."""
+        return self.full_remote_ref is not None
+
+    @staticmethod
+    def print_command_failure_message(message):
+        """Print a prominent error message referring to the command above."""
+        print('^' * 72)
+        print(message)
+        print('=' * 72)
+
+    def update_bv_head(self):
+        """Change refs/bv_head to point to the given remote ref."""
+
+        if self.remote_ref_is_a_branch:
+            # Case 1: if remote_ref points to a branch, use the corresponding
+            # remote-tracking branch.
+            ref = 'refs/remotes/origin/' + self.remote_ref
+        elif self.sha1_of_rev('refs/tags/' + self.remote_ref) is not None:
+            # Case 2: if remote_ref points to a tag, use it
+            ref = 'refs/tags/' + self.remote_ref
+        else:
+            # Case 3: neither of the above is true, fall back to using 'git
+            # fetch' to fetch the remote ref.
+            ref = None
+
+        if ref is not None:
+            retcode = self.call_command(['git', 'update-ref', '--no-deref',
+                                         'refs/bv_head', ref], echo=True)
+            if retcode != 0:
+                self.print_command_failure_message(
+                    'Failed to update refs/bv_head.')
+                raise GitUpdateError('bv_head update failed')
+        else:
+            # Redirect stderr to stdout since git fetch prints progress on stderr,
+            # but other BrainVISA tools (e.g. bv_build_nightly) consider every
+            # print to stderr to be an error.
+            retcode = self.call_command([
+                'git', 'fetch', 'origin',
+                "+" + self.remote_ref + ":refs/bv_head"
+            ], echo=True, stderr=subprocess.STDOUT)
+            self.invalidate_cache('bv_head_sha1')
+            if retcode != 0:
+                self.print_command_failure_message('''\
+Fetching failed. Please check your Internet connection and access rights
+to the remote repository.''')
+                raise GitUpdateError('fetch failed')
+
+    def checkout_or_create_branch(self, branch, remote='origin'):
+        """Check out a branch, or create it from the remote branch."""
+        retcode = self.call_command(['git', 'checkout', branch, '--'],
+                                    echo=True)
+        self.invalidate_cache()
+        if retcode != 0:
+            retcode = self.call_command(
+                ['git', 'checkout', '-b', branch, '--track',
+                 'refs/remotes/origin/' + branch])
+            if retcode != 0:
+                self.print_command_failure_message("""\
+The git repository could not be updated, probably because you have
+uncommitted local changes (see above).""")
+                raise GitUpdateError('checkout failed')
+
+    def try_ff_pull_from_upstream(self):
+        """Try to fast-forward from the git-configured @{upstream}.
+
+        This fast-forward is attempted only if @{upstream} is set and is
+        different from the remote_ref that bv_maker uses to update the
+        repository.
+
+        This is useful e.g. if you are working on a feature branch: it will try
+        to pull from the corresponding remote branch if there is one, before
+        trying to incorporate changes from the master branch. Failure is
+        ignored because this is provided for convenience only.
+        """
+        # NOTE: if this fails (e.g. because of uncommitted changes or
+        # network error), but the remote branch has advanced, the merge
+        # from origin (below) may make the local branch diverge from the
+        # remote feature branch, which effectively forces the user to merge the
+        # commits from master into their branch.
+        if (self.git_upstream_full_ref is not None
+                and self.git_upstream_full_ref != self.full_remote_ref):
+            # Redirect stderr to stdout since git fetch prints progress on
+            # stderr, but other BrainVISA tools (e.g. bv_build_nightly)
+            # consider every print to stderr to be an error.
+            self.call_nonessential_command(['git', 'pull', '--ff-only'],
+                                           stderr=subprocess.STDOUT)
+            self.invalidate_cache('head_sha1')
+
+    def ff_merge_bv_head(self):
+        """Fast-forward merge refs/bv_head into the current branch."""
+        retcode = self.call_command(
+            ['git', 'merge', '--ff-only', 'refs/bv_head'], echo=True)
+        self.invalidate_cache('head_sha1')
+        if retcode != 0:
+            # TODO(ylep): fall back to resetting the current branch if
+            # this is sufficiently safe (useful if a branch is
+            # rewritten or rebased).
+            self.print_command_failure_message("""\
+The upstream branch could not be merged, please refer to the error message
+above.""")
+            raise GitUpdateError('merge failed')
+
+    def detach_at_bv_head(self):
+        """Put the repository in detached state, pointing at refs/bv_head."""
+        retcode = self.call_command(
+            ['git', 'checkout', '--detach', 'refs/bv_head', '--'], echo=True)
+        self.invalidate_cache()
+        if retcode != 0:
+            self.print_command_failure_message("""\
+The Git repository could not be updated, probably because you have
+uncommitted local changes (see above).""")
+            raise GitUpdateError('checkout failed')
+
+    def print_short_status(self):
+        print("\nStatus of {0}:".format(self.path))
+        self.call_command(['git', 'status', '--short', '--branch'])
+
+    def get_status_dict(self):
+        # Collect information that can be used to build a short status string.
+        # This is inspired by git/contrib/completion/git-prompt.sh from the Git
+        # official source repository.
+        #
+        # Get the name of the current branch or description of commit
+        head = self.local_branch
+        if head is None:
+            try:
+                head = ensure_str(subprocess.check_output(
+                    ['git', 'describe', '--always'], cwd=self.path).rstrip())
+            except subprocess.CalledProcessError:
+                head = ''
+
+        # Get the dirty state of the repository
+        retcode = self.call_command(['git', 'diff', '--no-ext-diff',
+                                     '--quiet'])
+        tree_dirty = (retcode != 0)
+        retcode = self.call_command(['git', 'diff', '--no-ext-diff',
+                                     '--cached', '--quiet'])
+        index_dirty = (retcode != 0)
+
+        # Show the stash state of the repository
+        retcode = self.call_command(['git', 'rev-parse', '--verify', '--quiet',
+                                     'refs/stash'],
+                                    stdout=open(os.devnull, 'wb'))
+
+        stash = (retcode == 0)
+
+        # Show a marker if there are untracked files
+        retcode = self.call_command(['git', 'ls-files', '--others',
+                                     '--exclude-standard', '--directory',
+                                     '--no-empty-directory', '--error-unmatch',
+                                     '--', ':/*'],
+                                    stdout=open(os.devnull, 'wb'),
+                                    stderr=open(os.devnull, 'wb'))
+        untracked = (retcode == 0)
+
+        # Show upstream info for bv_maker-configured and git-configured
+        # upstream
+        bv_maker_upstream_ref = self.full_remote_ref
+        git_upstream_ref = self.git_upstream_full_ref
+        if bv_maker_upstream_ref:
+            bv_upstream_info = 'U' + self.behind_ahead_upstream_suffix(
+                bv_maker_upstream_ref)
+        else:
+            bv_upstream_info = ''
+
+        if git_upstream_ref and git_upstream_ref != bv_maker_upstream_ref:
+            git_upstream_info = 'u' + self.behind_ahead_upstream_suffix(
+                '@{upstream}')
+            git_upstream_name = self.git_upstream_abbrev_ref
+        else:
+            git_upstream_info = ''
+            git_upstream_name = ''
+
+        return {
+            'source_directory': self.source_directory,
+            'dest_directory': self.dest_directory,
+            'head': head,
+            'tree_dirty': tree_dirty,
+            'index_dirty': index_dirty,
+            'stash': stash,
+            'untracked': untracked,
+            'bv_upstream_info': bv_upstream_info,
+            'git_upstream_info': git_upstream_info,
+            'git_upstream_name': git_upstream_name,
+        }
+
+    def behind_ahead_upstream(self, upstream='@{upstream}'):
+        """Get the number of local commits behind and ahead of the upstream.
+
+        (None, None) is returned if the information is unavailable (e.g. the
+        specified upstream does not exist).
+        """
+        try:
+            output = subprocess.check_output(
+                ['git', 'rev-list', '--count', '--left-right',
+                 upstream + '...HEAD'],
+                stderr=open(os.devnull, 'wb'), cwd=self.path)
+            behind, ahead = (int(n) for n in output.split())
+        except subprocess.CalledProcessError:
+            return None, None
+        return behind, ahead
+
+    def behind_ahead_upstream_suffix(self, upstream='@{upstream}'):
+        """Get a suffix string representing the number of diverging commits.
+
+        '=' is returned if the current branch is even with upstream. Otherwise,
+        '+A-B' is returned, where A and B are the number of commits ahead and
+        behind of the branch, respectively. Any '+0' or '-0' part is omitted.
+
+        An empty string is returned if the information is unavailable (e.g. the
+        specified upstream does not exist).
+        """
+        behind, ahead = self.behind_ahead_upstream(upstream)
+        if behind is None:
+            return ''
+        if behind == ahead == 0:
+            return '='
+        upstream_info = ''
+        if ahead != 0:
+            upstream_info += '+{0}'.format(ahead)
+        if behind != 0:
+            upstream_info += '-{0}'.format(behind)
+        return upstream_info
+
+    @classmethod
+    def have_git_lfs(cls):
+        """Test if git-lfs is available."""
+        if not hasattr(cls, '_have_git_lfs'):
+            cls._have_git_lfs = bool(
+                distutils.spawn.find_executable('git-lfs')
+            )
+        return cls._have_git_lfs
+
+    def update_or_clone(self, source_dir):
+        """Update or clone the repository."""
+        print("\n")
+        print("Updating git repository {0}".format(self.path))
+
+        # Clone repository if it does not exist yet locally
+        if not os.path.exists(os.path.join(self.path, '.git')):
+            if os.path.isdir(self.path) and os.listdir(self.path):
+                print('''
+ERROR: directory "%s" is not empty, Git will not be able to clone into it.
+This error may be due to a repository change for a component (typically
+going from Subversion to Git). You must check yourself that you have nothing
+to keep in this directory and delete it to make "bv_maker sources" work.'''
+                       % self.path)
+            # TODO(ylep) clone without LFS first, then do git lfs pull (git lfs
+            # clone is deprecated with recent Git versions).
+            if self.have_git_lfs():
+                system('git', 'lfs', 'clone', '--branch', self.remote_ref,
+                       self.remote_url, self.path)
+                system('git', 'lfs', 'install', cwd=self.path)
+            else:
+                # An error with git clone is immediately fatal (raises OSError)
+                system('git', 'clone', '--branch', self.remote_ref,
+                       self.remote_url, self.path)
+        else:
+            # Make sure that the origin remote is configured and points to the
+            # URL configured in bv_maker
+            retcode = self.call_command(
+                ['git', 'remote', 'set-url', 'origin', self.remote_url],
+                stderr=open(os.devnull, 'wb')
+            )
+            if retcode != 0:
+                retcode = self.call_command(
+                    ['git', 'remote', 'add', '--tags',
+                     'origin', self.remote_url], echo=True)
+                if retcode == 0:
+                    raise GitUpdateError('remote set-up failed')
+
+        # Fetch the remote ref specified in bv_maker.cfg into refs/bv_head
+        #
+        # FIXME(ylep): what happens if the update below ends with an error?
+        # bv_head is already updated, does that pose a problem?
+        # Get the SHA-1 identifiers of HEAD and refs/bv_head commits
+        old_bv_head = self.bv_head_sha1
+        self.update_origin_and_bv_head()
+
+        # Update other remotes only if the user has explicitly configured
+        # update_git_remotes = 'ON'.
+        if source_dir.update_git_remotes.upper() == 'ON':
+            self.update_other_remotes()
+
+        if self.remote_ref_is_a_branch:
+            if ((not self.local_branch and self.head_sha1 == old_bv_head)
+                    or self.head_sha1 is None):
+                # NOTE: this code path will upgrade repositories that follow a
+                # branch in detached mode, which were used until May 2019.
+                self.checkout_or_create_branch(self.remote_ref)
+                # In case of success, we proceed to do the normal fast-forward
+                # update
+            elif not self.local_branch:
+                print('=' * 72)
+                print("""\
+The Git repository was not updated, because it is in detached HEAD
+state. You can update it manually with:
+
+  git -C '{path}' checkout {remote_ref}
+  git pull origin {remote_ref}
+
+If that fails, you can force the re-creation of the local branch (beware
+that this could lose local commits on the old '{remote_ref}' branch):
+
+  git -C '{path}' checkout -B {remote_ref} origin/{remote_ref}\
+""".format(path=self.path, remote_ref=self.remote_ref))
+                print('=' * 72)
+                raise GitUpdateError('detached')
+
+            self.try_ff_pull_from_upstream()
+
+            # We are following a branch. Advance the branch if it has not
+            # diverged from upstream. If local commits exist, that would
+            # require creating a merge commit, and we do not want to do that
+            # behind the back of the developer. The merge aborts safely if
+            # there are local uncommitted changes, and prints an appropriate
+            # message.
+            self.ff_merge_bv_head()
+        else:  # not self.remote_ref_is_a_branch
+            # If self.head_sha1 == old_bv_head, it means that the user has not
+            # moved the repository since the last bv_maker run. In this case,
+            # we allow ourselves to reconfigure the repository (e.g. check out
+            # a different commit).
+            if (self.head_sha1 == old_bv_head
+                    or not self.head_sha1
+                    or not old_bv_head):
+                # If remote_ref is not a branch (i.e. it is a tag or a sha-1),
+                # we want to detach the repository at this precise commit.
+                self.detach_at_bv_head()
+            elif self.head_sha1 == self.bv_head_sha1:
+                return  # success (nothing to do!)
+            else:
+                print('=' * 72)
+                print("""\
+The Git repository was not updated, because a different commit was
+checked out since the last run of bv_maker sources. You can update your
+repository manually using the following command:
+
+  git -C '{path}' checkout refs/bv_head\
+""".format(path=self.path, remote_ref=self.remote_ref))
+                print('=' * 72)
+                raise GitUpdateError('detached')
+
+
+def print_git_status_summary(source_directory, status_list):
+    if not status_list:
+        return
+
+    print()
+    header = 'Summary of Git repositories in ' + source_directory
+    print(header)
+    print('=' * len(header))
+
+    # Calculate optimal field widths
+    head_width = max(max(len(d['head']) for d in status_list),
+                     len('integration'))
+    bv_upstream_width = max(len(d['bv_upstream_info']) for d in status_list)
+    if bv_upstream_width != 0:
+        bv_upstream_format = '{{bv_upstream:{0}s}}'.format(bv_upstream_width)
+    else:
+        bv_upstream_format = ''
+    git_upstream_width = max(len(d['git_upstream_info']) for d in status_list)
+    if git_upstream_width != 0:
+        git_upstream_format = '{{git_upstream:{0}s}}'.format(
+            git_upstream_width)
+    else:
+        git_upstream_format = ''
+    update_message_width = max(len(d.get('update_message', u''))
+                               for d in status_list)
+    if update_message_width != 0:
+        update_message_format = '{{update_message:{0}s}} '.format(
+            update_message_width)
+        update_message_width += 1
+    else:
+        update_message_format = ''
+
+    print('┌───── * uncommitted working tree changes')
+    print('│┌──── + uncommitted index changes')
+    print('││┌─── $ stash present')
+    print('│││┌── % untracked files')
+    print('││││ ┌ HEAD')
+    prefix = '││││ │' + ' ' * head_width
+    if update_message_width != 0:
+        print(prefix + '┌ update status')
+        prefix += '│' + ' ' * (update_message_width - 1)
+    print(prefix + '┌ bv_maker upstream state')
+    print(prefix + '│' + ' ' * bv_upstream_width + '┌ Git upstream state')
+    print(prefix + '│' + ' ' * bv_upstream_width + '│'
+          + ' ' * git_upstream_width + '┌ Directory')
+
+    for status_dict in status_list:
+        print(u'{{tree_dirty}}{{index_dirty}}{{stash}}{{untracked}} '
+              '{{head:{head_width}s}} '
+              '{update_message_format}'
+              '{bv_upstream_format} {git_upstream_format} '
+              '{{dest_directory}}'
+              .format(
+                  head_width=head_width,
+                  bv_upstream_format=bv_upstream_format,
+                  git_upstream_format=git_upstream_format,
+                  update_message_format=update_message_format,
+              )
+              .format(
+                  dest_directory=status_dict['dest_directory'],
+                  head=status_dict.get('head', ''),
+                  tree_dirty='*' if status_dict.get('tree_dirty') else ' ',
+                  index_dirty='+' if status_dict.get('index_dirty') else ' ',
+                  stash='$' if status_dict.get('stash') else ' ',
+                  untracked='%' if status_dict.get('untracked') else ' ',
+                  bv_upstream=status_dict.get('bv_upstream_info', ''),
+                  git_upstream=status_dict.get('git_upstream_info', ''),
+                  update_message=status_dict.get('update_message', ''),
+              ))
+
 
 class SourceDirectory(DirectorySection, ConfigVariableParser):
 
@@ -2422,7 +3239,11 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
     _validAdditiveOptions = set(('default_steps', 'cross_compiling_dirs'))
     _validOptions = set(('revision_control',
                          'build_condition',
-                         'stdout_file', 'stderr_file'))
+                         'stdout_file', 
+                         'stderr_file',
+                         'update_git_remotes',
+                         'default_source_dir',
+                         'ignore_git_failure'))
     _validOptions.update(_variables_with_replacements)
     _validOptions.update(_path_variables)
     _validOptions.update(_validAdditiveOptions)
@@ -2437,6 +3258,7 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
         self.gitComponents = []
         self.default_steps = ['sources']
         self.revision_control = 'ON'
+        self.update_git_remotes = 'ON'
         self.directory_id = ''
         # cross_compiling_dirs contains toolchain substitutions for source
         # directories. This is used when execution needs different path to
@@ -2444,9 +3266,11 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
         # components, it is necessary to access source directory through
         # network share, instead of NFS mount point.
         self.cross_compiling_dirs = {}
+        self.ignore_git_failure = False
         if self.configuration.verbose:
             print('Processing source directory %s' % self.directory)
-        
+        self._git_only_failed = False
+
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ source ... ]:
         #    default_steps [info] [sources]
@@ -2479,6 +3303,8 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                 l + [None, None])[:5]
             git_tag_type, git_tag = (['branch'] \
                 + git_tag.split(':',1))[-2:]
+            # git_tag is the git branch (master, integration...)
+            # bv_version is the bv branch name (bug_fix, trunk)
             if self.configuration.verbose:
                 print('    adding repository: git', url, git_tag)
                 print('                   in:', \
@@ -2531,6 +3357,11 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                         brainvisa_projects.url_per_component[component]):
                         repo, dir = repo_dir
                         if fnmatchcase(version, versionPattern):
+                            default_source_dir = getattr(self, 'default_source_dir', None)
+                            if default_source_dir:
+                                dir = default_source_dir % dict(project=project,
+                                                                component=component,
+                                                                branch=version)
                             self.parseSourceConfigurationLine(
                                 '%s %s %s' % (repo, dir, version), 
                                 virtual=True, 
@@ -2590,6 +3421,9 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
             self.configurationLines.append(line)
 
     def process(self, options, args):
+        self._git_only_failed = False
+        if options.ignore_git_failure:
+            self.ignore_git_failure = True
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
         clientFile = open(os.path.join(self.directory, 'bv_maker.cfg'), 'w')
@@ -2621,9 +3455,7 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
 
         # Update SVN repositories
 
-        current_dir = os.getcwd()
         # Go to the sources directory
-        os.chdir(self.directory)
         externalsFileName = os.path.join(self.directory, 'bv_maker.externals')
         externalsFile = open(externalsFileName, 'w')
         for component_version, url, dest_directory, bv_version in set(self.svnComponents):
@@ -2632,25 +3464,40 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
         externalsFile.close()
         if use_rcs and options.svn:
             if options.cleanup:
-                self.svncommand('cleanup', self.directory)
+                self.svncommand('cleanup', self.directory, cwd=self.directory)
             self.svncommand('propset', 'svn:externals',
-                            '--file', externalsFileName, self.directory)
-            self.svncommand('commit', '-m', '', self.directory)
-            self.svncommand('update', self.directory)
-        os.chdir(current_dir)
+                            '--file', externalsFileName, self.directory,
+                            cwd=self.directory)
+            self.svncommand('commit', '-m', '', self.directory,
+                            cwd=self.directory)
+            self.svncommand('update', self.directory, cwd=self.directory)
 
         # update Git Repositories
 
+        git_status_list = []
+        git_update_failure = False
         for component_version, url, git_tag, dest_directory, bv_version \
                 in self.gitComponents:
             if dest_directory is None:
                 dest_directory = url.rsplit('/', 1)[-1]
                 if dest_directory.endswith('.git'):
                     dest_directory = dest_directory[:-4]
-            dest_path = os.path.join(self.directory, dest_directory)
             if use_rcs and options.git:
-                self.gitupdate(url, dest_path, git_tag)
-            source_directories.append((dest_path, bv_version))
+                gr = GitRepository(self.directory, dest_directory,
+                                   remote_url=url, remote_ref=git_tag)
+                try:
+                    gr.update_or_clone(source_dir=self)
+                except GitUpdateError as exc:
+                    update_message = u'✗ ' + ensure_text(str(exc))
+                    git_update_failure = True
+                else:
+                    update_message = u'✓'
+                status_dict = gr.get_status_dict()
+                status_dict['update_message'] = update_message
+                git_status_list.append(status_dict)
+                source_directories.append((dest_directory, bv_version))
+
+        print_git_status_summary(self.directory, git_status_list)
 
         components_sources = {}
         for dest_path, bv_version in source_directories:
@@ -2664,189 +3511,49 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                 components_sources.setdefault(component, {})[
                     bv_version or version] = (dest_path, build_model)
             else:
-                print('WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % os.path.join(self.directory, dest_path))
+                print('WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found or used' % os.path.join(self.directory, dest_path))
         json.dump(components_sources, open(
             os.path.join(self.directory, 'components_sources.json'), 'w'), indent=2)
+        if git_update_failure:
+            self._git_only_failed = True
+            raise RuntimeError('Error updating one or more Git repositories')
 
-    def svncommand(self, *svnargs):
+    def source_status(self, options, args):
+        repositoryDirectory = os.path.join(self.directory, '.repository')
+        use_rcs = self.revision_control.upper() in ('', 'ON')
+
+        # Display status of SVN repositories
+
+        # Go to the sources directory
+        if use_rcs and options.svn:
+            self.svncommand('status', self.directory, cwd=self.directory)
+
+        # Display status of Git Repositories
+
+        git_status_list = []
+        for _, url, git_tag, dest_directory, _ in self.gitComponents:
+            if dest_directory is None:
+                dest_directory = url.rsplit('/', 1)[-1]
+                if dest_directory.endswith('.git'):
+                    dest_directory = dest_directory[:-4]
+            dest_path = os.path.join(self.directory, dest_directory)
+            if use_rcs and options.git:
+                gr = GitRepository(self.directory, dest_directory,
+                                   remote_url=url, remote_ref=git_tag)
+                gr.print_short_status()
+                status_dict = gr.get_status_dict()
+                git_status_list.append(status_dict)
+
+        print_git_status_summary(self.directory, git_status_list)
+
+    def svncommand(self, *svnargs, **subprocess_kwargs):
         cmd = ['svn', svnargs[0]]
         if self.configuration.username:
             cmd += ['--username', self.configuration.username]
             if self.configuration.username == 'brainvisa':
                 cmd += ['--password', 'Soma2009']
         cmd.extend(svnargs[1:])
-        system(*cmd)
-
-    def get_git_remotes(self, dest):
-        cmd_output = str(system_output_on_error(['git', 'remote', '-v'],
-                                                cwd=dest))
-        remotes = {}
-        for line in cmd_output.split('\n'):
-            remotere = re.compile('^([^ ]+)[\s|\t]+([^ ]+)\s+([^ ]+)\s*$')
-            m = remotere.match(line)
-            if not m:
-                continue
-            remote, url, io = m.group(1), m.group(2), m.group(3)
-            if remote not in remotes:
-                if url.startswith('git@'):
-                    protocol = 'git'
-                    prefix, address = url.split(':')
-                    prefix += ':'
-                elif url.startswith('https://'):
-                    protocol = 'https'
-                    address = url[8:].split('/')
-                    prefix = url[:8] + address[0] + '/'
-                    address = '/'.join(address[1:])
-                else:
-                    # assume local repository
-                    protocol = ''
-                    prefix = ''
-                    address = url
-                remotes[remote] = protocol, prefix, address
-        return remotes
-
-    def gitupdate(self, src, dest, remote_ref="HEAD"):
-        # Set a username in src if necessary
-        if '@' not in src and self.configuration.username:
-            url_head, url_tail = src.split('//', 1)
-            src = '%s//%s@%s' % (
-                url_head, self.configuration.username, url_tail)
-
-        print("Updating git repository {0}".format(dest))
-
-        # Clone repository if it does not exist yet locally
-        if not os.path.exists(os.path.join(dest, '.git')):
-            if os.path.isdir(dest) and os.listdir(dest):
-                print('''
-ERROR: directory "%s" is not empty, Git will not be able to clone into it.
-This error may be due to a repository change for a component (typically
-going from Subversion to Git). You must check yourself that you have nothing
-to keep in this directory and delete it to make "bv_maker sources" work.'''
-                       % dest)
-            if self.configuration.verbose:
-                print('directory %s is not a git repository => clone from git %s'
-                      % (dest, src))
-            os.makedirs(dest)
-            retcode = subprocess.call(['git', 'init', '--quiet'], cwd=dest)
-            if retcode != 0:
-                print(
-                    'ERROR: could not initialize git repository in {0}'.format(dest))
-                return
-
-        remotes = self.get_git_remotes(dest)
-        if 'origin' in remotes:
-            remote = remotes['origin']
-            if src.endswith(remote[2]):
-                    # user has configured manually a different protocol:
-                    # respect it.
-                src = remote[1] + remote[2]
-        # Configure a remote for the developer's convenience
-        retcode = subprocess.call(['git', 'remote', 'set-url', 'origin', src],
-                                  cwd=dest, stderr=open(os.devnull, 'w'))
-        if retcode != 0:
-            subprocess.call(['git', 'remote', 'add', 'origin', src],
-                            cwd=dest)
-            # Failure is ignored deliberately (the remote is just for
-            # convenience)
-
-        # Get the SHA-1 identifiers of HEAD and refs/bv_head commits
-        try:
-            old_head = str(subprocess.check_output(
-                ['git', 'rev-parse', '--quiet', '--verify', 'HEAD^{commit}'],
-                cwd=dest))
-        except subprocess.CalledProcessError:
-            old_head = None
-        try:
-            old_bv_head = str(subprocess.check_output(
-                ['git', 'rev-parse', '--quiet',
-                 '--verify', 'refs/bv_head^{commit}'],
-                cwd=dest))
-        except subprocess.CalledProcessError:
-            old_bv_head = None
-
-        # Fetch the remotes specified in bv_maker.cfg into refs/bv_head
-        remotes = self.get_git_remotes(dest)
-        for remote in remotes:
-            # get stderr in a separate stream since git finds it funny to print
-            # normal operation messages in stderr.
-            stderr_str = tempfile.NamedTemporaryFile(delete=False)
-            retcode = subprocess.call(['git', 'fetch', '--quiet', '--tags',
-                                       remote],
-                                      cwd=dest, stderr=stderr_str)
-            stderr_str.close()
-            stderr_content = open(stderr_str.name).read()
-            os.unlink(stderr_str.name)
-
-            if retcode != 0:
-                sys.stderr.write(stderr_content)
-                print(
-                    '{0}: could not fetch from git repository {1}'.format(dest, src))
-            else:
-                # if no error, the output is sent to stdout, not stderr.
-                sys.stdout.write(stderr_content)
-
-        retcode = subprocess.call(['git', 'fetch', '--quiet', src,
-                                   "+" + remote_ref + ":refs/bv_head"],
-                                  cwd=dest)
-        if retcode != 0:
-            print(
-                '{0}: could not fetch from git repository {1}'.format(dest, src))
-            return  # Abort for this repository, continue with other repositories
-
-        # Check if we are in detached HEAD state
-        retcode = subprocess.call(['git', 'symbolic-ref', '--quiet', 'HEAD'],
-                                  cwd=dest, stdout=open(os.devnull, 'w'))
-        detached_head = False if retcode == 0 else True
-
-        if (not old_head) or (detached_head and old_head == old_bv_head):
-            # HEAD is detached, and is the same as left by the previous
-            # bv_maker run: this is "follower mode", the remote ref can be
-            # checked out. This is safe to do even if there are local
-            # uncommitted changes, in which case "git checkout" will error out
-            # appropriately.
-            retcode = subprocess.call(['git', 'checkout', '--quiet',
-                                       '--detach', 'refs/bv_head', '--'],
-                                      cwd=dest)
-            if retcode != 0:
-                print("""\
-The git repository at {0} could not be updated,
-please refer to the above error message.
-
-If you have made local changes, you should keep track of them in a branch:
-  git checkout -b <my_branch>
-  git add ...
-  git commit
-
-Or, discard your changes and go back to following the upstream version:
-  git checkout bv_head""".format(dest))
-        elif not detached_head:
-            # We are following a branch. Advance the branch if it has not
-            # diverged from upstream. If local commits exist, that would
-            # require creating a merge commit, and we do not want to do that
-            # behind the back of the developer. The (fetch + merge) command
-            # sequence is equivalent to "git pull --ff-only src remote_ref".
-            # The merge aborts safely if there are local uncommitted changes,
-            # and prints an appropriate message.
-            retcode = subprocess.call(
-                ['git', 'merge', '--ff-only', 'refs/bv_head'],
-                cwd=dest)
-            if retcode != 0:
-                print("""\
-Upstream changes could not be merged in {0},
-please refer to the above message of "git merge".
-
-If you do not want to develop in this repository anymore, you should
-leave the branch and go back to tracking the upstream version:
-  git checkout bv_head""".format(dest))
-        else:
-            # HEAD is detached but has been moved since last bv_maker run. The
-            # user has likely checked out a tag manually, do not mess with
-            # their repository.
-            print("""\
-The git repository at {0} will not be updated by bv_maker,
-because it is detached at a commit that does not correspond to bv_head.
-If you did not do this on purpose, you should go back to following upstream:
-  git -C '{0}' checkout bv_head""".format(dest))
+        system(*cmd, **subprocess_kwargs)
 
     def info(self):
         print('Source directory: "' + self.directory + '"')
@@ -2861,6 +3568,19 @@ If you did not do this on purpose, you should go back to following upstream:
                 component, version = component_version
                 print('    component %s (%s)' % (component, version))
 
+    @staticmethod
+    def dep_condition(dest_section, src_section, step):
+        # this function is used for step condition testing. It is overloaded
+        # just in case the option ignore_git_failure is set: then next
+        # steps are still enabled, while this source step has failed.
+        if not src_section.has_failed(step):
+            return True
+        if src_section.status.get(step, 'not run') == 'failed' \
+                and src_section.ignore_git_failure \
+                and src_section._git_only_failed:
+            return True
+        return False
+
 
 class ComponentsConfigParser(DirectorySection):
 
@@ -2873,7 +3593,7 @@ class ComponentsConfigParser(DirectorySection):
         self.components = {}
         self._configuration_lines_processed = False
 
-    def _process_configuration_lines(self):
+    def process_configuration_lines(self):
         if not self._configuration_lines_processed:
             if self.configuration.verbose:
                 print('Processing build directory %s' % self.directory)
@@ -3098,7 +3818,7 @@ if len(old_file) == 0:
 
     def set_dependencies(self):
         self.depend_on_sections = {
-            'configure': [(d, 'sources')
+            'configure': [(d, 'sources', SourceDirectory.dep_condition)
                           for d in
                           self.configuration.sourcesDirectories.values()],
             'build': [(self, 'configure')],
@@ -3143,7 +3863,7 @@ if len(old_file) == 0:
                                                        target_path_system)):
                 if self.cross_compiling_to_target_path_cmd:
                     # Register host to target conversion command
-                    cmd = shlex.split(self.cross_compiling_to_target_path_cmd)
+                    cmd = shlex_split(self.cross_compiling_to_target_path_cmd)
                 elif host_path_system == 'linux' \
                     and target_path_system == 'windows':
                     # Default cross compilation try to use winepath command
@@ -3172,7 +3892,7 @@ if len(old_file) == 0:
             return path
 
     def configure(self, options, args):
-        self._process_configuration_lines()
+        self.process_configuration_lines()
         # Order of projects and components is important for dependencies
         sortedProjects = [p for p in brainvisa_projects.ordered_projects
                           if p in self.projects]
@@ -3415,15 +4135,15 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         # After a first configuration, the global version file of the build 
         # directory has been generated, and package directories variables, 
         # must be updated
-        for p in self.configuration.packageDirectories.values() \
-               + self.configuration.publicationDirectories.values():
+        for p in list(self.configuration.packageDirectories.values()) \
+               + list(self.configuration.publicationDirectories.values()):
             if p.get_build_dir() is self:
                 version = self.get_version()
                 if version:
                     p.update_python_vars({'version': version})
 
     def build(self, options, args):
-        self._process_configuration_lines()
+        self.process_configuration_lines()
         if options.clean or self.clean_build.upper() == 'ON':
             if self.clean_commands:
                 clean_opts = ['-b']
@@ -3443,7 +4163,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                env=self.get_environ())
 
     def doc(self):
-        self._process_configuration_lines()
+        self.process_configuration_lines()
         print('Building docs in directory:', self.directory)
         system(cwd=self.directory, *
                (['make'] + self.make_options + ['doc']),
@@ -3487,9 +4207,9 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         self.__init_environ()
 
     def test(self, options, args):
-        self._process_configuration_lines()
+        self.process_configuration_lines()
         if options.ctest_options is not None:
-            ctoptions = shlex.split(options.ctest_options)
+            ctoptions = shlex_split(options.ctest_options)
         else:
             ctoptions = self.ctest_options
         print('Testing directory:', self.directory)
@@ -3507,9 +4227,9 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                                  env=env)
 
     def testref(self, options, args):
-        self._process_configuration_lines()
+        self.process_configuration_lines()
         if options.make_options is not None:
-            ctoptions = shlex.split(options.make_options)
+            ctoptions = shlex_split(options.make_options)
         else:
             ctoptions = self.make_options
         print('Creating test reference data for directory:', self.directory)
@@ -3525,7 +4245,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                                    env=env)
 
     def info(self):
-        self._process_configuration_lines()
+        self.process_configuration_lines()
         print('Build directory: "' + self.directory + '"')
         for component, directory_version_model \
                 in six.iteritems(self.components):
@@ -3601,7 +4321,8 @@ class VirtualenvDirectory(BuildDirectory):
 
 class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
 
-    _path_variables = set(('directory', 'build_directory',
+    _path_variables = set(('directory', 
+                           'build_directory',
                            'installer_filename',
                            'offline_installer_filename',
                            'data_repos_dir', 'test_install_dir',
@@ -3612,7 +4333,8 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                            'remote_test_install_dir',
                            'remote_test_ref_data_dir',
                            'remote_test_run_data_dir'))
-    _variables_with_replacements = set(('pack_version', 'directory_id',
+    _variables_with_replacements = set(('package_repository_subdir', 
+                                        'pack_version', 'directory_id',
                                         'packaging_options',
                                         'make_options', 'ctest_options',
                                         'installer_options'))
@@ -3636,6 +4358,7 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
     def __init__(self, directory, configuration):
         super(PackageDirectory, self).__init__(directory, configuration)
         self.build_directory = ''
+        self.package_repository_subdir = 'packages'
         self.packaging_options = []
         #self.packaging_thirdparty = ''
         self.installer_filename = None
@@ -3674,18 +4397,30 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                     raise SyntaxError()
         self.configurationLines.append(line)
 
-    def get_matching_build_dirs(self):
-        build_dirs = []
-        for o in self.configuration.buildDirectories.values():
-            if normalize_path(
-                o.replace_vars(self._build_directory)) == o.directory:
-                build_dirs.append(o)
+    #def validate_option(self, option):
+        #if option in ('init_components_from_build_dir', 'build_directory'):
+            #if self.build_directory not in ('', None):
+                #if self.init_components_from_build_dir.upper() == 'ON':
+                    #build_dir = self.get_build_dir()
+                    #build_dir.process_configuration_lines()
+                    #self.components = dict(build_dir.components)
+                #else:
+                    #self.components = {}
+    
+    #def get_matching_build_dirs(self):
+        #build_dirs = []
+        #for o in self.configuration.buildDirectories.values():
+            #if normalize_path(
+                #o.replace_vars(self._build_directory)) == o.directory:
+                #build_dirs.append(o)
                 
-        return build_dirs
+        #return build_dirs
         
     def get_build_dir(self):
         if not hasattr(self, 'build_dir'):
-            build_dirs = self.get_matching_build_dirs()
+            #build_dirs = self.get_matching_build_dirs()
+            build_dirs = get_matching_dirs(self.configuration.buildDirectories.values(),
+                              self._build_directory)
             if len(build_dirs) == 0:
                 raise RuntimeError(
                     'Package directory: referenced build directory "%s" does '
@@ -3700,6 +4435,24 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                 self.build_dir = build_dirs[0]
             
         return self.build_dir
+        
+    def get_data_dir(self):
+        if not hasattr(self, 'data_dir'):
+            data_dirs = get_matching_dirs(self.configuration.packageDirectories.values(),
+                              self._data_repos_dir)
+            if len(data_dirs) == 0:
+                self.data_dir = None
+                
+            elif len(data_dirs) > 1:
+                raise RuntimeError(
+                    'Package directory: referenced data directory "%s" '
+                    'must match a unique package directory. Matches %d '
+                    'directories %s' % (self.data_repos_dir, len(data_dirs),
+                                        str(data_dirs)))
+            else:
+                self.data_dir = data_dirs[0]
+            
+        return self.data_dir
     
     def set_dependencies(self):                
         build_section = self.get_build_dir()
@@ -3714,22 +4467,28 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
             'pack': build_section,
             'install_pack': [(self, 'pack')],
             'test_pack': [(self, 'install_pack')],
+            'testref_pack': [(self, 'install_pack')],
         }
 
-    def test_config(self, options, args):
-        build_dir = self.get_build_dir()
-        
-        if self.init_components_from_build_dir.upper() == 'ON':
-            build_dir._process_configuration_lines()
-            self.projects = build_dir.projects
-            self.components = build_dir.components
-        self._process_configuration_lines()
+    def process_configuration_lines(self):
+        if not self._configuration_lines_processed:
+            build_dir = self.get_build_dir()
+
+            if self.init_components_from_build_dir.upper() == 'ON':
+                build_dir.process_configuration_lines()
+                # make sure to do an actual copy of build dir projects/components
+                self.projects = list(build_dir.projects)
+                self.components = dict(build_dir.components)
+            super(PackageDirectory, self).process_configuration_lines()
 
     def info(self):
-        self._process_configuration_lines()
-        print('Package directory: "' + self._directory + '"')
-        print('Real package directory:', self.directory)
-        print('Build directory:', self.build_directory)
+        self.process_configuration_lines()
+        print('Base package directory: "' + self._directory + '"')
+        print('  Real base package directory:', self.directory)
+        print('  Real final package repository:', os.path.join(self.directory, self.package_repository_subdir))
+        print('  Real temporary package repository:', 
+              os.path.join(self.directory, self.package_repository_subdir) + '_tmp')
+        print('  Build directory:', self.build_directory)
         for component, directory_version_model \
                 in six.iteritems(self.components):
             directory, selected_version, version, build_model \
@@ -3780,7 +4539,7 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
         return self.get_python_vars()
     
     def installer_cmdline(self):
-        components = self.components.keys()
+        components = list(self.components.keys())
         projects = list(self.projects)
         pack_options = self.packaging_options
         installer_filename = self.installer_filename
@@ -3792,7 +4551,7 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
       
         offline_installer_filename = self.offline_installer_filename
         #directory = self.replace_vars(self.directory)
-        directory = self.directory
+        directory = os.path.join(self.directory, self.package_repository_subdir)
 
         exe_suffix = ''
         if sys.platform == 'win32':
@@ -3809,21 +4568,28 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
                sys.executable, bvi, '-r', directory]
         if installer_filename:
             cmd += ['-i', installer_filename]
+            if not offline_installer_filename:
+                cmd.append('--online-only')
         if offline_installer_filename:
             from brainvisa.installer import version as bvi_ver
             if [int(x) for x in bvi_ver.version.split('.')] >= [1, 2]:
                 cmd += ['-j', offline_installer_filename]
                 
-                if self.data_repos_dir:
+                data_dir = self.get_data_dir()
+                if data_dir and data_dir.directory:
                     # Add data directory as an additional repository to allow
                     # binarycreator to find data packages to embed in the 
                     # offline installer
-                    cmd += ['-f', self.data_repos_dir]
+                    cmd += ['-f', os.path.join(
+                        data_dir.directory, 
+                        data_dir.package_repository_subdir)]
             else:
                 print('warning: bv installer version too old to handle '
                       'offline + online installers at the same time.')
+            if not installer_filename:
+                cmd.append('--offline-only')
         if not installer_filename and not offline_installer_filename:
-            cmd.append( '--repository-only' )
+            cmd.append('--repository-only')
         cmd += pack_options + ['-p'] + projects + ['-n'] + components
         return cmd
 
@@ -4016,9 +4782,10 @@ Controller.prototype.FinishedPageCallback = function()
         return script_fname
 
     def package(self, options, args):
-        self.test_config(options, args)
+        #self.test_config(options, args)
+        self.process_configuration_lines()
         #directory = self.replace_vars(self.directory)
-        directory = self.directory
+        directory = os.path.join(self.directory, self.package_repository_subdir)
         print('Building package:', directory)
         print('    from build dir:', self.build_dir.directory)
         self.cleanup_package_dir()
@@ -4041,9 +4808,16 @@ Controller.prototype.FinishedPageCallback = function()
                 break
             d = os.path.dirname(d)
 
+    @staticmethod
+    def rm_with_empty_dirs_nofail(path):
+        try:
+            PackageDirectory.rm_with_empty_dirs(path)
+        except OSError:
+            pass # oh well...
+
     def cleanup_package_dir(self):
         #directory = self.replace_vars(self.directory)
-        directory = self.directory
+        directory = os.path.join(self.directory, self.package_repository_subdir)
         dirs = [directory, directory + '_tmp']
         pack_options = self.packaging_options
         if '--skip-repos' not in pack_options \
@@ -4056,13 +4830,16 @@ Controller.prototype.FinishedPageCallback = function()
             if os.path.exists(report_file):
                 os.unlink(report_file)
         # erase older repositories
-        if '%(date)s' in self._directory:
+        if '%(date)s' in os.path.join(self._directory,
+                                      self._package_repository_subdir):
             real_vars = dict(self.installer_variables())
             real_vars.update(global_installer_datetime())
             vars = dict(real_vars) # copy vars
             vars['date'] = '*'
             my_dir = environmentPathVariablesSubstitution(
-                self._directory, env=self.get_environ()) % real_vars
+                os.path.join(self._directory,
+                             self._package_repository_subdir), 
+                env=self.get_environ()) % real_vars
             dir_pattern = environmentPathVariablesSubstitution(
                 self._directory, env=self.get_environ()) % vars
             older_dirs = [d for d in glob.glob(dir_pattern) if d != my_dir]
@@ -4082,7 +4859,7 @@ Controller.prototype.FinishedPageCallback = function()
             for d in older_tmp_dirs:
                 if not d[:-4] in older_dirs:
                     print('temp repos', d, 'has no real repos')
-                    self.rm_with_empty_dirs(d)
+                    self.rm_with_empty_dirs_nofail(d)
                     to_remove.add(d)
             older_tmp_dirs = sorted([d for d in older_tmp_dirs
                                      if d not in to_remove])
@@ -4099,14 +4876,14 @@ Controller.prototype.FinishedPageCallback = function()
             pattern = re.compile(pattern % {'date': '(.+)'})
             for d in repos_to_remove:
                 print('removing:', d)
-                self.rm_with_empty_dirs(d)
+                self.rm_with_empty_dirs_nofail(d)
                 if d + '_tmp' in older_tmp_dirs:
                     print('removing:', d + '_tmp')
-                    self.rm_with_empty_dirs(d + '_tmp')
+                    self.rm_with_empty_dirs_nofail(d + '_tmp')
                 infos_file = os.path.join(os.path.dirname(d),
                                           'packages_infos.html')
                 if os.path.exists(infos_file):
-                    self.rm_with_empty_dirs(infos_file)
+                    self.rm_with_empty_dirs_nofail(infos_file)
                 m = pattern.match(d)
                 r_date = m.group(1)
                 vars['date'] = r_date
@@ -4117,22 +4894,23 @@ Controller.prototype.FinishedPageCallback = function()
                         env=self.get_environ()) % vars
                     if os.path.exists(installer):
                         print('removing:', installer)
-                        self.rm_with_empty_dirs(installer)
+                        self.rm_with_empty_dirs_nofail(installer)
                     if os.path.exists(installer + '.md5'):
-                        self.rm_with_empty_dirs(installer + '.md5')
+                        self.rm_with_empty_dirs_nofail(installer + '.md5')
                     # check for lock file leaved after installer crash
                     lockfile = glob.glob(os.path.join(
                         os.path.dirname(installer), 'lock*.lock'))
                     for lock in lockfile:
-                        self.rm_with_empty_dirs(lock)
+                        self.rm_with_empty_dirs_nofail(lock)
                     # on Mac, remove .dmg files and .app directory
                     if sys.platform == 'darwin':
                         if os.path.exists(installer + '.dmg'):
-                            self.rm_with_empty_dirs(installer + '.dmg')
+                            self.rm_with_empty_dirs_nofail(installer + '.dmg')
                         if os.path.exists(installer + '.dmg.md5'):
-                            self.rm_with_empty_dirs(installer + '.dmg.md5')
+                            self.rm_with_empty_dirs_nofail(
+                                installer + '.dmg.md5')
                         if os.path.exists(installer + '.app'):
-                            self.rm_with_empty_dirs(installer + '.app')
+                            self.rm_with_empty_dirs_nofail(installer + '.app')
                 # find associated install
                 if self.test_install_dir:
                     install_dir = environmentPathVariablesSubstitution(
@@ -4140,20 +4918,21 @@ Controller.prototype.FinishedPageCallback = function()
                         env=self.get_environ()) % vars
                     if os.path.exists(install_dir):
                         print('removing', install_dir)
-                        self.rm_with_empty_dirs(install_dir)
+                        self.rm_with_empty_dirs_nofail(install_dir)
                     # and tmp dir
                     tmp_dir = os.path.join(os.path.dirname(install_dir), 'tmp')
                     # remove it if empty
                     if os.path.isdir(tmp_dir) \
                             and len(os.listdir(tmp_dir)) == 0:
                         print('removing:', tmp_dir)
-                        self.rm_with_empty_dirs(tmp_dir)
+                        self.rm_with_empty_dirs_nofail(tmp_dir)
 
 
     def install_package(self, options, args):       
-        self.test_config(options, args)
+        #self.test_config(options, args)
+        self.process_configuration_lines()
         #directory = self.replace_vars(self.directory)
-        directory = self.directory
+        directory = os.path.join(self.directory, self.package_repository_subdir)
         
         if not self.test_install_dir:
             return IGNORED_STEP
@@ -4162,7 +4941,7 @@ Controller.prototype.FinishedPageCallback = function()
                                       and not options.local \
                                       else False
 
-        # Test install directory            
+        # Test install directory
         if options.prefix:
             test_install_dir = options.prefix
             remote_test_install_dir = options.prefix
@@ -4184,10 +4963,23 @@ Controller.prototype.FinishedPageCallback = function()
             remote_repos_dir = repos_dir
         
         # Data repository directory
-        data_repos_dir = self.data_repos_dir
+        data_dir = self.get_data_dir()
+        if data_dir and data_dir.directory:
+            data_repos_dir = os.path.join(
+                data_dir.directory, 
+                data_dir.package_repository_subdir)
+            data_repos_dir = self.replace_vars(data_repos_dir)
+            
+        else:
+            data_repos_dir = ''
+            
         if remote_test_install and self.remote_data_repos_dir:
             remote_data_repos_dir = self.remote_data_repos_dir
-        elif self.data_repos_dir:
+            if data_dir is not None:
+                remote_data_repos_dir = \
+                    os.path.join(remote_data_repos_dir,
+                                 data_dir.package_repository_subdir)
+        elif data_repos_dir:
             remote_data_repos_dir = data_repos_dir
         else:
             remote_data_repos_dir = None
@@ -4255,23 +5047,32 @@ Controller.prototype.FinishedPageCallback = function()
 
         cmd = []
         if remote_test_install:
-            cmd = shlex.split(self.remote_test_host_cmd)
+            cmd = shlex_split(self.remote_test_host_cmd)
 
         if sys.platform == 'darwin':
             # on Mac, the installer is a .app
             remote_installer_filename += '.app/Contents/MacOS/%s' \
                 % os.path.basename(remote_installer_filename)
         cmd += [remote_installer_filename] \
-               + shlex.split(self.installer_options) \
+               + shlex_split(self.installer_options) \
                + ['--script', self.build_dir.to_target_path(install_script)]
         try:
             print('installing...')
-            cmd = '"' + '" "'.join(cmd) + '"'
+            # the ssh command needs to be converted to a string, some options
+            # do not pass when check_call() is used with a list.
+            cmd = '"' + '" "'.join([x.replace('"', '\"') for x in cmd]) + '"'
             print(cmd)
-            subprocess.check_call(cmd, shell=True, env=self.get_environ())
+            # setup QT_QPA_PLATFORM=minimal envar to avoid need for
+            # GUI/X server. Note that if remote_test_host_cmd is used (ssh or
+            # other), it will need to re-export this variable in the remote
+            # context to be taken into account.
+            env = dict(self.get_environ())
+            env['QT_QPA_PLATFORM'] = 'minimal'
+            subprocess.check_call(cmd, shell=True, env=env)
             print('done.')
         finally:
-            os.unlink(install_script)
+            if not options.debug:
+                os.unlink(install_script)
 
     def init_vars(self):        
         super(PackageDirectory, self).init_vars()
@@ -4348,7 +5149,8 @@ Controller.prototype.FinishedPageCallback = function()
         self.__init_environ()
         
     def test_package(self, options, args):
-        self.test_config(options, args)
+        #self.test_config(options, args)
+        self.process_configuration_lines()
         if not self.test_install_dir:
             return IGNORED_STEP
         if not self.test_ref_data_dir:
@@ -4365,14 +5167,17 @@ Controller.prototype.FinishedPageCallback = function()
         install_dir = self.test_install_dir
         # Add directories to env
         new_env = self.get_environ(dict(os.environ))
-        repos_dir = self.replace_vars(self.directory)
+        repos_dir = self.replace_vars(
+            os.path.join(self.directory,
+                         self.package_repository_subdir))
         report_file = os.path.join(repos_dir, 'tests_report.txt')
         if options.ctest_options is not None:
-            ctoptions = shlex.split(options.ctest_options)
+            ctoptions = shlex_split(options.ctest_options)
         else:
             ctoptions = self.ctest_options
         test_res = run_and_log_tests(cwd=self.build_dir.directory,
-                                     env=new_env, options=ctoptions)
+                                     env=new_env, options=ctoptions,
+                                     projects=self.projects)
         if test_res:
             status = 'OK'
             for item in six.itervalues(test_res):
@@ -4385,8 +5190,9 @@ Controller.prototype.FinishedPageCallback = function()
         return test_res
 
     def testref_package(self, options, args):
-        self.test_config(options, args)
-        
+        #self.test_config(options, args)
+        self.process_configuration_lines()
+
         if not self.test_install_dir:
             return IGNORED_STEP
         if not self.test_ref_data_dir:
@@ -4397,7 +5203,7 @@ Controller.prototype.FinishedPageCallback = function()
                 and not os.path.exists(self.test_ref_data_dir):
             os.makedirs(self.test_ref_data_dir)
         if options.make_options is not None:
-            ctoptions = shlex.split(options.make_options)
+            ctoptions = shlex_split(options.make_options)
         else:
             ctoptions = self.make_options
         print('Creating test reference files for package:', self.directory)
@@ -4405,8 +5211,9 @@ Controller.prototype.FinishedPageCallback = function()
         install_dir = self.test_install_dir
         # Add directories to env
         new_env = self.get_environ(dict(os.environ))
-        return run_and_log_testref(cwd=self.build_dir.directory,
-                                   env=new_env, options=ctoptions)
+        test_res = run_and_log_testref(cwd=self.build_dir.directory,
+                                       env=new_env, options=ctoptions)
+        return test_res
 
     def expand_shell(self, line):
         ''' Allow shell commands expressions $(command arg) in string
@@ -4419,7 +5226,7 @@ Controller.prototype.FinishedPageCallback = function()
             text = subprocess.check_output(expr, shell=True).strip()
             new_line += text
             new_line += expressions.pop(0)
-        return ' '.join(shlex.split(new_line))
+        return ' '.join(shlex_split(new_line))
 
 
 class PublicationDirectory(DirectorySection, ConfigVariableParser):
@@ -4458,19 +5265,12 @@ class PublicationDirectory(DirectorySection, ConfigVariableParser):
         
         # Add same python variables than pack section
         self.update_python_vars(package_dir.get_python_vars())
-
-    def get_matching_package_dirs(self):
-        package_dirs = []
-        for o in self.configuration.packageDirectories.values():
-            if normalize_path(
-                o.replace_vars(self.package_directory)) == o.directory:
-                package_dirs.append(o)
-                
-        return package_dirs
         
     def get_package_dir(self):
         if not hasattr(self, 'package_dir'):
-            package_dirs = self.get_matching_package_dirs()
+            package_dirs = get_matching_dirs(
+                self.configuration.packageDirectories.values(),
+                self.package_directory)
             if len(package_dirs) == 0:
                 raise RuntimeError(
                     'Package directory: referenced package directory "%s" does '
@@ -4494,10 +5294,7 @@ class PublicationDirectory(DirectorySection, ConfigVariableParser):
         pack_section = self.get_package_dir()
         
         if pack_section is not None:
-            pack_section = [(pack_section, 'build'),
-                            (pack_section, 'doc'),
-                            (pack_section, 'test'),
-                            (pack_section, 'pack')]
+            pack_section = [(pack_section, 'pack')]
         else:
             pack_section = []
             
@@ -4505,19 +5302,20 @@ class PublicationDirectory(DirectorySection, ConfigVariableParser):
             'publish': pack_section,
         }
 
-    def test_config(self, options, args):
-        package_dir = self.get_package_dir()
-        build_dir = package_dir.get_build_dir()
+    #def test_config(self, options, args):
+        #package_dir = self.get_package_dir()
+        #build_dir = package_dir.get_build_dir()
 
     def info(self):
         print('Publication package directory: "' + self._directory + '"')
-        print('Real publication package directory:', self.directory)
-        print('Package directory:', self.package_directory)
-        print('Build directory:', self.get_package_dir().build_directory)
+        print('  Real publication package directory:', self.directory)
+        print('  Package directory:', self.package_directory)
+        print('  Build directory:', self.get_package_dir().build_directory)
 
     def publish_package(self, options, args):       
-        self.test_config(options, args)
-        
+        #self.test_config(options, args)
+        self.process_configuration_lines()
+
         package_dir = self.get_package_dir()
         if not package_dir:
             return IGNORED_STEP
@@ -4541,14 +5339,16 @@ class PublicationDirectory(DirectorySection, ConfigVariableParser):
 
         env = self.get_environ()
         for c in self.publication_commands:
-            command = shlex.split(c)
+            command = shlex_split(c)
             system_output_on_error(command, env = env)
             
 
 def display_failure_summary(configuration):
     sections = [('sourcesDirectories', ['sources']),
-                ('buildDirectories', ['configure', 'build', 'doc', 'test']),
-                ('packageDirectories', ['pack', 'install_pack', 'test_pack']),
+                ('buildDirectories', ['configure', 'build', 'doc', 'testref',
+                                      'test']),
+                ('packageDirectories', ['pack', 'install_pack', 'testref_pack',
+                                        'test_pack']),
                 ('publicationDirectories', ['publish_pack']),
                 ]
     global_failed = False
@@ -4605,9 +5405,14 @@ def display_failure_summary(configuration):
 
 # ---
 
+# export cpu_count() as NCPU env variable so that it can be used in conf file
+# for env replacements
+os.environ['NCPU'] = str(multiprocessing.cpu_count())
+
 commands = {
     'info': InfoCommand,
     'sources': SourcesCommand,
+    'status': SourceStatusCommand,
     'configure': ConfigureCommand,
     'build': BuildCommand,
     'doc': DocCommand,
@@ -4648,8 +5453,8 @@ if not jenkins_wrapper:
 jenkins_wrapper.jenkins_global_notify_running()
 
 # Ordered command list
-for command in ['info', 'sources', 'configure', 'build', 'doc', 'test',
-                'testref', 'pack', 'install_pack', 'test_pack',
+for command in ['info', 'status', 'sources', 'configure', 'build',
+                'doc', 'test', 'testref', 'pack', 'install_pack', 'test_pack',
                 'testref_pack', 'publish_pack']:
     if command in options_by_command:
         todo.append(

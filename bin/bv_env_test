@@ -18,48 +18,61 @@
 # Other example using docker:
 # BRAINVISA_TEST_REMOTE_COMMAND=docker run --rm -v /home/test:/home/test -u "$(id -u):$(id -g)" -e TMPDIR=/home/test/tmp -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$DISPLAY cati/brainvisa-test:ubuntu-16.04 xvfb-run
 
-# first, on Mac, re-set DYLD_*_PATH variables because MacOS 10.10+ erases them.
-if [ -z "${DYLD_LIBRARY_PATH}" -a -n "${BV_MAC_LIB_PATH}" ]; then
-  export DYLD_LIBRARY_PATH=${BV_MAC_LIB_PATH}
-fi
-if [ -z "${DYLD_FRAMEWORK_PATH}" -a -n "${BV_MAC_FWK_PATH}" ]; then
-  export DYLD_FRAMEWORK_PATH=${BV_MAC_FWK_PATH}
-fi
-if [ -z "${DYLD_FALLBACK_LIBRARY_PATH}" -a -n "${BV_MAC_FBL_PATH}" ]; then
-  export DYLD_FALLBACK_LIBRARY_PATH=${BV_MAC_FBL_PATH}
-fi
-
-# use only basename of main executable
-# (to avoid hard-coded /usr/bin/python for instance)
-if [ -z ${BRAINVISA_PACKAGE_INSTALL_PREFIX} ]; then
+if [[ -z $BRAINVISA_PACKAGE_INSTALL_PREFIX ]]; then
   BRAINVISA_PACKAGE_INSTALL_PREFIX=$(dirname -- "$(dirname -- "$0")")
 fi
 
 # check if we test windows binary tree
-if [ -f "${BRAINVISA_PACKAGE_INSTALL_PREFIX}/bin/bv_env.exe" ]; then
-  BRAINVISA_ENV="${BRAINVISA_PACKAGE_INSTALL_PREFIX}/bin/bv_env.exe"
+if [[ -f ${BRAINVISA_PACKAGE_INSTALL_PREFIX}/bin/bv_env.exe ]]; then
+  BRAINVISA_ENV=${BRAINVISA_PACKAGE_INSTALL_PREFIX}/bin/bv_env.exe
 else
   # check if we test linux or mac binary tree
-  if [ -f "${BRAINVISA_PACKAGE_INSTALL_PREFIX}/bin/bv_env" ]; then
-    BRAINVISA_ENV="${BRAINVISA_PACKAGE_INSTALL_PREFIX}/bin/bv_env"
+  if [[ -f ${BRAINVISA_PACKAGE_INSTALL_PREFIX}/bin/bv_env ]]; then
+    BRAINVISA_ENV=${BRAINVISA_PACKAGE_INSTALL_PREFIX}/bin/bv_env
   fi
 fi
 
-if [ -z "${BRAINVISA_ENV}" ]; then
-  echo "No bv_env command found for in ${BRAINVISA_PACKAGE_INSTALL_PREFIX}/bin"
+if [[ -z $BRAINVISA_ENV ]]; then
+  echo "No bv_env command found for in ${BRAINVISA_PACKAGE_INSTALL_PREFIX}/bin" >&2
   exit 1
 fi
 
+# use only basename of main executable
+# (to avoid hard-coded /usr/bin/python for instance)
 CMD=$(basename -- "$1")
 shift
 
-# get variables substitution inside arguments
+# expand variable substitutions inside arguments
 i=0
+exp=  # prevent injection
 for var_value in "$@"
 do
+  # ${var_value// /\\ } adds a backslash before every space in var_value
   exp[$i]=$(eval printf '%s' ${var_value// /\\ })
   i=$(($i+1))
 done
 
-echo ${BRAINVISA_TEST_REMOTE_COMMAND} "${BRAINVISA_ENV}" "$CMD" ${exp[@]}
-exec ${BRAINVISA_TEST_REMOTE_COMMAND} "${BRAINVISA_ENV}" "$CMD" ${exp[@]}
+bv_env_cmd=("${BRAINVISA_ENV}")
+if [[ .${BRAINVISA_ENV##*.} == .exe ]]; then
+    # Use wine command if defined and not already used in command
+    if [[ -n $WINECMD ]]; then
+        base_cmd=(${BRAINVISA_TEST_REMOTE_COMMAND} "${bv_env_cmd[@]}" "$CMD")
+        wine_found=0
+        for arg in ${base_cmd[@]}; do
+            if [[ $arg == wine ]] || [[ arg == wine64 ]]; then
+                wine_found=1
+                break;
+            fi
+        done
+        if [[ $wine_found == 0 ]]; then
+            bv_env_cmd=("${WINECMD}" "${bv_env_cmd[@]}")
+        fi
+    fi
+fi
+
+# PYTHONHASHSEED disables Python hash randomization so that test results are
+# reproducible (randomization is enabled by default in Python 3.3 and later).
+bv_env_cmd=(env PYTHONHASHSEED=0 "${bv_env_cmd[@]}")
+
+echo ${BRAINVISA_TEST_REMOTE_COMMAND} "${bv_env_cmd[@]}" "$CMD" ${exp[@]}
+exec ${BRAINVISA_TEST_REMOTE_COMMAND} "${bv_env_cmd[@]}" "$CMD" ${exp[@]}

@@ -289,7 +289,7 @@ if( NOT DCMTK_dict )
   get_filename_component( _libdir ${DCMTK_dcmdata_LIBRARY} DIRECTORY )
   find_file( DCMTK_dict dicom.dic
     PATHS ${_libdir} ${_libdir}/../share/libdcmtk5
-    ${_libdir}/../share/libdcmtk5 /usr/share/libdcmtk5
+    ${_libdir}/../share/libdcmtk12 /usr/share/libdcmtk5 /usr/share/libdcmtk12
     PATH_SUFFIXES ${_librarySuffixes} ${_shareSuffixes}
 )
 endif()

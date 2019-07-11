@@ -7,6 +7,9 @@ function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_main
 
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5gui RUN )
   BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libqt5network RUN )
+  if( NOT APPLE AND NOT WIN32  )
+    BRAINVISA_THIRDPARTY_DEPENDENCY( "${component}" RUN DEPENDS libpulse RUN )
+  endif()
 endfunction()
 
 function( BRAINVISA_PACKAGING_COMPONENT_RUN component )

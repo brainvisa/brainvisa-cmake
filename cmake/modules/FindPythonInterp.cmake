@@ -47,11 +47,10 @@ else()
         if(NOT PYTHON_EXECUTABLE)
             # Also get target python interpreter information if possible
             if(CMAKE_CROSSCOMPILING)
-                if(CROSSCOMPILING_PYTHON_EXECUTABLE)
-                    # Get target python interpreter information
-                    set(PYTHON_EXECUTABLE "${CROSSCOMPILING_PYTHON_EXECUTABLE}" 
-                        CACHE FILEPATH "Target python executable path")
-                endif()
+                find_program( PYTHON_EXECUTABLE
+                    NAMES python${CMAKE_EXECUTABLE_SUFFIX}
+                    ONLY_CMAKE_FIND_ROOT_PATH
+                    DOC "Target python executable path" )
             else()
                 # When not cross compiling, setting PYTHON_EXECUTABLE 
                 # to PYTHON_HOST_EXECUTABLE

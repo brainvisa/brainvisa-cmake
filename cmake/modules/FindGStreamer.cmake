@@ -17,7 +17,13 @@
 if (NOT GSTREAMER_INCLUDE_DIRS OR NOT GSTREAMER_LIBRARIES)
     find_package(PkgConfig)
     if(PKG_CONFIG_FOUND) # Glib search is supported only through pkg_config.
-        pkg_search_module(_GSTREAMER gstreamer-1.0)
+        # Do not search gstreamer 1.0 on CentOS-7.4
+        # because both versions are installed but we want 
+        # to use 0.10 version
+        if(NOT(LSB_DISTRIB STREQUAL "centos linux"
+            AND LSB_DISTRIB_RELEASE VERSION_GREATER "7.4"))
+            pkg_search_module(_GSTREAMER gstreamer-1.0)
+        endif()
         if( _GSTREAMER_FOUND )
             set( _gstreamer_ver 1.0 )
         else()

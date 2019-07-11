@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import glob, operator, os, re, string
 from fnmatch import fnmatchcase
 import sys
@@ -22,7 +23,8 @@ except ImportError:
 
 if sys.version_info[0] >= 3:
     def execfile(filename, globals=None, locals=None):
-        exec(compile(open(filename).read(), filename, 'exec'), globals, locals)
+        exec(compile(open(filename, 'rb').read(), filename, 'exec'), globals,
+             locals)
 
 
 class ProjectsSet(object):
@@ -166,8 +168,12 @@ def parse_project_info_cmake(
   build_model = None
   
   p = re.compile( r'\s*set\(\s*([^ \t]*)\s*(.*[^ \t])\s*\)' )
-  for line in open( path ):
-    match = p.match( line )
+  for line in open(path, 'rb'):
+    try:
+      line = line.decode()
+    except:
+      line = line.decode('utf-8') # in case the default encoding is ascii
+    match = p.match(line)
     if match:
       variable, value = match.groups()
       if variable == 'BRAINVISA_PACKAGE_NAME':
@@ -205,10 +211,11 @@ def parse_project_info_python(
                 format = version_format
             )
   execfile(path, d, d)
+
   for var in ('NAME', 'version_major', 'version_minor', 'version_micro'):
     if var not in d:
       raise KeyError('Variable %s missing in info file %s' % (var, path))
-    
+
   project = component = d['NAME']
   if len(version) > 0:
     version[0] = d['version_major']
@@ -286,10 +293,15 @@ def read_project_info( directory,
                      )
       
     elif project_info_path.endswith( '.py' ):
-        project_info = parse_project_info_python(
-                           project_info_path,
-                           version_format = version_format
-                       )
+        try:
+            project_info = parse_project_info_python(
+                              project_info_path,
+                              version_format = version_format
+                          )
+        except ImportError:
+            print('File %s cannot be imported, project is skipped.'
+                  % project_info_path, file=sys.stderr)
+            return None
         
     else:
       raise RuntimeError( 'File ' + project_info_path + ' has unknown '
@@ -308,7 +320,12 @@ def update_project_info(project_info_path, version):
     if project_info_path is None or not os.path.exists( project_info_path ):
         return False
         
-    project_info_content = open( project_info_path ).read()
+    project_info_content = open(project_info_path, 'rb').read()
+    try:
+        project_info = project_info.decode()
+    except:
+        # in case the default encoding is ascii
+        project_info = project_info.decode('utf-8')
         
     # Set version in project info file
     # It needs to have a version with at least 3
@@ -347,7 +364,7 @@ def update_project_info(project_info_path, version):
         )
     
     if project_info_content != project_info_content_new:
-        #print project_info_content_new
+        #print(project_info_content_new)
         # Write new project info content to file
         # and commit local changes to the branch
         f = open( project_info_path, "w" )
@@ -404,26 +421,26 @@ def find_components(componentsPattern):
 
 #if __name__ == '__main__':
     
-    #print 'components_definition = ['
+    #print('components_definition = [')
     #for project in sorted(components_definition):
         #project_dict = components_definition[project]
-        #print "    ('%s', {" % project
+        #print("    ('%s', {" % project)
         #description = project_dict.get('description')
         #if description:
-            #print "        'description': %s," % repr(description)
-        #print "        'components': ["
+            #print("        'description': %s," % repr(description))
+        #print("        'components': [")
         #for component, component_dict in project_dict['components']:
-            #print "            ['%s', {" % component
+            #print("            ['%s', {" % component)
             #groups = component_dict.pop('groups')
-            #print "                'groups': %s," % repr(groups)
-            #print "                'branches': {"
+            #print("                'groups': %s," % repr(groups))
+            #print("                'branches': {")
             #for branch in ('trunk', 'bug_fix', 'latest_release'):
                 #url = component_dict['branches'].get(branch)
                 #if url:
                   #url, dest_directory = url
-                  #print "                    '%s': (%s,%s)," % (branch,repr(url),repr(dest_directory))
-            #print '                },'
-            #print '            }],'
-        #print "        ],"
-        #print '    }),'
-    #print ']'
+                  #print("                    '%s': (%s,%s)," % (branch,repr(url),repr(dest_directory)))
+            #print('                },')
+            #print('            }],')
+        #print("        ],")
+        #print('    }),')
+    #print(']')

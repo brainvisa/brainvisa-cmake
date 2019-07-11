@@ -3181,7 +3181,7 @@ def print_git_status_summary(source_directory, status_list):
           + ' ' * git_upstream_width + '┌ Directory')
 
     for status_dict in status_list:
-        print('{{tree_dirty}}{{index_dirty}}{{stash}}{{untracked}} '
+        print(u'{{tree_dirty}}{{index_dirty}}{{stash}}{{untracked}} '
               '{{head:{head_width}s}} '
               '{update_message_format}'
               '{bv_upstream_format} {git_upstream_format} '

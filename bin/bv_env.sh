@@ -135,7 +135,7 @@ if type compgen complete >/dev/null 2>&1; then
     base_dir=$(dirname -- "$(dirname -- "$bv_env")")
     for d in "$base_dir/etc/bash_completion.d/"*; do
         if [ -f "$d" ]; then # if the dir is empty, we get an entry with *
-            . "$d"
+            . "$d" || :  # an error in the completion script is not fatal
         fi
     done
 fi

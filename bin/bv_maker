@@ -33,7 +33,9 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
-from __future__ import print_function
+from __future__ import (absolute_import, division,
+                        print_function, unicode_literals)
+import io
 import sys
 import os
 import re
@@ -1051,9 +1053,8 @@ class JenkinsWrapper(object):
             zlog_f = tempfile.mkstemp(prefix='log_%s' %step, suffix='.gz')
             os.close(zlog_f[0])
             zlog = zlog_f[1]
-            gf = gzip.GzipFile(zlog, 'wb')
-            gf.write(message)
-            gf.close()
+            with gzip.GzipFile(zlog, 'wb') as gf:
+                gf.write(message.encode())
             try:
                 jkn_cmd = ['java', '-jar', jenkins_cli_path] \
                     + self.jenkins_cli_options \
@@ -1077,16 +1078,13 @@ class JenkinsWrapper(object):
             POST_BUILD_RESULT = \
                 '%(folder_url)sjob/%(short_name)s/postBuildResult'
 
-            if isinstance(message, six.text_type):
-                message = message.encode('utf-8')
-
             config = '''<run>
               <log encoding="hexBinary">%s</log>
               <result>%d</result>
               <duration>%d</duration>
               <displayName>%s</displayName>
               <description>%s</description>
-            </run>''' % (binascii.hexlify(message), int(res),
+            </run>''' % (binascii.hexlify(message.encode('utf-8')), int(res),
                          duration, job_long_name, status)
 
             folder_url, short_name = jen._get_job_folder(job_name)
@@ -1514,7 +1512,7 @@ class StepCommand(object):
             print(self.log_message_content())
 
     def message_header(self, d, o, step, status):
-        real_dir = str(o.replace_vars(d))
+        real_dir = o.replace_vars(d)
         dlen = max((len(step), len(status), len(real_dir)))
         if hasattr(o, 'get_environ'):
             env = o.get_environ()
@@ -1522,7 +1520,8 @@ class StepCommand(object):
             env = os.environ
         start_time = '%04d/%02d/%02d %02d:%02d' % o.start_time[step][:5]
         stop_time = '%04d/%02d/%02d %02d:%02d' % o.stop_time[step][:5]
-        message = '''========================================='
+        message = '''\
+=========================================
 == directory: %s%s ==
 == step:      %s%s ==
 == status:    %s%s ==
@@ -1576,12 +1575,16 @@ Subject: %s - %s %s on %s (%s)
         message += self.message_header(d, o, step, status)
         message += self.log_message_content()
 
+        # Normalize all end-of-lines to use CRLF as required in Internet
+        # messages (taken from smtplib).
+        message = re.sub(r'(?:\r\n|\n|\r(?!\n))', '\r\n', message)
+
         if configuration.general_section.smtp_server != '':
             smtp_server = configuration.general_section.smtp_server
         else:
             smtp_server = 'mx.intra.cea.fr'
         server = SMTP(smtp_server)
-        server.sendmail(from_address, to_address, message)
+        server.sendmail(from_address, to_address, message.encode('utf-8'))
         server.quit()
 
     def log_message_content(self):
@@ -1590,14 +1593,14 @@ Subject: %s - %s %s on %s (%s)
         else:
             message = '====== output ======\n\n'
         # Read message from file
-        file = open(self.tmp_stdout.name)
-        message += file.read()
-        file.close()
+        with io.open(self.tmp_stdout.name, mode='rt', errors='replace',
+                     newline='') as file:
+            message += file.read()
         if self.tmp_stderr is not self.tmp_stdout:
             message += '====== standard error ======\n\n'
-            file = open(self.tmp_stderr.name)
-            message += file.read()
-            file.close()
+            with io.open(self.tmp_stderr.name, mode='rt', errors='replace',
+                         newline='') as file:
+                message += file.read()
         return message
 
     def log_in_global_log_file(self, d, o, step, status):

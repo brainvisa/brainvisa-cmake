@@ -3996,7 +3996,7 @@ if len(old_file) == 0:
             if build_model is not None:
                 build_model_class = getattr(__import__(
                     'brainvisa.maker.build_models',
-                    fromlist=['pure_python'], level=0),
+                    fromlist=[ensure_str('pure_python')], level=0),
                     build_model)
                 build_model = build_model_class(
                     component, self.components[component][0], self,

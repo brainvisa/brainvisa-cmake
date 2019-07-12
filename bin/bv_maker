@@ -35,6 +35,7 @@
 
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
+import codecs
 import io
 import sys
 import os
@@ -214,6 +215,42 @@ if this_script:
                                     version_format_short)),
                               'cmake')
     #print('cmake_root:', cmake_root)
+
+
+ASCII_SUBSTITUTIONS = {
+    ord('┌'): '/',
+    ord('─'): '-',
+    ord('│'): '|',
+    ord('✓'): 'v',
+    ord('✗'): 'X',
+}
+
+
+def nicer_replace_error_handler(error):
+    if isinstance(error, UnicodeEncodeError):
+        unencodable = error.object[error.start:error.end]
+        substitute = unencodable.translate(ASCII_SUBSTITUTIONS)
+        replaced_substitute = substitute.encode(error.encoding, 'replace')
+        if six.PY2:
+            return (replaced_substitute.decode(error.encoding), error.end)
+        return (replaced_substitute, error.end)
+    raise error
+
+codecs.register_error('nicer_replace', nicer_replace_error_handler)
+
+def replace_stdout_to_avoid_unicode_errors():
+    try:
+        fileno_stdout = sys.stdout.fileno()
+    except IOError:
+        return
+    sys.stdout = io.open(fileno_stdout, mode='wt',
+                         buffering=1,
+                         encoding=sys.stdout.encoding,
+                         errors='nicer_replace',
+                         closefd=False)
+
+
+replace_stdout_to_avoid_unicode_errors()
 
 
 # This function is copied from the 'six' library, where it was introduced in
@@ -3165,9 +3202,8 @@ def print_git_status_summary(source_directory, status_list):
     if not status_list:
         return
 
-    print()
     header = 'Summary of Git repositories in ' + source_directory
-    print(header)
+    print('\n' + header)
     print('=' * len(header))
 
     # Calculate optimal field widths

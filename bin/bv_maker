@@ -37,6 +37,7 @@ from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 import codecs
 import io
+import locale
 import sys
 import os
 import re
@@ -168,6 +169,12 @@ if "check_output" not in dir(subprocess):  # duck punch it in!
         return output
     subprocess.check_output = f
 
+
+def decode_output(output_bytes):
+    """Decode the output of subprocess.check_output to Unicode."""
+    return output_bytes.decode(locale.getpreferredencoding())
+
+
 if os.path.exists(sys.argv[0]):
     this_script = sys.argv[0]
 else:
@@ -226,7 +233,12 @@ ASCII_SUBSTITUTIONS = {
 }
 
 
-def nicer_replace_error_handler(error):
+def substitute_ascii_error_handler(error):
+    """Unicode error handler that replaces a few characters with ASCII.
+
+    Characters not in ASCII_SUBSTITUTIONS are handled by the 'replace' error
+    handler (i.e. replaced by '?').
+    """
     if isinstance(error, UnicodeEncodeError):
         unencodable = error.object[error.start:error.end]
         substitute = unencodable.translate(ASCII_SUBSTITUTIONS)
@@ -234,11 +246,15 @@ def nicer_replace_error_handler(error):
         if six.PY2:
             return (replaced_substitute.decode(error.encoding), error.end)
         return (replaced_substitute, error.end)
-    raise error
+    else:
+        raise error
 
-codecs.register_error('nicer_replace', nicer_replace_error_handler)
+
+codecs.register_error('substitute_ascii', substitute_ascii_error_handler)
+
 
 def replace_stdout_to_avoid_unicode_errors():
+    """Re-open stdout so it does not crash on foreign Unicode characters."""
     try:
         fileno_stdout = sys.stdout.fileno()
     except IOError:
@@ -246,7 +262,7 @@ def replace_stdout_to_avoid_unicode_errors():
     sys.stdout = io.open(fileno_stdout, mode='wt',
                          buffering=1,
                          encoding=sys.stdout.encoding,
-                         errors='nicer_replace',
+                         errors='substitute_ascii',
                          closefd=False)
 
 
@@ -2755,7 +2771,7 @@ class GitRepository(object):
     def local_branch(self):
         """Name of the current branch, or None if detached."""
         try:
-            head_ref = ensure_str(subprocess.check_output(
+            head_ref = decode_output(subprocess.check_output(
                 ['git', 'symbolic-ref', '--quiet', 'HEAD'],
                 cwd=self.path).rstrip())
         except subprocess.CalledProcessError:
@@ -2766,7 +2782,7 @@ class GitRepository(object):
     def sha1_of_rev(self, rev):
         """Obtain the full SHA-1 of the commit identified by rev."""
         try:
-            return ensure_str(subprocess.check_output(
+            return decode_output(subprocess.check_output(
                 ['git', 'rev-parse', '--quiet', '--verify', rev + '^{commit}'],
                 cwd=self.path).rstrip())
         except subprocess.CalledProcessError:
@@ -2789,7 +2805,7 @@ class GitRepository(object):
         None is returned if there is no @{upstream}.
         """
         try:
-            return ensure_str(subprocess.check_output(
+            return decode_output(subprocess.check_output(
                 ['git', 'rev-parse', '--symbolic-full-name', '@{upstream}'],
                 stderr=open(os.devnull, 'wb'), cwd=self.path).rstrip())
         except subprocess.CalledProcessError:
@@ -2802,7 +2818,7 @@ class GitRepository(object):
         None is returned if there is no @{upstream}.
         """
         try:
-            return ensure_str(subprocess.check_output(
+            return decode_output(subprocess.check_output(
                 ['git', 'rev-parse', '--abbrev-ref', '@{upstream}'],
                 stderr=open(os.devnull, 'wb'), cwd=self.path).rstrip())
         except subprocess.CalledProcessError:
@@ -2814,7 +2830,7 @@ class GitRepository(object):
         if self.remote_ref is None:
             return None
         try:
-            return ensure_str(subprocess.check_output(
+            return decode_output(subprocess.check_output(
                 ['git', 'rev-parse', '--symbolic-full-name',
                  'refs/remotes/origin/' + self.remote_ref],
                 stderr=open(os.devnull, 'wb'), cwd=self.path).rstrip())
@@ -2980,7 +2996,7 @@ uncommitted local changes (see above).""")
         head = self.local_branch
         if head is None:
             try:
-                head = ensure_str(subprocess.check_output(
+                head = decode_output(subprocess.check_output(
                     ['git', 'describe', '--always'], cwd=self.path).rstrip())
             except subprocess.CalledProcessError:
                 head = ''

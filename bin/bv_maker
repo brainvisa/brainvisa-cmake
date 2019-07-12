@@ -1723,7 +1723,8 @@ class InfoCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        print('Configuration file:', configuration.configuration_file)
+        print('Configuration file:',
+              ensure_text(configuration.configuration_file))
         dirs = dict(configuration.sourcesDirectories)
         dirs.update(configuration.buildDirectories)
         dirs.update(configuration.packageDirectories)

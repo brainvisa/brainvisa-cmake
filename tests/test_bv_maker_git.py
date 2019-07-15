@@ -52,7 +52,7 @@ class GitUpdateTestCase(unittest.TestCase):
         try:
             # Set up an immutable repository with a few commits, branches, and
             # tags
-            cls.cls_dir = tempfile.mkdtemp(prefix='test', suffix='cls')
+            cls.cls_dir = tempfile.mkdtemp(prefix='test', suffix='.cls')
             cls.prepared_repo = os.path.join(cls.cls_dir, 'testrepo')
             os.mkdir(cls.prepared_repo)
             subprocess.check_call(['git', 'init'], cwd=cls.prepared_repo)
@@ -101,7 +101,7 @@ class GitUpdateTestCase(unittest.TestCase):
 
     def setUp(self):
         try:
-            self.test_dir = tempfile.mkdtemp(prefix='test', suffix='run')
+            self.test_dir = tempfile.mkdtemp(prefix='test', suffix='.run')
             self.testrepo = os.path.join(self.test_dir, 'testrepo')
             subprocess.check_call(['git', 'clone',
                                    self.prepared_repo, self.testrepo])

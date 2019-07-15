@@ -255,15 +255,25 @@ codecs.register_error('substitute_ascii', substitute_ascii_error_handler)
 
 def replace_stdout_to_avoid_unicode_errors():
     """Re-open stdout so it does not crash on foreign Unicode characters."""
-    try:
-        fileno_stdout = sys.stdout.fileno()
-    except IOError:
+    # Python 3.7 and later
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(errors='substitute_ascii')
         return
-    sys.stdout = io.open(fileno_stdout, mode='wt',
-                         buffering=1,
-                         encoding=sys.stdout.encoding,
-                         errors='substitute_ascii',
-                         closefd=False)
+
+    # Under Python 2 many libraries (e.g. optparse) will try to write
+    # strings of type 'str' to stdout, so we need to replace it with an
+    # object that handles both unicode and str.
+    if six.PY2:
+        new_stdout = codecs.getwriter(sys.stdout.encoding)(
+            sys.stdout, errors='substitute_ascii')
+    else:
+        # Python 3.0 to 3.6
+        new_stdout = io.TextIOWrapper(sys.stdout.buffer,
+                                      encoding=sys.stdout.encoding,
+                                      errors='substitute_ascii',
+                                      line_buffering=True)
+    sys.stdout.flush()
+    sys.stdout = new_stdout
 
 
 replace_stdout_to_avoid_unicode_errors()

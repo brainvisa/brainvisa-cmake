@@ -69,10 +69,15 @@ class GitUpdateTestCase(unittest.TestCase):
                 f.write('initial contents\n')
             subprocess.check_call(['git', 'update-index', '--add', 'test.txt'],
                                   cwd=cls.prepared_repo)
-            subprocess.check_call(['git', 'commit', '-m', 'Initial commit'],
+            subprocess.check_call(['git',
+                                   '-c', 'user.name=Dummy',
+                                   '-c', 'user.email=dummy@dummy.test',
+                                   'commit', '-m', 'Initial commit'],
                                   cwd=cls.prepared_repo)
-            subprocess.check_call(['git', 'tag', '-a', '-m', 'tag message',
-                                   'v0.0.0'],
+            subprocess.check_call(['git',
+                                   '-c', 'user.name=Dummy',
+                                   '-c', 'user.email=dummy@dummy.test',
+                                   'tag', '-a', '-m', 'tag message', 'v0.0.0'],
                                   cwd=cls.prepared_repo)
             cls.v000_sha1 = subprocess.check_output(
                 ['git', 'rev-parse', '--verify', 'HEAD^{commit}'],
@@ -83,7 +88,10 @@ class GitUpdateTestCase(unittest.TestCase):
                 f.write('branchA contents\n')
             subprocess.check_call(['git', 'update-index', 'test.txt'],
                                   cwd=cls.prepared_repo)
-            subprocess.check_call(['git', 'commit', '-m', 'Commit on branchA'],
+            subprocess.check_call(['git',
+                                   '-c', 'user.name=Dummy',
+                                   '-c', 'user.email=dummy@dummy.test',
+                                   'commit', '-m', 'Commit on branchA'],
                                   cwd=cls.prepared_repo)
             cls.branchA_sha1 = subprocess.check_output(
                 ['git', 'rev-parse', '--verify', 'HEAD^{commit}'],
@@ -94,7 +102,10 @@ class GitUpdateTestCase(unittest.TestCase):
                 f.write('newer master contents\n')
             subprocess.check_call(['git', 'update-index', 'test.txt'],
                                   cwd=cls.prepared_repo)
-            subprocess.check_call(['git', 'commit', '-m', 'Newer commit on master'],
+            subprocess.check_call(['git',
+                                   '-c', 'user.name=Dummy',
+                                   '-c', 'user.email=dummy@dummy.test',
+                                   'commit', '-m', 'Newer commit on master'],
                                   cwd=cls.prepared_repo)
             cls.master_sha1 = subprocess.check_output(
                 ['git', 'rev-parse', '--verify', 'HEAD^{commit}'],
@@ -147,8 +158,10 @@ class GitUpdateTestCase(unittest.TestCase):
             f.write('{0} contents\n'.format(qualifier))
         subprocess.check_call(['git', 'update-index', 'test.txt'],
                               cwd=self.testrepo)
-        subprocess.check_call(['git', 'commit',
-                               '-m', '{0} commit'.format(qualifier)],
+        subprocess.check_call(['git',
+                               '-c', 'user.name=Dummy',
+                               '-c', 'user.email=dummy@dummy.test',
+                               'commit', '-m', '{0} commit'.format(qualifier)],
                               cwd=self.testrepo)
         return subprocess.check_output(['git', 'rev-parse', '--verify',
                                         'HEAD^{commit}'],

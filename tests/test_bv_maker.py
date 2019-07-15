@@ -163,6 +163,8 @@ class TestWithRepository(unittest.TestCase):
         retcode = subprocess.call(['bv_maker', '-c', self.bv_maker_cfg,
                                    'info'], env=self.env)
         self.assertEqual(retcode, 0)
+        retcode = subprocess.call(['bv_maker', 'info'], env=self.env)
+        self.assertEqual(retcode, 0)
 
 
     def test_bv_maker_status(self):

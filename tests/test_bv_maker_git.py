@@ -46,6 +46,15 @@ else:
     import unittest
 
 
+# Test the bv_maker executable from the source tree, with the same version of
+# Python that is used to run the tests.
+BV_MAKER = [
+    sys.executable,
+    os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                 '..', 'bin', 'bv_maker'))
+]
+
+
 class GitUpdateTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -106,20 +115,24 @@ class GitUpdateTestCase(unittest.TestCase):
             subprocess.check_call(['git', 'clone',
                                    self.prepared_repo, self.testrepo])
             self.src_dir = os.path.join(self.test_dir, 'src')
-            self.bv_maker_cfg = os.path.join(self.test_dir, 'bv_maker.cfg')
-            self.tag_bv_maker_cfg = os.path.join(self.test_dir,
-                                                 'bv_maker_tag.cfg')
             self.clone_path = os.path.join(self.src_dir, 'test')
+            self.bv_maker_cfg = os.path.join(self.test_dir, '.brainvisa',
+                                             'bv_maker.cfg')
+            os.makedirs(os.path.join(self.test_dir, '.brainvisa'))
             with open(self.bv_maker_cfg, 'w') as f:
                 f.write("""\
 [ source {src_dir} ]
   git file://{testrepo} master test
 """.format(src_dir=self.src_dir, testrepo=self.testrepo))
+            self.tag_bv_maker_cfg = os.path.join(self.test_dir,
+                                                 'bv_maker_tag.cfg')
             with open(self.tag_bv_maker_cfg, 'w') as f:
                 f.write("""\
 [ source {src_dir} ]
   git file://{testrepo} v0.0.0 test
 """.format(src_dir=self.src_dir, testrepo=self.testrepo))
+            self.env = os.environ.copy()
+            self.env['HOME'] = self.test_dir
         except:
             if hasattr(self, 'test_dir'):
                 shutil.rmtree(self.test_dir)
@@ -143,8 +156,9 @@ class GitUpdateTestCase(unittest.TestCase):
 
     def test_clone_and_follow_branch(self):
         # Test fresh clone of the master branch
-        retcode = subprocess.call(['bv_maker', '-c', self.bv_maker_cfg,
-                                   'sources', '--no-svn'])
+        retcode = subprocess.call(
+            BV_MAKER + ['sources', '--no-svn'],
+            env=self.env)
         self.assertEqual(retcode, 0, 'bv_maker failed to clone')
         output = subprocess.check_output(['git', 'rev-parse', '--verify',
                                           'HEAD^{commit}'],
@@ -157,23 +171,26 @@ class GitUpdateTestCase(unittest.TestCase):
 
         # Test fast-forwarding of branch
         new_commit = self.make_commit_in_testrepo()
-        retcode = subprocess.call(['bv_maker', '-c', self.bv_maker_cfg,
-                                   'sources', '--no-svn'])
+        retcode = subprocess.call(
+            BV_MAKER + ['-c', self.bv_maker_cfg, 'sources', '--no-svn'],
+            env=self.env)
         self.assertEqual(retcode, 0, 'bv_maker failed to fast-forward branch')
         output = subprocess.check_output(['git', 'rev-parse', '--verify',
                                           'HEAD^{commit}'],
                                          cwd=self.clone_path).rstrip()
         self.assertEqual(output, new_commit, 'fast-forward failed')
 
-        retcode = subprocess.call(['bv_maker', '-c', self.bv_maker_cfg,
-                                   'status', '--no-svn'])
+        retcode = subprocess.call(
+            BV_MAKER + ['-c', self.bv_maker_cfg, 'status', '--no-svn'],
+            env=self.env)
         self.assertEqual(retcode, 0, 'bv_maker status failed')
 
 
     def test_dirty_repository_update(self):
         # Test fresh clone of the master branch
-        retcode = subprocess.call(['bv_maker', '-c', self.bv_maker_cfg,
-                                   'sources', '--no-svn'])
+        retcode = subprocess.call(
+            BV_MAKER + ['-c', self.bv_maker_cfg, 'sources', '--no-svn'],
+            env=self.env)
         self.assertEqual(retcode, 0, 'bv_maker failed to clone')
 
         # Make the repository dirty
@@ -182,8 +199,9 @@ class GitUpdateTestCase(unittest.TestCase):
 
         # Test fast-forward update of branch
         new_commit = self.make_commit_in_testrepo()
-        retcode = subprocess.call(['bv_maker', '-c', self.bv_maker_cfg,
-                                   'sources', '--no-svn'])
+        retcode = subprocess.call(
+            BV_MAKER + ['-c', self.bv_maker_cfg, 'sources', '--no-svn'],
+            env=self.env)
         self.assertNotEqual(retcode, 0, 'bv_maker should fail in dirty repo')
         output = subprocess.check_output(['git', 'rev-parse', '--verify',
                                           'HEAD^{commit}'],
@@ -192,8 +210,9 @@ class GitUpdateTestCase(unittest.TestCase):
                          'the repository should not have been updated')
 
         # Test checking out a tag
-        retcode = subprocess.call(['bv_maker', '-c', self.tag_bv_maker_cfg,
-                                   'sources', '--no-svn'])
+        retcode = subprocess.call(
+            BV_MAKER + ['-c', self.tag_bv_maker_cfg, 'sources', '--no-svn'],
+            env=self.env)
         self.assertNotEqual(retcode, 0, 'bv_maker should fail in dirty repo')
         output = subprocess.check_output(['git', 'rev-parse', '--verify',
                                           'HEAD^{commit}'],
@@ -204,28 +223,32 @@ class GitUpdateTestCase(unittest.TestCase):
     def test_fetch_failure(self):
         # Test fresh clone of unreachable repository
         os.rename(self.testrepo, self.testrepo + '.bak')
-        retcode = subprocess.call(['bv_maker', '-c', self.bv_maker_cfg,
-                                   'sources', '--no-svn'])
+        retcode = subprocess.call(
+            BV_MAKER + ['-c', self.bv_maker_cfg, 'sources', '--no-svn'],
+            env=self.env)
         self.assertNotEqual(retcode, 0, 'bv_maker should fail to clone from an'
                             'unreachable repository')
 
         # Put the repository back in place to allow a fresh clone
         os.rename(self.testrepo + '.bak', self.testrepo)
-        retcode = subprocess.call(['bv_maker', '-c', self.bv_maker_cfg,
-                                   'sources', '--no-svn'])
+        retcode = subprocess.call(
+            BV_MAKER + ['-c', self.bv_maker_cfg, 'sources', '--no-svn'],
+            env=self.env)
         self.assertEqual(retcode, 0, 'bv_maker failed to clone')
 
         # Test update of unreachable repository
         os.rename(self.testrepo, self.testrepo + '.bak')
-        retcode = subprocess.call(['bv_maker', '-c', self.bv_maker_cfg,
-                                   'sources', '--no-svn'])
+        retcode = subprocess.call(
+            BV_MAKER + ['-c', self.bv_maker_cfg, 'sources', '--no-svn'],
+            env=self.env)
         self.assertNotEqual(retcode, 0, 'bv_maker should fail to update from '
                             'an unreachable repository')
 
     def test_branch_to_tag_to_branch(self):
         # First, clone the repository to follow a branch
-        retcode = subprocess.call(['bv_maker', '-c', self.bv_maker_cfg,
-                                   'sources', '--no-svn'])
+        retcode = subprocess.call(
+            BV_MAKER + ['-c', self.bv_maker_cfg, 'sources', '--no-svn'],
+            env=self.env)
         self.assertEqual(retcode, 0, 'bv_maker failed to clone')
         output = subprocess.check_output(['git', 'rev-parse', '--verify',
                                           'HEAD^{commit}'],
@@ -237,8 +260,9 @@ class GitUpdateTestCase(unittest.TestCase):
                          'HEAD should point to the master branch after clone')
 
         # Then, switch to following a tag
-        retcode = subprocess.call(['bv_maker', '-c', self.tag_bv_maker_cfg,
-                                   'sources', '--no-svn'])
+        retcode = subprocess.call(
+            BV_MAKER + ['-c', self.tag_bv_maker_cfg, 'sources', '--no-svn'],
+            env=self.env)
         self.assertEqual(retcode, 0, 'bv_maker failed to update')
         output = subprocess.check_output(['git', 'rev-parse', '--verify',
                                           'HEAD^{commit}'],
@@ -251,8 +275,9 @@ class GitUpdateTestCase(unittest.TestCase):
                             'HEAD should be detached when following a tag')
 
         # Finally, get back to following a branch
-        retcode = subprocess.call(['bv_maker', '-c', self.bv_maker_cfg,
-                                   'sources', '--no-svn'])
+        retcode = subprocess.call(
+            BV_MAKER + ['-c', self.bv_maker_cfg, 'sources', '--no-svn'],
+            env=self.env)
         self.assertEqual(retcode, 0, 'bv_maker failed to update')
         output = subprocess.check_output(['git', 'rev-parse', '--verify',
                                           'HEAD^{commit}'],
@@ -276,8 +301,9 @@ class GitUpdateTestCase(unittest.TestCase):
 
         # Test the upgrade path for detached-mode repositories, which were put
         # in this state by bv_maker before May 2019.
-        retcode = subprocess.call(['bv_maker', '-c', self.bv_maker_cfg,
-                                   'sources', '--no-svn'])
+        retcode = subprocess.call(
+            BV_MAKER + ['-c', self.bv_maker_cfg, 'sources', '--no-svn'],
+            env=self.env)
         self.assertEqual(retcode, 0, 'bv_maker failed to clone')
         output = subprocess.check_output(['git', 'rev-parse', '--verify',
                                           'HEAD^{commit}'],
@@ -300,8 +326,9 @@ class GitUpdateTestCase(unittest.TestCase):
 
         # Test that bv_maker does not mess with repositories that were manually
         # put in detached mode.
-        retcode = subprocess.call(['bv_maker', '-c', self.bv_maker_cfg,
-                                   'sources', '--no-svn'])
+        retcode = subprocess.call(
+            BV_MAKER + ['-c', self.bv_maker_cfg, 'sources', '--no-svn'],
+            env=self.env)
         self.assertNotEqual(retcode, 0, 'bv_maker should fail upon attempting '
                             'to update a manually detached repository')
         output = subprocess.check_output(['git', 'rev-parse', '--verify',
@@ -318,21 +345,24 @@ class GitUpdateTestCase(unittest.TestCase):
     @unittest.expectedFailure
     def test_diverging_upstream_branch(self):
         self.make_commit_in_testrepo()
-        retcode = subprocess.call(['bv_maker', '-c', self.bv_maker_cfg,
-                                   'sources', '--no-svn'])
+        retcode = subprocess.call(
+            BV_MAKER + ['-c', self.bv_maker_cfg, 'sources', '--no-svn'],
+            env=self.env)
         self.assertEqual(retcode, 0, 'bv_maker failed to clone')
 
         # Diverge upstream branch
         subprocess.check_call(['git', 'reset', '--hard', 'branchA'],
                               cwd=self.testrepo)
-        retcode = subprocess.call(['bv_maker', '-c', self.bv_maker_cfg,
-                                   'sources', '--no-svn'])
+        retcode = subprocess.call(
+            BV_MAKER + ['-c', self.bv_maker_cfg, 'sources', '--no-svn'],
+            env=self.env)
         self.assertEqual(retcode, 0,
                          'bv_maker failed to follow a diverging upstream')
 
     def test_clone_tag(self):
-        retcode = subprocess.call(['bv_maker', '-c', self.tag_bv_maker_cfg,
-                                   'sources', '--no-svn'])
+        retcode = subprocess.call(
+            BV_MAKER + ['-c', self.tag_bv_maker_cfg, 'sources', '--no-svn'],
+            env=self.env)
         self.assertEqual(retcode, 0, 'bv_maker failed to clone')
         output = subprocess.check_output(['git', 'rev-parse', '--verify',
                                           'HEAD^{commit}'],
@@ -355,8 +385,9 @@ class GitUpdateTestCase(unittest.TestCase):
   git file://{testrepo} HEAD test
 """.format(src_dir=self.src_dir, testrepo=self.testrepo))
         bv_maker_cfg = f.name
-        retcode = subprocess.call(['bv_maker', '-c', bv_maker_cfg,
-                                   'sources', '--no-svn'])
+        retcode = subprocess.call(
+            BV_MAKER + ['-c', bv_maker_cfg, 'sources', '--no-svn'],
+            env=self.env)
         self.assertEqual(retcode, 0, 'bv_maker failed to clone')
         output = subprocess.check_output(['git', 'rev-parse', '--verify',
                                           'HEAD^{commit}'],
@@ -376,8 +407,9 @@ class GitUpdateTestCase(unittest.TestCase):
 """.format(src_dir=self.src_dir, testrepo=self.testrepo,
            sha1=self.master_sha1))
         bv_maker_cfg = f.name
-        retcode = subprocess.call(['bv_maker', '-c', bv_maker_cfg,
-                                   'sources', '--no-svn'])
+        retcode = subprocess.call(
+            BV_MAKER + ['-c', bv_maker_cfg, 'sources', '--no-svn'],
+            env=self.env)
         self.assertEqual(retcode, 0, 'bv_maker failed to clone')
         output = subprocess.check_output(['git', 'rev-parse', '--verify',
                                           'HEAD^{commit}'],

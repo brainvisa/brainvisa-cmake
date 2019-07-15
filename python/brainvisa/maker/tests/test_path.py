@@ -42,7 +42,7 @@ from brainvisa.maker.path import Path, SystemPathConverter
 #-------------------------------------------------------------------------------
 # Main functions
 #-------------------------------------------------------------------------------
-def test(argv):
+def execute_tests(argv):
     """ Function to execute unitest
     """
    
@@ -54,7 +54,7 @@ def test(argv):
 def main(argv):
     """ Main function
     """
-    ret = test(sys.argv[1:])
+    ret = execute_tests(sys.argv[1:])
     print("RETURNCODE: ", ret)
     return 0 if ret else 1
 

@@ -51,6 +51,15 @@ BV_MAKER_SUBCOMMANDS = ['info', 'sources', 'status', 'configure', 'build',
                         'testref_pack', 'test_pack', 'publish_pack']
 
 
+# Test the bv_maker executable from the source tree, with the same version of
+# Python that is used to run the tests.
+BV_MAKER = [
+    sys.executable,
+    os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                 '..', 'bin', 'bv_maker'))
+]
+
+
 # Variables set in setUpModule()
 MODULE_TEST_DIR = None
 TEST_REPO_PATH = None
@@ -111,15 +120,15 @@ class TestWithoutRepository(unittest.TestCase):
         shutil.rmtree(cls.test_dir)
 
     def test_bv_maker_help(self):
-        retcode = subprocess.call(['bv_maker', '--help'], env=self.env)
+        retcode = subprocess.call(BV_MAKER + ['--help'], env=self.env)
         self.assertEqual(retcode, 0)
         for subcommand in BV_MAKER_SUBCOMMANDS:
-            retcode = subprocess.call(['bv_maker', subcommand, '--help'],
+            retcode = subprocess.call(BV_MAKER + [subcommand, '--help'],
                                       env=self.env)
             self.assertEqual(retcode, 0)
 
     def test_bv_maker_sources(self):
-        retcode = subprocess.call(['bv_maker', '-c', self.bv_maker_cfg,
+        retcode = subprocess.call(BV_MAKER + ['-c', self.bv_maker_cfg,
                                    'sources'], env=self.env)
         self.assertEqual(retcode, 0)
         self.assertTrue(os.path.isfile(os.path.join(
@@ -148,7 +157,7 @@ class TestWithRepository(unittest.TestCase):
            brainvisa_cmake_repo=BRAINVISA_CMAKE_REPO))
             cls.env = os.environ.copy()
             cls.env['HOME'] = cls.test_dir
-            subprocess.check_call(['bv_maker', '-c', cls.bv_maker_cfg,
+            subprocess.check_call(BV_MAKER + ['-c', cls.bv_maker_cfg,
                                    'sources'], env=cls.env)
         except:
             if hasattr(cls, 'test_dir'):
@@ -160,16 +169,14 @@ class TestWithRepository(unittest.TestCase):
         shutil.rmtree(cls.test_dir)
 
     def test_bv_maker_info(self):
-        retcode = subprocess.call(['bv_maker', '-c', self.bv_maker_cfg,
+        retcode = subprocess.call(BV_MAKER + ['-c', self.bv_maker_cfg,
                                    'info'], env=self.env)
         self.assertEqual(retcode, 0)
-        retcode = subprocess.call(['bv_maker', 'info'], env=self.env)
+        retcode = subprocess.call(BV_MAKER + ['info'], env=self.env)
         self.assertEqual(retcode, 0)
 
-
     def test_bv_maker_status(self):
-        retcode = subprocess.call(['bv_maker', '-c', self.bv_maker_cfg,
-                                   'status'], env=self.env)
+        retcode = subprocess.call(BV_MAKER + ['status'], env=self.env)
         self.assertEqual(retcode, 0)
 
 

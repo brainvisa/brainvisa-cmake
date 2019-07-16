@@ -1,14 +1,21 @@
+sudo: false
 language: python
-# The next two lines are here to fix build with Pyton 3.7, see
-# https://github.com/travis-ci/travis-ci/issues/9069#issuecomment-425720905
-sudo: required
-dist: xenial
-python:
-  - "2.6"
-  - "2.7"
-  - "3.4"
-  - "3.5"
-  - "3.6"
-  - "3.7"
+matrix:
+  include:
+    - python: 3.8-dev
+      dist: xenial  # required for Python >= 3.7
+    - python: 3.7
+      dist: xenial  # required for Python >= 3.7
+    - python: 3.6
+    - python: 3.5
+    - python: 3.4
+    - python: 2.7
+    - name: "Python 3.7.2 on macOS"
+      os: osx
+      osx_image: xcode10.2  # Python 3.7.2 running on macOS 10.14.3
+      language: generic     # 'language: python' is an error on Travis CI macOS
+  allow_failures:
+    - python: 3.8-dev  # allowed to fail as long as Python 3.8 is in beta
+
 install: pip install tox-travis
 script: tox

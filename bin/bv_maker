@@ -2802,6 +2802,17 @@ class GitRepository(object):
             return None
 
     @cached_property
+    def head_short_sha1(self):
+        """Shortened SHA-1 identifier of the current HEAD commit."""
+        try:
+            return decode_output(subprocess.check_output(
+                ['git', 'rev-parse', '--quiet', '--verify',
+                 '--short', 'HEAD^{commit}'],
+                cwd=self.path).rstrip())
+        except subprocess.CalledProcessError:
+            return None
+
+    @cached_property
     def head_sha1(self):
         """SHA-1 identifier of the current HEAD commit."""
         return self.sha1_of_rev('HEAD')
@@ -3006,13 +3017,13 @@ uncommitted local changes (see above).""")
         # official source repository.
         #
         # Get the name of the current branch or description of commit
-        head = self.local_branch
-        if head is None:
+        describe_head = None
+        if self.local_branch is None:
             try:
-                head = decode_output(subprocess.check_output(
+                describe_head = decode_output(subprocess.check_output(
                     ['git', 'describe', '--always'], cwd=self.path).rstrip())
             except subprocess.CalledProcessError:
-                head = ''
+                pass
 
         # Get the dirty state of the repository
         retcode = self.call_command(['git', 'diff', '--no-ext-diff',
@@ -3059,7 +3070,9 @@ uncommitted local changes (see above).""")
         return {
             'source_directory': self.source_directory,
             'dest_directory': self.dest_directory,
-            'head': head,
+            'describe_head': describe_head,
+            'current_branch': self.local_branch,
+            'head_short_sha1': self.head_short_sha1,
             'tree_dirty': tree_dirty,
             'index_dirty': index_dirty,
             'stash': stash,
@@ -3235,9 +3248,14 @@ def print_git_status_summary(source_directory, status_list):
     print('\n' + header)
     print('=' * len(header))
 
+    def format_head(status_dict):
+        if status_dict['current_branch'] is not None:
+            return '{current_branch} ({head_short_sha1})'.format(**status_dict)
+        else:
+            return status_dict['describe_head']
+
     # Calculate optimal field widths
-    head_width = max(max(len(d['head']) for d in status_list),
-                     len('integration'))
+    head_width = max(max(len(format_head(d)) for d in status_list), 1)
     bv_upstream_width = max(len(d['bv_upstream_info']) for d in status_list)
     if bv_upstream_width != 0:
         bv_upstream_format = '{{bv_upstream:{0}s}}'.format(bv_upstream_width)
@@ -3286,7 +3304,7 @@ def print_git_status_summary(source_directory, status_list):
               )
               .format(
                   dest_directory=status_dict['dest_directory'],
-                  head=status_dict.get('head', ''),
+                  head=format_head(status_dict),
                   tree_dirty='*' if status_dict.get('tree_dirty') else ' ',
                   index_dirty='+' if status_dict.get('index_dirty') else ' ',
                   stash='$' if status_dict.get('stash') else ' ',

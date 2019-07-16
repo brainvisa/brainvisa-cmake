@@ -264,7 +264,10 @@ def replace_stdout_to_avoid_unicode_errors():
     # strings of type 'str' to stdout, so we need to replace it with an
     # object that handles both unicode and str.
     if six.PY2:
-        new_stdout = codecs.getwriter(sys.stdout.encoding)(
+        encoding = getattr(sys.stdout, 'encoding', None)
+        if encoding is None:
+            encoding = locale.getpreferredencoding()
+        new_stdout = codecs.getwriter(encoding)(
             sys.stdout, errors='substitute_ascii')
     else:
         # Python 3.0 to 3.6

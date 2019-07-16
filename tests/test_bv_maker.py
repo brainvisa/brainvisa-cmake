@@ -152,7 +152,7 @@ class TestWithRepository(unittest.TestCase):
   git {brainvisa_cmake_repo} master development/brainvisa-cmake/master
 
 [ build {build_dir} ]
-  brainvisa-cmake bug_fix {src_dir}
+  + {src_dir}/development/brainvisa-cmake/master
 """.format(src_dir=cls.src_dir, build_dir=cls.build_dir,
            brainvisa_cmake_repo=BRAINVISA_CMAKE_REPO))
             cls.env = os.environ.copy()
@@ -168,16 +168,23 @@ class TestWithRepository(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.test_dir)
 
-    def test_bv_maker_info(self):
+    def test01_bv_maker_info(self):
         retcode = subprocess.call(BV_MAKER + ['-c', self.bv_maker_cfg,
                                    'info'], env=self.env)
         self.assertEqual(retcode, 0)
         retcode = subprocess.call(BV_MAKER + ['info'], env=self.env)
         self.assertEqual(retcode, 0)
 
-    def test_bv_maker_status(self):
+    def test02_bv_maker_status(self):
         retcode = subprocess.call(BV_MAKER + ['status'], env=self.env)
         self.assertEqual(retcode, 0)
+
+    def test03_bv_maker_configure(self):
+        retcode = subprocess.call(BV_MAKER + ['configure'], env=self.env)
+        self.assertEqual(retcode, 0)
+        # Verify that bv_maker has bootstrapped itself in the build tree
+        self.assertTrue(os.path.isfile(os.path.join(self.build_dir,
+                                                    'bin', 'bv_maker')))
 
 
 if __name__ == '__main__':

@@ -88,7 +88,7 @@ class LinuxPathSystemSyntax(PathSystemSyntax):
         return syntax.match(path)
 
 class PathSystems:    
-    '''
+    r'''
     Supported path systems are:
     - uri (i.e. path with uri syntax, for example file:///dir/file)
     - linux (i.e. linux path syntax, /dir/file)

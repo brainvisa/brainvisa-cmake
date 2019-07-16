@@ -1,3 +1,8 @@
+[![travis](https://travis-ci.com/brainvisa/brainvisa-cmake.svg?branch=master)](https://travis-ci.com/brainvisa/brainvisa-cmake)
+[![codecov](https://codecov.io/gh/brainvisa/brainvisa-cmake/branch/master/graph/badge.svg)](https://codecov.io/gh/brainvisa/brainvisa-cmake)
+![licence](https://img.shields.io/github/license/brainvisa/brainvisa-cmake.svg?label=licence)
+
+
 # brainvisa-cmake
 Build system of BrainVISA
 

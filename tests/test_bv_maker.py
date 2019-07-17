@@ -103,9 +103,6 @@ class TestWithoutRepository(unittest.TestCase):
                 f.write("""\
 [ source {src_dir} ]
   git {brainvisa_cmake_repo} master development/brainvisa-cmake/master
-
-[ build {build_dir} ]
-  brainvisa-cmake bug_fix {src_dir}
 """.format(src_dir=cls.src_dir, build_dir=cls.build_dir,
            brainvisa_cmake_repo=BRAINVISA_CMAKE_REPO))
             cls.env = os.environ.copy()
@@ -152,6 +149,7 @@ class TestWithRepository(unittest.TestCase):
   git {brainvisa_cmake_repo} master development/brainvisa-cmake/master
 
 [ build {build_dir} ]
+  cmake_options = -DBRAINVISA_IGNORE_BUG_GCC_5:BOOL=YES
   + {src_dir}/development/brainvisa-cmake/master
 """.format(src_dir=cls.src_dir, build_dir=cls.build_dir,
            brainvisa_cmake_repo=BRAINVISA_CMAKE_REPO))

@@ -34,8 +34,15 @@
 
 from __future__ import print_function
 
-import unittest
+from distutils.spawn import find_executable
 import sys
+
+if sys.version_info < (2, 7):
+    # Decorators are not available on python 2.6:
+    # we need a backport of a newer version of unittest.
+    import unittest2 as unittest
+else:
+    import unittest
 
 from brainvisa.maker.path import Path, SystemPathConverter
 
@@ -219,24 +226,18 @@ class PathTestCases(unittest.TestCase):
         self.assertEqual(Path(('file:///c:/dir1/dir2/file', 'uri'),'uri'), 
                          Path('file:///c:/dir1/dir2/file', 'uri'))
 
+    @unittest.skipUnless(find_executable('winepath') is not None,
+                         'winepath command not found')
     def test_wine_path_conversion(self):
         # Try to find winepath command
-        from distutils.spawn import find_executable
         w = find_executable('winepath')
-        if not w:
-            print('winepath command not found, skipping test', '...', end = ' ')
-            sys.stdout.flush()
-            return
-        
-        print('winepath command found', '...', end = ' ')
-        sys.stdout.flush()
-        
+
         # Add windows path converter to linux using wine
         SystemPathConverter('windows', 'linux', [w, '-u'])
 
         # Add linux path converter to windows using wine
         SystemPathConverter('linux', 'windows', [w, '-w'])
-        
+
         # Get root path wine installation prefix
         wine_z = str(Path('z:\\','windows').to_system('linux'))
         wine_c = str(Path('c:\\','windows').to_system('linux'))
@@ -280,4 +281,3 @@ class PathTestCases(unittest.TestCase):
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
-   

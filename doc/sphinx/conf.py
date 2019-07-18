@@ -14,7 +14,6 @@
 from __future__ import print_function
 import sys, os
 import datetime
-import distutils.spawn
 import subprocess
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -26,6 +25,34 @@ try:
     sys.path.append( os.path.abspath( os.path.join( os.path.dirname( os.path.dirname( matplotlib.__file__ ) ), 'sphinx', 'ext' ) ) )
 except Exception as e:
     print('warning:', e)
+
+# taken from soma-base
+def find_in_path(file, path=None):
+    '''
+    Look for a file in a series of directories. By default, directories are
+    contained in ``PATH`` environment variable. But another environment
+    variable name or a sequence of directories names can be given in *path*
+    parameter.
+
+    Examples::
+
+      find_in_path('sh') could return '/bin/sh'
+      find_in_path('libpython2.7.so', 'LD_LIBRARY_PATH') could return '/usr/local/lib/libpython2.7.so'
+    '''
+    if path is None:
+        path = os.environ.get('PATH').split(os.pathsep)
+    elif isinstance(path, basestring):
+        var = os.environ.get(path)
+        if var is None:
+            var = path
+        path = var.split(os.pathsep)
+    for i in path:
+        p = os.path.normpath(os.path.abspath(i))
+        if p:
+            r = glob.glob(os.path.join(p, file))
+            if r:
+                return r[0]
+
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -253,9 +280,9 @@ extlinks = {
 #}
 
 # ---- build help pages ---
-bv_maker = distutils.spawn.find_executable('bv_maker')
+bv_maker = find_in_path('bv_maker')
 for subcmd in ('', 'info', 'sources', 'status', 'configure', 'build', 'doc', 'testref', 'test', 'pack', 'install_pack', 'testref_pack', 'test_pack', 'publish_pack'):
-    cmd = [bv_maker]
+    cmd = [sys.executable, bv_maker]
     if subcmd == '':
         fname = 'bv_maker_help.rst'
     else:

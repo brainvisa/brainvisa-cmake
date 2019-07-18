@@ -237,6 +237,9 @@ if( BRAINVISA_BVMAKER )
       list( APPEND cmds ${_command_name} )
     endif()
   endforeach()
+  # Duplicates can occur if bv_env or bv_env_host are present in
+  # ${CMAKE_CURRENT_SOURCE_DIR}/bin
+  list( REMOVE_DUPLICATES cmds )
   set( brainvisa-cmake-commands ${cmds}
        CACHE INTERNAL "Commands list for component brainvisa-cmake" FORCE )
   # disable help for some internal or undocumented commands

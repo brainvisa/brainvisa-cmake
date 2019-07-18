@@ -17,6 +17,8 @@ CTestTestfile.cmake
 /debian-control
 /installed_files.txt
 
+# Generated documentation
+/doc/sphinx/bv_maker_help*.rst
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -156,7 +156,7 @@ class TestWithRepository(unittest.TestCase):
             cls.env = os.environ.copy()
             cls.env['HOME'] = cls.test_dir
             subprocess.check_call(BV_MAKER + ['-c', cls.bv_maker_cfg,
-                                   'sources'], env=cls.env)
+                                              'sources'], env=cls.env)
         except:
             if hasattr(cls, 'test_dir'):
                 shutil.rmtree(cls.test_dir)
@@ -175,6 +175,12 @@ class TestWithRepository(unittest.TestCase):
 
     def test02_bv_maker_status(self):
         retcode = subprocess.call(BV_MAKER + ['status'], env=self.env)
+        self.assertEqual(retcode, 0)
+
+    def test02_bv_maker_status_ascii_locale(self):
+        c_locale_env = self.env.copy()
+        c_locale_env['LC_ALL'] = 'C'
+        retcode = subprocess.call(BV_MAKER + ['status'], env=c_locale_env)
         self.assertEqual(retcode, 0)
 
     def test03_bv_maker_configure(self):

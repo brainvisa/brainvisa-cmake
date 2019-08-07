@@ -115,6 +115,37 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "Python.app/Contents/MacOS/Python" "$(BRAINVISA_INSTALL_PREFIX)/bin/${_pythonv}" )
       add_custom_command( TARGET install-${component} POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "Python.app/Contents/MacOS/Python" "$(BRAINVISA_INSTALL_PREFIX)/bin/python${PYTHON_SHORT_VERSION}" )
+        
+      # re-create the framework structure in lib/
+      add_custom_command( TARGET install-${component} POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E "make_directory" "$(BRAINVISA_INSTALL_PREFIX)/lib/Python.framework/Versions/${PYTHON_SHORT_VERSION}"
+        COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "Versions/Current/Headers" "$(BRAINVISA_INSTALL_PREFIX)/lib/Python.framework/Headers"
+        COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "Versions/Current/Python" "$(BRAINVISA_INSTALL_PREFIX)/lib/Python.framework/Python"
+        COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "Versions/Current/Resources" "$(BRAINVISA_INSTALL_PREFIX)/lib/Python.framework/Resources"
+        COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "${PYTHON_SHORT_VERSION}" "$(BRAINVISA_INSTALL_PREFIX)/lib/Python.framework/Versions/Current"
+        COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "include/python${PYTHON_SHORT_VERSION}" "$(BRAINVISA_INSTALL_PREFIX)/lib/Python.framework/Versions/${PYTHON_SHORT_VERSION}/Headers"
+        COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "../../.." "$(BRAINVISA_INSTALL_PREFIX)/lib/Python.framework/Versions/${PYTHON_SHORT_VERSION}/lib"
+        COMMAND "${CMAKE_COMMAND}" -E "copy" "${PYTHON_DIR}/Python" "$(BRAINVISA_INSTALL_PREFIX)/lib/Python.framework/Versions/${PYTHON_SHORT_VERSION}/Python"
+        COMMAND "${CMAKE_COMMAND}" -E "copy_directory" "${PYTHON_DIR}/Resources" "$(BRAINVISA_INSTALL_PREFIX)/lib/Python.framework/Versions/${PYTHON_SHORT_VERSION}/Resources"
+        COMMAND "${CMAKE_COMMAND}" -E "copy_directory" "${PYTHON_DIR}/bin" "$(BRAINVISA_INSTALL_PREFIX)/lib/Python.framework/Versions/${PYTHON_SHORT_VERSION}/bin"
+        COMMAND "${CMAKE_COMMAND}" -E "copy_directory" "${PYTHON_DIR}/include" "$(BRAINVISA_INSTALL_PREFIX)/lib/Python.framework/Versions/${PYTHON_SHORT_VERSION}/include"
+        COMMAND "${CMAKE_COMMAND}" -E "copy_directory" "${PYTHON_DIR}/share" "$(BRAINVISA_INSTALL_PREFIX)/lib/Python.framework/Versions/${PYTHON_SHORT_VERSION}/share"
+      )
+      file( GLOB _files "${PYTHON_DIR}/lib/*" )
+      list( REMOVE_ITEM _files "${PYTHON_DIR}/lib/python${PYTHON_SHORT_VERSION}" )
+      foreach( _file ${_files} )
+        if( IS_SYMLINK "${file}" )
+          file( READ_SYMLINK "${file}" _link )
+          get_filename_component( _relfile "${file}" NAME )
+          add_custom_command( TARGET install-${component} POST_BUILD 
+            COMMAND "${CMAKE_COMMAND}" -E "create_symlink" "${_link}" "$(BRAINVISA_INSTALL_PREFIX)/lib/Python.framework/Versions/${PYTHON_SHORT_VERSION}/lib/${_relfile}"
+          )
+        else()
+          add_custom_command( TARGET install-${component} POST_BUILD 
+            COMMAND "${CMAKE_COMMAND}" -E "copy" "${_file}" "$(BRAINVISA_INSTALL_PREFIX)/lib/Python.framework/Versions/${PYTHON_SHORT_VERSION}/lib/"
+          )
+        endif()
+      endforeach()
 
     else()
 

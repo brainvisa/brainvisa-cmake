@@ -318,6 +318,15 @@ components_definition = [
                     'latest_release': ('git https://github.com/brainvisa/morphologist.git tag:latest_release', 'morphologist/morphologist-ui/latest_release'),
                 },
             }],
+            ['morpho-deepsulci', {
+                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
+                'branches': {
+                    'trunk': ('git https://github.com/brainvisa/morpho-deepsulci.git branch:master', 'morphologist/morpho-deepsulci/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/morpho-deepsulci.git default:master', 'morphologist/morpho-deepsulci/master'),
+                    #'release_candidate': ('git https://github.com/brainvisa/morpho-deepsulci.git branch:release_candidate', 'morphologist/morpho-deepsulci/release_candidate'),
+                    #'latest_release': ('git https://github.com/brainvisa/morpho-deepsulci.git tag:latest_release', 'morphologist/morpho-deepsulci/latest_release'),
+                },
+            }],
         ],
     }),
     ('brainrat', {

@@ -5554,10 +5554,7 @@ if len(options_by_command) == 1:
     for i in default_commands:
         options_by_command[i] = ['--only-if-default']
 
-if not jenkins_wrapper:
-    jenkins_wrapper = JenkinsWrapper()
-jenkins_wrapper.jenkins_global_notify_running()
-
+log_something = False
 # Ordered command list
 for command in ['info', 'status', 'sources', 'configure', 'build',
                 'doc', 'test', 'testref', 'pack', 'install_pack', 'test_pack',
@@ -5565,6 +5562,20 @@ for command in ['info', 'status', 'sources', 'configure', 'build',
     if command in options_by_command:
         todo.append(
             commands[command](options_by_command[command], configuration))
+        if command not in ('info', 'status') \
+                and '-h' not in options_by_command[command] \
+                and '--help' not in options_by_command[command]:
+            log_something = True
+
+if not log_something:
+    # if no "real" job is required (help options used or only get info/status), 
+    # then disable Jenkins logging
+    configuration.options.disable_jenkins = True
+    
+if not jenkins_wrapper:
+    jenkins_wrapper = JenkinsWrapper()
+if log_something:
+    jenkins_wrapper.jenkins_global_notify_running()
 
 failed = False
 # Execute selected commands

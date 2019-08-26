@@ -5535,6 +5535,7 @@ default_commands = ['info', 'sources', 'configure', 'build', 'doc', 'test',
                     'pack', 'install_pack', 'test_pack']
 options_by_command = {None: []}
 command = None
+ask_help = False
 for i in sys.argv[1:]:
     if i in commands:
         command = i
@@ -5543,6 +5544,13 @@ for i in sys.argv[1:]:
         options_by_command[command] = []
     else:
         options_by_command[command].append(i)
+        if i in ('-h', '--help'):
+            # we must detect if bv_maker is invoked to get help in order to automatically
+            # disable jenkins logging in this case
+            ask_help = True
+# if help option is used, disable Jenkins logging
+if ask_help and '--disable-jenkins' not in options_by_command[None]:
+    options_by_command[None].append('--disable_jenkins')
 
 # Initialize global configuration
 configuration = GlobalConfiguration(options_by_command[None])

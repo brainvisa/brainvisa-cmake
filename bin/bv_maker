@@ -5535,7 +5535,6 @@ default_commands = ['info', 'sources', 'configure', 'build', 'doc', 'test',
                     'pack', 'install_pack', 'test_pack']
 options_by_command = {None: []}
 command = None
-ask_help = False
 for i in sys.argv[1:]:
     if i in commands:
         command = i
@@ -5544,13 +5543,6 @@ for i in sys.argv[1:]:
         options_by_command[command] = []
     else:
         options_by_command[command].append(i)
-        if i in ('-h', '--help'):
-            # we must detect if bv_maker is invoked to get help in order to automatically
-            # disable jenkins logging in this case
-            ask_help = True
-# if help option is used, disable Jenkins logging
-if ask_help and '--disable-jenkins' not in options_by_command[None]:
-    options_by_command[None].append('--disable_jenkins')
 
 # Initialize global configuration
 configuration = GlobalConfiguration(options_by_command[None])
@@ -5562,10 +5554,7 @@ if len(options_by_command) == 1:
     for i in default_commands:
         options_by_command[i] = ['--only-if-default']
 
-if not jenkins_wrapper:
-    jenkins_wrapper = JenkinsWrapper()
-jenkins_wrapper.jenkins_global_notify_running()
-
+log_something = False
 # Ordered command list
 for command in ['info', 'status', 'sources', 'configure', 'build',
                 'doc', 'test', 'testref', 'pack', 'install_pack', 'test_pack',
@@ -5573,6 +5562,20 @@ for command in ['info', 'status', 'sources', 'configure', 'build',
     if command in options_by_command:
         todo.append(
             commands[command](options_by_command[command], configuration))
+        if command not in ('info', 'status') \
+                and '-h' not in options_by_command[command] \
+                and '--help' not in options_by_command[command]:
+            log_something = True
+
+if not log_something:
+    # if no "real" job is required (help options used or only get info/status), 
+    # then disable Jenkins logging
+    configuration.options.disable_jenkins = True
+    
+if not jenkins_wrapper:
+    jenkins_wrapper = JenkinsWrapper()
+if log_something:
+    jenkins_wrapper.jenkins_global_notify_running()
 
 failed = False
 # Execute selected commands

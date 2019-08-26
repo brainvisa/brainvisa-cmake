@@ -263,6 +263,9 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         set( _pyside2 )
         set( _pyside3 )
         set( _dirs )
+        set( _exclude_modules "torch" )
+        set( _exclude )
+
         foreach( _pypath ${_inv_pypath} )
           set( _already_done )
           foreach( _done_path ${_toinstall} )
@@ -275,41 +278,49 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
           if( NOT _already_done )
             list( APPEND _toinstall "${_pypath}" )
             list( APPEND _dirs "lib" )
-            if( EXISTS "${_pypath}/dist-packages" )
-                if( EXISTS "${_pypath}/dist-packages/PyQt4/uic/widget-plugins" )
-                  list( APPEND _uicpdir
-                    "${_pypath}/dist-packages/PyQt4/uic/widget-plugins" )
-                endif()
-                if( EXISTS "${_pypath}/dist-packages/PySide" )
-                  list( APPEND _pyside1 "${_pypath}/dist-packages/PySide" )
-                endif()
-  #             endif()
-                if( "${_pypath}" STREQUAL
-                    "/usr/lib/python${PYTHON_SHORT_VERSION}" )
-                  # Ubuntu install
-                  if( EXISTS "/usr/lib/pymodules/python${PYTHON_SHORT_VERSION}" )
-                    list( APPEND _toinstall
-                      "/usr/lib/pymodules/python${PYTHON_SHORT_VERSION}/*" )
-                    list( APPEND _dirs
-                      "lib/python${PYTHON_SHORT_VERSION}/dist-packages" )
+            foreach( _modpath "dist-packages" ) ## "site-packages" )
+              if( EXISTS "${_pypath}/${_modpath}" )
+                  if( EXISTS "${_pypath}/${_modpath}/PyQt4/uic/widget-plugins" )
+                    list( APPEND _uicpdir
+                      "${_pypath}/${_modpath}/PyQt4/uic/widget-plugins" )
                   endif()
-                  if( EXISTS "/usr/lib/pyshared/python${PYTHON_SHORT_VERSION}" )
-                    list( APPEND _toinstall
-                      "/usr/lib/pyshared/python${PYTHON_SHORT_VERSION}/*" )
-                    list( APPEND _dirs
-                      "lib/python${PYTHON_SHORT_VERSION}/dist-packages" )
+                  if( EXISTS "${_pypath}/${_modpath}/PySide" )
+                    list( APPEND _pyside1 "${_pypath}/${_modpath}/PySide" )
                   endif()
-                  if( EXISTS "/usr/share/pyshared" )
-                    list( APPEND _toinstall
-                      "/usr/share/pyshared/*" )
-                    list( APPEND _dirs
-                      "lib/python${PYTHON_SHORT_VERSION}/dist-packages" )
+    #             endif()
+                  if( "${_pypath}" STREQUAL
+                      "/usr/lib/python${PYTHON_SHORT_VERSION}" )
+                    # Ubuntu install
+                    if( EXISTS "/usr/lib/pymodules/python${PYTHON_SHORT_VERSION}" )
+                      list( APPEND _toinstall
+                        "/usr/lib/pymodules/python${PYTHON_SHORT_VERSION}/*" )
+                      list( APPEND _dirs
+                        "lib/python${PYTHON_SHORT_VERSION}/${_modpath}" )
+                    endif()
+                    if( EXISTS "/usr/lib/pyshared/python${PYTHON_SHORT_VERSION}" )
+                      list( APPEND _toinstall
+                        "/usr/lib/pyshared/python${PYTHON_SHORT_VERSION}/*" )
+                      list( APPEND _dirs
+                        "lib/python${PYTHON_SHORT_VERSION}/${_modpath}" )
+                    endif()
+                    if( EXISTS "/usr/share/pyshared" )
+                      list( APPEND _toinstall
+                        "/usr/share/pyshared/*" )
+                      list( APPEND _dirs
+                        "lib/python${PYTHON_SHORT_VERSION}/${_modpath}" )
+                    endif()
+                    set( _pyside2
+                      "/usr/lib/pyshared/python${PYTHON_SHORT_VERSION}/PySide" )
+                    set( _pyside3 "/usr/share/pyshared/PySide" )
                   endif()
-                  set( _pyside2
-                    "/usr/lib/pyshared/python${PYTHON_SHORT_VERSION}/PySide" )
-                  set( _pyside3 "/usr/share/pyshared/PySide" )
-                endif()
-            endif()
+                  foreach( _exc_mod ${_exclude_modules} )
+                    if( EXISTS "${_pypath}/${_modpath}/${_exc_mod}" )
+                      list( APPEND _exclude
+                            "-e" "${_pypath}/${_modpath}/${_exc_mod}" )
+                    endif()
+                  endforeach()
+              endif()
+            endforeach()
           endif()
         endforeach()
 #         set( _toinstall ${_toinstall}
@@ -320,7 +331,6 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
 #         set( _pyside2 "/usr/lib/pyshared/python${PYTHON_SHORT_VERSION}/PySide" )
 #         set( _pyside3 "/usr/share/pyshared/PySide" )
 
-        set( _exclude )
         set( _uicpdir_excl "kde4.py" "kde4.pyc" "qaxcontainer.py" "qaxcontainer.pyc" "qscintilla.py" "qscintilla.pyc" )
         foreach( _excl ${_uicpdir} )
           list( APPEND _exclude "-e" "${_excl}" )
@@ -355,11 +365,11 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
         #
         if( NOT LSB_DISTRIB STREQUAL "ubuntu"
             OR LSB_DISTRIB_RELEASE VERSION_GREATER "14.0" )
-          set( removed_packages "numpy" "PyQt5" "PyQt4" "zmq" "scipy" )
+          set( removed_packages "numpy" "PyQt5" "PyQt4" "zmq" "scipy" "torch" )
         else()
           # on our ubuntu 12 we have upgraded numpy, scipy and zmq using pip.
           # this is specific to our own install, I know.
-          set( removed_packages "numpy" "scipy" "zmq" )
+          set( removed_packages "numpy" "scipy" "zmq" "torch" )
         endif()
         set( bv_copy_options1 "" )
         set( bv_copy_options2 "" )

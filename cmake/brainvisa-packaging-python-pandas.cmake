@@ -1,4 +1,4 @@
-find_package( Python )  # FIXME
+find_package( python )
 
 function( BRAINVISA_PACKAGING_COMPONENT_INFO component package_name package_maintainer package_version )
   set( ${package_name} ${component} PARENT_SCOPE )

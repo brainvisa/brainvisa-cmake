@@ -23,6 +23,7 @@ if( PYTHONINTERP_FOUND )
            "main directory of the torch module" )
       execute_process( COMMAND ${PYTHON_EXECUTABLE} "-c" "from __future__ import print_function; import torch; print(torch.__version__)"
                     OUTPUT_VARIABLE _torch_version
+                    ERROR_VARIABLE _dummy
                     RESULT_VARIABLE _res )
       if( _res EQUAL 0 )
         set( PYTORCH_VERSION "${_torch_version}" CACHE STRING

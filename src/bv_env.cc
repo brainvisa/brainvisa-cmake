@@ -89,7 +89,7 @@ bool is_sep(const char c, const string & sep = PATH_SEP) {
  
   bool res = false;
   
-  // Test if string is one of PATH_SEP¨characters
+  // Test if string is one of PATH_SEP characters
   for (string::size_type i = 0; i < sep.size(); i++) {
     if (c == sep[i]) {
       res = true;

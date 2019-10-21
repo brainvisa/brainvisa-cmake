@@ -2,7 +2,7 @@ sudo: false
 language: python
 matrix:
   include:
-    - python: 3.8-dev
+    - python: 3.8
       dist: xenial  # required for Python >= 3.7
     - python: 3.7
       dist: xenial  # required for Python >= 3.7
@@ -15,7 +15,6 @@ matrix:
       osx_image: xcode10.2  # Python 3.7.2 running on macOS 10.14.3
       language: generic     # 'language: python' is an error on Travis CI macOS
   allow_failures:
-    - python: 3.8-dev  # allowed to fail as long as Python 3.8 is in beta
 
 install: pip install tox-travis
 script: tox

@@ -10,9 +10,9 @@ file( READ /etc/lsb-release _x )
 string( REGEX MATCH "DISTRIB_RELEASE=([0-9.]+)" _x "${_x}" )
 if( CMAKE_MATCH_1 VERSION_EQUAL "16.04"
     OR CMAKE_MATCH_1 VERSION_GREATER "16.04" )
-    string( FIND "${CMAKE_CXX_FLAGS}" "-std=c++11" _result )
+    string( FIND "${CMAKE_CXX_FLAGS}" "-std" _result )
     if( _result EQUAL -1 )
-        set( CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}" CACHE STRING
+        set( CMAKE_CXX_FLAGS "-std=gnu++11 ${CMAKE_CXX_FLAGS}" CACHE STRING
             "Flags used by the compiler during all build types (flags forced by brainvisa-cmake)." FORCE )
     endif()
 endif()

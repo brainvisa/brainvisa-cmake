@@ -10,9 +10,9 @@ file( READ /etc/redhat-release _x )
 string( REGEX MATCH "release ([0-9.]+)" _x "${_x}" )
 if( CMAKE_MATCH_1 VERSION_EQUAL "7"
     OR CMAKE_MATCH_1 VERSION_GREATER "7" )
-    string( FIND "${CMAKE_CXX_FLAGS}" "-std=c++11" _result )
+    string( FIND "${CMAKE_CXX_FLAGS}" "-std" _result )
     if( _result EQUAL -1 )
-        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11" CACHE STRING 
+        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11" CACHE STRING
             "Flags used by the compiler during all build types." FORCE )
     endif()
 endif()

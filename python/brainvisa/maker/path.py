@@ -116,6 +116,9 @@ class DefaultPathConverterRegistry(Singleton, dict):
     pass
 
 def get_host_path_system():
+    import os
+    import sys
+    
     if sys.platform.startswith('win'):
         if os.environ.get('TERM') == 'msys':
             return 'msys'

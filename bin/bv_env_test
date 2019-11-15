@@ -53,26 +53,42 @@ do
 done
 
 bv_env_cmd=("${BRAINVISA_ENV}")
-if [[ .${BRAINVISA_ENV##*.} == .exe ]]; then
-    # Use wine command if defined and not already used in command
-    if [[ -n $WINECMD ]]; then
-        base_cmd=(${BRAINVISA_TEST_REMOTE_COMMAND} "${bv_env_cmd[@]}" "$CMD")
-        wine_found=0
-        for arg in ${base_cmd[@]}; do
-            if [[ $arg == wine ]] || [[ arg == wine64 ]]; then
-                wine_found=1
-                break;
-            fi
-        done
-        if [[ $wine_found == 0 ]]; then
-            bv_env_cmd=("${WINECMD}" "${bv_env_cmd[@]}")
-        fi
-    fi
-fi
-
 # PYTHONHASHSEED disables Python hash randomization so that test results are
 # reproducible (randomization is enabled by default in Python 3.3 and later).
-bv_env_cmd=(env PYTHONHASHSEED=0 "${bv_env_cmd[@]}")
+test_env=(env PYTHONHASHSEED=0)
 
-echo ${BRAINVISA_TEST_REMOTE_COMMAND} "${bv_env_cmd[@]}" "$CMD" ${exp[@]}
-exec ${BRAINVISA_TEST_REMOTE_COMMAND} "${bv_env_cmd[@]}" "$CMD" ${exp[@]}
+if [[ .${BRAINVISA_ENV##*.} == .exe ]]; then
+    # Windows case
+    base_cmd=(${BRAINVISA_TEST_REMOTE_COMMAND} "${bv_env_cmd[@]}" "$CMD")
+    wine_found=0
+    wine_cmd=()
+
+    # Find wine in args and set the required test environment variables before it
+    for arg in ${base_cmd[@]}; do
+        if [[ "$arg" == "wine" ]] || [[ "$arg" == "wine64" ]]; then
+            if [[ $wine_found == 0 ]]; then
+                # Only add wine and test environment the first time we find it
+                wine_found=1
+                wine_cmd=("${wine_cmd[@]}" "${test_env[@]}" "${arg}")
+            fi
+        else
+            wine_cmd=("${wine_cmd[@]}" "${arg}")
+        fi
+    done
+    
+    if [[ $wine_found == 0 ]]; then
+        if [[ -n "${WINECMD}" ]]; then
+            wine_cmd=("${WINECMD}" "${wine_cmd[@]}")
+        fi
+        wine_cmd=("${test_env[@]}" "${wine_cmd[@]}")
+    fi
+    
+    # Replace base cmd with wine one
+    base_cmd=("${wine_cmd[@]}")
+else
+    # Standard linux/macOS case: test environment variables are always set before calling bv_env
+    base_cmd=(${BRAINVISA_TEST_REMOTE_COMMAND} "${test_env[@]}" "${bv_env_cmd[@]}" "$CMD")
+fi
+
+echo "${base_cmd[@]}" ${exp[@]}
+exec "${base_cmd[@]}" ${exp[@]}

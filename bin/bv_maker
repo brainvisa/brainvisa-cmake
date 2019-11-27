@@ -60,9 +60,11 @@ import gzip
 import binascii
 import multiprocessing  # for cpu_count()
 
+default_subprocess_timeout = 3600 * 6 # default subprocess timeout is 6 hours
 try:
     # backport of subprocess of python 3
     import subprocess32
+    
 except ImportError:
     subprocess32 = None
 
@@ -154,6 +156,8 @@ from socket import gethostname
 # TODO: remove this once BrainVISA is only compatible with python >= 2.7
 if "check_output" not in dir(subprocess):  # duck punch it in!
     def f(*popenargs, **kwargs):
+        kwargs=dict(kwargs)
+        kwargs.pop('timeout', None)
         if 'stdout' in kwargs:
             raise ValueError(
                 'stdout argument not allowed, it will be overridden.')
@@ -356,15 +360,15 @@ def system(*args, **kwargs):
     error = None
     try:
         try:
+            kwargs = dict(kwargs)
+            timeout = kwargs.pop('timeout', None)
             if subprocess32 is not None:
                 popen = subprocess32.Popen(args, **kwargs)
+                popen.communicate(timeout=timeout)
             else:
-                if 'timeout' in kwargs:
-                    # timeout not supported in python2.subprocess
-                    kwargs = dict(kwargs)
-                    del kwargs['timeout']
+                # timeout not supported in python2.subprocess
                 popen = subprocess.Popen(args, **kwargs)
-            popen.communicate()
+                popen.communicate()
             if popen.returncode != 0:
                 raise OSError()
         except Exception as e:
@@ -502,7 +506,7 @@ def environmentVariablesSubstitution(value, env=None):
 def environmentPathVariablesSubstitution(path, env=None):
     return normalize_path(environmentVariablesSubstitution(path, env))
 
-def run_and_log_tests(cwd=None, env=None, options=None, projects=None):
+def run_and_log_tests(cwd=None, env=None, options=None, projects=None, timeout=None):
     # get test labels to assign them to projects
     test_labels = system_output_on_error(
         ['ctest', '--print-labels'] + options, echo=False, cwd=cwd)
@@ -517,6 +521,10 @@ def run_and_log_tests(cwd=None, env=None, options=None, projects=None):
             'ctest --print-labels produced an unexpected output:\n'
             + '\n'.join(lines))
     logs = {}
+
+    if timeout is None:
+        timeout = configuration.general_section.subprocess_timeout
+        
     for label in labels:
         if projects is not None and label not in projects:
             # skip this test, it's not part of the packaging/build config
@@ -525,7 +533,9 @@ def run_and_log_tests(cwd=None, env=None, options=None, projects=None):
         os.close(logfile[0])
         start_time = time.localtime()
         try:
-            system(cwd=cwd, env=env,
+            system(cwd=cwd, 
+                   env=env,
+                   timeout = timeout,
                   *(['ctest', '-L', '^%s$' % label, '--output-on-failure',
                      '-O', logfile[1]] + options))
         except Exception as e:
@@ -555,9 +565,12 @@ def run_and_log_tests(cwd=None, env=None, options=None, projects=None):
     return logs
 
 
-def run_and_log_testref(cwd=None, env=None, options=None):
+def run_and_log_testref(cwd=None, env=None, options=None, timeout = None):
     logs = {}
 
+    if timeout is None:
+        timeout = configuration.general_section.subprocess_timeout
+        
     if ((configuration.general_section.email_notification_by_default. \
             upper() != 'ON' and not configuration.options.email) \
             or (configuration.general_section.failure_email == ''
@@ -574,7 +587,8 @@ def run_and_log_testref(cwd=None, env=None, options=None):
     start_time = time.localtime()
     try:
         output = system_output_on_error(['make'] + options + ['testref'],
-                                        cwd=cwd, env=env)
+                                        cwd=cwd, env=env, 
+                                        timeout = timeout)
     except Exception as e:
         if hasattr(e, 'output'):
             open(logfile[1], 'w').write(e.output)
@@ -2617,7 +2631,8 @@ class GeneralSection(ConfigVariableParser):
     _variables_with_replacements = \
         set(('directory_id_by_default',
              'jenkins_global_job_name_step_by_default',
-             'jenkins_server_url'))
+             'jenkins_server_url',
+             'subprocess_timeout'))
     _variables_with_env_only_replacements = set(('jenkins_build_name', 'env'))
     _validAdditiveOptions = set(('env', ))
     _path_variables = set(('global_status_file', ))
@@ -2650,6 +2665,7 @@ class GeneralSection(ConfigVariableParser):
         self.jenkins_global_job_name_step_by_default = ''
         self.jenkins_username = None
         self.jenkins_token = None
+        self.subprocess_timeout = default_subprocess_timeout
         self.directory_id_by_default = ''
         self.env = {}
 
@@ -3997,8 +4013,12 @@ if len(old_file) == 0:
         else:
             return path
 
-    def configure(self, options, args):
+    def configure(self, options, args):       
         self.process_configuration_lines()
+        
+        timeout = configuration.general_section.subprocess_timeout
+        timeout = getattr(options, 'subprocess_timeout', timeout)
+        
         # Order of projects and components is important for dependencies
         sortedProjects = [p for p in brainvisa_projects.ordered_projects
                           if p in self.projects]
@@ -4215,9 +4235,11 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                         '-DBRAINVISA_CMAKE_BUILD_TYPE=brainvisa-cmake-only',
                         '-DCMAKE_INSTALL_PREFIX=%s' % self.directory]
                      + bvcmake_options),
-                     env=self.get_environ())
+                     env=self.get_environ(),
+                     timeout=timeout)
             system(cwd=bvcmake_dir, *['make', 'install'],
-                   env=self.get_environ())
+                   env=self.get_environ(),
+                   timeout=timeout)
             print('=== now configuring all other projects ===')
             # run with this local bv-cmake environment
             system(cwd=self.directory,
@@ -4228,14 +4250,16 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                      + cross_compiling_options
                      + ["-DBRAINVISA_CMAKE_BUILD_TYPE=no-brainvisa-cmake"]
                      + [config_dir]),
-                   env=self.get_environ())
+                   env=self.get_environ(),
+                   timeout=timeout)
         else:
             # run cmake in a regular way
             system(cwd=self.directory, *( command_base
                                         + command_options
                                         + cross_compiling_options
                                         + [config_dir]),
-                   env=self.get_environ())
+                   env=self.get_environ(),
+                   timeout=timeout)
             
         
         # After a first configuration, the global version file of the build 
@@ -4250,6 +4274,10 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 
     def build(self, options, args):
         self.process_configuration_lines()
+        
+        timeout = configuration.general_section.subprocess_timeout
+        timeout = getattr(options, 'subprocess_timeout', timeout)
+            
         if options.clean or self.clean_build.upper() == 'ON':
             if self.clean_commands:
                 clean_opts = ['-b']
@@ -4266,14 +4294,17 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 
         print('Building directory:', self.directory)
         system(cwd=self.directory, *(['make'] + self.make_options),
-               env=self.get_environ())
+               env=self.get_environ(),
+               timeout=timeout)
 
     def doc(self):
         self.process_configuration_lines()
         print('Building docs in directory:', self.directory)
+        timeout = configuration.general_section.subprocess_timeout
         system(cwd=self.directory, *
                (['make'] + self.make_options + ['doc']),
-               env=self.get_environ())
+               env=self.get_environ(),
+               timeout=timeout)
 
     def init_vars(self):
         super(BuildDirectory, self).init_vars()
@@ -4314,6 +4345,10 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 
     def test(self, options, args):
         self.process_configuration_lines()
+        
+        timeout = configuration.general_section.subprocess_timeout
+        timeout = getattr(options, 'subprocess_timeout', timeout)
+        
         if options.ctest_options is not None:
             ctoptions = shlex_split(options.ctest_options)
         else:
@@ -4330,10 +4365,15 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
             if not os.path.exists(self.test_ref_data_dir):
                 os.makedirs(self.test_ref_data_dir)
         return run_and_log_tests(cwd=self.directory, options=ctoptions,
-                                 env=env)
+                                 env=env,
+                                 timeout=timeout)
 
     def testref(self, options, args):
         self.process_configuration_lines()
+        
+        timeout = configuration.general_section.subprocess_timeout
+        timeout = getattr(options, 'subprocess_timeout', timeout)
+        
         if options.make_options is not None:
             ctoptions = shlex_split(options.make_options)
         else:
@@ -4348,7 +4388,8 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
             if not os.path.exists(self.test_ref_data_dir):
                 os.makedirs(self.test_ref_data_dir)
         return run_and_log_testref(cwd=self.directory, options=ctoptions,
-                                   env=env)
+                                   env=env,
+                                   timeout=timeout)
 
     def info(self):
         self.process_configuration_lines()
@@ -4412,13 +4453,18 @@ class VirtualenvDirectory(BuildDirectory):
         return None
 
     def virtualenv_command(self, env_path):
+        
+        timeout = configuration.general_section.subprocess_timeout
+        
         if not self.which("virtualenv"):
             raise ValueError("Cannot find virtual. Please install virtualenv.")
         active_path = os.path.join(env_path, "bin", "activate")
         if not os.path.isfile(active_path):
             cmd = ["virtualenv",  "--system-site-packages"]
             cmd.append(env_path)
-            system(*cmd, env=self.get_environ())
+            system(*cmd, 
+                   env=self.get_environ(), 
+                   timeout=timeout)
         else:
             print("No need to virtualenv init '%s' since it is already initialized." \
                 % env_path)
@@ -4890,6 +4936,10 @@ Controller.prototype.FinishedPageCallback = function()
     def package(self, options, args):
         #self.test_config(options, args)
         self.process_configuration_lines()
+        
+        timeout = configuration.general_section.subprocess_timeout
+        timeout = getattr(options, 'subprocess_timeout', timeout)
+        
         #directory = self.replace_vars(self.directory)
         directory = os.path.join(self.directory, self.package_repository_subdir)
         print('Building package:', directory)
@@ -4897,8 +4947,15 @@ Controller.prototype.FinishedPageCallback = function()
         self.cleanup_package_dir()
         cmd = self.installer_cmdline()
         print('running:', "'" + "' '".join(cmd) + "'")
-        subprocess.check_call(cmd, cwd=self.build_dir.directory,
-                              env=self.get_environ())
+        
+            
+        if subprocess32:
+            subprocess32.check_call(cmd, cwd=self.build_dir.directory,
+                                    env=self.get_environ(),
+                                    timeout=timeout)
+        else:
+            subprocess.check_call(cmd, cwd=self.build_dir.directory,
+                                  env=self.get_environ())
 
     @staticmethod
     def rm_with_empty_dirs(path):
@@ -5037,6 +5094,10 @@ Controller.prototype.FinishedPageCallback = function()
     def install_package(self, options, args):       
         #self.test_config(options, args)
         self.process_configuration_lines()
+        
+        timeout = configuration.general_section.subprocess_timeout
+        timeout = getattr(options, 'subprocess_timeout', timeout)
+        
         #directory = self.replace_vars(self.directory)
         directory = os.path.join(self.directory, self.package_repository_subdir)
         
@@ -5174,7 +5235,12 @@ Controller.prototype.FinishedPageCallback = function()
             # context to be taken into account.
             env = dict(self.get_environ())
             env['QT_QPA_PLATFORM'] = 'minimal'
-            subprocess.check_call(cmd, shell=True, env=env)
+            
+            if subprocess32:
+                subprocess32.check_call(cmd, shell=True, env=env, timeout=timeout)
+            else:
+                subprocess.check_call(cmd, shell=True, env=env)
+                
             print('done.')
         finally:
             if not options.debug:
@@ -5257,6 +5323,10 @@ Controller.prototype.FinishedPageCallback = function()
     def test_package(self, options, args):
         #self.test_config(options, args)
         self.process_configuration_lines()
+        
+        timeout = configuration.general_section.subprocess_timeout
+        timeout = getattr(options, 'subprocess_timeout', timeout)
+        
         if not self.test_install_dir:
             return IGNORED_STEP
         if not self.test_ref_data_dir:
@@ -5283,7 +5353,8 @@ Controller.prototype.FinishedPageCallback = function()
             ctoptions = self.ctest_options
         test_res = run_and_log_tests(cwd=self.build_dir.directory,
                                      env=new_env, options=ctoptions,
-                                     projects=self.projects)
+                                     projects=self.projects,
+                                     timeout=timeout)
         if test_res:
             status = 'OK'
             for item in six.itervalues(test_res):
@@ -5299,6 +5370,9 @@ Controller.prototype.FinishedPageCallback = function()
         #self.test_config(options, args)
         self.process_configuration_lines()
 
+        timeout = configuration.general_section.subprocess_timeout
+        timeout = getattr(options, 'subprocess_timeout', timeout)
+        
         if not self.test_install_dir:
             return IGNORED_STEP
         if not self.test_ref_data_dir:
@@ -5318,7 +5392,8 @@ Controller.prototype.FinishedPageCallback = function()
         # Add directories to env
         new_env = self.get_environ(dict(os.environ))
         test_res = run_and_log_testref(cwd=self.build_dir.directory,
-                                       env=new_env, options=ctoptions)
+                                       env=new_env, options=ctoptions,
+                                       timeout=timeout)
         return test_res
 
     def expand_shell(self, line):
@@ -5422,6 +5497,9 @@ class PublicationDirectory(DirectorySection, ConfigVariableParser):
         #self.test_config(options, args)
         self.process_configuration_lines()
 
+        timeout = configuration.general_section.subprocess_timeout
+        timeout = getattr(options, 'subprocess_timeout', timeout)
+        
         package_dir = self.get_package_dir()
         if not package_dir:
             return IGNORED_STEP
@@ -5446,7 +5524,7 @@ class PublicationDirectory(DirectorySection, ConfigVariableParser):
         env = self.get_environ()
         for c in self.publication_commands:
             command = shlex_split(c)
-            system_output_on_error(command, env = env)
+            system_output_on_error(command, env = env, timeout=timeout)
             
 
 def display_failure_summary(configuration):

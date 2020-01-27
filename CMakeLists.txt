@@ -226,6 +226,16 @@ if( BRAINVISA_BVMAKER )
   find_package( Sphinx )
   find_package( python )
 
+  # Create a symbolic link named 'python' so that programs launched through
+  # bv_env use the correct version of Python that BrainVISA was configured for.
+  # This is especially useful for projects such as AIMS and Anatomist, which
+  # use compiled Python modules.
+  execute_process(COMMAND "${CMAKE_COMMAND}" -E create_symlink ${PYTHON_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/python
+    RESULT_VARIABLE python_symlink_result)
+  if(python_symlink_result)
+    message(WARNING "Failed to create the Python symlink (${CMAKE_BINARY_DIR}/bin/python -> ${PYTHON_EXECUTABLE}), see the error message above.  This means that programs launched with bv_env are not guaranteed to use the version of Python that BrainVISA was compiled for, so you may get version mismatch errors.")
+  endif()
+
   BRAINVISA_GENERATE_SPHINX_DOC( "doc/sphinx"
     "share/doc/${PROJECT_NAME}-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}" USER )
 

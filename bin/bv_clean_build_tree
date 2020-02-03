@@ -208,11 +208,12 @@ def parse_cmake_executables(directory):
         raise RuntimeError('No CMakeCache.txt found - not cleaning bin/')
     cmds_re = re.compile('^.*-commands:INTERNAL=(.+)$')
     all_cmds = []
-    for line in open(cmake_cache):
-        m = cmds_re.match(line)
-        if m:
-            cmds = m.group(1).split(';')
-            all_cmds += cmds
+    with open(cmake_cache) as f:
+        for line in f:
+            m = cmds_re.match(line)
+            if m:
+                cmds = m.group(1).split(';')
+                all_cmds += cmds
     if len(all_cmds) == 0:
         # no command found
         raise RuntimeError(

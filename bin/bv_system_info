@@ -6,12 +6,12 @@ import sys, os
 
 def getValueFromFile( file, index = 0 ):
   if os.path.exists( file ):
-    f = open( file )
-    splittedline = f.readline().split()
-    if ( ( 0 <= index ) and  ( index < len(splittedline) ) ) :
-      return splittedline[index]
-    else :
-      return None
+    with open( file ) as f:
+      splittedline = f.readline().split()
+      if ( ( 0 <= index ) and  ( index < len(splittedline) ) ) :
+        return splittedline[index]
+      else :
+        return None
   else :
     return None
 
@@ -98,10 +98,10 @@ else :
     systemplatform = system.lower()
     # Check for Ubuntu
     if os.path.exists( '/etc/lsb-release' ):
-      f = open( '/etc/lsb-release' )
-      if f.readline() == 'DISTRIB_ID=Ubuntu\n':
-        system = 'Ubuntu'
-        release = f.readline().split( '=' )[1][:-1]
+      with open( '/etc/lsb-release' ) as f:
+        if f.readline() == 'DISTRIB_ID=Ubuntu\n':
+          system = 'Ubuntu'
+          release = f.readline().split( '=' )[1][:-1]
     if system == systemtype:
       for x in ( 'system', 'fedora', 'redhat', 'mandriva', 'mandrake' ):
         # overcome bug in python

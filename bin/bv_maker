@@ -69,6 +69,11 @@ except ImportError:
     subprocess32 = None
 
 try:
+    from subprocess import DEVNULL
+except ImportError:
+    DEVNULL = open(os.devnull, 'wb')
+
+try:
     import jenkins
     if '_get_job_folder' not in jenkins.Jenkins.__dict__:
         def get_job_folder(self, name):
@@ -440,13 +445,14 @@ def copy_brainvisa_cmake(installDir):
     if samefile:
         return
     import brainvisa.maker
-    for f in open(os.path.join(os.path.dirname(brainvisa.maker.__file__),
-                               'installed_files.txt')):
-        p, f = os.path.split(f.strip())
-        d = os.path.join(installDir, p)
-        if not os.path.exists(d):
-            os.makedirs(d)
-        shutil.copy(os.path.join(sourceDir, p, f), d)
+    with open(os.path.join(os.path.dirname(brainvisa.maker.__file__),
+                           'installed_files.txt')) as installed_f:
+        for f in installed_f:
+            p, f = os.path.split(f.strip())
+            d = os.path.join(installDir, p)
+            if not os.path.exists(d):
+                os.makedirs(d)
+            shutil.copy(os.path.join(sourceDir, p, f), d)
 
 
 def normalize_path(path):
@@ -554,14 +560,11 @@ def run_and_log_tests(cwd=None, env=None, options=None, projects=None, timeout=N
             logs[label] = logitem
             #os.unlink(logfile[1])
         # FIXME DEBUG
-        print('-------------------------------------',
-              file=open(logfile[1], 'a'))
-        print('projects to test: %s' % repr(projects),
-              file=open(logfile[1], 'a'))
-        print('labels to test: %s' % repr(labels),
-              file=open(logfile[1], 'a'))
-        print('current label: %s' % label,
-              file=open(logfile[1], 'a'))
+        with open(logfile[1], 'a') as f:
+            print('-------------------------------------', file=f)
+            print('projects to test: %s' % repr(projects), file=f)
+            print('labels to test: %s' % repr(labels), file=f)
+            print('current label: %s' % label, file=f)
     return logs
 
 
@@ -591,7 +594,8 @@ def run_and_log_testref(cwd=None, env=None, options=None, timeout = None):
                                         timeout = timeout)
     except Exception as e:
         if hasattr(e, 'output'):
-            open(logfile[1], 'w').write(e.output)
+            with open(logfile[1], 'w') as f:
+                f.write(e.output)
             if print_output:
                 print(e.output)
         logitem = {}
@@ -601,7 +605,8 @@ def run_and_log_testref(cwd=None, env=None, options=None, timeout = None):
         logitem['stop_time'] = time.localtime()
         logs['testref'] = logitem
     else:
-        open(logfile[1], 'w').write(output)
+        with open(logfile[1], 'w') as f:
+            f.write(output)
         logitem = {}
         logitem['log_file'] = logfile[1]
         logitem['exception'] = None
@@ -707,20 +712,12 @@ http://brainvisa.info/brainvisa-cmake/
             sys.exit(0)
 
         packages = []
-        lineCount = 0
-        currentDirectoryObject = None
-        
-        source_dirs = []
-        build_dirs = []
-        package_dirs = []
-        publication_dirs = []
         
         self.sourcesDirectories = {}
         self.buildDirectories = {}
         self.packageDirectories = {}
         self.publicationDirectories = {}
         self.general_section = GeneralSection(self)
-        condition_stack = []
 
         self.directories = options.directories
 
@@ -753,131 +750,149 @@ http://brainvisa.info/brainvisa-cmake/
             options.configuration_file = defaultConfigurationFile
 
         if options.configuration_file:
+            with open(options.configuration_file, 'rb') as f:
+                self.parse_config_file(f, options)
 
-            # Read configuration file
-            for line in open(options.configuration_file, 'rb'):
-                lineCount += 1
-                line = line.strip()
-                try:
-                    line = line.decode()
-                except:
-                    line = line.decode('utf-8')
-                # skip comments
-                if not line or line[0] == '#' or line.startswith('//'):
-                    continue
-                try:
-                    if line[0] == '[':
-                        if line[-1] != ']':
-                            raise SyntaxError()
-                        l = line[1:-1].split(None, 1)
-                        if len(l) != 2 and l[0] not in ('if', 'endif', 'else', 
-                                                        'general'):
-                            raise SyntaxError()
+        if options.verbose:
+            print('variables initialized')
 
-                        if l[0] == 'if' \
-                                and currentDirectoryObject is not None \
-                                and len(l) >= 2:
-                            if len(condition_stack) != 0 \
-                                    and condition_stack[-1] is False:
-                                # if an upstream condition is already false,
-                                # all the subtree is false (but we still have
-                                # to parse it to count if/endif/else
-                                # occurrences in it)
-                                condition_stack.append(False)
-                            else:
-                                try:
-                                    condition_stack.append(
-                                        check_filter_condition(l[1:]))
-                                except:
-                                    print('error in condition, line %d:'
-                                          % lineCount, file=sys.stderr)
-                                    print(line, file=sys.stderr)
-                                    raise
-                        elif l[0] == 'endif' and len(l) == 1:
-                            if len(condition_stack) > 0:
-                                # ends the filtered section
-                                condition_stack.pop()
-                            else:
-                                SyntaxError('[endif] clause is not preceded '
-                                            'by [if] clause.')
-                        elif l[0] == 'else' and len(l) == 1:
-                            if len(condition_stack) > 0:
-                                # inverts the filtered section, only if its
-                                # parent condition is True
-                                if len(condition_stack) == 1 \
-                                        or condition_stack[-2]:
-                                    condition_stack[-1] \
-                                        = not condition_stack[-1]
-                            else:
-                                SyntaxError('[else] clause is not preceded by '
-                                            '[if] clause.')
-                        elif len(condition_stack) == 0 \
-                            or False not in condition_stack:
-                            if self.verbose:
-                                print('  processing line %s:' % str(lineCount),
-                                      repr(line))
-                                sys.stdout.flush()
-                                
-                            if l[0] == 'source':
-                                currentDirectoryObject = SourceDirectory(
-                                    l[1].strip(),
-                                    self)
-                                source_dirs.append(currentDirectoryObject)
+        # store options and args
+        self.options = options
+        self.args = args
 
-                            elif l[0] == 'build':
-                                currentDirectoryObject = BuildDirectory(
-                                    l[1].strip(),
-                                    self)
-                                build_dirs.append(currentDirectoryObject)
 
-                            elif l[0] == 'virtualenv':
-                                currentDirectoryObject = VirtualenvDirectory(
-                                    l[1].strip(),
-                                    self)
-                                build_dirs.append(currentDirectoryObject)
-                                
-                            elif l[0] == 'package':
-                                currentDirectoryObject = PackageDirectory(
-                                    l[1].strip(),
-                                    self)
-                                package_dirs.append(currentDirectoryObject)
-                                
-                            elif l[0] == 'package_publication':
-                                currentDirectoryObject = PublicationDirectory(
-                                    l[1].strip(),
-                                    self)
-                                publication_dirs.append(currentDirectoryObject)
-                                
-                            elif l[0] == 'general' and len(l) == 1:
-                                currentDirectoryObject = self.general_section
-                            else:
-                                raise SyntaxError()
+    def parse_config_file(self, f, options):
+        """Read configuration from an file object (opened in binary mode)."""
+        lineCount = 0
+        currentDirectoryObject = None
 
+        source_dirs = []
+        build_dirs = []
+        package_dirs = []
+        publication_dirs = []
+
+        condition_stack = []
+
+        for line in f:
+            lineCount += 1
+            line = line.strip()
+            try:
+                line = line.decode()
+            except:
+                line = line.decode('utf-8')
+            # skip comments
+            if not line or line[0] == '#' or line.startswith('//'):
+                continue
+            try:
+                if line[0] == '[':
+                    if line[-1] != ']':
+                        raise SyntaxError()
+                    l = line[1:-1].split(None, 1)
+                    if len(l) != 2 and l[0] not in ('if', 'endif', 'else', 
+                                                    'general'):
+                        raise SyntaxError()
+
+                    if l[0] == 'if' \
+                            and currentDirectoryObject is not None \
+                            and len(l) >= 2:
+                        if len(condition_stack) != 0 \
+                                and condition_stack[-1] is False:
+                            # if an upstream condition is already false,
+                            # all the subtree is false (but we still have
+                            # to parse it to count if/endif/else
+                            # occurrences in it)
+                            condition_stack.append(False)
+                        else:
+                            try:
+                                condition_stack.append(
+                                    check_filter_condition(l[1:]))
+                            except:
+                                print('error in condition, line %d:'
+                                      % lineCount, file=sys.stderr)
+                                print(line, file=sys.stderr)
+                                raise
+                    elif l[0] == 'endif' and len(l) == 1:
+                        if len(condition_stack) > 0:
+                            # ends the filtered section
+                            condition_stack.pop()
+                        else:
+                            SyntaxError('[endif] clause is not preceded '
+                                        'by [if] clause.')
+                    elif l[0] == 'else' and len(l) == 1:
+                        if len(condition_stack) > 0:
+                            # inverts the filtered section, only if its
+                            # parent condition is True
+                            if len(condition_stack) == 1 \
+                                    or condition_stack[-2]:
+                                condition_stack[-1] \
+                                    = not condition_stack[-1]
+                        else:
+                            SyntaxError('[else] clause is not preceded by '
+                                        '[if] clause.')
                     elif len(condition_stack) == 0 \
                         or False not in condition_stack:
-                        if currentDirectoryObject is None:
-                            raise SyntaxError()
                         if self.verbose:
-                            print('  processing line %s:' % str(lineCount), 
+                            print('  processing line %s:' % str(lineCount),
                                   repr(line))
                             sys.stdout.flush()
-                            
-                        currentDirectoryObject.addConfigurationLine(line)
-                except SyntaxError as e:
-                    msg = e.message
-                    if msg == '':
-                        msg = 'Syntax error'
-                    raise SyntaxError('%s in ' % msg + repr(
-                        options.configuration_file) + ' on line '
-                        + str(lineCount))
+
+                        if l[0] == 'source':
+                            currentDirectoryObject = SourceDirectory(
+                                l[1].strip(),
+                                self)
+                            source_dirs.append(currentDirectoryObject)
+                        elif l[0] == 'build':
+                            currentDirectoryObject = BuildDirectory(
+                                l[1].strip(),
+                                self)
+                            build_dirs.append(currentDirectoryObject)
+                        elif l[0] == 'virtualenv':
+                            currentDirectoryObject = VirtualenvDirectory(
+                                l[1].strip(),
+                                self)
+                            build_dirs.append(currentDirectoryObject)
+                        elif l[0] == 'package':
+                            currentDirectoryObject = PackageDirectory(
+                                l[1].strip(),
+                                self)
+                            package_dirs.append(currentDirectoryObject)
+                        elif l[0] == 'package_publication':
+                            currentDirectoryObject = PublicationDirectory(
+                                l[1].strip(),
+                                self)
+                            publication_dirs.append(currentDirectoryObject)
+                        elif l[0] == 'general' and len(l) == 1:
+                            currentDirectoryObject = self.general_section
+                        else:
+                            raise SyntaxError()
+
+                elif len(condition_stack) == 0 \
+                    or False not in condition_stack:
+                    if currentDirectoryObject is None:
+                        raise SyntaxError()
+                    if self.verbose:
+                        print('  processing line %s:' % str(lineCount),
+                              repr(line))
+                        sys.stdout.flush()
+
+                    currentDirectoryObject.addConfigurationLine(line)
+            except SyntaxError as e:
+                # FIXME: SyntaxError should be reserved for Python syntax
+                # errors, use a custom exception instead
+                msg = e.message
+                if msg == '':
+                    msg = 'Syntax error'
+                raise SyntaxError('%s in ' % msg + repr(
+                    options.configuration_file) + ' on line '
+                    + str(lineCount))
 
         if len(condition_stack) > 0:
             RuntimeError('some [if] clause remain unclosed by [endif].')
-        
+
         if options.verbose:
-            print('configuration file %s parsed' 
+            print('configuration file %s parsed'
                 % repr(options.configuration_file))
-        
+
         for r, sections in ((None, [self.general_section]), \
                             ('sourcesDirectories', source_dirs), \
                             ('buildDirectories', build_dirs), \
@@ -900,17 +915,9 @@ http://brainvisa.info/brainvisa-cmake/
                         s.parseSourceConfiguration()
 
                 if options.verbose:
-                    print(s.directory if hasattr(s, 'directory') else 'general', 
-                        'options:')
+                    print(getattr(s, 'directory', 'general'), 'options:')
                     for o in s._validOptions:
                         print(' ', o, '=', getattr(s, o, None))
-                
-        if options.verbose:
-            print('variables initialized')
-        
-        # store options and args
-        self.options = options
-        self.args = args
 
 
 def check_filter_condition(filters):
@@ -1158,7 +1165,8 @@ class JenkinsWrapper(object):
                        '--duration', str(duration), '--log', '-']
                 #print('Run jenkins:')
                 #print(jkn_cmd)
-                system_output_on_error(jkn_cmd, stdin=open(zlog), timeout=15)
+                with open(zlog) as f:
+                    system_output_on_error(jkn_cmd, stdin=f, timeout=15)
 
 
             finally:
@@ -1324,7 +1332,8 @@ class JenkinsWrapper(object):
             + '/jnlpJars/jenkins-cli.jar'
         try:
             f = urlopen(url)
-            open(cli_file, 'wb').write(f.read())
+            with open(cli_file, 'wb') as f_out:
+                f_out.write(f.read())
             cls.jenkins_cli = cli_file
         except:
             shutil.rmtree(cli_file_d)
@@ -1361,7 +1370,8 @@ class JenkinsWrapper(object):
             tfile = tempfile.mkstemp(prefix='bv_maker_jenkins_',
                                       suffix='.xml')
             os.close(tfile[0])
-            open(tfile[1], 'w').write(template)
+            with open(tfile[1], 'w') as f:
+                f.write(template)
             jkn_cmd = ['java', '-jar', jenkins_cli_path] \
                 + self.jenkins_cli_options \
                 + ['-s',
@@ -1369,8 +1379,8 @@ class JenkinsWrapper(object):
                    'create-job', job_name]
             #print('jkn cmd:', jkn_cmd)
             try:
-                system_output_on_error(jkn_cmd, timeout=15,
-                                       stdin=open(tfile[1]))
+                with open(tfile[1]) as f:
+                    system_output_on_error(jkn_cmd, timeout=15, stdin=f)
             finally:
                 os.unlink(tfile[1])
 
@@ -1721,8 +1731,8 @@ Subject: %s - %s %s on %s (%s)
         if stop:
             message += ', stopped: %04d/%02d/%02d %02d:%02d' \
                 % stop[:5]
-        open(log_file, 'a').write(
-            '%s on %s (%s)\n' % (message, machine, osname))
+        with open(log_file, 'a') as f:
+            f.write('%s on %s (%s)\n' % (message, machine, osname))
 
     def jenkins_notification(self, d, o, step, status):
         ''' Notify job execution (build, test etc) to a Jenkins server
@@ -2859,7 +2869,7 @@ class GitRepository(object):
         try:
             return decode_output(subprocess.check_output(
                 ['git', 'rev-parse', '--symbolic-full-name', '@{upstream}'],
-                stderr=open(os.devnull, 'wb'), cwd=self.path).rstrip())
+                stderr=DEVNULL, cwd=self.path).rstrip())
         except subprocess.CalledProcessError:
             return None
 
@@ -2872,7 +2882,7 @@ class GitRepository(object):
         try:
             return decode_output(subprocess.check_output(
                 ['git', 'rev-parse', '--abbrev-ref', '@{upstream}'],
-                stderr=open(os.devnull, 'wb'), cwd=self.path).rstrip())
+                stderr=DEVNULL, cwd=self.path).rstrip())
         except subprocess.CalledProcessError:
             return None
 
@@ -2885,7 +2895,7 @@ class GitRepository(object):
             return decode_output(subprocess.check_output(
                 ['git', 'rev-parse', '--symbolic-full-name',
                  'refs/remotes/origin/' + self.remote_ref],
-                stderr=open(os.devnull, 'wb'), cwd=self.path).rstrip())
+                stderr=DEVNULL, cwd=self.path).rstrip())
         except subprocess.CalledProcessError:
             return None
 
@@ -3073,7 +3083,7 @@ uncommitted local changes (see above).""")
         # Show the stash state of the repository
         retcode = self.call_command(['git', 'rev-parse', '--verify', '--quiet',
                                      'refs/stash'],
-                                    stdout=open(os.devnull, 'wb'))
+                                    stdout=DEVNULL)
 
         stash = (retcode == 0)
 
@@ -3082,8 +3092,8 @@ uncommitted local changes (see above).""")
                                      '--exclude-standard', '--directory',
                                      '--no-empty-directory', '--error-unmatch',
                                      '--', ':/*'],
-                                    stdout=open(os.devnull, 'wb'),
-                                    stderr=open(os.devnull, 'wb'))
+                                    stdout=DEVNULL,
+                                    stderr=DEVNULL)
         untracked = (retcode == 0)
 
         # Show upstream info for bv_maker-configured and git-configured
@@ -3129,7 +3139,7 @@ uncommitted local changes (see above).""")
             output = subprocess.check_output(
                 ['git', 'rev-list', '--count', '--left-right',
                  upstream + '...HEAD'],
-                stderr=open(os.devnull, 'wb'), cwd=self.path)
+                stderr=DEVNULL, cwd=self.path)
             behind, ahead = (int(n) for n in output.split())
         except subprocess.CalledProcessError:
             return None, None
@@ -3195,7 +3205,7 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
             # URL configured in bv_maker
             retcode = self.call_command(
                 ['git', 'remote', 'set-url', 'origin', self.remote_url],
-                stderr=open(os.devnull, 'wb')
+                stderr=DEVNULL,
             )
             if retcode != 0:
                 retcode = self.call_command(
@@ -3548,8 +3558,9 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
             self.ignore_git_failure = True
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
-        clientFile = open(os.path.join(self.directory, 'bv_maker.cfg'), 'w')
-        print('\n'.join(self.configurationLines), file=clientFile)
+        with open(os.path.join(self.directory, 'bv_maker.cfg'),
+                  'w') as clientFile:
+            print('\n'.join(self.configurationLines), file=clientFile)
 
         repositoryDirectory = os.path.join(self.directory, '.repository')
         checkout = False
@@ -3579,11 +3590,11 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
 
         # Go to the sources directory
         externalsFileName = os.path.join(self.directory, 'bv_maker.externals')
-        externalsFile = open(externalsFileName, 'w')
-        for component_version, url, dest_directory, bv_version in set(self.svnComponents):
-            print(dest_directory, url, file=externalsFile)
-            source_directories.append((dest_directory, bv_version))
-        externalsFile.close()
+        with open(externalsFileName, 'w') as externalsFile:
+            for component_version, url, dest_directory, bv_version in set(self.svnComponents):
+                print(dest_directory, url, file=externalsFile)
+                source_directories.append((dest_directory, bv_version))
+
         if use_rcs and options.svn:
             if options.cleanup:
                 self.svncommand('cleanup', self.directory, cwd=self.directory)
@@ -3634,8 +3645,9 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                     bv_version or version] = (dest_path, build_model)
             else:
                 print('WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found or used' % os.path.join(self.directory, dest_path))
-        json.dump(components_sources, open(
-            os.path.join(self.directory, 'components_sources.json'), 'w'), indent=2)
+        with open(os.path.join(self.directory, 'components_sources.json'),
+                  'w') as f:
+            json.dump(components_sources, f, indent=2)
         if git_update_failure:
             self._git_only_failed = True
             raise RuntimeError('Error updating one or more Git repositories')
@@ -3775,9 +3787,9 @@ class ComponentsConfigParser(DirectorySection):
                         versionPattern, sourceDirectory = l
                     sourceDirectory = environmentPathVariablesSubstitution(
                             sourceDirectory, env=self.get_environ())
-                    components_sources = json.load(
-                        open(os.path.join(sourceDirectory,
-                                          'components_sources.json')))
+                    with open(os.path.join(sourceDirectory,
+                                           'components_sources.json')) as f:
+                        components_sources = json.load(f)
                     projects_set = brainvisa_projects.ProjectsSet()
                     projects_set.add_sources_list(components_sources)
                     possible_components = set(
@@ -3819,7 +3831,8 @@ class ComponentsConfigParser(DirectorySection):
                     installed_json = os.path.join(
                         self.directory, 'bv_maker_install.json')
                     if os.path.exists(installed_json):
-                        installed = json.load(open(installed_json))
+                        with open(installed_json) as f:
+                            installed = json.load(f)
                     else:
                         installed = {}
                     pip_installed = installed.setdefault('pip', {})
@@ -3831,7 +3844,8 @@ class ComponentsConfigParser(DirectorySection):
                         print('Running:', ' '.join(command))
                         subprocess.check_call(command)
                         pip_installed[module] = version
-                        json.dump(installed, open(installed_json, 'w'))
+                        with open(installed_json, 'w') as f:
+                            json.dump(installed, f)
                 else:
                     SyntaxError()
             projects = set(brainvisa_projects.project_per_component.get(i, i)
@@ -3890,7 +3904,9 @@ for p in sys.path[i+1:]:
             filename = os.path.join(p, 'sitecustomize', '__init__.py')
         if os.path.exists(filename):
             __file__ = filename
-            exec(compile(open(filename).read(), filename, 'exec'))
+            with open(filename) as f:
+                file_contents = f.read()
+            exec(compile(file_contents, filename, 'exec'))
 __file__ = old_file.pop()
 for v in ('filename', 'p', 'i'):
     if v in globals():
@@ -4054,8 +4070,8 @@ if len(old_file) == 0:
             self.directory, 'python', 'sitecustomize')
         if not os.path.exists(sitecustomize_dir):
             os.makedirs(sitecustomize_dir)
-        open(os.path.join(sitecustomize_dir, '__init__.py'), 'w').write(
-            self.sitecustomize_content)
+        with open(os.path.join(sitecustomize_dir, '__init__.py'), 'w') as f:
+            f.write(self.sitecustomize_content)
         # Remove existing sitecustomize.py (was generated by older Axon)
         for i in glob.glob(sitecustomize_dir + '.py*'):
             os.remove(i)
@@ -4094,57 +4110,57 @@ if len(old_file) == 0:
                 self.buildModelPerComponent[component] = build_model
 
         cmakeFile = os.path.join(self.directory, 'bv_maker.cmake')
-        out = open(cmakeFile, 'w')
-        print('set( BRAINVISA_PROJECTS', ' '.join(
-            sortedProjects), 'CACHE STRING "BrainVISA Projects list" FORCE )',
-            file=out)
-        print('set( _BRAINVISA_PROJECTS', ' '.join(
-            sortedProjects), 'CACHE STRING "BrainVISA Projects list" FORCE )',
-            file=out)
-        print('set( BRAINVISA_COMPONENTS',
-              ' '.join(sortedComponents),
-              'CACHE STRING "BrainVISA components list" FORCE )',
-              file=out)
-        print('set( _BRAINVISA_COMPONENTS',
-              ' '.join(sortedComponents),
-              'CACHE STRING "BrainVISA components list" FORCE )',
-              file=out)
-        print(file=out)
-        for component, directory_version_model in six.iteritems(self.components):
-            directory, selected_version, version, build_model = directory_version_model
-            if component in self.buildModelPerComponent:
-                print('set( BRAINVISA_SOURCES_' + component + ' "' \
-                    + cmake_path(self.directory ) + '/build_files/' \
-                    + component + '_src' \
-                    + '" CACHE STRING "Sources directory for component ' \
-                    + component + '" FORCE )',
-                    file=out)
-            else:
-                print('set( BRAINVISA_SOURCES_' + component + ' "' \
-                    + cmake_path(directory) \
-                    + '" CACHE STRING "Sources directory for component ' \
-                    + component + '" FORCE )',
-                    file=out)
-            print('set( ' + component + '_DIR "' \
-                + cmake_path(self.directory ) + '/share/' + component + \
-                '-' + version + \
-                '/cmake" CACHE STRING "Directory used for find_package( ' + \
-                component + \
-                ' )" FORCE )',
+        with open(cmakeFile, 'w') as out:
+            print('set( BRAINVISA_PROJECTS', ' '.join(
+                sortedProjects), 'CACHE STRING "BrainVISA Projects list" FORCE )',
                 file=out)
-            print('set( ' + component + '_VERSION "' + version + '" )',
+            print('set( _BRAINVISA_PROJECTS', ' '.join(
+                sortedProjects), 'CACHE STRING "BrainVISA Projects list" FORCE )',
+                file=out)
+            print('set( BRAINVISA_COMPONENTS',
+                  ' '.join(sortedComponents),
+                  'CACHE STRING "BrainVISA components list" FORCE )',
                   file=out)
+            print('set( _BRAINVISA_COMPONENTS',
+                  ' '.join(sortedComponents),
+                  'CACHE STRING "BrainVISA components list" FORCE )',
+                  file=out)
+            print(file=out)
+            for component, directory_version_model in six.iteritems(self.components):
+                directory, selected_version, version, build_model = directory_version_model
+                if component in self.buildModelPerComponent:
+                    print('set( BRAINVISA_SOURCES_' + component + ' "' \
+                        + cmake_path(self.directory ) + '/build_files/' \
+                        + component + '_src' \
+                        + '" CACHE STRING "Sources directory for component ' \
+                        + component + '" FORCE )',
+                        file=out)
+                else:
+                    print('set( BRAINVISA_SOURCES_' + component + ' "' \
+                        + cmake_path(directory) \
+                        + '" CACHE STRING "Sources directory for component ' \
+                        + component + '" FORCE )',
+                        file=out)
+                print('set( ' + component + '_DIR "' \
+                    + cmake_path(self.directory ) + '/share/' + component + \
+                    '-' + version + \
+                    '/cmake" CACHE STRING "Directory used for find_package( ' + \
+                    component + \
+                    ' )" FORCE )',
+                    file=out)
+                print('set( ' + component + '_VERSION "' + version + '" )',
+                      file=out)
 
         cmakeLists = os.path.join(self.directory, 'CMakeLists.txt')
-        out.close()
-        out = open(cmakeLists, 'w')
-        print('''
+
+        with open(cmakeLists, 'w') as out:
+            print('''
 cmake_minimum_required( VERSION 2.6 )
 set( CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}" ${CMAKE_PREFIX_PATH} )
 find_package( brainvisa-cmake NO_POLICY_SCOPE )
 include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 ''', file=out)
-        out.close()
+
         exe_suffix = ''
         if sys.platform == 'win32':
             command_base = ['cmake', '-G', 'MSYS Makefiles']
@@ -4769,8 +4785,8 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
             
         
 
-        f = open(script_fname, 'w')
-        f.write('''var install_dir = "%s";
+        with open(script_fname, 'w') as f:
+            f.write('''var install_dir = "%s";
 var repositories = ["%s"%s];
 
 function Controller()
@@ -4930,7 +4946,6 @@ Controller.prototype.FinishedPageCallback = function()
 }
 
 ''' % (install_dir, repos_dir, data_repos_dir_url))
-        f.close()
         return script_fname
 
     def package(self, options, args):
@@ -5013,7 +5028,8 @@ Controller.prototype.FinishedPageCallback = function()
             for d in older_dirs:
                 report_file = os.path.join(d, 'tests_report.txt')
                 if os.path.exists(report_file):
-                    report = open(report_file).readlines()
+                    with open(report_file) as f:
+                        report = f.readlines()
                     if report[-1].strip() != 'Tests_result: OK':
                         repos_to_remove.add(d)
                         print('removing older failed repos:', d)
@@ -5361,9 +5377,11 @@ Controller.prototype.FinishedPageCallback = function()
                 if item['exception'] is not None:
                     status = 'FAILED'
             if os.path.isdir(repos_dir):
-                open(report_file, 'w').write('Tests_result: %s\n' % status)
+                with open(report_file, 'w') as f:
+                    f.write('Tests_result: %s\n' % status)
         elif os.path.isdir(repos_dir):
-            open(report_file, 'w').write('Tests_result: OK\n')
+            with open(report_file, 'w') as f:
+                f.write('Tests_result: OK\n')
         return test_res
 
     def testref_package(self, options, args):

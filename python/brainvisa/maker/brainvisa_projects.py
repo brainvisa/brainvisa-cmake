@@ -23,8 +23,9 @@ except ImportError:
 
 if sys.version_info[0] >= 3:
     def execfile(filename, globals=None, locals=None):
-        exec(compile(open(filename, 'rb').read(), filename, 'exec'), globals,
-             locals)
+        with open(filename, 'rb') as f:
+            file_contents = f.read()
+        exec(compile(file_contents, filename, 'exec'), globals, locals)
 
 
 class ProjectsSet(object):
@@ -168,27 +169,28 @@ def parse_project_info_cmake(
   build_model = None
   
   p = re.compile( r'\s*set\(\s*([^ \t]*)\s*(.*[^ \t])\s*\)' )
-  for line in open(path, 'rb'):
-    try:
-      line = line.decode()
-    except:
-      line = line.decode('utf-8') # in case the default encoding is ascii
-    match = p.match(line)
-    if match:
-      variable, value = match.groups()
-      if variable == 'BRAINVISA_PACKAGE_NAME':
-        component = value
-      elif variable == 'BRAINVISA_PACKAGE_MAIN_PROJECT':
-        project = value
-      elif variable == 'BRAINVISA_PACKAGE_VERSION_MAJOR' and len(version) > 0:
-        version[ 0 ] = value
-      elif variable == 'BRAINVISA_PACKAGE_VERSION_MINOR' and len(version) > 1:
-        version[ 1 ] = value
-      elif variable == 'BRAINVISA_PACKAGE_VERSION_PATCH' and len(version) > 2:
-        version[ 2 ] = value
-      elif variable == 'BRAINVISA_BUILD_MODEL':
-        build_model = value
-        
+  with open(path, 'rb') as f:
+    for line in f:
+      try:
+        line = line.decode()
+      except:
+        line = line.decode('utf-8') # in case the default encoding is ascii
+      match = p.match(line)
+      if match:
+        variable, value = match.groups()
+        if variable == 'BRAINVISA_PACKAGE_NAME':
+          component = value
+        elif variable == 'BRAINVISA_PACKAGE_MAIN_PROJECT':
+          project = value
+        elif variable == 'BRAINVISA_PACKAGE_VERSION_MAJOR' and len(version) > 0:
+          version[ 0 ] = value
+        elif variable == 'BRAINVISA_PACKAGE_VERSION_MINOR' and len(version) > 1:
+          version[ 1 ] = value
+        elif variable == 'BRAINVISA_PACKAGE_VERSION_PATCH' and len(version) > 2:
+          version[ 2 ] = value
+        elif variable == 'BRAINVISA_BUILD_MODEL':
+          build_model = value
+
   return ( project, component, version, build_model )
 
 

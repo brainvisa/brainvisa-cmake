@@ -109,7 +109,7 @@ if options.logfile:
     logfiles = options.logfile
 
 if options.ssh_host:
-    ssh_remote_host = optons.ssh_host
+    ssh_remote_host = options.ssh_host
 
 if options.user:
     ssh_user = options.user + '@'

@@ -42,6 +42,8 @@ try:
 except:
     import cElementTree as ElementTree # for 2.4
 
+import six
+
 from brainvisa.maker.bioproj_parser import SVN_URL, BRAINVISA_SVN_URL
 from brainvisa.maker.brainvisa_projects import brainvisaBranchesPerComponent, brainvisaURLPerComponent, brainvisaComponentsPerGroup, brainvisaProjectPerComponent
 

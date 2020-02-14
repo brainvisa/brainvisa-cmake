@@ -724,6 +724,7 @@ http://brainvisa.info/brainvisa-cmake/
         for i in ('configuration_file', 'username', 'verbose'):
             setattr(self, i, getattr(options, i))
 
+        bd = None  # build directory supplied on the command-line
         if options.build_directory:
             if not options.configuration_file:
                 cf = os.path.join(options.build_directory, 'bv_maker.cfg')
@@ -736,8 +737,6 @@ http://brainvisa.info/brainvisa-cmake/
             reload(brainvisa_projects)
 
             bd = BuildDirectory(options.build_directory, self)
-                
-            build_dirs.append(bd)
 
             for sd in options.sources_directories:
                 if os.path.exists(os.path.join(sd, 'project_info.cmake')) \
@@ -751,7 +750,7 @@ http://brainvisa.info/brainvisa-cmake/
 
         if options.configuration_file:
             with open(options.configuration_file, 'rb') as f:
-                self.parse_config_file(f, options)
+                self.parse_config_file(f, options, extra_build_dir=bd)
 
         if options.verbose:
             print('variables initialized')
@@ -761,13 +760,13 @@ http://brainvisa.info/brainvisa-cmake/
         self.args = args
 
 
-    def parse_config_file(self, f, options):
+    def parse_config_file(self, f, options, extra_build_dir=None):
         """Read configuration from an file object (opened in binary mode)."""
         lineCount = 0
         currentDirectoryObject = None
 
         source_dirs = []
-        build_dirs = []
+        build_dirs = [extra_build_dir] if extra_build_dir else []
         package_dirs = []
         publication_dirs = []
 
@@ -5683,9 +5682,6 @@ except KeyboardInterrupt:
     failed = True
 
 failed |= display_failure_summary(configuration)
-
-# cleanup
-del f, todo, commands, options_by_command, configuration
 
 if failed:
     sys.exit(1)

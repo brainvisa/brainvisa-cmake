@@ -588,6 +588,22 @@ components_definition = [
             }],
         ],
     }),
+    ('whasa', {
+        'components': [
+            ['whasa-private', { # Experimental branch to propose a new organization
+                'groups': ['catidb3_all', 'cati_platform'],
+                'branches': {
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/whasa/whasa-private/branches/bug_fix', 'whasa-private/bug_fix'),
+                },
+            }],
+            ['whasa-gpl', { # Experimental branch to propose a new organization
+                'groups': ['catidb3_all', 'cati_platform'],
+                'branches': {
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/whasa/whasa-gpl/branches/bug_fix', 'whasa-gpl/bug_fix'),
+                    },
+            }],
+        ],
+    }),
     ('release', {
         'components': [
             ['brainvisa-release', {

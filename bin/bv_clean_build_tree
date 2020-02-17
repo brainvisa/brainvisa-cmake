@@ -159,10 +159,19 @@ while basedirs:
 
     for f in dircontent:
         path = os.path.join(d, f)
-        if os.path.isdir(path) and not os.path.islink(path):
-            # (if path is a symlink, don't recurse in it, it may be pointing to
-            # itself or somewhere already done, or in sources...)
-            basedirs.append((path, excluded))
+        if os.path.isdir(path):
+            if os.path.islink(path):
+                # (if path is a symlink, don't recurse in it, it may be
+                # pointing to itself or somewhere already done, or in
+                # sources...)
+                continue
+            elif f == '__pycache__':
+                # __pycache__ directories are harmless, their .pyc files are
+                # ignored if the corresponding source file is gone
+                # (https://www.python.org/dev/peps/pep-3147/#id59)
+                continue
+            else:
+                basedirs.append((path, excluded))
         elif os.path.islink(path):
             if not os.path.exists(path):
                 print('rm dead link', path)

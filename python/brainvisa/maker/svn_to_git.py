@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 import os
@@ -412,7 +413,7 @@ def main():
         else:
             old_project, old_branch = old_project[0], 'trunk'
         if new_dir is None:
-            new_dir = s.path.join(repos, new_project)
+            new_dir = os.path.join(repos, new_project)
         if old_dir is None:
             old_dir = os.path.join(repos, old_project)
         graft_history(new_project, old_project, new_dir, old_dir,

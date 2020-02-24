@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 import jenkins
@@ -39,5 +40,4 @@ for job in jobs:
         jen.delete_job(job['name'])
         count += 1
 
-print('\n%d / %d jobs deleted.' % (count, len(jobs))
-
+print('\n%d / %d jobs deleted.' % (count, len(jobs)))

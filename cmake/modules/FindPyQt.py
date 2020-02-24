@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # This script comes from kdelibs's git repository at https://quickgit.kde.org/
 # under [kdelibs.git]/cmake/modules/FindPyQt.py
 #

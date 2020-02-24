@@ -52,7 +52,8 @@ class PathSystemSyntax(object):
     def __init__(self):
         raise RuntimeError('PathSystemSyntax is not instanciable')
         
-    def check(path):
+    @classmethod
+    def check(cls, path):
         return True
     
 class UriPathSystemSyntax(PathSystemSyntax):
@@ -62,8 +63,9 @@ class UriPathSystemSyntax(PathSystemSyntax):
     scheme = 'file://'
     syntax = re.compile('^(file://([a-zA-Z0-9_%/:]+))$')
 
-    def check(path):
-        return syntax.match(path)
+    @classmethod
+    def check(cls, path):
+        return cls.syntax.match(path)
     
 class WindowsPathSystemSyntax(PathSystemSyntax):
     sep = '\\'
@@ -71,8 +73,9 @@ class WindowsPathSystemSyntax(PathSystemSyntax):
     possible_sep = [sep] + alt_sep
     syntax = re.compile(r'^(([a-zA-Z]:)?([a-zA-Z0-9_%\\/]+))$')
 
-    def check(path):
-        return syntax.match(path)
+    @classmethod
+    def check(cls, path):
+        return cls.syntax.match(path)
     
 class WindowsAltPathSystemSyntax(WindowsPathSystemSyntax):
     sep = '/'
@@ -84,8 +87,9 @@ class LinuxPathSystemSyntax(PathSystemSyntax):
     possible_sep = ['/']
     syntax = re.compile(r'^([:a-zA-Z0-9_%\\/]+)$')
 
-    def check(path):
-        return syntax.match(path)
+    @classmethod
+    def check(cls, path):
+        return cls.syntax.match(path)
 
 class PathSystems:    
     r'''
@@ -117,7 +121,6 @@ class DefaultPathConverterRegistry(Singleton, dict):
 
 def get_host_path_system():
     import os
-    import sys
     
     if sys.platform.startswith('win'):
         if os.environ.get('TERM') == 'msys':

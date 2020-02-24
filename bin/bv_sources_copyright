@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 #  This software and supporting documentation are distributed by
 #      Institut Federatif de Recherche 49
@@ -209,7 +210,7 @@ class CppOldHeaderClassifier( CppHeaderClassifier ):
     return result
   
   if False:
-    def separateHeaders( self, fileNames ):
+    def separateHeaders( self, fileNames ):  # noqa: F811
       result = {}
       aimsHeader = re.compile( r'[ \t\n]*/\*[ \t\n]*\*[ \t\n]*Copyright.*' )
       idLine = re.compile( r'^\s*\*\s*\$Id.*' )

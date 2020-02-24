@@ -324,10 +324,10 @@ def update_project_info(project_info_path, version):
         
     project_info_content = open(project_info_path, 'rb').read()
     try:
-        project_info = project_info.decode()
+        project_info_content = project_info_content.decode()
     except:
         # in case the default encoding is ascii
-        project_info = project_info.decode('utf-8')
+        project_info_content = project_info_content.decode('utf-8')
         
     # Set version in project info file
     # It needs to have a version with at least 3

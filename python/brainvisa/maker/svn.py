@@ -1024,7 +1024,7 @@ class SvnComponent( VersionControlComponent ):
             @rtype: list
             @return: A list that contains matching branch entries.
         """
-        import fnmatch, lxml.objectify, types
+        import fnmatch, lxml.objectify
 
         if not isinstance(patterns, (types.ListType, types.TupleType)):
             patterns = ( str( patterns ), )
@@ -1070,7 +1070,7 @@ class SvnComponent( VersionControlComponent ):
             @return: A dictionary that contains matching versions as keys
                      and their associated branch name
         """
-        import fnmatch, lxml.objectify, types
+        import fnmatch, lxml.objectify
         
         from brainvisa.maker.version_number import VersionNumber
         

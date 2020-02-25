@@ -39,10 +39,7 @@ import os, sys
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
 from functools import reduce
-try:
-    import xml.etree.ElementTree as ElementTree
-except:
-    import cElementTree as ElementTree # for 2.4
+import xml.etree.ElementTree as ElementTree
 
 import six
 

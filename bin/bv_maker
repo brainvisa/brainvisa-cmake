@@ -762,7 +762,7 @@ http://brainvisa.info/brainvisa-cmake/
             line = line.strip()
             try:
                 line = line.decode()
-            except:
+            except UnicodeError:
                 line = line.decode('utf-8')
             # skip comments
             if not line or line[0] == '#' or line.startswith('//'):
@@ -790,7 +790,7 @@ http://brainvisa.info/brainvisa-cmake/
                             try:
                                 condition_stack.append(
                                     check_filter_condition(l[1:]))
-                            except:
+                            except Exception:
                                 print('error in condition, line %d:'
                                       % lineCount, file=sys.stderr)
                                 print(line, file=sys.stderr)
@@ -912,7 +912,7 @@ def check_filter_condition(filters):
     expression = expression % vars
     try:
         res = bool(eval(expression))
-    except:
+    except Exception:
         traceback.print_exc()
         raise
     return res
@@ -1303,7 +1303,7 @@ class JenkinsWrapper(object):
                 print('Java version %s cannot be parsed. '
                       'Not using Jenkins-cli' % jver_s)
                 java = None
-        except:
+        except Exception:
             print('Could not check java version. Not using Jenkins-cli')
             java = None
         if not java:
@@ -1319,7 +1319,7 @@ class JenkinsWrapper(object):
             with open(cli_file, 'wb') as f_out:
                 f_out.write(f.read())
             cls.jenkins_cli = cli_file
-        except:
+        except Exception:
             shutil.rmtree(cli_file_d)
             cls.jenkins_cli = None
         return cls.jenkins_cli
@@ -1432,7 +1432,7 @@ class StepCommand(object):
                             o.stop_time[step] = time.localtime()
                             # user interruptions should stop all.
                             raise
-                        except:
+                        except Exception:
                             traceback.print_exc()
                             # record failure
                             o.status[step] = 'failed'
@@ -2449,7 +2449,7 @@ class ConfigVariableParser(object):
         else:
             try:
                 old_value -= value
-            except:
+            except Exception:
                 raise SyntaxError()
     
     def get_valid_options(self):
@@ -2480,19 +2480,19 @@ class ConfigVariableParser(object):
                     if value.startswith('{') and value.endswith('}'):
                         try:
                             value = eval(value)
-                        except:
+                        except Exception:
                             raise SyntaxError()
                     else:
                         try:
                             value = eval('{' + value + '}')
-                        except:
+                        except Exception:
                             # try simpler syntax without quotes
                             try:
                                 value = [x.strip() for x in value.split(',')]
                                 value = dict([(x[:x.find(':')],
                                                x[x.find(':') + 1:].strip())
                                     for x in value])
-                            except:
+                            except Exception:
                                 raise SyntaxError()
             
             if oper == '':
@@ -4966,7 +4966,7 @@ Controller.prototype.FinishedPageCallback = function()
         while d and len(os.listdir(d)) == 0:
             try:
                 os.rmdir(d)
-            except:
+            except OSError:
                 break
             d = os.path.dirname(d)
 
@@ -5035,7 +5035,7 @@ Controller.prototype.FinishedPageCallback = function()
             vars['date'] = '%(date)s' # keep date pattern as is
             pattern = environmentPathVariablesSubstitution(
                 self._directory, env=self.get_environ()) % vars
-            pattern = pattern.replace('\\', '\\\\').replace('.', '\.')
+            pattern = re.escape(pattern)
             pattern = re.compile(pattern % {'date': '(.+)'})
             for d in repos_to_remove:
                 print('removing:', d)
@@ -5401,7 +5401,7 @@ Controller.prototype.FinishedPageCallback = function()
     def expand_shell(self, line):
         ''' Allow shell commands expressions $(command arg) in string
         '''
-        patt = re.compile('\$\(([^\)]+)\)')
+        patt = re.compile(r'\$\(([^\)]+)\)')
         expressions = patt.split(os.path.expandvars(line))
         new_line = expressions.pop(0)
         while expressions:

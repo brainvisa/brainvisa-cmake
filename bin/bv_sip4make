@@ -44,7 +44,7 @@ import re
 from six.moves import range
 try:
     import subprocess32 as subprocess
-except:
+except ImportError:
     import subprocess
 
 # print('SIP options:', sys.argv)
@@ -53,7 +53,7 @@ sys.stdout.flush()
 # find -S option for sip command specified
 try:
     sipopt = sys.argv.index('-S')
-except:
+except ValueError:
     sipopt = -1
 if sipopt == len(sys.argv) - 1:
     sipopt = -1
@@ -67,7 +67,7 @@ else:
 
 try:
     copt = sys.argv.index('-c')
-except:
+except ValueError:
     copt = -1
 if copt < 0:
     # print('-c option not found. Running sip normally')
@@ -79,7 +79,7 @@ elif copt == len(sys.argv) - 1:
 # find -j option
 try:
     jopt = sys.argv.index('-j')
-except:
+except ValueError:
     jopt = -1
 if jopt == len(sys.argv) - 1:
     jopt = -1
@@ -90,7 +90,7 @@ if jopt >= 0:
 try:
     listingOnly = sys.argv.index('--listingOnly')
     sys.argv.remove('--listingOnly')
-except:
+except ValueError:
     listingOnly = -1
 
 if copt < 0:
@@ -114,7 +114,7 @@ def skipcomment(f):
     try:
         for i in range(5):
             l = f.readline()  # for now I know it's 5 lines...
-    except:
+    except IOError:
         # if fewer than 5 lines
         pass
 
@@ -139,7 +139,7 @@ if res == 0:
         for x in tlist:
             if x.endswith('.cc') or x.endswith('.cpp'):
                 ccfiles.append(x)
-        r = re.compile('^(.*part)([0-9]+)\.(cpp|cc)$')
+        r = re.compile(r'^(.*part)([0-9]+)\.(cpp|cc)$')
         indices = set()
         base = ''
         ext = ''

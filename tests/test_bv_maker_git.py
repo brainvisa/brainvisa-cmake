@@ -112,7 +112,7 @@ class GitUpdateTestCase(unittest.TestCase):
             cls.master_sha1 = subprocess.check_output(
                 ['git', 'rev-parse', '--verify', 'HEAD^{commit}'],
                 cwd=cls.prepared_repo).rstrip()
-        except:
+        except BaseException:
             if hasattr(cls, 'cls_dir'):
                 shutil.rmtree(cls.cls_dir)
             raise
@@ -146,7 +146,7 @@ class GitUpdateTestCase(unittest.TestCase):
 """.format(src_dir=self.src_dir, testrepo=self.testrepo))
             self.env = os.environ.copy()
             self.env['HOME'] = self.test_dir
-        except:
+        except BaseException:
             if hasattr(self, 'test_dir'):
                 shutil.rmtree(self.test_dir)
             raise

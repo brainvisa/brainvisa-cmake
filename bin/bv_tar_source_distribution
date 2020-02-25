@@ -47,7 +47,7 @@ if not os.path.isdir( sourcedir ):
 else:
   try:
     os.listdir( sourcedir )
-  except:
+  except OSError:
     sourcedir = '.'
 
 usage = '''%prog [options] <projects>

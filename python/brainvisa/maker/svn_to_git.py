@@ -36,7 +36,7 @@ def convert_project(project, repos, svn_repos, authors_file=None,
     try:
         print(cmd)
         subprocess.check_call(cmd.split())
-    except:
+    except subprocess.CalledProcessError:
         # git-svn died with signal 11
         print('conversion fails at some point... trying again...')
         fetch_project(project, '.', authors_file)
@@ -94,7 +94,7 @@ def fetch_project(project, repos, authors_file=None):
             print(cmd)
             subprocess.check_call(cmd.split())
             ok = True
-        except:
+        except subprocess.CalledProcessError:
             print('conversion fails at some point... trying again in 5 seconds...')
             time.sleep(5)
     os.chdir(cur_dir)
@@ -267,7 +267,7 @@ def convert_perforce_directory(project, repos, svn_repos, authors_file=None):
         try:
             print(cmd)
             subprocess.check_call(cmd.split())
-        except:
+        except subprocess.CalledProcessError:
             # some errors are due to non-understood history items
             print('conversion fails at some point...')
     finally:

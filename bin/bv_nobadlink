@@ -12,13 +12,13 @@ def nobadlink( dir ):
         if os.path.isdir( f ):
             try:
                 nobadlink( f )
-            except:
+            except OSError:
                 pass
         elif os.path.islink( f ) and not os.path.exists( f ):
             print('rm', f)
             try:
                 os.unlink( f )
-            except Exception as e:
+            except OSError as e:
                 print(e)
 
 

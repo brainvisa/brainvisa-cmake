@@ -76,8 +76,8 @@ def checkPythonScript( filename ):
   if len( ext ) > 1 and ext[-1].lower() != 'py':
     return False
   f = open( filename )
-  interp = re.compile( '^\s*\#\!.*python$' )
-  comment = re.compile( '(^\s*$)|(^\s*\#.*$)' )
+  interp = re.compile( r'^\#\!.*python' )
+  comment = re.compile( r'(^\s*$)|(^\s*\#.*$)' )
   for l in f:
     if interp.match( l ):
       return True

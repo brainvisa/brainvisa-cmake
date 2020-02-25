@@ -48,13 +48,13 @@ def target_system(directory):
 def clean_lib_dir(directory):
     system = target_system(directory)
     if system.startswith('linux'):
-        libre = re.compile('^lib(.*)\.so\..*$')
+        libre = re.compile(r'^lib(.*)\.so\..*$')
         liblink = 'lib%s.so'
     elif system == 'darwin':
-        libre = re.compile('^lib(.*)(\.[0-9]+)+\.dylib$')
+        libre = re.compile(r'^lib(.*)(\.[0-9]+)+\.dylib$')
         liblink = 'lib%s.dylib'
     elif system.startswith('win'):
-        libre = re.compile('lib(.*)((\.[0-9]+)+)\.dll$')
+        libre = re.compile(r'lib(.*)((\.[0-9]+)+)\.dll$')
         liblink = None
         libs = {}
     for f in os.listdir(directory):

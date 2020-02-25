@@ -54,7 +54,7 @@ from brainvisa.maker.brainvisa_client_components import BranchType, \
 from brainvisa.maker.version_number import VersionNumber, \
                                             version_format_release
 # Glob special char
-svn_glob_regexp = re.compile('[\[\]\*\?]')
+svn_glob_regexp = re.compile(r'[\[\]\*\?]')
 svn_revision_regexp = re.compile(r'<\s*logentry\s+revision\s*=\s*"(\d+)"\s*>')
 
 def svn_get_latest_revision(svn_url):
@@ -746,8 +746,8 @@ def svn_update_version_info( version_file_url,
         
         if version_file_path.endswith( '.cmake' ):
             pattern = re.compile(
-                'BRAINVISA_PACKAGE_VERSION_MAJOR.+'
-                + 'BRAINVISA_PACKAGE_VERSION_PATCH \d+',
+                r'BRAINVISA_PACKAGE_VERSION_MAJOR.+'
+                r'BRAINVISA_PACKAGE_VERSION_PATCH \d+',
                 re.DOTALL
             )
             
@@ -763,7 +763,7 @@ def svn_update_version_info( version_file_url,
                                       
         elif version_file_path.endswith( '.py' ):
             pattern = re.compile(
-                'version_major.+\nversion_micro\s*=\s*\d+',
+                r'version_major.+\nversion_micro\s*=\s*\d+',
                 re.DOTALL
             )
       
@@ -1480,8 +1480,8 @@ class SvnComponent( VersionControlComponent ):
         
         if project_info_path.endswith( '.cmake' ):
             pattern = re.compile(
-                'BRAINVISA_PACKAGE_VERSION_MAJOR.+'
-                + 'BRAINVISA_PACKAGE_VERSION_PATCH \d+',
+                r'BRAINVISA_PACKAGE_VERSION_MAJOR.+'
+                r'BRAINVISA_PACKAGE_VERSION_PATCH \d+',
                 re.DOTALL
             )
             
@@ -1497,7 +1497,7 @@ class SvnComponent( VersionControlComponent ):
                                       
         elif project_info_path.endswith( '.py' ):
             pattern = re.compile(
-                'version_major.+\nversion_micro\s*=\s*\d+',
+                r'version_major.+\nversion_micro\s*=\s*\d+',
                 re.DOTALL
             )
       

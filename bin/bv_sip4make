@@ -34,12 +34,14 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 
 from __future__ import print_function
+from __future__ import absolute_import
 import os
 import sys
 import shutil
 import tempfile
 import string
 import re
+from six.moves import range
 try:
     import subprocess32 as subprocess
 except:
@@ -110,7 +112,7 @@ if not os.path.exists(outdir):
 
 def skipcomment(f):
     try:
-        for i in xrange(5):
+        for i in range(5):
             l = f.readline()  # for now I know it's 5 lines...
     except:
         # if fewer than 5 lines
@@ -170,7 +172,7 @@ if res == 0:
             skipcomment(tf)
             skipcomment(of)
             diff = 0
-            for l in tf.xreadlines():
+            for l in tf:
                 ol = of.readline()
                 if l != ol:
                     is_line_macro = line_re.match(l)

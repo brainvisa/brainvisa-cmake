@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__                 import print_function
+from __future__ import absolute_import, print_function
+
 import os
 
-try:
-    from configparser               import RawConfigParser, NoOptionError
-except:
-    from ConfigParser               import RawConfigParser, NoOptionError
-    
+from six.moves.configparser import RawConfigParser, NoOptionError
+
 def get_section(line):
    e = line.index(']')
    

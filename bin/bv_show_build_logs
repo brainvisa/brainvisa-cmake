@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
+
 import os, sys, re
 import optparse
 import subprocess
 from PyQt4 import QtCore, QtGui
-if sys.version_info[0] >= 3:
-    xrange = range
+
+from six.moves import range
 
 logfiles = ['/neurospin/brainvisa/build/builds.log']
 ssh_remote_host = 'is208611'
@@ -77,8 +78,8 @@ def reload_data():
                 items.append((m.group(2), m.group(3), 'all', '', m.group(1),
                               m.group(4), ''))
     tv.setRowCount(len(items))
-    for i in xrange(len(items)):
-        for j in xrange(len(items[-i-1])):
+    for i in range(len(items)):
+        for j in range(len(items[-i-1])):
             tv.setItem(i, j, QtGui.QTableWidgetItem(items[-i-1][j]))
         if items[-i-1][status_col] in ('Error', 'FAILED', 'INTERRUPTED'):
             tv.item(i, status_col).setBackground( QtGui.QBrush( \

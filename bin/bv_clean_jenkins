@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
+
 import jenkins
 from datetime import datetime, timedelta
 import os
 import sys
+
+from six.moves import input
 
 jenkins_url = 'http://brainvisa.info/brainvisa_builds'
 jenkins_user = 'cati'
@@ -16,10 +19,7 @@ if os.path.exists(user_conf):
     exec(open(user_conf).read())
 else:
     import getpass
-    if sys.version_info[0] >= 3:
-        jenkins_user2 = input('user [cati]: ')
-    else:
-        jenkins_user2 = raw_input('user [cati]: ')
+    jenkins_user2 = input('user [cati]: ')
     if jenkins_user2:
         jenkins_user = jenkins_user2
     jenkins_passwd = getpass.getpass('password:')

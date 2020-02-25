@@ -349,7 +349,7 @@ def create_directory_package(options, selected_packages, dependencies,
                 specific_env_commands += ['brainvisa']
         else:
             exe_ext = ''
-        env_commands = ['bv_env' + exe_ext, 'bv_env.py',
+        env_commands = ['bv_env' + exe_ext,
                         'bv_env.sh', 'bv_env_test', 'bv_env.bat', 'bv_unenv',
                         'bv_unenv.sh']
         if options.bv_env:  # --bv_env case: also install bv_env* commands

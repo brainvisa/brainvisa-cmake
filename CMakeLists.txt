@@ -258,7 +258,6 @@ if( BRAINVISA_BVMAKER )
       bv_build_nightly
       bv_check_svn_merge
       bv_env.bat
-      bv_env.py
       bv_env.sh
       bv_packaging_i2bm
       bv_patch_libs.sh

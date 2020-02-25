@@ -5,6 +5,8 @@ from __future__ import absolute_import, print_function
 import sys, os, string, types, glob
 from optparse import OptionParser
 
+import six
+
 parser = OptionParser( usage='%prog [options] name [name...]', 
   version='%prog 1.0',
   description = 'Look for files in environment variables containing paths. ' \

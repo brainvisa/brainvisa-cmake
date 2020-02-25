@@ -134,26 +134,9 @@ try:
 except ImportError:
     # jenkins module is not here
     jenkins = None
-try:
-    from urllib.request import urlopen
-except ImportError:
-    from six.moves.urllib.request import urlopen
-try:
-    # compatibility for python3
-    import six
-    from six.moves import zip
-except ImportError:
-    # six module not here, assume python2
-    class six(object):
-        @staticmethod
-        def iteritems(obj, *args, **kwargs):
-            return obj.iteritems(*args, **kwargs)
-        text_type = unicode
-try:
-    from cStringIO import StringIO
-except ImportError:
-    # python3
-    from io import StringIO
+
+import six
+from six.moves import reload_module, urlopen, zip
 
 # the following imports are just to make functions available in tests
 # using eval() in filters/conditions
@@ -735,8 +718,8 @@ http://brainvisa.info/brainvisa-cmake/
                 else:
                     options.configuration_file = defaultConfigurationFile
             os.environ['BV_MAKER_BUILD'] = options.build_directory
-            reload(brainvisa.maker.components_definition)
-            reload(brainvisa_projects)
+            reload_module(brainvisa.maker.components_definition)
+            reload_module(brainvisa_projects)
 
             bd = BuildDirectory(options.build_directory, self)
 

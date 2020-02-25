@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
 import os
 import sys
 
@@ -683,8 +685,5 @@ if 'BV_MAKER_BUILD' in os.environ:
     customize_components_definition.append(os.path.join(os.environ['BV_MAKER_BUILD'], 'components_definition.py'))
 for ccd in customize_components_definition:
     if os.path.exists(ccd):
-        if sys.version_info[0] >= 3:
-            code = compile(open(ccd).read(), ccd, 'exec')
-            exec(code)
-        else:
-            execfile(ccd)
+        with open(ccd) as f:
+            exec(compile(f.read(), ccd, 'exec'))

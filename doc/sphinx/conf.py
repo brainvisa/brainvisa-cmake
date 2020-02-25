@@ -11,11 +11,14 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
+
 import sys, os
 import datetime
 import subprocess
 import glob
+
+import six
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -42,7 +45,7 @@ def find_in_path(file, path=None):
     '''
     if path is None:
         path = os.environ.get('PATH').split(os.pathsep)
-    elif isinstance(path, basestring):
+    elif isinstance(path, six.string_types):
         var = os.environ.get(path)
         if var is None:
             var = path

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
+
 import glob, operator, os, re, string
 from fnmatch import fnmatchcase
 import sys
@@ -212,7 +213,8 @@ def parse_project_info_python(
                 '1.0.0',
                 format = version_format
             )
-  execfile(path, d, d)
+  with open(path) as f:
+      exec(compile(f.read(), path, 'exec'), d, d)
 
   for var in ('NAME', 'version_major', 'version_minor', 'version_micro'):
     if var not in d:

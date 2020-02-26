@@ -136,7 +136,8 @@ except ImportError:
     jenkins = None
 
 import six
-from six.moves import reload_module, urlopen, zip
+from six.moves import reload_module, zip
+from six.moves.urllib.request import urlopen
 
 # the following imports are just to make functions available in tests
 # using eval() in filters/conditions

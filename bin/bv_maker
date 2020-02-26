@@ -136,7 +136,7 @@ except ImportError:
     jenkins = None
 
 import six
-from six.moves import reload_module, zip
+from six.moves import reload_module, shlex_quote, zip
 from six.moves.urllib.request import urlopen
 
 # the following imports are just to make functions available in tests
@@ -347,7 +347,7 @@ def get_target_path_system(platform):
         return 'linux'
 
 def system(*args, **kwargs):
-    print('$ ' + ' '.join(args))
+    print('$ ' + ' '.join(shlex_quote(arg) for arg in args))
     error = None
     try:
         try:
@@ -2792,14 +2792,12 @@ class GitRepository(object):
     def call_command(self, args, echo=False, **kwargs):
         """Call a command in the repository, returning its exit code."""
         if echo:
-            print('$ ' + ' '.join(args))
+            print('$ ' + ' '.join(shlex_quote(arg) for arg in args))
         return subprocess.call(args, cwd=self.path, **kwargs)
 
     def call_nonessential_command(self, args, echo=True, **kwargs):
         """Call a command in the repository, ignoring failure."""
-        if echo:
-            print('$ ' + ' '.join(args))
-        retcode = subprocess.call(args, cwd=self.path, **kwargs)
+        retcode = self.call_command(args, echo=echo, **kwargs)
         if echo and retcode != 0:
             print('You can safely ignore errors of the above command')
 
@@ -3161,6 +3159,15 @@ uncommitted local changes (see above).""")
             )
         return cls._have_git_lfs
 
+    @classmethod
+    def have_pre_commit(cls):
+        """Test if pre-commit is available."""
+        if not hasattr(cls, '_have_pre_commit'):
+            cls._have_pre_commit = bool(
+                distutils.spawn.find_executable('pre-commit')
+            )
+        return cls._have_pre_commit
+
     def update_or_clone(self, source_dir):
         """Update or clone the repository."""
         print("\n")
@@ -3258,7 +3265,7 @@ that this could lose local commits on the old '{remote_ref}' branch):
                 # we want to detach the repository at this precise commit.
                 self.detach_at_bv_head()
             elif self.head_sha1 == self.bv_head_sha1:
-                return  # success (nothing to do!)
+                pass  # success (nothing to do!)
             else:
                 print('=' * 72)
                 print("""\
@@ -3270,6 +3277,10 @@ repository manually using the following command:
 """.format(path=self.path, remote_ref=self.remote_ref))
                 print('=' * 72)
                 raise GitUpdateError('detached')
+
+        if (os.path.exists(os.path.join(self.path, '.pre-commit-config.yaml'))
+                and self.have_pre_commit()):
+            self.call_nonessential_command(['pre-commit', 'install'])
 
 
 def print_git_status_summary(source_directory, status_list):

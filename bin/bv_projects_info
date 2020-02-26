@@ -32,8 +32,9 @@
 #
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
-from __future__ import print_function
-import os, sys, string, re, time, types, urlparse, posixpath, fnmatch
+from __future__ import absolute_import, print_function
+
+import os, sys, string, re, time, types, six.moves.urllib.parse, posixpath, fnmatch
 
 from optparse import OptionParser
 

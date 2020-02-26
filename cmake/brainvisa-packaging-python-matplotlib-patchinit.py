@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
+
 import os, re, sys
 
 infile = sys.argv[1]
@@ -11,7 +13,7 @@ if not os.path.exists(infile):
     # needs a better fix one day)
     sys.exit(0)
 
-r = re.compile("((^.*$\n)*)^( *path = '/usr/share/matplotlib/mpl-data')$\n((^.*$\n)*)^( *raise RuntimeError\('Could not find the matplotlib data files'\))$\n+( *# setuptools' namespace_packages may highjack this init file$\n(^.*$\n)*)^( *path = *('/etc') +# guaranteed to exist or raise)$\n((^.*$\n?)*)\Z", re.MULTILINE)
+r = re.compile(r"((^.*$\n)*)^( *path = '/usr/share/matplotlib/mpl-data')$\n((^.*$\n)*)^( *raise RuntimeError\('Could not find the matplotlib data files'\))$\n+( *# setuptools' namespace_packages may highjack this init file$\n(^.*$\n)*)^( *path = *('/etc') +# guaranteed to exist or raise)$\n((^.*$\n?)*)\Z", re.MULTILINE)
 
 lines = open(infile).read()
 m = r.match(lines)
@@ -26,7 +28,7 @@ if m is not None:
     olines.write(m.group(11))
 else:
     # newer matplotlib versions
-    r = re.compile("((^.*$\n)*)^( *path = '/usr/share/matplotlib/mpl-data')$\n((^.*$\n)*)^( *raise RuntimeError\('Could not find the matplotlib data files'\))$\n+( *# setuptools' namespace_packages may highjack this init file$\n(^.*$\n)*)^( *yield +('/etc/matplotlibrc') *)$\n((^.*$\n?)*)\Z", re.MULTILINE)
+    r = re.compile(r"((^.*$\n)*)^( *path = '/usr/share/matplotlib/mpl-data')$\n((^.*$\n)*)^( *raise RuntimeError\('Could not find the matplotlib data files'\))$\n+( *# setuptools' namespace_packages may highjack this init file$\n(^.*$\n)*)^( *yield +('/etc/matplotlibrc') *)$\n((^.*$\n?)*)\Z", re.MULTILINE)
 
     lines = open(infile).read()
     m = r.match(lines)

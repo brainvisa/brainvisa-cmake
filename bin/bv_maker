@@ -33,8 +33,9 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import absolute_import, division
+from __future__ import print_function, unicode_literals
+
 import codecs
 import io
 import locale
@@ -127,31 +128,16 @@ try:
         del get_encoded_params
 
     if 'Request' not in jenkins.__dict__:
-        from urllib2 import Request
+        from six.moves.urllib.request import Request
         jenkins.Request = Request
 
 except ImportError:
     # jenkins module is not here
     jenkins = None
-try:
-    from urllib.request import urlopen
-except ImportError:
-    from urllib2 import urlopen
-try:
-    # compatibility for python3
-    import six
-except ImportError:
-    # six module not here, assume python2
-    class six(object):
-        @staticmethod
-        def iteritems(obj, *args, **kwargs):
-            return obj.iteritems(*args, **kwargs)
-        text_type = unicode
-try:
-    from cStringIO import StringIO
-except ImportError:
-    # python3
-    from io import StringIO
+
+import six
+from six.moves import reload_module, zip
+from six.moves.urllib.request import urlopen
 
 # the following imports are just to make functions available in tests
 # using eval() in filters/conditions
@@ -733,8 +719,8 @@ http://brainvisa.info/brainvisa-cmake/
                 else:
                     options.configuration_file = defaultConfigurationFile
             os.environ['BV_MAKER_BUILD'] = options.build_directory
-            reload(brainvisa.maker.components_definition)
-            reload(brainvisa_projects)
+            reload_module(brainvisa.maker.components_definition)
+            reload_module(brainvisa_projects)
 
             bd = BuildDirectory(options.build_directory, self)
 
@@ -777,7 +763,7 @@ http://brainvisa.info/brainvisa-cmake/
             line = line.strip()
             try:
                 line = line.decode()
-            except:
+            except UnicodeError:
                 line = line.decode('utf-8')
             # skip comments
             if not line or line[0] == '#' or line.startswith('//'):
@@ -805,7 +791,7 @@ http://brainvisa.info/brainvisa-cmake/
                             try:
                                 condition_stack.append(
                                     check_filter_condition(l[1:]))
-                            except:
+                            except Exception:
                                 print('error in condition, line %d:'
                                       % lineCount, file=sys.stderr)
                                 print(line, file=sys.stderr)
@@ -927,7 +913,7 @@ def check_filter_condition(filters):
     expression = expression % vars
     try:
         res = bool(eval(expression))
-    except:
+    except Exception:
         traceback.print_exc()
         raise
     return res
@@ -1318,7 +1304,7 @@ class JenkinsWrapper(object):
                 print('Java version %s cannot be parsed. '
                       'Not using Jenkins-cli' % jver_s)
                 java = None
-        except:
+        except Exception:
             print('Could not check java version. Not using Jenkins-cli')
             java = None
         if not java:
@@ -1334,7 +1320,7 @@ class JenkinsWrapper(object):
             with open(cli_file, 'wb') as f_out:
                 f_out.write(f.read())
             cls.jenkins_cli = cli_file
-        except:
+        except Exception:
             shutil.rmtree(cli_file_d)
             cls.jenkins_cli = None
         return cls.jenkins_cli
@@ -1447,7 +1433,7 @@ class StepCommand(object):
                             o.stop_time[step] = time.localtime()
                             # user interruptions should stop all.
                             raise
-                        except:
+                        except Exception:
                             traceback.print_exc()
                             # record failure
                             o.status[step] = 'failed'
@@ -1776,7 +1762,7 @@ class InfoCommand(StepCommand):
         dirs.update(configuration.buildDirectories)
         dirs.update(configuration.packageDirectories)
         dirs.update(configuration.publicationDirectories)
-        self.process('info', dirs.values(), 'info')
+        self.process('info', list(dirs.values()), 'info')
 
 
 class SourcesCommand(StepCommand):
@@ -1816,7 +1802,7 @@ class SourcesCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('sources', configuration.sourcesDirectories.values(),
+        self.process('sources', list(configuration.sourcesDirectories.values()),
                      'process', self.options, self.args)
 
 
@@ -1851,7 +1837,7 @@ class SourceStatusCommand(StepCommand):
 
     def __call__(self):
         self.process('status',
-                     configuration.sourcesDirectories.values(),
+                     list(configuration.sourcesDirectories.values()),
                      'source_status', self.options, self.args)
 
 
@@ -1883,7 +1869,7 @@ class ConfigureCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('configure', configuration.buildDirectories.values(),
+        self.process('configure', list(configuration.buildDirectories.values()),
                      'configure', self.options, self.args)
 
 class BuildCommand(StepCommand):
@@ -1914,7 +1900,7 @@ class BuildCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('build', configuration.buildDirectories.values(),
+        self.process('build', list(configuration.buildDirectories.values()),
                      'build', self.options, self.args)
 
 
@@ -1942,7 +1928,7 @@ class DocCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('doc', configuration.buildDirectories.values(), 'doc')
+        self.process('doc', list(configuration.buildDirectories.values()), 'doc')
 
 
 class TestCommand(StepCommand):
@@ -1975,7 +1961,7 @@ class TestCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('test', configuration.buildDirectories.values(), 'test',
+        self.process('test', list(configuration.buildDirectories.values()), 'test',
                      self.options, self.args)
 
 
@@ -2010,7 +1996,7 @@ class TestrefCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('testref', configuration.buildDirectories.values(), 'testref',
+        self.process('testref', list(configuration.buildDirectories.values()), 'testref',
                      self.options, self.args)
 
 
@@ -2133,7 +2119,7 @@ class InstallPackCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('install_pack', configuration.packageDirectories.values(),
+        self.process('install_pack', list(configuration.packageDirectories.values()),
                      'install_package', self.options, self.args)
 
 
@@ -2195,7 +2181,7 @@ class TestPackCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('test_pack', configuration.packageDirectories.values(),
+        self.process('test_pack', list(configuration.packageDirectories.values()),
                      'test_package', self.options, self.args)
 
 
@@ -2258,7 +2244,7 @@ class TestrefPackCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('testref_pack', configuration.packageDirectories.values(),
+        self.process('testref_pack', list(configuration.packageDirectories.values()),
                      'testref_package', self.options, self.args)
 
 
@@ -2321,7 +2307,7 @@ class PublishPackCommand(StepCommand):
         self.args = args
 
     def __call__(self):
-        self.process('publish_pack', configuration.publicationDirectories.values(),
+        self.process('publish_pack', list(configuration.publicationDirectories.values()),
                      'publish_package', self.options, self.args)
 
 class VarReplacementType:
@@ -2464,7 +2450,7 @@ class ConfigVariableParser(object):
         else:
             try:
                 old_value -= value
-            except:
+            except Exception:
                 raise SyntaxError()
     
     def get_valid_options(self):
@@ -2495,19 +2481,19 @@ class ConfigVariableParser(object):
                     if value.startswith('{') and value.endswith('}'):
                         try:
                             value = eval(value)
-                        except:
+                        except Exception:
                             raise SyntaxError()
                     else:
                         try:
                             value = eval('{' + value + '}')
-                        except:
+                        except Exception:
                             # try simpler syntax without quotes
                             try:
                                 value = [x.strip() for x in value.split(',')]
                                 value = dict([(x[:x.find(':')],
                                                x[x.find(':') + 1:].strip())
                                     for x in value])
-                            except:
+                            except Exception:
                                 raise SyntaxError()
             
             if oper == '':
@@ -4981,7 +4967,7 @@ Controller.prototype.FinishedPageCallback = function()
         while d and len(os.listdir(d)) == 0:
             try:
                 os.rmdir(d)
-            except:
+            except OSError:
                 break
             d = os.path.dirname(d)
 
@@ -5050,7 +5036,7 @@ Controller.prototype.FinishedPageCallback = function()
             vars['date'] = '%(date)s' # keep date pattern as is
             pattern = environmentPathVariablesSubstitution(
                 self._directory, env=self.get_environ()) % vars
-            pattern = pattern.replace('\\', '\\\\').replace('.', '\.')
+            pattern = re.escape(pattern)
             pattern = re.compile(pattern % {'date': '(.+)'})
             for d in repos_to_remove:
                 print('removing:', d)
@@ -5416,7 +5402,7 @@ Controller.prototype.FinishedPageCallback = function()
     def expand_shell(self, line):
         ''' Allow shell commands expressions $(command arg) in string
         '''
-        patt = re.compile('\$\(([^\)]+)\)')
+        patt = re.compile(r'\$\(([^\)]+)\)')
         expressions = patt.split(os.path.expandvars(line))
         new_line = expressions.pop(0)
         while expressions:

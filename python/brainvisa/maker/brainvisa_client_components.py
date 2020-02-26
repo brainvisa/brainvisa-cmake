@@ -32,6 +32,8 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
+from __future__ import absolute_import
+
 from brainvisa.maker.version_number        import VersionNumber, \
                                                   version_format_release
 from brainvisa.maker.brainvisa_projects    import parse_versioning_client_info

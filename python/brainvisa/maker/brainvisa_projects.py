@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
+
 import glob, operator, os, re, string
 from fnmatch import fnmatchcase
 import sys
@@ -173,7 +174,7 @@ def parse_project_info_cmake(
     for line in f:
       try:
         line = line.decode()
-      except:
+      except UnicodeError:
         line = line.decode('utf-8') # in case the default encoding is ascii
       match = p.match(line)
       if match:
@@ -212,7 +213,8 @@ def parse_project_info_python(
                 '1.0.0',
                 format = version_format
             )
-  execfile(path, d, d)
+  with open(path) as f:
+      exec(compile(f.read(), path, 'exec'), d, d)
 
   for var in ('NAME', 'version_major', 'version_minor', 'version_micro'):
     if var not in d:
@@ -325,7 +327,7 @@ def update_project_info(project_info_path, version):
     project_info_content = open(project_info_path, 'rb').read()
     try:
         project_info_content = project_info_content.decode()
-    except:
+    except UnicodeError:
         # in case the default encoding is ascii
         project_info_content = project_info_content.decode('utf-8')
         
@@ -337,8 +339,8 @@ def update_project_info(project_info_path, version):
             
     if project_info_path.endswith( '.cmake' ):
         pattern = re.compile(
-            'BRAINVISA_PACKAGE_VERSION_MAJOR.+'
-        + 'BRAINVISA_PACKAGE_VERSION_PATCH \d+',
+            r'BRAINVISA_PACKAGE_VERSION_MAJOR.+'
+            r'BRAINVISA_PACKAGE_VERSION_PATCH \d+',
             re.DOTALL
         )
         
@@ -354,7 +356,7 @@ def update_project_info(project_info_path, version):
                  
     elif project_info_path.endswith( '.py' ):
         pattern = re.compile(
-            'version_major.+\nversion_micro\s*=\s*\d+',
+            r'version_major.+\nversion_micro\s*=\s*\d+',
             re.DOTALL
         )
       

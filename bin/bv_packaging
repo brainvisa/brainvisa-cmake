@@ -33,7 +33,8 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
+
 import sys
 import os
 import re
@@ -262,13 +263,13 @@ def create_graphviz_dependencies(options, selected_packages, dependencies):
 
 def is_shell_script(filename):
     try:
-        f = open(filename)
-        l = f.readline().strip()
+        with open(filename) as f:
+            l = f.readline().strip()
         shells = ('#!/bin/sh', '#! /bin/sh', '#!/bin/bash', '#! /bin/bash')
         for shell in shells:
             if l.startswith(shell):
                 return True
-    except:
+    except IOError:
         return False
     return False
 
@@ -349,7 +350,7 @@ def create_directory_package(options, selected_packages, dependencies,
                 specific_env_commands += ['brainvisa']
         else:
             exe_ext = ''
-        env_commands = ['bv_env' + exe_ext, 'bv_env.py',
+        env_commands = ['bv_env' + exe_ext,
                         'bv_env.sh', 'bv_env_test', 'bv_env.bat', 'bv_unenv',
                         'bv_unenv.sh']
         if options.bv_env:  # --bv_env case: also install bv_env* commands
@@ -735,7 +736,7 @@ def create_readme_file(install_directory):
     else:
         zipext = ".zip"
     date = time.strftime('%Y_%m_%d')
-    m = re.match('.*-([0-9]\.[0-9](\.[0-9]))',
+    m = re.match(r'.*-([0-9]\.[0-9](\.[0-9]))',
                  os.path.basename(install_directory))
     if m and len(m.groups()) >= 1:
         version = m.group(1)

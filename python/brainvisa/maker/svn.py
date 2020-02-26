@@ -32,17 +32,19 @@
 #
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
-from __future__ import print_function
+from __future__ import absolute_import, print_function
+
 import os
 import string
 import re
 import types
-import urlparse
 import fnmatch
 import posixpath
 import lxml.objectify
 import tempfile
+
 import six
+from six.moves.urllib.parse import urlparse, urlunparse, urlsplit, urlunsplit
 
 from brainvisa.maker.brainvisa_clients import system, normurl
 from brainvisa.maker.brainvisa_projects     import parse_project_info_cmake, \
@@ -52,7 +54,7 @@ from brainvisa.maker.brainvisa_client_components import BranchType, \
 from brainvisa.maker.version_number import VersionNumber, \
                                             version_format_release
 # Glob special char
-svn_glob_regexp = re.compile('[\[\]\*\?]')
+svn_glob_regexp = re.compile(r'[\[\]\*\?]')
 svn_revision_regexp = re.compile(r'<\s*logentry\s+revision\s*=\s*"(\d+)"\s*>')
 
 def svn_get_latest_revision(svn_url):
@@ -584,7 +586,7 @@ def svn_glob( *urlpatterns ):
     
     for url_pattern in urlpatterns:
       # Split url pattern
-      url_pattern_splitted = urlparse.urlsplit( normurl( url_pattern ) )
+      url_pattern_splitted = urlsplit( normurl( url_pattern ) )
       
       # Create stack to solve pattern
       url_path_pattern_stack = list()
@@ -602,7 +604,7 @@ def svn_glob( *urlpatterns ):
           if ( len(svn_glob_regexp.findall(
                                   url_path_pattern_splitted[i])) > 0 ):
             # Search matching entries from server
-            url = urlparse.urlunsplit(
+            url = urlunsplit(
                         url_pattern_splitted[ 0:2 ]
                         + ( string.join( url_path_pattern_splitted[ 0:i ],
                                          posixpath.sep ), )
@@ -648,7 +650,7 @@ def svn_glob( *urlpatterns ):
                     + ( str(e.name), )
                     + url_path_pattern_splitted[ i + 1: ] )
                 url_checked.add(
-                    urlparse.urlunsplit( 
+                    urlunsplit(
                     url_pattern_splitted[ 0:2 ]
                     + ( string.join( url_path_pattern_splitted[ 0:i ]
                                    + ( str(e.name), ),
@@ -661,7 +663,7 @@ def svn_glob( *urlpatterns ):
             break
             
           elif( i == (len(url_path_pattern_splitted) - 1) ):
-            url = urlparse.urlunsplit(
+            url = urlunsplit(
                         url_pattern_splitted[ 0:2 ]
                         + ( string.join( url_path_pattern_splitted, 
                                          posixpath.sep ), )
@@ -744,8 +746,8 @@ def svn_update_version_info( version_file_url,
         
         if version_file_path.endswith( '.cmake' ):
             pattern = re.compile(
-                'BRAINVISA_PACKAGE_VERSION_MAJOR.+'
-                + 'BRAINVISA_PACKAGE_VERSION_PATCH \d+',
+                r'BRAINVISA_PACKAGE_VERSION_MAJOR.+'
+                r'BRAINVISA_PACKAGE_VERSION_PATCH \d+',
                 re.DOTALL
             )
             
@@ -761,7 +763,7 @@ def svn_update_version_info( version_file_url,
                                       
         elif version_file_path.endswith( '.py' ):
             pattern = re.compile(
-                'version_major.+\nversion_micro\s*=\s*\d+',
+                r'version_major.+\nversion_micro\s*=\s*\d+',
                 re.DOTALL
             )
       
@@ -841,7 +843,7 @@ class SvnComponent( VersionControlComponent ):
                                               url,
                                               params )
         
-        parsed_url = urlparse.urlparse( self.url() )
+        parsed_url = urlparse( self.url() )
         
         # Find tags, branches, trunk in url to get a base url
         client_url_branch_type, client_url_base_path = self.branch_path_parse(
@@ -867,9 +869,9 @@ class SvnComponent( VersionControlComponent ):
                                 #+ client_local_branch_type )
         
         self._url_branch_type = client_url_branch_type
-        self._url_base = urlparse.urlunparse( parsed_url[ 0:2 ]
-                                            + ( client_url_base_path, )
-                                            + parsed_url[ 3: ] )
+        self._url_base = urlunparse( parsed_url[ 0:2 ]
+                                     + ( client_url_base_path, )
+                                     + parsed_url[ 3: ] )
                                             
         self._local_base = client_local_base_path
                                             
@@ -1026,7 +1028,7 @@ class SvnComponent( VersionControlComponent ):
         """
         import fnmatch, lxml.objectify
 
-        if not isinstance(patterns, (types.ListType, types.TupleType)):
+        if not isinstance(patterns, (list, tuple)):
             patterns = ( str( patterns ), )
         
         entries = list()
@@ -1074,7 +1076,7 @@ class SvnComponent( VersionControlComponent ):
         
         from brainvisa.maker.version_number import VersionNumber
         
-        if type(version_patterns) not in (types.ListType, types.TupleType):
+        if not isinstance(version_patterns, (list, tuple)):
             version_patterns = ( str( version_patterns ), )
         
         versions = dict()
@@ -1478,8 +1480,8 @@ class SvnComponent( VersionControlComponent ):
         
         if project_info_path.endswith( '.cmake' ):
             pattern = re.compile(
-                'BRAINVISA_PACKAGE_VERSION_MAJOR.+'
-                + 'BRAINVISA_PACKAGE_VERSION_PATCH \d+',
+                r'BRAINVISA_PACKAGE_VERSION_MAJOR.+'
+                r'BRAINVISA_PACKAGE_VERSION_PATCH \d+',
                 re.DOTALL
             )
             
@@ -1495,7 +1497,7 @@ class SvnComponent( VersionControlComponent ):
                                       
         elif project_info_path.endswith( '.py' ):
             pattern = re.compile(
-                'version_major.+\nversion_micro\s*=\s*\d+',
+                r'version_major.+\nversion_micro\s*=\s*\d+',
                 re.DOTALL
             )
       

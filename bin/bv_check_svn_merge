@@ -33,14 +33,13 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
+
 import os, sys
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
-try:
-    import xml.etree.ElementTree as ElementTree
-except:
-    import cElementTree as ElementTree # for 2.4
+from functools import reduce
+import xml.etree.ElementTree as ElementTree
 
 import six
 
@@ -135,7 +134,7 @@ for project, component, url, versions in branches:
         if previous_project:
           for c, client_component_dir in commit:
             print('svn commit ' + client_component_dir + " -m 'merge " + c + " from stable to trunk'")
-          print
+          print()
           commit = []
         previous_project = project
         print('-----', project, '-----')

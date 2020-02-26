@@ -33,10 +33,13 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
+
 import sys, os, re
 from optparse import OptionParser
 import six
+
+from six.moves import range
 
 parser = OptionParser( version="%prog 1.1",
   usage="usage: %prog [options] -t <file_type> <files_or_directories>" )
@@ -73,9 +76,9 @@ def checkPythonScript( filename ):
   if len( ext ) > 1 and ext[-1].lower() != 'py':
     return False
   f = open( filename )
-  interp = re.compile( '^\s*\#\!.*python$' )
-  comment = re.compile( '(^\s*$)|(^\s*\#.*$)' )
-  for l in f.xreadlines():
+  interp = re.compile( r'^\#\!.*python' )
+  comment = re.compile( r'(^\s*$)|(^\s*\#.*$)' )
+  for l in f:
     if interp.match( l ):
       return True
     if not comment.match( l ):
@@ -147,7 +150,7 @@ class HeaderClassifier:
       for f, headerStart in fileInfos:
         newFile = ''
         file = open( f )
-        for i in xrange( headerStart ):
+        for i in range( headerStart ):
           newFile += file.readline()
         file.read( len( header ) )
         newFile += newHeader
@@ -278,7 +281,7 @@ class CppOldHeaderClassifier( CppHeaderClassifier ):
           for f, headerStart, headerSize in fileInfos:
             newFile = ''
             file = open( f )
-            for i in xrange( headerStart ):
+            for i in range( headerStart ):
               newFile += file.readline()
             file.read( headerSize )
             newFile += newHeader

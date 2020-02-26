@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
+
 import sys, os, re, shutil
 from optparse import OptionParser
 from datetime import datetime
@@ -47,13 +48,13 @@ def target_system(directory):
 def clean_lib_dir(directory):
     system = target_system(directory)
     if system.startswith('linux'):
-        libre = re.compile('^lib(.*)\.so\..*$')
+        libre = re.compile(r'^lib(.*)\.so\..*$')
         liblink = 'lib%s.so'
     elif system == 'darwin':
-        libre = re.compile('^lib(.*)(\.[0-9]+)+\.dylib$')
+        libre = re.compile(r'^lib(.*)(\.[0-9]+)+\.dylib$')
         liblink = 'lib%s.dylib'
     elif system.startswith('win'):
-        libre = re.compile('lib(.*)((\.[0-9]+)+)\.dll$')
+        libre = re.compile(r'lib(.*)((\.[0-9]+)+)\.dll$')
         liblink = None
         libs = {}
     for f in os.listdir(directory):

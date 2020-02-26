@@ -1,8 +1,11 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+from __future__ import absolute_import, print_function
+
 import sys, os, string, types, glob
 from optparse import OptionParser
+
+import six
 
 parser = OptionParser( usage='%prog [options] name [name...]', 
   version='%prog 1.0',
@@ -40,7 +43,7 @@ def no_link( p ):
   return p
 
 def findInPath( name, path ):
-  if type( path ) is types.StringType:
+  if isinstance( path,  six.string_types ):
     path = string.split( path, ':' )
   for p in path:
     for fp in glob.glob( os.path.join( p, name ) ):

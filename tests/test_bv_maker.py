@@ -32,6 +32,8 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
+from __future__ import absolute_import
+
 import os
 import shutil
 import subprocess
@@ -79,7 +81,7 @@ def setUpModule():
             'https://github.com/brainvisa/brainvisa-cmake.git',
             TEST_REPO_PATH
         ])
-    except:
+    except BaseException:
         if MODULE_TEST_DIR is not None:
             shutil.rmtree(MODULE_TEST_DIR)
         raise
@@ -107,7 +109,7 @@ class TestWithoutRepository(unittest.TestCase):
            brainvisa_cmake_repo=BRAINVISA_CMAKE_REPO))
             cls.env = os.environ.copy()
             cls.env['HOME'] = cls.test_dir
-        except:
+        except BaseException:
             if hasattr(cls, 'test_dir'):
                 shutil.rmtree(cls.test_dir)
             raise
@@ -157,7 +159,7 @@ class TestWithRepository(unittest.TestCase):
             cls.env['HOME'] = cls.test_dir
             subprocess.check_call(BV_MAKER + ['-c', cls.bv_maker_cfg,
                                               'sources'], env=cls.env)
-        except:
+        except BaseException:
             if hasattr(cls, 'test_dir'):
                 shutil.rmtree(cls.test_dir)
             raise

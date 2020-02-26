@@ -31,7 +31,8 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
+
 import sys, os, re
 
 reNode = re.compile( r'\s*"(?P<node>[^"]*)"\s*\[\s*label="(?P<label>[^"]*)"\s*shape="(?P<shape>[^"]*)"\];.*' )

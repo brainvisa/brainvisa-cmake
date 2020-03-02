@@ -1,0 +1,12 @@
+# CodeCov configuration, see https://docs.codecov.io/docs/codecov-yaml
+
+comment:
+  # Keep the PR comments small (default is "reach, diff, flags, files")
+  layout: "diff, flags"
+coverage:
+  status:
+    project:
+      default:
+        # Allow code coverage to drop by this amount and still
+        # mark the PR with a green check mark
+        threshold: 2%

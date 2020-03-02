@@ -1300,7 +1300,7 @@ endfunction()
 #   BRAINVISA_INSTALL_DIRECTORY <directory> <destination> <component> )
 #
 # Example:
-#  BRAINVISA_INSTALL_DIRECTORY( "/usr/lib/python2.6" "python" "brainvisa-python" )
+#  BRAINVISA_INSTALL_DIRECTORY( "/usr/lib/python2.7" "python" "brainvisa-python" )
 function( BRAINVISA_INSTALL_DIRECTORY directory destination component )
   file( GLOB_RECURSE allFiles RELATIVE "${directory}" FOLLOW_SYMLINKS "${directory}/*" )
   foreach( file ${allFiles} )

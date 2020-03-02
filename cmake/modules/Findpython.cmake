@@ -8,14 +8,14 @@
 #  PYTHON_HOST_EXECUTABLE_NAME - name of the python interpreter
 #  PYTHON_HOST_PREFIX - path to the install directory of the python interpreter
 #  PYTHON_HOST_MODULES_PATH - path to main Python modules
-#  PYTHON_HOST_VERSION - Python full version (e.g. "2.6.2")
-#  PYTHON_HOST_SHORT_VERSION - Python short version (e.g. "2.6")
+#  PYTHON_HOST_VERSION - Python full version (e.g. "2.7.12")
+#  PYTHON_HOST_SHORT_VERSION - Python short version (e.g. "2.7")
 #  PYTHON_EXECUTABLE - path to the target python interpreter
 #  PYTHON_EXECUTABLE_NAME - name of the target python interpreter
 #  PYTHON_PREFIX - path to the install directory of the target python interpreter
 #  PYTHON_MODULES_PATH - path to main Python modules
-#  PYTHON_VERSION - Python target full version (e.g. "2.6.2")
-#  PYTHON_SHORT_VERSION - Python target short version (e.g. "2.6")
+#  PYTHON_VERSION - Python target full version (e.g. "2.7.12")
+#  PYTHON_SHORT_VERSION - Python target short version (e.g. "2.7")
 #  PYTHON_INCLUDE_PATH - path to target python header files
 #  PYTHON_LIBRARY - path to target python dynamic library
 #  PYTHON_FLAGS - flags used to compile target python dynamic library
@@ -52,8 +52,8 @@ function(__GET_PYTHON_INFO __python_executable __output_prefix __translate_path 
     TARGET_TO_HOST_PATH( "${_pythonpath}" _pythonpath ) 
   endif()
 
-  set( "${__output_prefix}_VERSION" "${_fullVersion}" CACHE STRING "Python full version (e.g. \"2.6.2\")" FORCE)
-  set( "${__output_prefix}_SHORT_VERSION" "${_version}" CACHE STRING "Python short version (e.g. \"2.6\")" FORCE)
+  set( "${__output_prefix}_VERSION" "${_fullVersion}" CACHE STRING "Python full version (e.g. \"2.7.12\")" FORCE)
+  set( "${__output_prefix}_SHORT_VERSION" "${_version}" CACHE STRING "Python short version (e.g. \"2.7\")" FORCE)
 
   find_path( "${__output_prefix}_MODULES_PATH2"
     NAMES platform.py

@@ -151,7 +151,7 @@ function( BRAINVISA_PACKAGING_COMPONENT_RUN component )
 
       # Non-Mac case
 
-      # copy or create a link named python that starts the real python executable (ex. python -> python2.6)
+      # copy or create a link named python that starts the real python executable (ex. python -> python2.7)
       get_filename_component( name "${REAL_PYTHON_EXECUTABLE}" NAME )
       if( NOT name STREQUAL "python" )
         if(WIN32)

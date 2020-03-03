@@ -30,7 +30,7 @@ else()
         # (To distributed this file outside of CMake, substitute the full
         #  License text for the above reference.)
         FIND_PROGRAM(PYTHON_HOST_EXECUTABLE
-            NAMES python2.7 python2.6 python2
+            NAMES python2.7 python2
                   python3.8 python3.7 python3.6 python3.5 python3.4 python3
                   python
             PATHS
@@ -40,7 +40,6 @@ else()
                 [HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\3.5\\InstallPath]
                 [HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\3.4\\InstallPath]
                 [HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.7\\InstallPath]
-                [HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\2.6\\InstallPath]
         )
         
         if(NOT PYTHON_EXECUTABLE)

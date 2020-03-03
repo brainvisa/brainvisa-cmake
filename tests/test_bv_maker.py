@@ -38,14 +38,8 @@ import os
 import shutil
 import subprocess
 import tempfile
+import unittest
 import sys
-
-if sys.version_info < (2, 7):
-    # Decorators are not available on python 2.6:
-    # we need a backport of a newer version of unittest.
-    import unittest2 as unittest
-else:
-    import unittest
 
 
 BV_MAKER_SUBCOMMANDS = ['info', 'sources', 'status', 'configure', 'build',

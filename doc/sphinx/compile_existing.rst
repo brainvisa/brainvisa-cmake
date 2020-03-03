@@ -18,7 +18,7 @@ You must have the following software on your system:
 * Subversion. The command svnadmin must also be installed on your system. On some Linux distributions it is not in the subversion package (for instance in Ubuntu you must install subversion-tools package).
 * Git
 * CMake (version >= 2.6.4)
-* Python (version >= 2.6)
+* Python (version >= 2.7)
 * Make
 * Other dependencies depends on the components you want to build.
 

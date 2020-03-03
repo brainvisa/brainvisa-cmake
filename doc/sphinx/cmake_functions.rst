@@ -444,7 +444,7 @@ Example:
 
 ::
 
-    BRAINVISA_INSTALL_DIRECTORY( "/usr/lib/python2.6" "python"
+    BRAINVISA_INSTALL_DIRECTORY( "/usr/lib/python2.7" "python"
                                  "brainvisa-python" )
 
 

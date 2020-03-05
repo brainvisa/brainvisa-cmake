@@ -5041,6 +5041,9 @@ Controller.prototype.FinishedPageCallback = function()
             pattern = environmentPathVariablesSubstitution(
                 self._directory, env=self.get_environ()) % vars
             pattern = re.escape(pattern)
+            # this replace restores the pattern '%(date)s' modified
+            # by re.escape()
+            pattern = pattern.replace(re.escape('%(date)s'), '%(date)s')
             pattern = re.compile(pattern % {'date': '(.+)'})
             for d in repos_to_remove:
                 print('removing:', d)

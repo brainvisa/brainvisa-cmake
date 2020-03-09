@@ -257,6 +257,7 @@ if( BRAINVISA_BVMAKER )
       bv_build_installer_i2bm
       bv_build_nightly
       bv_check_svn_merge
+      bv_clean_jenkins
       bv_env.bat
       bv_env.sh
       bv_packaging_i2bm
@@ -289,6 +290,7 @@ if( BRAINVISA_BVMAKER )
   # set script commands to be run using a python interpreter (for windows)
   foreach( _command
            bv_clean_build_tree
+           bv_clean_jenkins
            bv_copy_tree
            bv_maker
            bv_nobadlink

@@ -39,7 +39,7 @@ from brainvisa.maker.version_number        import VersionNumber, \
 from brainvisa.maker.brainvisa_projects    import parse_versioning_client_info
 from brainvisa.maker.brainvisa_clients     import normurl
 
-class BranchType:
+class BranchType(object):
     """ Branch types that can be used by clients
         TRUNK: branch used for main development and new features integration
         BUG_FIX: branch that are created to initiate a release and that can be

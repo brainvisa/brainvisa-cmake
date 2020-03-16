@@ -91,7 +91,7 @@ class LinuxPathSystemSyntax(PathSystemSyntax):
     def check(cls, path):
         return cls.syntax.match(path)
 
-class PathSystems:    
+class PathSystems(object):
     r'''
     Supported path systems are:
     - uri (i.e. path with uri syntax, for example file:///dir/file)

@@ -18,5 +18,20 @@ jobs:
       language: generic     # 'language: python' is an error on Travis CI macOS
   allow_failures:
 
-install: pip install tox-travis
+install:
+    - pip install tox-travis
+    - pip install -U sphinx
+    - if [[  "$TRAVIS_OS_NAME" = "linux" && "$TRAVIS_PYTHON_VERSION" == "3.8" ]]; then cd doc && sphinx-build -b HTML sphinx build_html  && touch build_html/.nojekyll && cd ..; fi
+    - if [[ -n "$GITHUB_ACCESS_TOKEN" ]]; then export PUSH_DOC_TO_GH_PAGES=yes; fi
+
 script: tox
+
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN
+  target-branch: gh-pages
+  local-dir: doc/build_html
+  on:
+    branch: master
+    condition: $PUSH_DOC_TO_GH_PAGES == yes && $TRAVIS_OS_NAME == linux && $TRAVIS_PYTHON_VERSION == 3.8

@@ -23,6 +23,7 @@ install:
     - pip install -U sphinx
     - cd doc
     - PYTHONPATH="$PWD/../python:$PYTHONPATH" python -c 'import sys; print(sys.path)'
+    - PYTHONPATH="$PWD/../python:$PYTHONPATH" python -c 'import brainvisa.maker.version; print(brainvisa.maker.version)'
     - cd ..
     - if [[  "$TRAVIS_OS_NAME" = "linux" && "$TRAVIS_PYTHON_VERSION" == "3.8" ]]; then cd doc && PATH="$PWD/../bin:$PATH" PYTHONPATH="$PWD/../python:$PYTHONPATH" sphinx-build -b html sphinx build_html  && touch build_html/.nojekyll && cd ..; fi
     - if [[ -n "$GITHUB_ACCESS_TOKEN" ]]; then export PUSH_DOC_TO_GH_PAGES=yes; fi

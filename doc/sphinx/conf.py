@@ -300,6 +300,8 @@ for subcmd in ('', 'info', 'sources', 'status', 'configure', 'build', 'doc', 'te
         ofile = open(fname, 'w')
     try:
         print('generate:', fname)
+        print('using command:')
+        print(cmd)
         subprocess.call(cmd, stdout=ofile)
     finally:
         ofile.close()

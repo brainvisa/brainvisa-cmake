@@ -727,7 +727,8 @@ http://brainvisa.info/brainvisa-cmake/
         elif not options.configuration_file:
             options.configuration_file = defaultConfigurationFile
 
-        if options.configuration_file:
+        if options.configuration_file \
+                and os.path.exists(options.configuration_file):
             with open(options.configuration_file, 'rb') as f:
                 self.parse_config_file(f, options, extra_build_dir=bd)
 

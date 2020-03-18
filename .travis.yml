@@ -22,7 +22,7 @@ install:
     - pip install tox-travis
     - pip install -U sphinx
     - if [[  "$TRAVIS_OS_NAME" = "linux" && "$TRAVIS_PYTHON_VERSION" == "3.8" ]]; then sudo apt-get install cmake make; cmake -DCMAKE_INSTALL_PREFIX=. . && make install && ./bin/bv_env_host sphinx-build -b html doc/sphinx doc/build_html && touch doc/build_html/.nojekyll; fi
-    - if [[ -n "$GITHUB_ACCESS_TOKEN" ]]; then export PUSH_DOC_TO_GH_PAGES=yes; fi
+    - if [[ -n "$GITHUB_TOKEN" ]]; then export PUSH_DOC_TO_GH_PAGES=yes; fi
 
 script: tox
 

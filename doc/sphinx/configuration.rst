@@ -610,3 +610,35 @@ Examples
       - connectomist-*
       + $HOME/brainvisa/source/perso/myself/myproject
 
+
+.. _build_qt5:
+
+Compiling using Qt 5
+--------------------
+
+Add in the ``[ build ]`` section:
+
+.. code-block:: bash
+
+    [ build $HOME/brainvisa/build/bug_fix ]
+      # ...
+      cmake_options += -DDESIRED_QT_VERSION=5
+      # ...
+
+
+.. _build_py3:
+
+Compiling using Python3
+-----------------------
+
+Add in the ``[ build ]`` section:
+
+.. code-block:: bash
+
+    [ build $HOME/brainvisa/build/bug_fix ]
+      # ...
+      cmake_options += -DPYTHON_EXECUTABLE=/usr/bin/python3
+      # ...
+
+Under Unix (filesystems supporting symbolic links) , after building, a link to the matching python executable will be found in ``bin/python`` so that the ``python`` command within this build tree will point to ``python3`` and will be used by all python scripts.
+

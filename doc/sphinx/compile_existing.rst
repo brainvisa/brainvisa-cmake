@@ -77,7 +77,10 @@ Typical configuration:
       - communication:web
 
 .. warning::
-    The option build_type is very important, the execution can be two to three times slower if the build is not in Release mode.
+    The option ``build_type`` is very important, the execution can be two to three times slower if the build is not in Release mode.
+
+.. note::
+    To compile using Qt5 or / and Python3, it is possible to add in the ``build`` sections appropriate ``cmake_options`` variables. Read :ref:`build_qt5` and :ref:`build_py3`.
 
 
 4) Download sources

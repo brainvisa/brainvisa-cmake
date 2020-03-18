@@ -7,8 +7,8 @@
 Build system of BrainVISA
 
 ## Documentation
-on github, master branch: https://brainvisa.github.io/brainvisa-cmake/
-Stable version on http://brainvisa.info/brainvisa-cmake/index.html
+* on github, master branch: https://brainvisa.github.io/brainvisa-cmake/
+* Stable version on http://brainvisa.info/brainvisa-cmake/index.html
 
 ## Licence
 This project is distributed under [CeCILL-B licence](http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html)

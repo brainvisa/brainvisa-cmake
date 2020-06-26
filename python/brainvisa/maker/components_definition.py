@@ -142,6 +142,7 @@ components_definition = [
             ['populse_db', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
+                    'trunk': ('git https://github.com/populse/populse_db.git default:master','populse/populse_db/trunk'),
                     'bug_fix': ('git https://github.com/populse/populse_db.git default:master','populse/populse_db/bug_fix'),
                 },
                 'build_model': 'pure_python',

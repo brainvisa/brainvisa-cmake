@@ -2281,7 +2281,7 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
                         "${output_directory}"
                       COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX}
                         "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
-                        "${SPHINXBUILD_EXECUTABLE}"
+                        ${SPHINXBUILD_EXECUTABLE}
                         ${source_directory}
                         ${output_directory}
     )

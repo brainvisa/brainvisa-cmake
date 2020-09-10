@@ -142,8 +142,8 @@ components_definition = [
             ['populse_db', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/populse/populse_db.git default:master','populse/populse_db/trunk'),
-                    'bug_fix': ('git https://github.com/populse/populse_db.git default:master','populse/populse_db/bug_fix'),
+                    'trunk': ('git https://github.com/populse/populse_db.git default:master','populse/populse_db/integration'),
+                    'bug_fix': ('git https://github.com/populse/populse_db.git default:master','populse/populse_db/master'),
                 },
                 'build_model': 'pure_python',
             }],
@@ -246,6 +246,22 @@ components_definition = [
             }],
         ],
     }),
+
+    ('highres-cortex', {
+        'description': 'Process 3D images of the cerebral cortex at a sub-millimetre scale',
+        'components': [
+            ['highres-cortex', {
+                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
+                'branches': {
+                    'trunk': ('git https://github.com/neurospin/highres-cortex.git branch:master','highres-cortex/integration'),
+                    'bug_fix': ('git https://github.com/neurospin/highres-cortex.git default:master','highres-cortex/master'),
+                    #'release_candidate': (),
+                    #'latest_release': (),
+                },
+            }],
+        ],
+    }),
+
     ('morphologist', {
         'description': 'Anatomical MRI (T1) analysis toolbox, featuring cortex and sulci segmentation, and sulci analysis tools, by the <a href="http://lnao.fr">LNAO team</a>.',
         'components': [
@@ -315,8 +331,8 @@ components_definition = [
             ['morphologist-ui', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/brainvisa/morphologist.git branch:integration', 'morphologist/morphologist-ui/trunk'),
-                    'bug_fix': ('git https://github.com/brainvisa/morphologist.git default:master', 'morphologist/morphologist-ui/bug_fix'),
+                    'trunk': ('git https://github.com/brainvisa/morphologist.git branch:integration', 'morphologist/morphologist-ui/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/morphologist.git default:master', 'morphologist/morphologist-ui/master'),
                     'release_candidate': ('git https://github.com/brainvisa/morphologist.git branch:release_candidate', 'morphologist/morphologist-ui/release_candidate'),
                     'latest_release': ('git https://github.com/brainvisa/morphologist.git tag:latest_release', 'morphologist/morphologist-ui/latest_release'),
                 },

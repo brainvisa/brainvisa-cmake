@@ -856,11 +856,13 @@ function( BRAINVISA_COPY_AND_INSTALL_HEADERS _headersVariable _includeDir target
       # execute code from the build tree and directly benefit from
       # modifications in the source tree (without typing make)
       get_filename_component( _path "${_destFile}" PATH )
+      file( RELATIVE_PATH _relsource ${_path}
+            "${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}" )
       add_custom_command(
         OUTPUT "${_destFile}"
         DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}"
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${_path}"
-        COMMAND "${CMAKE_COMMAND}" -E create_symlink "${CMAKE_CURRENT_SOURCE_DIR}/${_currentHeader}" "${_destFile}" )
+        COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_relsource}" "${_destFile}" )
     else()
       add_custom_command(
         OUTPUT "${_destFile}"
@@ -991,10 +993,13 @@ function( BRAINVISA_COPY_FILES component )
             # execute code from the build tree and directly benefit from
             # modifications in the source tree (without typing make)
             get_filename_component( _path_file "${_file}" PATH )
+            file( RELATIVE_PATH _relsource
+                  "${CMAKE_BINARY_DIR}/${_destination}/${_path_file}"
+                  "${_absoluteFile}" )
             add_custom_command(
               OUTPUT "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
               COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/${_destination}/${_path_file}"
-              COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_absoluteFile}" "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
+              COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_relsource}" "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
           else()
             add_custom_command(
               OUTPUT "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
@@ -1225,9 +1230,12 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
             # Make a symlink instead of copying Python source allows to
             # execute code from the build tree and directly benefit from
             # modifications in the source tree (without typing make)
+            get_filename_component( _dest_directory "${_fileBuild}" DIRECTORY )
+            file( RELATIVE_PATH _relsource "${_dest_directory}"
+                  "${_pythonDirectory}/${_file}" )
             add_custom_command( OUTPUT "${_fileBuild}"
                                 COMMAND "${CMAKE_COMMAND}" -E make_directory "${_path}"
-                                COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_pythonDirectory}/${_file}" "${_fileBuild}"
+                                COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_relsource}" "${_fileBuild}"
                                 DEPENDS "${_pythonDirectory}/${_file}"
                                 VERBATIM )
         else()
@@ -1265,9 +1273,11 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
         # execute code from the build tree and directly benefit from
         # modifications in the source tree (without typing make)
         get_filename_component( _path "${_fileBuild}" PATH )
+        file( RELATIVE_PATH _relsource "${_path}"
+              "${_pythonDirectory}/${_file}" )
         add_custom_command( OUTPUT "${_fileBuild}"
                             COMMAND "${CMAKE_COMMAND}" -E make_directory "${_path}"
-                            COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_pythonDirectory}/${_file}" "${_fileBuild}"
+                            COMMAND "${CMAKE_COMMAND}" -E create_symlink "${_relsource}" "${_fileBuild}"
                             DEPENDS "${_pythonDirectory}/${_file}"
                             VERBATIM )
         else()

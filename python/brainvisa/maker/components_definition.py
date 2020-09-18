@@ -43,7 +43,7 @@ components_definition = [
     ('communication', {
         'components': [
             ['documentation', {
-                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
+                'groups': ['all', ],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/documentation/trunk','communication/documentation/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/documentation/branches/bug_fix','communication/documentation/bug_fix'),
@@ -52,7 +52,7 @@ components_definition = [
                 },
             }],
             ['bibliography', {
-                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
+                'groups': ['all', ],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/bibliography/trunk','communication/bibliography/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/bibliography/trunk','communication/bibliography/bug_fix'),
@@ -61,7 +61,7 @@ components_definition = [
                 },
             }],
             ['web', {
-                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
+                'groups': ['all', ],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/web/trunk','communication/web/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/web/branches/bug_fix','communication/web/bug_fix'),

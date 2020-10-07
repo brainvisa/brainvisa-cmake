@@ -1,41 +1,10 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#  This software and supporting documentation are distributed by
-#      Institut Federatif de Recherche 49
-#      CEA/NeuroSpin, Batiment 145,
-#      91191 Gif-sur-Yvette cedex
-#      France
-#
-# This software is governed by the CeCILL-B license under
-# French law and abiding by the rules of distribution of free software.
-# You can  use, modify and/or redistribute the software under the
-# terms of the CeCILL-B license as circulated by CEA, CNRS
-# and INRIA at the following URL "http://www.cecill.info".
-#
-# As a counterpart to the access to the source code and  rights to copy,
-# modify and redistribute granted by the license, users are provided only
-# with a limited warranty  and the software's author,  the holder of the
-# economic rights,  and the successive licensors  have only  limited
-# liability.
-#
-# In this respect, the user's attention is drawn to the risks associated
-# with loading,  using,  modifying and/or developing or reproducing the
-# software by the user in light of its specific status of free software,
-# that may mean  that it is complicated to manipulate,  and  that  also
-# therefore means  that it is reserved for developers  and  experienced
-# professionals having in-depth computer knowledge. Users are therefore
-# encouraged to load and test the software's suitability as regards their
-# requirements in conditions enabling the security of their systems and/or
-# data to be ensured and,  more generally, to use and operate it in the
-# same conditions as regards security.
-#
-# The fact that you are presently reading this means that you have had
-# knowledge of the CeCILL-B license and that you accept its terms.
-
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 
+import binascii
 import codecs
 import io
 import locale
@@ -58,7 +27,6 @@ import time
 import traceback
 from smtplib import SMTP
 import gzip
-import binascii
 import multiprocessing  # for cpu_count()
 
 default_subprocess_timeout = 3600 * 6 # default subprocess timeout is 6 hours
@@ -73,67 +41,6 @@ try:
     from subprocess import DEVNULL
 except ImportError:
     DEVNULL = open(os.devnull, 'wb')
-
-try:
-    import jenkins
-    if '_get_job_folder' not in jenkins.Jenkins.__dict__:
-        def get_job_folder(self, name):
-            '''Return the name and folder (see cloudbees plugin).
-
-            This is a method to support cloudbees folder plugin.
-            Url request should take into account folder path when the job name specify it
-            (ex.: 'folder/job')
-
-            :param name: Job name, ``str``
-            :returns: Tuple [ 'folder path for Request', 'Name of job without folder path' ]
-            '''
-
-            a_path = name.split('/')
-            short_name = a_path[-1]
-            folder_url = (('job/' + '/job/'.join(a_path[:-1]) + '/')
-                          if len(a_path) > 1 else '')
-
-            return folder_url, short_name
-
-        jenkins.Jenkins._get_job_folder = get_job_folder
-        del get_job_folder
-
-    if '_build_url' not in jenkins.Jenkins.__dict__:
-        from six.moves.urllib.parse import urljoin
-
-        def build_url(self, format_spec, variables=None):
-
-            if variables:
-                url_path = format_spec % self._get_encoded_params(variables)
-            else:
-                url_path = format_spec
-
-            return urljoin(self.server, url_path)
-
-        jenkins.Jenkins._build_url = build_url
-        del build_url
-
-    if '_get_encoded_params' not in jenkins.Jenkins.__dict__:
-        from six.moves.urllib.parse import quote
-
-        def get_encoded_params(self, params):
-            for k, v in params.items():
-                if k in ["name", "msg", "short_name", "from_short_name",
-                        "to_short_name", "folder_url", "from_folder_url",
-                        "to_folder_url"]:
-                    params[k] = quote(v)
-            return params
-
-        jenkins.Jenkins._get_encoded_params = get_encoded_params
-        del get_encoded_params
-
-    if 'Request' not in jenkins.__dict__:
-        from six.moves.urllib.request import Request
-        jenkins.Request = Request
-
-except ImportError:
-    # jenkins module is not here
-    jenkins = None
 
 import six
 from six.moves import reload_module, shlex_quote, zip
@@ -199,8 +106,6 @@ from brainvisa.maker.version_number import version_format_short
 
 
 IGNORED_STEP = 'ignored'
-jenkins_cli = None
-jenkins_wrapper = None
 
 if this_script:
     cmake_root = os.path.join(os.path.dirname(this_script),
@@ -209,7 +114,127 @@ if this_script:
                                     brainvisa_cmake_version,
                                     version_format_short)),
                               'cmake')
-    #print('cmake_root:', cmake_root)
+
+
+class BrainVISAJenkins:
+    '''
+    Wrapper to access Jenkins server of BrainVISA and push bv_maker results
+    '''
+    
+    job_xml = '''<?xml version='1.1' encoding='UTF-8'?>
+    <hudson.model.ExternalJob plugin="external-monitor-job@1.7">
+    <description>{description}</description>
+    <keepDependencies>false</keepDependencies>
+    <properties>
+        <hudson.plugins.jira.JiraProjectProperty plugin="jira@3.1.1"/>
+        <jenkins.model.BuildDiscarderProperty>
+        <strategy class="hudson.tasks.LogRotator">
+            <daysToKeep>-1</daysToKeep>
+            <numToKeep>20</numToKeep>
+            <artifactDaysToKeep>-1</artifactDaysToKeep>
+            <artifactNumToKeep>-1</artifactNumToKeep>
+        </strategy>
+        </jenkins.model.BuildDiscarderProperty>
+    </properties>
+    </hudson.model.ExternalJob>
+    '''
+
+    build_xml = ('<run>'
+        '<log encoding="hexBinary">{hex_log}</log>'
+        '<result>{result}</result>'
+        '<duration>{duration}</duration>'
+        '<displayName>{build}</displayName>'
+        '<description>{description}</description>'
+        '</run>')
+
+    def __init__(self, server, login, password):
+        '''
+        server = URL of the Jenkins server
+        login = username to use for Jenkins authentication
+        password = password or token for authentication
+        '''
+        self.server = server
+        self.login = login
+        self.password = password
+    
+    def get(self, route, **kwargs):
+        return requests.get('{0}/{1}'.format(self.server, route),
+                            auth=(self.login, self.password),
+                            **kwargs)
+
+    def post(self, route, **kwargs):
+        return requests.post('{0}/{1}'.format(self.server, route),
+                             auth=(self.login, self.password),
+                             **kwargs)
+
+    def delete(self, route, **kwargs):
+        return requests.delete('{0}/{1}'.format(self.server, route),
+                               auth=(self.login, self.password),
+                               **kwargs)
+    
+    def job_exists(self, environment):
+        r = self.get('/job/{0}/api/json'.format(environment))
+        if r.status_code == 404:
+            return False
+        r.raise_for_status()
+        return True
+    
+    def create_job(self, environment, distro, system, branch):
+        '''
+        Create a jenkins job representing a task performed in a casa_distro 
+        environment.The type of the job created is "external task" therefore 
+        the corresponding plugin must be installed on the server. The job is
+        configured to keep only the 20 last build logs (others are destroyed).
+        
+        environment : name of the casa_distro environment.
+        distro      : distro of casa_distro used for this job
+        system      : system of casa_distro used for this job
+        branch      : branch of casa_distro used for this job
+        '''
+        description = '''environment = {0}
+        distro = {1}
+        system = {2}
+        branch = {3}'''.format(environment, distro, system, branch)
+        r = self.post('createItem',
+            params={'name': environment},
+            headers={'Content-Type': 'application/xml'},
+            data=self.job_xml.format(description=description))
+        r.raise_for_status()
+        
+    def delete_job(self, job):
+        r = self.delete('job/{0}/'.format(job))
+        r.raise_for_status()
+
+    def jobs(self):
+        r = self.get('api/json')
+        r.raise_for_status()
+        return [i['name'] for i in r.json()['jobs']]
+    
+    def create_build(self, environment, task, result,
+                     log, duration=None, description=None):
+        '''
+        Add a build report related
+
+        environment : name of the casa_distro environment.
+        task        : name of the task that is performed by this build 
+                      (e.g. src, configure, build, etc.)
+        result      : integer value representing the result of the build
+                      any no zero value means failure
+        log         : console output of the build
+        duration    : (optional) duration of the build in milliseconds
+        description : (optional) description text attached to the build
+        '''
+        # Python 2 need binascii module to convert str
+        # to hex string. In Python 3, bytes have an hex() method.
+        hex_log = binascii.hexlify(log.encode())
+        r = self.post('job/{0}/postBuildResult'.format(environment),
+            headers={'Content-Type': 'application/xml'},
+            data=self.build_xml.format(build=task,
+                                       hex_log=hex_log,
+                                       result=result,
+                                       duration=duration or '0',
+                                       description=description or ''))
+        r.raise_for_status()
 
 
 ASCII_SUBSTITUTIONS = {
@@ -1002,383 +1027,6 @@ def global_installer_variables():
     return _installer_variables
 
 
-class JenkinsWrapper(object):
-
-    jenkins_cli = ''
-    # for use with using a ssh key
-    jenkins_cli_options = ['-remoting'] # needed for recent client
-    jenkins_unavailable_warned = False
-
-    def __init__(self):
-        # the following does not work on our server, it really needs ssh key
-        # + 'remoting' mode
-        #
-        ## (configuration is global)
-        #if configuration.general_section.jenkins_username \
-                #and configuration.general_section.jenkins_token:
-            #self.jenkins_cli_options = [
-                #'-http', '-auth',
-                #'%s:%s' % (configuration.general_section.jenkins_username,
-                          #configuration.general_section.jenkins_token)]
-        pass
-
-
-    def __del__(self):
-        # cleanup jenkins CLI temp file
-        if self.__class__.jenkins_cli:
-            shutil.rmtree(os.path.dirname(self.jenkins_cli))
-            self.__class__.jenkins_cli = ''
-
-
-    def jenkins_job_name(self, o, step):
-        vars = dict(global_installer_variables())
-        if o.directory_id:
-            vars['directory_id'] = o.directory_id
-        elif configuration.general_section.directory_id_by_default:
-            vars['directory_id'] = configuration.general_section \
-                                                .directory_id_by_default        
-        else:
-            vars['directory_id'] = os.path.basename(o.directory)
-        project = ''
-        if ':' in step:
-            project = '-' + '-'.join(step.split(':')[1:])
-            step = step.split(':')[0]
-        vars['step'] = step
-        vars['project'] = project
-        job_name = configuration.general_section.jenkins_build_name % vars
-        return job_name
-
-
-    def jenkins_global_job_name(self):
-        vars = dict(global_installer_variables())
-        if configuration.general_section.directory_id_by_default:
-            vars['directory_id'] = configuration.general_section \
-                                                .directory_id_by_default        
-        else:
-            vars['directory_id'] = 'all'
-        
-        if configuration.general_section. \
-                         jenkins_global_job_name_step_by_default:
-            vars['step'] = configuration.general_section \
-                                        .jenkins_global_job_name_step_by_default
-        else:
-            vars['step'] = 'status'
-            
-        vars['project'] = ''
-        job_name = configuration.general_section.jenkins_build_name % vars
-        return job_name
-
-
-    def jenkins_long_job_name(self, o, step):
-        vars = dict(global_installer_variables())
-        if o.directory_id:
-            vars['directory_id'] = o.directory_id
-        elif configuration.general_section.directory_id_by_default:
-            vars['directory_id'] = configuration.general_section \
-                                                .directory_id_by_default
-        else:
-            vars['directory_id'] = os.path.basename(o.directory)
-        project = ''
-        if ':' in step:
-            project = '-' + '-'.join(step.split(':')[1:])
-            step = step.split(':')[0]
-        vars['step'] = step
-        vars['project'] = project
-        job_long_name = '%(directory_id)s step %(step)s%(project)s, on ' \
-            '%(hostname)s (%(os)s)' % vars
-        return job_long_name
-
-
-    def jenkins_notification(self, message, d, o, step, status):
-        ''' Notify job execution (build, test etc) to a Jenkins server
-        '''
-        if not configuration.general_section.jenkins_server_url \
-                or configuration.options.disable_jenkins:
-            return # don't notify
-
-        if jenkins is None and not JenkinsWrapper.jenkins_unavailable_warned:
-            # jenkins module is not here
-            JenkinsWrapper.jenkins_unavailable_warned = True
-            print('Warning: jenkins module is not available')
-
-        #Status = status[0].upper() + status[1:]
-        if o.status[step] not in ('interrupted', 'failed'):
-            res = 0
-        #elif isinstance(o.status[step]['exception'], KeyboardInterrupt):
-            #res = 2
-        else:
-            res = 1
-
-        job_name = self.jenkins_job_name(o, step)
-        job_long_name = self.jenkins_long_job_name(o, step)
-        duration_t = tuple([y - x
-                            for x, y in zip(o.start_time[step],
-                                            o.stop_time[step])])
-        # duration in seconds
-        duration = int(time.mktime(duration_t) - time.mktime((0, ) * 9)) \
-            * 1000
-
-        self.create_jenkins_job(job_name)
-        self.submit_job_result(job_name, job_long_name, res, duration,
-                               message, o.status[step], step)
-
-
-    def submit_job_result(self, job_name, job_long_name, res, duration,
-                          message, status, step='all'):
-        jenkins_cli_path = self.get_jenkins_cli()
-        if jenkins_cli_path:
-            # gzip content
-            zlog_f = tempfile.mkstemp(prefix='log_%s' %step, suffix='.gz')
-            os.close(zlog_f[0])
-            zlog = zlog_f[1]
-            with gzip.GzipFile(zlog, 'wb') as gf:
-                gf.write(message.encode())
-            try:
-                jkn_cmd = ['java', '-jar', jenkins_cli_path] \
-                    + self.jenkins_cli_options \
-                    + ['-s',
-                       configuration.general_section.jenkins_server_url,
-                       'set-external-build-result', '--display',
-                       job_long_name, '--job', job_name,
-                       '--result', str(int(res)),
-                       '--duration', str(duration), '--log', '-']
-                #print('Run jenkins:')
-                #print(jkn_cmd)
-                with open(zlog) as f:
-                    system_output_on_error(jkn_cmd, stdin=f, timeout=15)
-
-
-            finally:
-                os.unlink(zlog)
-        elif jenkins:
-            # jenkins_cli unavailable, use python-jenkins
-            jen = self.jenkins
-
-            POST_BUILD_RESULT = \
-                '%(folder_url)sjob/%(short_name)s/postBuildResult'
-
-            config = '''<run>
-              <log encoding="hexBinary">%s</log>
-              <result>%d</result>
-              <duration>%d</duration>
-              <displayName>%s</displayName>
-              <description>%s</description>
-            </run>''' % (binascii.hexlify(message.encode('utf-8')), int(res),
-                         duration, job_long_name, status)
-
-            folder_url, short_name = jen._get_job_folder(job_name)
-            jen.jenkins_open(jenkins.Request(
-                jen._build_url(POST_BUILD_RESULT,
-                              {'folder_url': folder_url,
-                               'short_name': short_name}),
-                config.encode('utf-8'), jenkins.DEFAULT_HEADERS))
-
-
-    def jenkins_global_notification(self, message, res, start_time,
-                                    stop_time, status):
-        if not configuration.general_section.jenkins_server_url \
-                or configuration.options.disable_jenkins:
-            return # don't notify
-
-        job_name = self.jenkins_global_job_name()
-        self.create_jenkins_job(job_name)
-
-        # duration in seconds
-        if start_time is None or stop_time is None:
-            duration = 0
-        else:
-            duration_t = tuple([y - x for x, y in zip(start_time, stop_time)])
-            duration = int(time.mktime(duration_t) - time.mktime((0, ) * 9)) \
-                * 1000
-
-        job_long_name = job_name
-
-        self.submit_job_result(job_name, job_long_name, res, duration,
-                               message, status)
-        # remove the temporary "running" build
-        if hasattr(self, 'running_build'):
-            self.delete_build(job_name, self.running_build)
-            del self.running_build
-
-
-    def jenkins_global_notify_running(self):
-        if not configuration.general_section.jenkins_server_url \
-                or configuration.options.disable_jenkins:
-            return # don't notify
-        job_name = self.jenkins_global_job_name()
-        self.create_jenkins_job(job_name)
-        self.submit_job_result(job_name, 'RUNNING...', 0, 0,
-                               'Job in progress.', '')
-        # keep this temporary "running" build to allow deleting it later
-        try:
-            running_build = self.get_last_build(job_name)
-        except AttributeError: # jenkins module not available
-            running_build = None
-        if running_build is not None:
-            self.running_build = running_build
-
-
-    def get_last_build(self, job_name):
-        jenkins_cli_path = self.get_jenkins_cli()
-        if jenkins_cli_path:
-            return self.get_last_build_cli(job_name)
-        else:
-            return self.get_last_build_py(job_name)
-
-
-    def get_last_build_cli(self, job_name):
-        # cli does not allow to get builds list in a job...
-        if jenkins and not hasattr(self, 'jenkins'):
-            self.jenkins = jenkins.Jenkins(
-                configuration.general_section.jenkins_server_url, configuration.general_section.jenkins_username,
-                configuration.general_section.jenkins_token)
-        if hasattr(self, 'jenkins'):
-            return self.get_last_build_py(job_name)
-
-
-    def get_last_build_py(self, job_name):
-        return str(self.jenkins.get_job_info(job_name)['lastBuild']['number'])
-
-
-    def delete_build(self, job_name, build_name):
-        if hasattr(self, 'jenkins'):
-            self.delete_build_py(job_name, build_name)
-        #jenkins_cli_path = self.get_jenkins_cli()
-        #if jenkins_cli_path:
-            #self.delete_build_cli(job_name, build_name)
-        #else:
-            #self.delete_build_py(job_name, build_name)
-
-
-    def delete_build_cli(self, job_name, build_name):
-        # doesn't work: always returns "ERROR: No such job"
-        jenkins_cli_path = self.get_jenkins_cli()
-        # check if the job exists
-        jkn_cmd = ['java', '-jar', jenkins_cli_path] \
-            + self.jenkins_cli_options \
-            + ['-s',
-               configuration.general_section.jenkins_server_url,
-               'delete-builds', job_name, build_name]
-        system_output_on_error(jkn_cmd, timeout=15).strip().split('\n')
-
-
-    def delete_build_py(self, job_name, build_name):
-        DELETE_BUILD \
-            = '%(folder_url)sjob/%(short_name)s/%(build_name)s/doDelete'
-        folder_url, short_name = self.jenkins._get_job_folder(job_name)
-        self.jenkins.jenkins_open(jenkins.Request(
-            self.jenkins._build_url(DELETE_BUILD, locals()), b''))
-
-
-    @classmethod
-    def get_jenkins_cli(cls):
-        if cls.jenkins_cli is None or cls.jenkins_cli:
-            return cls.jenkins_cli
-        if jenkins is not None:
-            #if the python module is here, use it.
-            cls.jenkins_cli = None
-            return None
-
-        java = distutils.spawn.find_executable('java')
-        # test java version
-        try:
-            java_ver = system_output_on_error(['java', '-version'], timeout=3)
-            ver = java_ver.split('\n')[0].strip()
-            jvre = re.match('^.* version "([^"]+)"$', ver)
-            if jvre:
-                jver_s = jvre.group(1)
-                jver = [int(x) for x in jver_s.split('.')[:2]]
-                if jver < [1, 7]:
-                    print('Java version %s is too old for Jenkins-cli.'
-                          % jver_s)
-                    java = None
-                else:
-                    print('Java version %s OK for jenkins-cli' % jver_s)
-            else:
-                print('Java version %s cannot be parsed. '
-                      'Not using Jenkins-cli' % jver_s)
-                java = None
-        except Exception:
-            print('Could not check java version. Not using Jenkins-cli')
-            java = None
-        if not java:
-            cls.jenkins_cli = None
-            return None
-        # jenkins-cli.jar is retreived from the server
-        cli_file_d = tempfile.mkdtemp(prefix='bv_maker_jenkins')
-        cli_file = os.path.join(cli_file_d, 'jenkins-cli.jar')
-        url = configuration.general_section.jenkins_server_url \
-            + '/jnlpJars/jenkins-cli.jar'
-        try:
-            f = urlopen(url)
-            with open(cli_file, 'wb') as f_out:
-                f_out.write(f.read())
-            cls.jenkins_cli = cli_file
-        except Exception:
-            shutil.rmtree(cli_file_d)
-            cls.jenkins_cli = None
-        return cls.jenkins_cli
-
-
-    def create_jenkins_job(self, job_name):
-        jenkins_cli_path = self.get_jenkins_cli()
-        if jenkins_cli_path:
-            return self.create_jenkins_job_cli(job_name)
-        elif jenkins:
-            # use jenkins module
-            return self.create_jenkins_job_py(job_name)
-
-
-    def create_jenkins_job_cli(self, job_name):
-        jenkins_cli_path = self.get_jenkins_cli()
-        # check if the job exists
-        jkn_cmd = ['java', '-jar', jenkins_cli_path] \
-            + self.jenkins_cli_options \
-            + ['-s',
-               configuration.general_section.jenkins_server_url,
-               'list-jobs']
-        jobs = system_output_on_error(jkn_cmd, timeout=15).strip().split('\n')
-        if job_name not in jobs:
-            # create new job
-            template  = '''<?xml version='1.0' encoding='UTF-8'?>
-<hudson.model.ExternalJob plugin="external-monitor-job@1.7">
-  <description></description>
-  <keepDependencies>false</keepDependencies>
-  <properties/>
-</hudson.model.ExternalJob>'''
-            tfile = tempfile.mkstemp(prefix='bv_maker_jenkins_',
-                                      suffix='.xml')
-            os.close(tfile[0])
-            with open(tfile[1], 'w') as f:
-                f.write(template)
-            jkn_cmd = ['java', '-jar', jenkins_cli_path] \
-                + self.jenkins_cli_options \
-                + ['-s',
-                   configuration.general_section.jenkins_server_url,
-                   'create-job', job_name]
-            #print('jkn cmd:', jkn_cmd)
-            try:
-                with open(tfile[1]) as f:
-                    system_output_on_error(jkn_cmd, timeout=15, stdin=f)
-            finally:
-                os.unlink(tfile[1])
-
-
-    def create_jenkins_job_py(self, job_name):
-        if not hasattr(self, 'jenkins'):
-            self.jenkins = jenkins.Jenkins(
-                configuration.general_section.jenkins_server_url, configuration.general_section.jenkins_username,
-                configuration.general_section.jenkins_token)
-        jen = self.jenkins
-        if not jen.get_job_name(job_name):
-            config = '''<?xml version='1.0' encoding='UTF-8'?>
-<hudson.model.ExternalJob plugin="external-monitor-job@1.7">
-  <description></description>
-  <keepDependencies>false</keepDependencies>
-  <properties/>
-</hudson.model.ExternalJob>'''
-            jen.create_job(job_name, config)
-
 
 class StepCommand(object):
     
@@ -1716,15 +1364,23 @@ Subject: %s - %s %s on %s (%s)
     def jenkins_notification(self, d, o, step, status):
         ''' Notify job execution (build, test etc) to a Jenkins server
         '''
+        global jenkins_server, casa_environment
+        
         if not configuration.general_section.jenkins_server_url \
                 or configuration.options.disable_jenkins:
             return # don't notify
-        message = self.message_header(d, o, step, status)
-        message += self.log_message_content()
-        global jenkins_wrapper
-        if jenkins_wrapper is None:
-            jenkins_wrapper = JenkinsWrapper()
-        jenkins_wrapper.jenkins_notification(message, d, o, step, status)
+        
+        if o.status[step] not in ('interrupted', 'failed'):
+            result = 0
+        else:
+            result = 1
+        
+        log = (self.message_header(d, o, step, status) +
+               self.log_message_content())
+        jenkins_server.create_build(environment=casa_environment,
+            task=step,
+            result=result,
+            log=log)
 
 
 class InfoCommand(StepCommand):
@@ -2619,17 +2275,16 @@ class ConfigVariableParser(object):
 class GeneralSection(ConfigVariableParser):
     _variables_with_replacements = \
         set(('directory_id_by_default',
-             'jenkins_global_job_name_step_by_default',
              'jenkins_server_url',
              'subprocess_timeout'))
-    _variables_with_env_only_replacements = set(('jenkins_build_name', 'env'))
+    _variables_with_env_only_replacements = set(('casa_environment', 'env'))
     _validAdditiveOptions = set(('env', ))
     _path_variables = set(('global_status_file', ))
     _validOptions = set(('failure_email', 'success_email', 'smtp_server',
                          'from_email', 'reply_to_email',
                          'email_notification_by_default',
                          'failure_email_by_project',
-                         'jenkins_build_name',
+                         'casa_environment',
                          'jenkins_username',
                          'jenkins_token'))
     _validOptions.update(_variables_with_replacements)
@@ -2650,7 +2305,7 @@ class GeneralSection(ConfigVariableParser):
         self.global_status_file = None
         self.email_notification_by_default = 'OFF'
         self.jenkins_server_url = ''
-        self.jenkins_build_name = ''
+        self.casa_environment = ''
         self.jenkins_global_job_name_step_by_default = ''
         self.jenkins_username = None
         self.jenkins_token = None
@@ -5592,10 +5247,15 @@ def display_failure_summary(configuration):
     else:
         status = 'All went good.'
         print(status)
-    global jenkins_wrapper
-    jenkins_wrapper.jenkins_global_notification(
-        '\n'.join(messages) + '\n', global_failed, first_start, last_stop,
-        status)
+    if not configuration.options.disable_jenkins and configuration.general_section.jenkins_server_url:
+        global casa_environment
+        global jenkins_server
+        
+        jenkins_server.create_build(environment=casa_environment,
+            task='bv_maker finished',
+            result=(1 if global_failed else 0),
+            log='\n'.join(messages) + '\n')
+
     return global_failed
 
 # ---
@@ -5661,10 +5321,34 @@ if not log_something:
     # then disable Jenkins logging
     configuration.options.disable_jenkins = True
     
-if not jenkins_wrapper:
-    jenkins_wrapper = JenkinsWrapper()
-if log_something:
-    jenkins_wrapper.jenkins_global_notify_running()
+if (not configuration.options.disable_jenkins and
+    configuration.general_section.jenkins_server_url):
+    
+    import requests
+    
+    if configuration.general_section.casa_environment:
+        casa_environment = configuration.general_section.casa_environment
+    else:
+        casa_environment = os.environ.get('CASA_ENVIRONMENT')
+        if not casa_environment:
+            raise ValueError('No name for Jenkins environment. '
+                'Either set CASA_ENVIRONMENT env var or set casa_environment '
+                'in bv_maker.cfg [general] section')
+    jenkins_server = BrainVISAJenkins(
+        configuration.general_section.jenkins_server_url,
+        configuration.general_section.jenkins_username,
+        configuration.general_section.jenkins_token)
+    if not jenkins_server.job_exists(casa_environment):
+        jenkins_server.create_job(casa_environment,
+            distro=os.environ.get('CASA_DISTRO', 'unknown'),
+            branch=os.environ.get('CASA_BRANCH', 'unknown'),
+            system=os.environ.get('CASA_SYSTEM', 'unknown'))
+    jenkins_server.create_build(environment=casa_environment,
+        task='start bv_maker',
+        result=0,
+        log=' '.join("'%s'" %i for i in sys.argv) + '\n')
+
+                                  
 
 failed = False
 # Execute selected commands

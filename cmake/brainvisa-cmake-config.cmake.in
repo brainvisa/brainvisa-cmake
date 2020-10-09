@@ -3,6 +3,7 @@ cmake_policy( SET CMP0009 NEW )
 if( CMAKE_MAJOR_VERSION GREATER 2 )
   cmake_policy( SET CMP0054 NEW )
 endif()
+cmake_policy( SET CMP0057 NEW )
 
 get_property( config_done GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE )
 
@@ -180,6 +181,37 @@ function( BRAINVISA_SYSTEM_PATH_TO_LIST  result_variable_name system_path )
   endif( NOT WIN32 )
   set( ${result_variable_name} "${system_path}" PARENT_SCOPE )
 endfunction( BRAINVISA_SYSTEM_PATH_TO_LIST  result_variable_name system_path )
+
+
+# This code is a safeguard: libraries that are dynamically mounted by
+# Singularity should never be used by the linker, see
+# https://github.com/brainvisa/casa-distro/issues/113
+if(NOT CMAKE_IGNORE_PATH IN_LIST "/.singularity.d/libs")
+  list(APPEND CMAKE_IGNORE_PATH "/.singularity.d/libs")
+endif()
+BRAINVISA_SYSTEM_PATH_TO_LIST( ld_library_path_list "$ENV{LD_LIBRARY_PATH}" )
+if("/.singularity.d/libs" IN_LIST ld_library_path_list)
+  file(GLOB _lib_list "/.singularity.d/libs/*")
+  list(LENGTH _lib_list _lib_list_len)
+  if(NOT _lib_list_len EQUAL 0)
+    message(FATAL_ERROR "The LD_LIBRARY_PATH environment variable contains \
+'/.singularity.d/libs', which means that you are running bv_maker/cmake from \
+within Singularity with binding of the NVidia drivers (probably). This has \
+been found to result in broken builds, see \
+.\
+
+Please remember to run any configuration and compilation (bv_maker, cmake, or
+make) without the NVidia driver binding, by starting your container:\
+
+  - either with 'casa_distro bv_maker',
+  - or, by passing the 'opengl=container' option.
+")
+  endif()
+  unset(_lib_list)
+  unset(_lib_list_len)
+endif()
+unset(ld_library_path_list)
+
 
 #
 # BRAINVISA_TARGET_SYSTEM_COMMAND

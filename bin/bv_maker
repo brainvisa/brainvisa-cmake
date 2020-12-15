@@ -3136,7 +3136,7 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                         if fnmatchcase(version, versionPattern):
                             default_source_dir = getattr(self, 'default_source_dir', None)
                             if default_source_dir:
-                                dir = default_source_dir % dict(project=project,
+                                dir = default_source_dir.format(project=project,
                                                                 component=component,
                                                                 branch=version)
                             self.parseSourceConfigurationLine(

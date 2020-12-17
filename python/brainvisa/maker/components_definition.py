@@ -101,7 +101,7 @@ components_definition = [
             ['soma-io', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/brainvisa/soma-io.git branch:integration','soma/soma-io/integration'),
+                    'trunk': ('git https://github.com/brainvisa/soma-io.git branch:master','soma/soma-io/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/soma-io.git branch:master','soma/soma-io/master'),
                     'release_candidate': ('git https://github.com/brainvisa/soma-io.git branch:release_candidate','soma/soma-io/release_candidate'),
                     'latest_release': ('git https://github.com/brainvisa/soma-io.git branch:latest_release','soma/soma-io/latest_release'),
@@ -155,7 +155,7 @@ components_definition = [
             ['aims-free', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/brainvisa/aims-free.git branch:integration','aims/aims-free/integration'),
+                    'trunk': ('git https://github.com/brainvisa/aims-free.git branch:master','aims/aims-free/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/aims-free.git branch:master','aims/aims-free/master'),
                     'release_candidate': ('git https://github.com/brainvisa/aims-free.git branch:release_candidate','aims/aims-free/release_candidate'),
                     'latest_release': ('git https://github.com/brainvisa/aims-free.git branch:latest_release','aims/aims-free/latest_release'),
@@ -164,7 +164,7 @@ components_definition = [
             ['aims-gpl', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/brainvisa/aims-gpl.git branch:integration','aims/aims-gpl/integration'),
+                    'trunk': ('git https://github.com/brainvisa/aims-gpl.git branch:master','aims/aims-gpl/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/aims-gpl.git branch:master','aims/aims-gpl/master'),
                     'release_candidate': ('git https://github.com/brainvisa/aims-gpl.git branch:release_candidate','aims/aims-gpl/release_candidate'),
                     'latest_release': ('git https://github.com/brainvisa/aims-gpl.git branch:latest_release','aims/aims-gpl/latest_release'),
@@ -173,7 +173,7 @@ components_definition = [
             ['aims-til', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/brainvisa/aims-til.git branch:integration','aims/aims-til/integration'),
+                    'trunk': ('git https://github.com/brainvisa/aims-til.git branch:master','aims/aims-til/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/aims-til.git branch:master','aims/aims-til/master'),
                     'release_candidate': ('git https://github.com/brainvisa/aims-til.git branch:release_candidate','aims/aims-til/release_candidate'),
                     'latest_release': ('git https://github.com/brainvisa/aims-til.git branch:latest_release','aims/aims-til/latest_release'),
@@ -187,7 +187,7 @@ components_definition = [
             ['anatomist-free', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/brainvisa/anatomist-free.git branch:integration','anatomist/anatomist-free/integration'),
+                    'trunk': ('git https://github.com/brainvisa/anatomist-free.git branch:master','anatomist/anatomist-free/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/anatomist-free.git branch:master','anatomist/anatomist-free/master'),
                     'release_candidate': ('git https://github.com/brainvisa/anatomist-free.git branch:release_candidate','anatomist/anatomist-free/release_candidate'),
                     'latest_release': ('git https://github.com/brainvisa/anatomist-free.git branch:latest_release','anatomist/anatomist-free/latest_release'),
@@ -196,7 +196,7 @@ components_definition = [
             ['anatomist-gpl', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/brainvisa/anatomist-gpl.git branch:integration','anatomist/anatomist-gpl/integration'),
+                    'trunk': ('git https://github.com/brainvisa/anatomist-gpl.git branch:master','anatomist/anatomist-gpl/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/anatomist-gpl.git branch:master','anatomist/anatomist-gpl/master'),
                     'release_candidate': ('git https://github.com/brainvisa/anatomist-gpl.git branch:release_candidate','anatomist/anatomist-gpl/release_candidate'),
                     'latest_release': ('git https://github.com/brainvisa/anatomist-gpl.git branch:latest_release','anatomist/anatomist-gpl/latest_release'),
@@ -210,7 +210,7 @@ components_definition = [
             ['axon', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/brainvisa/axon.git branch:integration','axon/integration'),
+                    'trunk': ('git https://github.com/brainvisa/axon.git branch:master','axon/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/axon.git branch:master','axon/master'),
                     'release_candidate': ('git https://github.com/brainvisa/axon.git branch:release_candidate','axon/release_candidate'),
                     'latest_release': ('git https://github.com/brainvisa/axon.git branch:latest_release','axon/latest_release'),
@@ -658,7 +658,7 @@ components_definition = [
             ['disco', {
                 'groups': ['all'],
                 'branches': {
-                    'trunk': ('git https://bioproj.extra.cea.fr/git/brainvisa-disco branch:integration', 'disco/integration'),
+                    'trunk': ('git https://bioproj.extra.cea.fr/git/brainvisa-disco branch:master', 'disco/integration'),
                     'bug_fix': ('git https://bioproj.extra.cea.fr/git/brainvisa-disco branch:master', 'disco/master'),
                     'release_candidate': ('git https://bioproj.extra.cea.fr/git/brainvisa-disco branch:release_candidate', 'disco/release_candidate'),
                     'latest_release': ('git https://bioproj.extra.cea.fr/git/brainvisa-disco branch:latest_release', 'disco/latest_release'),

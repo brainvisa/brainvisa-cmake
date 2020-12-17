@@ -22,7 +22,7 @@ components_definition = [
             ['brainvisa-installer', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/brainvisa/brainvisa-installer.git branch:integration','development/brainvisa-installer/integration'),
+                    'trunk': ('git https://github.com/brainvisa/brainvisa-installer.git branch:master','development/brainvisa-installer/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/brainvisa-installer.git branch:master','development/brainvisa-installer/master'),
                     'release_candidate': ('git https://github.com/brainvisa/brainvisa-installer.git branch:release_candidate','development/brainvisa-installer/release_candidate'),
                     'latest_release': ('git https://github.com/brainvisa/brainvisa-installer.git branch:latest_release','development/brainvisa-installer/latest_release'),
@@ -78,7 +78,7 @@ components_definition = [
             ['brainvisa-share', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/brainvisa/brainvisa-share.git branch:integration','brainvisa-share/integration'),
+                    'trunk': ('git https://github.com/brainvisa/brainvisa-share.git branch:master','brainvisa-share/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/brainvisa-share.git branch:master','brainvisa-share/master'),
                     'release_candidate': ('git https://github.com/brainvisa/brainvisa-share.git branch:release_candidate','brainvisa-share/release_candidate'),
                     'latest_release': ('git https://github.com/brainvisa/brainvisa-share.git branch:latest_release','brainvisa-share/latest_release'),
@@ -92,7 +92,7 @@ components_definition = [
             ['soma-base', {
                 'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/populse/soma-base.git branch:integration','soma/soma-base/integration'),
+                    'trunk': ('git https://github.com/populse/soma-base.git branch:master','soma/soma-base/integration'),
                     'bug_fix': ('git https://github.com/populse/soma-base.git branch:master','soma/soma-base/master'),
                     'release_candidate': ('git https://github.com/populse/soma-base.git branch:release_candidate','soma/soma-base/release_candidate'),
                     'latest_release': ('git https://github.com/populse/soma-base.git branch:latest_release','soma/soma-base/latest_release'),
@@ -119,7 +119,7 @@ components_definition = [
             ['soma-workflow', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/populse/soma-workflow.git branch:integration','soma/soma-workflow/integration'),
+                    'trunk': ('git https://github.com/populse/soma-workflow.git branch:master','soma/soma-workflow/integration'),
                     'bug_fix': ('git https://github.com/populse/soma-workflow.git default:master','soma/soma-workflow/master'),
                     'release_candidate': ('git https://github.com/populse/soma-workflow.git branch:release_candidate','soma/soma-workflow/release_candidate'),
                     'latest_release': ('git https://github.com/populse/soma-workflow.git tag:latest_release','soma/soma-workflow/latest_release'),
@@ -132,7 +132,7 @@ components_definition = [
             ['capsul', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/populse/capsul.git branch:integration','capsul/integration'),
+                    'trunk': ('git https://github.com/populse/capsul.git branch:master','capsul/integration'),
                     'bug_fix': ('git https://github.com/populse/capsul.git default:master','capsul/master'),
                     'release_candidate': ('git https://github.com/populse/capsul.git branch:release_candidate','capsul/release_candidate'),
                     'latest_release': ('git https://github.com/populse/capsul.git tag:latest_release','capsul/latest_release'),
@@ -331,7 +331,7 @@ components_definition = [
             ['morphologist-ui', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/brainvisa/morphologist.git branch:integration', 'morphologist/morphologist-ui/integration'),
+                    'trunk': ('git https://github.com/brainvisa/morphologist.git branch:master', 'morphologist/morphologist-ui/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/morphologist.git default:master', 'morphologist/morphologist-ui/master'),
                     'release_candidate': ('git https://github.com/brainvisa/morphologist.git branch:release_candidate', 'morphologist/morphologist-ui/release_candidate'),
                     'latest_release': ('git https://github.com/brainvisa/morphologist.git tag:latest_release', 'morphologist/morphologist-ui/latest_release'),
@@ -628,7 +628,7 @@ components_definition = [
             ['brainvisa-release', {
                 'groups': ['all', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/brainvisa/brainvisa-release.git branch:integration','development/brainvisa-release/integration'),
+                    'trunk': ('git https://github.com/brainvisa/brainvisa-release.git branch:master','development/brainvisa-release/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/brainvisa-release.git branch:master','development/brainvisa-release/master'),
                     'release_candidate': ('git https://github.com/brainvisa/brainvisa-release.git branch:release_candidate','development/brainvisa-release/release_candidate'),
                     'latest_release': ('git https://github.com/brainvisa/brainvisa-release.git branch:latest_release','development/brainvisa-release/latest_release'),

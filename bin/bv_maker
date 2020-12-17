@@ -2446,7 +2446,11 @@ class GitRepository(object):
 
     def call_nonessential_command(self, args, echo=True, **kwargs):
         """Call a command in the repository, ignoring failure."""
-        retcode = self.call_command(args, echo=echo, **kwargs)
+        try:
+            retcode = self.call_command(args, echo=echo, **kwargs)
+        except OSError:
+            # "Command not found" scenario
+            return
         if echo and retcode != 0:
             print('You can safely ignore errors of the above command')
 
@@ -2555,9 +2559,6 @@ to the origin repository.''')
 
     def update_other_remotes(self):
         """Fetch all remotes except 'origin' (errors are non-fatal)."""
-        # Redirect stderr to stdout since git fetch prints progress on
-        # stderr, but bv_build_nightly considers everything printed to
-        # stderr to be an error.
         self.call_nonessential_command(
             ['git', '-c', 'remote.origin.skipDefaultUpdate',
              'remote', 'update'], echo=True)
@@ -2573,6 +2574,27 @@ to the origin repository.''')
         print('^' * 72)
         print(message)
         print('=' * 72)
+
+    @classmethod
+    def _setup_git_lfs_global_config(cls):
+        """Install git-lfs so that 'git clone' will check out lfs files.
+
+        Errors of 'git lfs install' are ignored, including git lfs not being
+        installed.
+        """
+        if not hasattr(cls, '_git_lfs_is_configured'):
+            args = ['git', 'lfs', 'install', '--skip-repo']
+            print('$ ' + ' '.join(shlex_quote(arg) for arg in args))
+            try:
+                subprocess.check_call(args)
+            except OSError:
+                # "Command not found" scenario
+                cls._git_lfs_is_configured = False
+            except subprocess.CalledProcessError:
+                print('You can safely ignore errors of the above command')
+                cls._git_lfs_is_configured = False
+            else:
+                cls._git_lfs_is_configured = True
 
     def update_bv_head(self):
         """Change refs/bv_head to point to the given remote ref."""
@@ -2800,15 +2822,6 @@ uncommitted local changes (see above).""")
         return upstream_info
 
     @classmethod
-    def have_git_lfs(cls):
-        """Test if git-lfs is available."""
-        if not hasattr(cls, '_have_git_lfs'):
-            cls._have_git_lfs = bool(
-                distutils.spawn.find_executable('git-lfs')
-            )
-        return cls._have_git_lfs
-
-    @classmethod
     def have_pre_commit(cls):
         """Test if pre-commit is available."""
         if not hasattr(cls, '_have_pre_commit'):
@@ -2831,16 +2844,9 @@ This error may be due to a repository change for a component (typically
 going from Subversion to Git). You must check yourself that you have nothing
 to keep in this directory and delete it to make "bv_maker sources" work.'''
                        % self.path)
-            # TODO(ylep) clone without LFS first, then do git lfs pull (git lfs
-            # clone is deprecated with recent Git versions).
-            if self.have_git_lfs():
-                system('git', 'lfs', 'clone', '--branch', self.remote_ref,
-                       self.remote_url, self.path)
-                system('git', 'lfs', 'install', cwd=self.path)
-            else:
-                # An error with git clone is immediately fatal (raises OSError)
-                system('git', 'clone', '--branch', self.remote_ref,
-                       self.remote_url, self.path)
+            self._setup_git_lfs_global_config()
+            system('git', 'clone', '--branch', self.remote_ref,
+                   self.remote_url, self.path)
         else:
             # Make sure that the origin remote is configured and points to the
             # URL configured in bv_maker

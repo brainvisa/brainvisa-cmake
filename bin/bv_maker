@@ -116,6 +116,31 @@ if this_script:
                               'cmake')
 
 
+def check_ld_library_path_error(fatal):
+    # This code is a safeguard: libraries that are dynamically mounted by
+    # Singularity should never be used by the linker, see
+    # https://github.com/brainvisa/casa-distro/issues/113
+    if '/.singularity.d/libs' in (os.environ.get('LD_LIBRARY_PATH', '')
+                                  .split(os.pathsep)):
+        sys.stderr.write('''\
+
+ERROR: The LD_LIBRARY_PATH environment variable contains
+'/.singularity.d/libs', which probably means that you are running
+bv_maker/cmake from within Singularity with binding of the NVidia
+drivers. This has been found to result in broken builds, see
+<https://github.com/brainvisa/casa-distro/issues/113>.
+
+Please remember to always run configuration and compilation work
+(bv_maker, cmake, or make) without the NVidia driver binding, by
+starting your container:
+
+  - either with 'bv bv_maker',
+  - or, by passing the 'opengl=container' option to 'casa_distro run'.
+''')
+        if fatal:
+            sys.exit(1)
+
+
 class BrainVISAJenkins:
     '''
     Wrapper to access Jenkins server of BrainVISA and push bv_maker results
@@ -3941,7 +3966,12 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 
     def build(self, options, args):
         self.process_configuration_lines()
-        
+
+        # It is crucial that we do not run 'make' with spurious
+        # libraries in LD_LIBRARY_PATH, because 'make' has no safeguard
+        # against it.
+        check_ld_library_path_error(fatal=True)
+
         timeout = configuration.general_section.subprocess_timeout
         timeout = getattr(options, 'subprocess_timeout', timeout)
             
@@ -5268,7 +5298,13 @@ def display_failure_summary(configuration):
 
 # export cpu_count() as NCPU env variable so that it can be used in conf file
 # for env replacements
-os.environ['NCPU'] = str(multiprocessing.cpu_count())
+try:
+    os.environ['NCPU'] = str(multiprocessing.cpu_count())
+except NotImplementedError:
+    # multiprocessing.cpu_count can raise NotImplementedError
+    os.environ['NCPU'] = '1'
+
+check_ld_library_path_error(fatal=False)
 
 commands = {
     'info': InfoCommand,

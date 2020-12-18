@@ -29,7 +29,7 @@ components_definition = [
                 },
             }],
             ['casa-distro', {
-                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
+                'groups': ['all', 'anatomist', 'opensource', 'standard', 'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/casa-distro.git branch:master','development/casa-distro/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/casa-distro.git branch:master','development/casa-distro/master'),

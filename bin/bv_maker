@@ -122,8 +122,12 @@ def check_ld_library_path_error(fatal):
     # https://github.com/brainvisa/casa-distro/issues/113
     if '/.singularity.d/libs' in (os.environ.get('LD_LIBRARY_PATH', '')
                                   .split(os.pathsep)):
-        sys.stderr.write('''\
-
+        try:
+            libs_list = os.listdir('/.singularity.d/libs')
+        except OSError:
+            libs_list = []
+        if libs_list:
+            sys.stderr.write('''\
 ERROR: The LD_LIBRARY_PATH environment variable contains
 '/.singularity.d/libs', which probably means that you are running
 bv_maker/cmake from within Singularity with binding of the NVidia
@@ -137,8 +141,8 @@ starting your container:
   - either with 'bv bv_maker',
   - or, by passing the 'opengl=container' option to 'casa_distro run'.
 ''')
-        if fatal:
-            sys.exit(1)
+            if fatal:
+                sys.exit(1)
 
 
 class BrainVISAJenkins:

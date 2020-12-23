@@ -195,16 +195,17 @@ if("/.singularity.d/libs" IN_LIST ld_library_path_list)
   list(LENGTH _lib_list _lib_list_len)
   if(NOT _lib_list_len EQUAL 0)
     message(FATAL_ERROR "The LD_LIBRARY_PATH environment variable contains \
-'/.singularity.d/libs', which means that you are running bv_maker/cmake from \
-within Singularity with binding of the NVidia drivers (probably). This has \
-been found to result in broken builds, see \
-.\
+'/.singularity.d/libs', which probably  means that you are running \
+ bv_maker/cmake from within Singularity with binding of the NVidia \
+drivers (probably). This has been found to result in broken builds, see \
+<https://github.com/brainvisa/casa-distro/issues/113>.\
 
-Please remember to run any configuration and compilation (bv_maker, cmake, or
-make) without the NVidia driver binding, by starting your container:\
+Please remember to always run configuration and compilation work \
+(bv_maker, cmake, or make) without the NVidia driver binding, by \
+starting your container:\
 
-  - either with 'casa_distro bv_maker',
-  - or, by passing the 'opengl=container' option.
+  - either with 'bv bv_maker',
+  - or, by passing the 'opengl=container' option to 'casa_distro run'.
 ")
   endif()
   unset(_lib_list)

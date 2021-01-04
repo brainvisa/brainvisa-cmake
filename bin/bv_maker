@@ -3998,6 +3998,22 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                env=self.get_environ(),
                timeout=timeout)
 
+        # make / update run scripts/symlinks from a container
+        if os.environ.get('CASA_SYSTEM'):
+            try:
+                casaver = subprocess.check_output(['casa_distro', '--version'],
+                                                  stderr=subprocess.STDOUT)
+                casaver = '.'.join(casaver.split()[-1].split('.')[:2])
+                script = os.path.join(
+                    self.directory, 'share', 'casa-distro-%s' % casaver,
+                    'scripts', 'casa_build_host_links')
+                if os.path.exists(script):
+                    print('updating run scripts for casa-distro')
+                    subprocess.call([sys.executable, script])
+            except Exception as e:
+                print(e)
+                pass
+
     def doc(self):
         self.process_configuration_lines()
         print('Building docs in directory:', self.directory)

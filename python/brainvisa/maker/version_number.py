@@ -132,7 +132,6 @@ version_format_short = VersionFormat(
 def version_to_list(version, separator=version_separator):
     """ Converts a version string to a list of integers
     """
-    print('version:', repr(version))
     version = version.replace('"', '')
     return [int(v) for v in version.split(separator)]
     

@@ -354,7 +354,7 @@ components_definition = [
             ['brainrat-gpl', {
                 'groups': ['all'],
                 'branches': {
-                    'trunk': ('git https://bioproj.extra.cea.fr/git/brainrat-gpl branch:integration', 'brainrat/brainrat-gpl/integration'),
+                    'trunk': ('git https://bioproj.extra.cea.fr/git/brainrat-gpl branch:master', 'brainrat/brainrat-gpl/integration'),
                     'bug_fix': ('git https://bioproj.extra.cea.fr/git/brainrat-gpl branch:master', 'brainrat/brainrat-gpl/master'),
                     'release_candidate': ('git https://bioproj.extra.cea.fr/git/brainrat-gpl branch:release_candidate', 'brainrat/brainrat-gpl/release_candidate'),
                     'latest_release': ('git https://bioproj.extra.cea.fr/git/brainrat-gpl branch:latest_release', 'brainrat/brainrat-gpl/latest_release'),
@@ -363,7 +363,7 @@ components_definition = [
             ['brainrat-private', {
                 'groups': ['all'],
                 'branches': {
-                    'trunk': ('git https://bioproj.extra.cea.fr/git/brainrat-private branch:integration', 'brainrat/brainrat-private/integration'),
+                    'trunk': ('git https://bioproj.extra.cea.fr/git/brainrat-private branch:master', 'brainrat/brainrat-private/integration'),
                     'bug_fix': ('git https://bioproj.extra.cea.fr/git/brainrat-private branch:master', 'brainrat/brainrat-private/master'),
                     'release_candidate': ('git https://bioproj.extra.cea.fr/git/brainrat-private branch:release_candidate', 'brainrat/brainrat-private/release_candidate'),
                     'latest_release': ('git https://bioproj.extra.cea.fr/git/brainrat-private branch:latest_release', 'brainrat/brainrat-private/latest_release'),
@@ -372,7 +372,7 @@ components_definition = [
             ['bioprocessing', {
                 'groups': ['all'],
                 'branches': {
-                    'trunk': ('git https://bioproj.extra.cea.fr/git/bioprocessing branch:integration', 'brainrat/bioprocessing/integration'),
+                    'trunk': ('git https://bioproj.extra.cea.fr/git/bioprocessing branch:master', 'brainrat/bioprocessing/integration'),
                     'bug_fix': ('git https://bioproj.extra.cea.fr/git/bioprocessing branch:master', 'brainrat/bioprocessing/master'),
                     'release_candidate': ('git https://bioproj.extra.cea.fr/git/bioprocessing branch:release_candidate', 'brainrat/bioprocessing/release_candidate'),
                     'latest_release': ('git https://bioproj.extra.cea.fr/git/bioprocessing branch:latest_release', 'brainrat/bioprocessing/latest_release'),
@@ -381,7 +381,7 @@ components_definition = [
             ['preclinical-imaging-iam', {
                 'groups': ['all'],
                 'branches': {
-                    'trunk': ('git https://bioproj.extra.cea.fr/git/preclinical-imaging-iam branch:integration', 'brainrat/preclinical-imaging-iam/integration'),
+                    'trunk': ('git https://bioproj.extra.cea.fr/git/preclinical-imaging-iam branch:master', 'brainrat/preclinical-imaging-iam/integration'),
                     'bug_fix': ('git https://bioproj.extra.cea.fr/git/preclinical-imaging-iam branch:master', 'brainrat/preclinical-imaging-iam/master'),
                     'release_candidate': ('git https://bioproj.extra.cea.fr/git/preclinical-imaging-iam branch:release_candidate', 'brainrat/preclinical-imaging-iam/release_candidate'),
                     'latest_release': ('git https://bioproj.extra.cea.fr/git/preclinical-imaging-iam branch:latest_release', 'brainrat/preclinical-imaging-iam/latest_release'),
@@ -390,7 +390,7 @@ components_definition = [
             ['primatologist-gpl', {
                 'groups': ['all'],
                 'branches': {
-                    'trunk': ('git https://bioproj.extra.cea.fr/git/primatologist-gpl branch:integration', 'brainrat/primatologist-gpl/integration'),
+                    'trunk': ('git https://bioproj.extra.cea.fr/git/primatologist-gpl branch:master', 'brainrat/primatologist-gpl/integration'),
                     'bug_fix': ('git https://bioproj.extra.cea.fr/git/primatologist-gpl branch:master', 'brainrat/primatologist-gpl/master'),
                     'release_candidate': ('git https://bioproj.extra.cea.fr/git/primatologist-gpl branch:release_candidate', 'brainrat/primatologist-gpl/release_candidate'),
                     'latest_release': ('git https://bioproj.extra.cea.fr/git/primatologist-gpl branch:latest_release', 'brainrat/primatologist-gpl/latest_release'),
@@ -399,7 +399,7 @@ components_definition = [
             ['3dns-private', {
                 'groups': ['3dns'],
                 'branches': {
-                    'trunk': ('git https://bioproj.extra.cea.fr/git/3dns-private branch:integration', 'brainrat/3dns-private/integration'),
+                    'trunk': ('git https://bioproj.extra.cea.fr/git/3dns-private branch:master', 'brainrat/3dns-private/integration'),
                     'bug_fix': ('git https://bioproj.extra.cea.fr/git/3dns-private branch:master', 'brainrat/3dns-private/master'),
 #                    'release_candidate': ('git https://bioproj.extra.cea.fr/git/3dns-private branch:release_candidate', 'brainrat/3dns-private/release_candidate'),
 #                    'latest_release': ('git https://bioproj.extra.cea.fr/git/3dns-private branch:latest_release', 'brainrat/3dns-private/latest_release'),

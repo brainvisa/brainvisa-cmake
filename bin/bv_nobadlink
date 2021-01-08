@@ -25,7 +25,7 @@ def nobadlink( dir ):
 args = [ '.' ]
 if len( sys.argv ) > 1:
     args = sys.argv[1:]
-    if args >= 1 and args[0] in ('-h', '--help'):
+    if len(args) >= 1 and args[0] in ('-h', '--help'):
         print(sys.argv[0], '[directory1 [directory2 [...]]]:')
         print('recursively remove dead links in the given directories '
               '(default: current directory)')

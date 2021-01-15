@@ -155,12 +155,31 @@ install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/python"
          PATTERN ".svn" EXCLUDE
          PATTERN "*~" EXCLUDE )
 
-install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
-         DESTINATION "."
-         USE_SOURCE_PERMISSIONS
-         COMPONENT brainvisa-cmake
-         PATTERN ".svn" EXCLUDE
-         PATTERN "*~" EXCLUDE )
+if( "${BRAINVISA_CMAKE_INSTALL_FOR_USER}" )
+  # Only programs that are usuful at runtime are installed, *not* scripts that
+  # are used for development.
+  #
+  # The BRAINVISA_CMAKE_INSTALL_FOR_USER variable is set in
+  # brainvisa-compilation.cmake.
+  install( FILES "bin/bv_env.sh"
+                 "bin/bv_env.bat"
+                 "bin/bv_unenv.sh"
+           DESTINATION "bin"
+           COMPONENT brainvisa-cmake )
+  install( PROGRAMS "bin/bv_env_test"
+                    "bin/bv_unenv"
+           DESTINATION "bin"
+           COMPONENT brainvisa-cmake )
+else()
+  # When installing into the BrainVISA build-tree, we install all tools from
+  # bin/ (including developer tools).
+  install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
+           DESTINATION "."
+           USE_SOURCE_PERMISSIONS
+           COMPONENT brainvisa-cmake
+           PATTERN ".svn" EXCLUDE
+           PATTERN "*~" EXCLUDE )
+endif()
 
 install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/etc"
          DESTINATION "."

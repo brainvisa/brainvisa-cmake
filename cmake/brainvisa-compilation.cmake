@@ -119,6 +119,9 @@ endif()
 if( NOT BRAINVISA_CMAKE_BUILD_TYPE
   OR NOT BRAINVISA_CMAKE_BUILD_TYPE STREQUAL "brainvisa-cmake-only" )
 
+  # See brainvisa-cmake/CMakeLists.txt for an explanation of this variable.
+  set( BRAINVISA_CMAKE_INSTALL_FOR_USER 1 )
+
   # Second pass to configure all other components
   foreach( component ${BRAINVISA_COMPONENTS} )
 #     if( NOT component STREQUAL brainvisa-cmake )

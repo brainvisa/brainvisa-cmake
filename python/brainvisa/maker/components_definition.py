@@ -20,7 +20,7 @@ components_definition = [
                 },
             }],
             ['brainvisa-installer', {
-                'groups': ['all', 'opensource', 'standard', 'cati_platform'],
+                'groups': [],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/brainvisa-installer.git branch:master','development/brainvisa-installer/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/brainvisa-installer.git branch:master','development/brainvisa-installer/master'),
@@ -52,7 +52,7 @@ components_definition = [
                 },
             }],
             ['bibliography', {
-                'groups': ['all', ],
+                'groups': [],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/bibliography/trunk','communication/bibliography/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/bibliography/trunk','communication/bibliography/bug_fix'),
@@ -410,7 +410,7 @@ components_definition = [
     ('connectomist', {
         'components': [
             ['connectomist-private', {
-                'groups': ['all'],
+                'groups': [],
                 'branches': {
                     #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/connectomist-private/trunk','connectomist/connectomist-private/trunk'),
                     #'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/connectomist-private/branches/bug_fix','connectomist/connectomist-private/bug_fix'),
@@ -418,7 +418,7 @@ components_definition = [
                 },
             }],
             ['old_connectomist-gpl', {
-                'groups': ['all', 'opensource', 'standard'],
+                'groups': [],
                 'branches': {
                     #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/old_connectomist-gpl/trunk','connectomist/old_connectomist-gpl/trunk'),
                     #'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/old_connectomist-gpl/branches/bug_fix','connectomist/old_connectomist-gpl/bug_fix'),
@@ -426,7 +426,7 @@ components_definition = [
                 },
             }],
             ['old_connectomist-private', {
-                'groups': ['all', 'standard'],
+                'groups': [],
                 'branches': {
                     #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/old_connectomist-private/trunk','connectomist/old_connectomist-private/trunk'),
                     #'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/old_connectomist-private/branches/bug_fix','connectomist/old_connectomist-private/bug_fix'),
@@ -527,13 +527,13 @@ components_definition = [
     ('ptk', {
         'components': [
             ['pyptk', {
-                'groups': ['all'],
+                'groups': [],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/ptk/pyptk/trunk','ptk/pyptk/trunk'),
                 },
             }],
             ['fiber-clustering', {
-                'groups': ['all'],
+                'groups': [],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/ptk/toolbox-fiber-clustering/trunk','ptk/toolbox-fiber-clustering/trunk'),
                 },

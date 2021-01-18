@@ -704,3 +704,17 @@ for ccd in customize_components_definition:
     if os.path.exists(ccd):
         with open(ccd) as f:
             exec(compile(f.read(), ccd, 'exec'))
+
+# allow to name branches master or bug_fix indistinctly, or integration/trunk
+for cgroup in components_definition:
+    for comp in cgroup[1]['components']:
+        branches = comp[1]['branches']
+        if 'bug_fix' in branches and 'master' not in branches:
+            branches['master'] = branches['bug_fix']
+        elif 'master' in branches and 'bug_fix' not in branches:
+            branches['bug_fix'] = branches['master']
+        if 'trunk' in branches and 'integration' not in branches:
+            branches['integration'] = branches['trunk']
+        elif 'integration' in branches and 'trunk' not in branches:
+            branches['trunk'] = branches['integration']
+

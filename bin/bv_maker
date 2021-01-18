@@ -4001,15 +4001,29 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         # make / update run scripts/symlinks from a container
         if os.environ.get('CASA_SYSTEM'):
             try:
-                casaver = subprocess.check_output(['casa_distro', '--version'],
-                                                  stderr=subprocess.STDOUT)
-                casaver = '.'.join(casaver.split()[-1].split('.')[:2])
-                script = os.path.join(
-                    self.directory, 'share', 'casa-distro-%s' % casaver,
-                    'scripts', 'casa_build_host_links')
-                if os.path.exists(script):
-                    print('updating run scripts for casa-distro')
-                    subprocess.call([sys.executable, script])
+                casa_distro = 'casa_distro'
+                casa_distro = distutils.spawn.find_executable(casa_distro)
+                if not casa_distro:
+                    casa_distro = distutils.spawn.find_executable(
+                        'casa_container')
+                if casa_distro:
+                    casa_distro = os.path.dirname(os.path.dirname(
+                        os.path.realpath(casa_distro)))
+                    script = os.path.join(
+                        casa_distro, 'share', 'scripts',
+                        'casa_build_host_links')
+                    if os.path.exists(script):
+                        print('updating run scripts for casa-distro')
+                        env = dict(os.environ)
+                        if 'PYTHONPATH' in env:
+                            pypath = ':'.join(
+                                [os.path.join(casa_distro, 'python'),
+                                 env['PYTHONPATH']])
+                            env['PYTHONPATH'] = pypath
+                        else:
+                            env['PYTHONPATH'] = os.path.join(casa_distro,
+                                                             'python')
+                        subprocess.call([sys.executable, script], env=env)
             except Exception as e:
                 print(e)
                 pass

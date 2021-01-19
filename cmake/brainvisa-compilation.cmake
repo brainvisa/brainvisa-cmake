@@ -30,6 +30,8 @@ endif()
 
 set( BRAINVISA_BVMAKER TRUE )
 
+add_custom_target( post-install )
+
 set( CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_BINARY_DIR}" )
 include_directories( "${CMAKE_BINARY_DIR}/include" )
 

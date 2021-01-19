@@ -226,6 +226,7 @@ if( NOT TARGET install-runtime )
                              DISPLAY_NAME "Runtime"
                              DESCRIPTION "All elements necessary to use ${PROJECT_NAME} at runtime without developpement files such as C++ headers." )
   add_custom_target( install-runtime )
+  add_custom_target( post-install )
 endif()
 
 if( NOT TARGET install-${PROJECT_NAME} )

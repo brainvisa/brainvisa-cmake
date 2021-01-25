@@ -715,7 +715,7 @@ components_definition = [
                 'groups': ['all', 'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/fmri/rsfmri/trunk','rsfmri/trunk'),
-                    #'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/fmri/rsfmri/branches/bug_fix','rsfmri/bug_fix'),
+                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/fmri/rsfmri/branches/bug_fix','rsfmri/bug_fix'),
                     #'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/fmri/rsfmri/tags/latest_release','rsfmri/latest_release'),
                 },
                 'build_model': 'pure_python',

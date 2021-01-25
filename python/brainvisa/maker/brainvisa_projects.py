@@ -54,11 +54,11 @@ class ProjectsSet(object):
             self.ordered_projects.append(project)
             for component, component_info in components['components']:
                 for group in component_info['groups']:
-                    self.components_per_group.setdefault(group,set()).add(
+                    self.components_per_group.setdefault(group, set()).add(
                         component)
-                    self.url_per_component[component] \
-                        = component_info['branches']
-                    self.info_per_component[component] = component_info
+                self.url_per_component[component] \
+                    = component_info['branches']
+                self.info_per_component[component] = component_info
                 self.components_per_project.setdefault(
                     project, []).append(component)
                 self.project_per_component[component] = project

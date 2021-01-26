@@ -99,7 +99,7 @@ else:
         # don't rely on ultra-buggy python platform.dist()[0]
         # which just returns a random system
         system = systemtype  # default is just 'Linux'
-        release = platform.dist()[1]
+        release = None
         arch = platform.machine()
         systemplatform = system.lower()
         # Check for Ubuntu
@@ -121,6 +121,12 @@ else:
                         release = getValueFromFile(sysfile, 2)
                     break
         system = system[0].upper() + system[1:]
+        if release is None:
+            if hasattr(platform, 'dist'):
+                release = platform.dist()[1]
+            else:
+                import distro  # needs external package "distro"
+                release = distro.linux_distribution()[1]
 
     identification = system + '-' + release + '-' + arch
     shortname = system + '-' + release

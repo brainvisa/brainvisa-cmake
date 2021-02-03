@@ -127,22 +127,32 @@ def check_ld_library_path_error(fatal):
         except OSError:
             libs_list = []
         if libs_list:
-            sys.stderr.write('''\
-ERROR: The LD_LIBRARY_PATH environment variable contains
-'/.singularity.d/libs', which probably means that you are running
-bv_maker/cmake from within Singularity with binding of the NVidia
-drivers. This has been found to result in broken builds, see
-<https://github.com/brainvisa/casa-distro/issues/113>.
+            # if we have set the env variable
+            # BV_MAKER_BYPASS_SINGULARITY_LIB_PATH, then bypass the safeguard
+            # by removing the singularity paths during configure/build
+            if (os.environ.get('BV_MAKER_BYPASS_SINGULARITY_LIB_PATH', '')
+                    in ('1', 'TRUE', 'True', 'true')):
+                lpath = os.environ.get('LD_LIBRARY_PATH', '').split(os.pathsep)
+                lpath.remove('/.singularity.d/libs')
+                lpath = os.pathsep.join(lpath)
+                os.environ['LD_LIBRARY_PATH'] = lpath
+            else:
+                sys.stderr.write('''\
+    ERROR: The LD_LIBRARY_PATH environment variable contains
+    '/.singularity.d/libs', which probably means that you are running
+    bv_maker/cmake from within Singularity with binding of the NVidia
+    drivers. This has been found to result in broken builds, see
+    <https://github.com/brainvisa/casa-distro/issues/113>.
 
-Please remember to always run configuration and compilation work
-(bv_maker, cmake, or make) without the NVidia driver binding, by
-starting your container:
+    Please remember to always run configuration and compilation work
+    (bv_maker, cmake, or make) without the NVidia driver binding, by
+    starting your container:
 
-  - either with 'bv bv_maker',
-  - or, by passing the 'opengl=container' option to 'casa_distro run'.
-''')
-            if fatal:
-                sys.exit(1)
+      - either with 'bv bv_maker',
+      - or, by passing the 'opengl=container' option to 'casa_distro run'.
+    ''')
+                if fatal:
+                    sys.exit(1)
 
 
 class BrainVISAJenkins:

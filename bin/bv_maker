@@ -150,6 +150,9 @@ def check_ld_library_path_error(fatal):
 
       - either with 'bv bv_maker',
       - or, by passing the 'opengl=container' option to 'casa_distro run'.
+      - alternately, you can try an experimental workaroung by setting the
+        environment variable BV_MAKER_BYPASS_SINGULARITY_LIB_PATH to 1 and
+        see what happens later.
     ''')
                 if fatal:
                     sys.exit(1)

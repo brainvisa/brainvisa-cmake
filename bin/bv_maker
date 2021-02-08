@@ -127,16 +127,7 @@ def check_ld_library_path_error(fatal):
         except OSError:
             libs_list = []
         if libs_list:
-            # if we have set the env variable
-            # BV_MAKER_BYPASS_SINGULARITY_LIB_PATH, then bypass the safeguard
-            # by removing the singularity paths during configure/build
-            if (os.environ.get('BV_MAKER_BYPASS_SINGULARITY_LIB_PATH', '')
-                    in ('1', 'TRUE', 'True', 'true')):
-                lpath = os.environ.get('LD_LIBRARY_PATH', '').split(os.pathsep)
-                lpath.remove('/.singularity.d/libs')
-                lpath = os.pathsep.join(lpath)
-                os.environ['LD_LIBRARY_PATH'] = lpath
-            else:
+            if fatal:
                 sys.stderr.write('''\
     ERROR: The LD_LIBRARY_PATH environment variable contains
     '/.singularity.d/libs', which probably means that you are running
@@ -150,12 +141,14 @@ def check_ld_library_path_error(fatal):
 
       - either with 'bv bv_maker',
       - or, by passing the 'opengl=container' option to 'casa_distro run'.
-      - alternately, you can try an experimental workaroung by setting the
-        environment variable BV_MAKER_BYPASS_SINGULARITY_LIB_PATH to 1 and
-        see what happens later.
     ''')
-                if fatal:
-                    sys.exit(1)
+                sys.exit(1)
+            else:
+                # remove the singularity paths during configure/build
+                lpath = os.environ.get('LD_LIBRARY_PATH', '').split(os.pathsep)
+                lpath.remove('/.singularity.d/libs')
+                lpath = os.pathsep.join(lpath)
+                os.environ['LD_LIBRARY_PATH'] = lpath
 
 
 class BrainVISAJenkins:
@@ -3987,7 +3980,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         # It is crucial that we do not run 'make' with spurious
         # libraries in LD_LIBRARY_PATH, because 'make' has no safeguard
         # against it.
-        check_ld_library_path_error(fatal=True)
+        check_ld_library_path_error(fatal=False)
 
         timeout = configuration.general_section.subprocess_timeout
         timeout = getattr(options, 'subprocess_timeout', timeout)

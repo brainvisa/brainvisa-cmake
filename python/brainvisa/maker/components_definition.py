@@ -533,8 +533,8 @@ components_definition = [
     ('nuclear_imaging', {
         'components': [
             ['nuclear_imaging-gpl', {
-                'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
-                           'standard', 'cea', 'cati_platform'],
+                'groups': ['all', 'opensource', 'standard', 'cea',
+                           'cati_platform'],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_imaging/nuclear_imaging-gpl/trunk','nuclear_imaging/nuclear_imaging-gpl/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_imaging/nuclear_imaging-gpl/branches/bug_fix','nuclear_imaging/nuclear_imaging-gpl/bug_fix'),

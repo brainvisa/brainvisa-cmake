@@ -1907,10 +1907,14 @@ endfunction()
 #  If TESTREF is used, we re-use the command to run it in a special mode
 #  for the generation of reference test files (this is launched by the testref
 #  target).
+#  TIMEOUT: the test command is interrupted after that duration. If TIMEOUT is
+#  0, then no timeout is set (infinite). If TIMEOUT is not specified, a default
+#  timeout will be used: DART_TESTING_TIMEOUT (same as used by CTest)
 # Usage:
 #
 #   BRAINVISA_ADD_TEST( NAME <name> [CONFIGURATIONS [Debug|Release|...]]
 #                       [WORKING_DIRECTORY dir]
+#                       [TIMEOUT seconds]
 #                       COMMAND <command> [arg1 [arg2 ...]]
 #                       [TESTREF]
 #  )
@@ -1920,41 +1924,52 @@ function( BRAINVISA_ADD_TEST )
 
   # Read options
   set( _arg_index 0 )
-  unset(_current_arg)
   unset(_name_args)
   unset(_command_args)
   set(_form 1)
   set(testref OFF)
   set(_working_dir)
+  set(_timeout)
+  set(_skip)
 
   foreach( _arg ${_argn} )
-    if( ${_arg_index} EQUAL 0 )
-      if( _arg STREQUAL "NAME" )
-        set(_current_arg "_name_args")
-        set(_form 2)
-      else()
-        list( GET _argn ${_arg_index} result )
-        set(_name_args "${result}")
-        set(_current_arg "_command_args")
-      endif()
-    elseif( _arg STREQUAL "TESTREF" )
-      set(testref ON)
-    elseif( _arg STREQUAL "COMMAND" )
-      set(_current_arg "_command_args")
-
+    if( _skip )
+      set(_skip "")
     else()
-      list( GET _argn ${_arg_index} result )
-      if( NOT DEFINED "${_current_arg}" )
-        # Sets argument value
-        set( "${_current_arg}" "${result}" )
+      if( ${_arg_index} EQUAL 0 )
+        if( _arg STREQUAL "NAME" )
+          set(_form 2)
+          math(EXPR _arg_index2 "${_arg_index} + 1")
+          list( GET _argn ${_arg_index2} result )
+          set( _name_args "${result}" )
+          set( _skip "1" )
+        else()
+          list( GET _argn ${_arg_index} result )
+          set(_name_args "${result}")
+        endif()
+      elseif( _arg STREQUAL "TESTREF" )
+        set(testref ON)
+      elseif( _arg STREQUAL "COMMAND" )
+        # do nothing
+
+      elseif( _arg STREQUAL "TIMEOUT" )
+        math(EXPR _arg_index2 "${_arg_index} + 1")
+        list( GET _argn ${_arg_index2} result )
+        set( _timeout "${result}" )
+        set( _skip "1" )
+
       else()
-        # Add argument to list of arguments
-        set("${_current_arg}" ${${_current_arg}} "${result}" )
-      endif()
-      if( _working_dir STREQUAL "*set_workdir*" )
-        set( _working_dir "${_arg}" )
-      elseif( _arg STREQUAL "WORKING_DIRECTORY" )
-        set( _working_dir "*set_workdir*" )
+        if( _working_dir STREQUAL "*set_workdir*" )
+          set( _working_dir "${_arg}" )
+        elseif( _arg STREQUAL "WORKING_DIRECTORY" )
+          set( _working_dir "*set_workdir*" )
+        else()
+          if( NOT DEFINED _command_args )
+            set( _command_args "${_arg}" )
+          else()
+            set( _command_args "${_command_args}" "${_arg}" )
+          endif()
+        endif()
       endif()
     endif()
 
@@ -1988,6 +2003,21 @@ function( BRAINVISA_ADD_TEST )
     unset(_python_executable)
   endif()
 
+  if( NOT _timeout )
+    # use the same default timeout as ctest
+    if( "${DART_TESTING_TIMEOUT}" STREQUAL "" )
+      set( DART_TESTING_TIMEOUT "1800"
+           CACHE "STRING" "Maximum time allowed before CTest will kill the test" )
+    endif()
+    if( NOT "${DART_TESTING_TIMEOUT}" STREQUAL "0" )
+      set( _timeout "${DART_TESTING_TIMEOUT}" )
+    endif()
+  endif()
+
+  if( _timeout )
+    set( _command_args "timeout" "-k" "10" "${_timeout}" ${_command_args} )
+  endif()
+
   # If the test is not marked testref we don't pass options for run mode
   # (so this test don't have to bother about options)
   if(testref)
@@ -2015,8 +2045,8 @@ function( BRAINVISA_ADD_TEST )
   set(_command_args_ref "${brainvisa-cmake_DIR}/../../../bin/bv_env_test"
                         "${_command_args_ref}")
 
-  #message("====== NAME ${_name_args} =======")
-  #message("====== COMMAND ${_command_args} =======")
+  # message("====== FORM ${_form}, NAME ${_name_args} =======")
+  # message("====== COMMAND ${_command_args} =======")
 
   if(_form EQUAL 1)
     # Add the test in the first manner
@@ -2043,7 +2073,6 @@ function( BRAINVISA_ADD_TEST )
   endif()
 
   unset(_arg_index)
-  unset(_current_arg)
   unset(_name_args)
   unset(_command_args_run)
   unset(_command_args_ref)

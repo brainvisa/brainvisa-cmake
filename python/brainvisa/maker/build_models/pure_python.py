@@ -132,7 +132,7 @@ class PurePythonComponentBuild(object):
         True: "TESTREF",
         False: ""
     }
-    bv_add_test_cmd_fmt = '''brainvisa_add_test( {0}-tests{1} {2} {3} )'''
+    bv_add_test_cmd_fmt = '''brainvisa_add_test( {0}-tests{1} {4} {2} {3} )'''
 
     def __init__(self, component_name, source_directory, build_directory,
                  cross_compiling_directories, options=None, args=None):
@@ -237,6 +237,7 @@ class PurePythonComponentBuild(object):
                     brainvisa_dependencies.append(
                         self.dependency_string(dcomponent))
             tests = dinfo.get('test_commands', [])
+            test_timeouts = dinfo.get('test_timeouts', [])
         brainvisa_dependencies = '\n'.join(brainvisa_dependencies)
 
         # Create <build directory>/build_files/<component>_src/CMakeLists.txt
@@ -247,7 +248,7 @@ class PurePythonComponentBuild(object):
         # It is necessary to escape backslash ('\') characters because
         # cmake interpretes it in CMakeLists.txt files.
         source_file  = os.path.normpath(__file__).replace('\\', '\\\\')
-        tests_str = self.build_tests_cmake_code(tests)
+        tests_str = self.build_tests_cmake_code(tests, test_timeouts)
         cmakelists_content = cmake_template % dict(
             file=source_file,
             component_name=self.component_name,
@@ -308,7 +309,7 @@ class PurePythonComponentBuild(object):
             subprocess.call([sys.executable, bv_clean, '-d',
                              self.source_directory])
 
-    def build_tests_cmake_code(self, tests):
+    def build_tests_cmake_code(self, tests, test_timeouts=[]):
         tests_code = []
         if len(tests) != 0:
             tests_code = ['enable_testing()']
@@ -317,9 +318,13 @@ class PurePythonComponentBuild(object):
             else:
               nnum = ''
             for i, test in enumerate(tests):
+                if len(test_timeouts) > i:
+                    timeout = test_timeouts[i]
+                else:
+                    timeout = None
                 if isinstance(test, (tuple, list)):
                     if len(test) != 2:
-                        raise ValueError("content of test_commands mus be a string or a 2-tuple (command, options)")
+                        raise ValueError("content of test_commands must be a string or a 2-tuple (command, options)")
                     test_cmd, test_options = test
                     use_testref = self.bool_to_cmake_testref[
                         test_options.get('use_testref', False)
@@ -328,10 +333,16 @@ class PurePythonComponentBuild(object):
                     test_cmd = test
                     use_testref = self.bool_to_cmake_testref[False]
                 test_str = '"' + '" "'.join(shlex.split(test_cmd)) + '"'
+                if timeout is not None:
+                    timeout_str = 'TIMEOUT %f ' % timeout
+                else:
+                    timeout_str = ''
                 bv_add_test = self.bv_add_test_cmd_fmt.format(
                     self.component_name, nnum % {'num': i}, test_str,
-                    use_testref
+                    use_testref, timeout_str
                 )
+                print('*** TIMEOUT:', timeout)
+                print('TEST:', bv_add_test)
                 tests_code.append(bv_add_test)
         tests_str = '\n'.join(tests_code)
         if len(tests_str) != 0:

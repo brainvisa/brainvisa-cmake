@@ -328,5 +328,12 @@ if( BRAINVISA_BVMAKER )
         set(${_command}-command-is-script TRUE CACHE INTERNAL 
             "${_command} command is script")
   endforeach()
+
+  # define an install rule for the python symlink
+  add_custom_target( install-brainvisa-cmake-python-symlink
+                     COMMAND if [ -n "$(BRAINVISA_INSTALL_PREFIX)" ] \; then "${CMAKE_COMMAND}" "-E" "make_directory" "$(BRAINVISA_INSTALL_PREFIX)/bin" \; else "${CMAKE_COMMAND}" "-E" "make_directory" "${CMAKE_INSTALL_PREFIX}/bin" \; fi
+                     COMMAND if [ -n "$(BRAINVISA_INSTALL_PREFIX)" ] \; then "${CMAKE_COMMAND}" "-E" "create_symlink" "${PYTHON_EXECUTABLE}" "$(BRAINVISA_INSTALL_PREFIX)/bin/python" \; else "${CMAKE_COMMAND}" "-E" "create_symlink" "${PYTHON_EXECUTABLE}" "${CMAKE_INSTALL_PREFIX}/bin/python" \; fi )
+  add_dependencies( install-brainvisa-cmake install-brainvisa-cmake-python-symlink )
+
 endif()
 

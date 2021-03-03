@@ -341,8 +341,6 @@ class PurePythonComponentBuild(object):
                     self.component_name, nnum % {'num': i}, test_str,
                     use_testref, timeout_str
                 )
-                print('*** TIMEOUT:', timeout)
-                print('TEST:', bv_add_test)
                 tests_code.append(bv_add_test)
         tests_str = '\n'.join(tests_code)
         if len(tests_str) != 0:

@@ -2739,6 +2739,7 @@ uncommitted local changes (see above).""")
         if not os.path.exists(os.path.join(self.path, '.git')):
             print('not a Git repository.')
             return
+        self.call_command(['git', 'describe'])
         self.call_command(['git', 'status', '--short', '--branch'])
 
     def get_status_dict(self):

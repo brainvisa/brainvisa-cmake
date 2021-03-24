@@ -3235,7 +3235,11 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                                     count += 1
             else:
                 raise SyntaxError('Line cannot begin with "%s"' % sign)
-            
+
+        # Sort components according to their destination directory
+        self.gitComponents = sorted(self.gitComponents, key=lambda t: t[3])
+        self.svnComponents = sorted(self.svnComponents, key=lambda t: t[2])
+
         if not virtual:
             self.configurationLines.append(line)
 

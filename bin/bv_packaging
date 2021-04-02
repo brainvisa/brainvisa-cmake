@@ -876,7 +876,7 @@ def create_debian_packages(options, selected_packages, dependencies):
         os.makedirs(output)
     # Looking for architecture using apt-config if possible
     architecture = re.search(r'APT::Architecture *\"([^\"]*)\";?',
-                             subprocess.Popen(('apt-config', 'dump'), stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0])
+                             six.ensure_str(subprocess.Popen(('apt-config', 'dump'), stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0]))
     if architecture:
         architecture = architecture.group(1)
     else:

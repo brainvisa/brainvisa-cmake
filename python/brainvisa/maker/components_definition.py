@@ -539,26 +539,10 @@ components_definition = [
     }),
     ('catidb', {
         'components': [
-            ['catidb3_server', {
+            ['catidb-client', {
                 'groups': ['cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb3_server/trunk', 'catidb3_server/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb3_server/branches/bug_fix', 'catidb3_server/bug_fix'),
-                },
-            }],
-            ['catidb3_client', {
-                'groups': ['cati_platform'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb3_client/trunk','catidb3_client/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb3_client/branches/bug_fix', 'catidb3_client/bug_fix'),
-                },
-                'build_model': 'pure_python',
-            }],
-            ['catidb3_exploitation', {
-                'groups': ['cati_platform'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb3_exploitation','catidb3_exploitation/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/catidb3_exploitation','catidb3_exploitation/bug_fix'),
+                    'bug_fix': ('git https://github.com/cati-neuroimaging/catidb-client.git default:main', 'catidb-client'),
                 },
             }],
         ],

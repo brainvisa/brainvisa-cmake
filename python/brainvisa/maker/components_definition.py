@@ -425,6 +425,7 @@ components_definition = [
                 'branches': {
                     'trunk': ('git https://bioproj.extra.cea.fr/git/3dns-private branch:master', 'brainrat/3dns-private/integration'),
                     'bug_fix': ('git https://bioproj.extra.cea.fr/git/3dns-private branch:master', 'brainrat/3dns-private/master'),
+                    '5.0': ('git https://bioproj.extra.cea.fr/git/3dns-private branch:5.0', 'brainrat/3dns-private/5.0'),
 #                    'latest_release': ('git https://bioproj.extra.cea.fr/git/3dns-private branch:latest_release', 'brainrat/3dns-private/latest_release'),
                 },
             }],

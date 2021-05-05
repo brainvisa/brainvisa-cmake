@@ -382,7 +382,7 @@ components_definition = [
                 },
             }],
             ['primatologist-gpl', {
-                'groups': ['all', 'brainvisa', 'bvdev', 'cea'],
+                'groups': ['all', 'brainvisa', 'cea'],
                 'branches': {
                     'trunk': ('git https://bioproj.extra.cea.fr/git/primatologist-gpl branch:master', 'brainrat/primatologist-gpl/integration'),
                     'bug_fix': ('git https://bioproj.extra.cea.fr/git/primatologist-gpl branch:master', 'brainrat/primatologist-gpl/master'),

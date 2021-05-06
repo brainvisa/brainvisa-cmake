@@ -692,13 +692,11 @@ components_definition = [
         ],
     }),
     ('qualicati', {
-        'description': 'CATI quality control software.',
         'components': [
             ['qualicati', {
                 'groups': ['cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/qualicati/trunk','qualicati/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/qualicati/branches/bug_fix','qualicati/bug_fix'),
+                    'bug_fix': ('git https://github.com/cati-neuroimaging/qualicati.git default:main', 'qualicati'),
                     'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/qualicati/tags/latest_release','qualicati/latest_release'),
                 },
                 'build_model': 'pure_python',

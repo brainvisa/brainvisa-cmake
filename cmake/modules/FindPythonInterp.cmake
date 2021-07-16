@@ -30,8 +30,7 @@ else()
         # (To distributed this file outside of CMake, substitute the full
         #  License text for the above reference.)
         FIND_PROGRAM(PYTHON_HOST_EXECUTABLE
-            NAMES python2.7 python2
-                  python3.8 python3.7 python3.6 python3.5 python3.4 python3
+            NAMES python3.9 python3.8 python3.7 python3.6 python3
                   python
             PATHS
                 [HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\3.8\\InstallPath]
@@ -46,7 +45,7 @@ else()
             # Also get target python interpreter information if possible
             if(CMAKE_CROSSCOMPILING)
                 find_program( PYTHON_EXECUTABLE
-                    NAMES python${CMAKE_EXECUTABLE_SUFFIX}
+                    NAMES python3${CMAKE_EXECUTABLE_SUFFIX} python${CMAKE_EXECUTABLE_SUFFIX}
                     ONLY_CMAKE_FIND_ROOT_PATH
                     DOC "Target python executable path" )
             else()

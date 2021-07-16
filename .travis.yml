@@ -1,37 +1,41 @@
 version: ~> 1.0
+# As of 2021-07-16, using the arm64 architecture is a way to use the Partner
+# Queue, which is completely free of charge (whereas the default amd64
+# queue consumes paid credits, or free "OSS credits" that we have to
+# request from Travis Support). See this page for details:
+# https://docs.travis-ci.com/user/billing-overview/#partner-queue-solution
+arch:
+  - arm64
 os: linux
+dist: bionic
 language: python
-
-jobs:
-  include:
-    - python: 3.8
-      dist: xenial  # required for Python >= 3.7
-    - python: 3.7
-      dist: xenial  # required for Python >= 3.7
-    - python: 3.6
-    - python: 3.5
-    - python: 3.4
-    - python: 2.7
-    - name: "Python 3.7.2 on macOS"
-      os: osx
-      osx_image: xcode10.2  # Python 3.7.2 running on macOS 10.14.3
-      language: generic     # 'language: python' is an error on Travis CI macOS
-  allow_failures:
+python:
+  - 3.6
+  - 3.8
 
 install:
-    - pip install tox-travis
-    - pip install -U sphinx
-    - if [[  "$TRAVIS_OS_NAME" = "linux" && "$TRAVIS_PYTHON_VERSION" == "3.8" ]]; then sudo apt-get install cmake make; cmake -DCMAKE_INSTALL_PREFIX=. . && make install && ./bin/bv_env_host sphinx-build -b html doc/sphinx doc/build_html && touch doc/build_html/.nojekyll; fi
-    - if [[ -n "$GITHUB_TOKEN" ]]; then export PUSH_DOC_TO_GH_PAGES=yes; fi
+  - pip install tox-travis
+  - pip install -U sphinx
+  - |
+    if [[ "$TRAVIS_OS_NAME" = "linux" && "$TRAVIS_PYTHON_VERSION" == "3.8" ]]; then
+      set -e  # fail the script if any command fails
+      sudo apt-get install cmake make
+      cmake -DCMAKE_INSTALL_PREFIX=. .
+      make install
+      ./bin/bv_env_host sphinx-build -b html doc/sphinx doc/build_html
+      touch doc/build_html/.nojekyll
+    fi
+  - if [[ -n "$GITHUB_TOKEN" ]]; then export PUSH_DOC_TO_GH_PAGES=yes; fi
 
 script: tox
 
 deploy:
+  strategy: git
   provider: pages
-  skip_cleanup: true
-  github_token: $GITHUB_TOKEN
-  target-branch: gh-pages
-  local-dir: doc/build_html
+  cleanup: false
+  token: $GITHUB_TOKEN
+  target_branch: gh-pages
+  local_dir: doc/build_html
   on:
     branch: master
     condition: $PUSH_DOC_TO_GH_PAGES == yes && $TRAVIS_OS_NAME == linux && $TRAVIS_PYTHON_VERSION == 3.8

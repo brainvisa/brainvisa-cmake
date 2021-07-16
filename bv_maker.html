@@ -1,0 +1,635 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>bv_maker &#8212; BrainVisa-Cmake 5.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="bv_env" href="bv_env.html" />
+    <link rel="prev" title="Dependencies in brainvisa-cmake" href="dependencies.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="bv_env.html" title="bv_env"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dependencies.html" title="Dependencies in brainvisa-cmake"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BrainVisa-Cmake 5.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bv_maker</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="bv-maker">
+<h1>bv_maker<a class="headerlink" href="#bv-maker" title="Permalink to this headline">¶</a></h1>
+<p>Once its configuration file is setup, just run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_maker
+</pre></div>
+</div>
+<p>This should be enough in most cases.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>that <em>brainvisa-cmake</em> provides a <em>bash_completion</em> script which helps and speeds up the use of <code class="docutils literal notranslate"><span class="pre">bv_maker</span></code>. It can be used <strong>in a bash shell</strong> by <em>sourcing</em> the script:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>. <span class="k">$(</span>dirname <span class="k">$(</span>which bv_maker<span class="k">))</span>/../etc/bash_completion.d/bv_maker-completion.bash
+</pre></div>
+</div>
+<p>You may copy this line in your <code class="docutils literal notranslate"><span class="pre">~/.bashrc</span></code> file.</p>
+</div>
+<section id="help-of-the-commandline">
+<h2>Help of the commandline<a class="headerlink" href="#help-of-the-commandline" title="Permalink to this headline">¶</a></h2>
+<p>Usage: bv_maker [options] [ command [command options] ]…</p>
+<p>This program is for the management of source retrieval, configuration and compilation of BrainVISA projects.</p>
+<p>In order to work, the commands svn and svnadmin must be installed on your system. On some Linux systems they are in two separate packages (e.g. subversion and subversion-tools).</p>
+<p>Commands:</p>
+<ul class="simple">
+<li><p>info: Just output info about configured components.</p></li>
+<li><p>sources: Create or updated selected sources directories from Subversion
+repository.</p></li>
+<li><p>status: Display a summary of the status of all source repositories.</p></li>
+<li><p>configure: Create and configure selected build directories with CMake.</p></li>
+<li><p>build: compile all selected build directories.</p></li>
+<li><p>doc: Generate documentation (sphinx, doxygen, docbook, epydoc).</p></li>
+<li><p>testref: Execute tests in a special mode to generate machine-specific
+reference files (this is needed by some tests).</p></li>
+<li><p>test: Execute tests using ctest.</p></li>
+<li><p>pack: Generate binary packages.</p></li>
+<li><p>install_pack: Install binary packages.</p></li>
+<li><p>testref_pack: Create the machine-specific reference files for tests in
+installed binary package.</p></li>
+<li><p>test_pack: Run tests in installed binary packages.</p></li>
+<li><p>publish_pack: Publish binary packages.</p></li>
+</ul>
+<p>To get help for a specific command, use -h option of the command. Example: “bv_maker build -h”.</p>
+<p>To get help on how to configure and write a bv_maker configuration file, see:</p>
+<p><a class="reference external" href="http://brainvisa.info/brainvisa-cmake/compile_existing.html">http://brainvisa.info/brainvisa-cmake/compile_existing.html</a></p>
+<p>config file syntax:</p>
+<p><a class="reference external" href="http://brainvisa.info/brainvisa-cmake/configuration.html">http://brainvisa.info/brainvisa-cmake/configuration.html</a></p>
+<p>and more generally:</p>
+<p><a class="reference external" href="http://brainvisa.info/brainvisa-cmake/">http://brainvisa.info/brainvisa-cmake/</a></p>
+<dl>
+<dt>Options:</dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<dd><p>show this help message and exit</p>
+</dd>
+<dt><kbd><span class="option">-d <var>DIR</var></span>, <span class="option">--directory=<var>DIR</var></span></kbd></dt>
+<dd><p>Restrict actions to a selected directory. May be used
+several times to process several directories.</p>
+</dd>
+<dt><kbd><span class="option">-c <var>CONFIG</var></span>, <span class="option">--config=<var>CONFIG</var></span></kbd></dt>
+<dd><p>specify configuration file. Default
+=”/home/travis/.brainvisa/bv_maker.cfg”</p>
+</dd>
+<dt><kbd><span class="option">-s <var>DIR</var></span>, <span class="option">--sources=<var>DIR</var></span></kbd></dt>
+<dd><p>directory containing sources</p>
+</dd>
+<dt><kbd><span class="option">-b <var>DIR</var></span>, <span class="option">--build=<var>DIR</var></span></kbd></dt>
+<dd><p>build directory</p>
+</dd>
+<dt><kbd><span class="option">--username=<var>USERNAME</var></span></kbd></dt>
+<dd><p>specify user login to use with the svn server</p>
+</dd>
+<dt><kbd><span class="option">-e</span>, <span class="option">--email</span></kbd></dt>
+<dd><p>Use email notification (if configured in the general
+section of the configuration file)</p>
+</dd>
+<dt><kbd><span class="option">--disable-jenkins</span></kbd></dt>
+<dd><p>disable Jenkins server logging</p>
+</dd>
+<dt><kbd><span class="option">--def</span>, <span class="option">--only-if-default</span></kbd></dt>
+<dd><p>apply only steps which are defined as default steps in
+the bv_maker.cfg config file. Equivalent to passing
+–only-if-default to every substep which supports it.</p>
+</dd>
+<dt><kbd><span class="option">-v</span>, <span class="option">--verbose</span></kbd></dt>
+<dd><p>show as much information as possible</p>
+</dd>
+<dt><kbd><span class="option">--version</span></kbd></dt>
+<dd><p>show bv_maker (brainvisa-cmake) version number</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<section id="info-step">
+<span id="infi-step"></span><h3>Info step<a class="headerlink" href="#info-step" title="Permalink to this headline">¶</a></h3>
+<p>Usage: bv_maker [global options] info [options]</p>
+<blockquote>
+<div><p>Display information about configuration, sources directories and build directories.</p>
+</div></blockquote>
+<dl>
+<dt>Options:</dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<dd><p>show this help message and exit</p>
+</dd>
+<dt><kbd><span class="option">--only-if-default</span></kbd></dt>
+<dd><p>only perform this step if it is a default step, or
+specified in the “default_steps” option of bv_maker.cfg
+config file. Default steps are normally “sources” for
+source sections, and “configure build” for build sections</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="sources-step">
+<span id="id1"></span><h3>Sources step<a class="headerlink" href="#sources-step" title="Permalink to this headline">¶</a></h3>
+<p>Usage: bv_maker [global options] sources [options]</p>
+<blockquote>
+<div><p>Create or updated selected sources directories from Subversion repository.</p>
+</div></blockquote>
+<dl>
+<dt>Options:</dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<dd><p>show this help message and exit</p>
+</dd>
+<dt><kbd><span class="option">--no-cleanup</span></kbd></dt>
+<dd><p>don’t cleanup svn sources</p>
+</dd>
+<dt><kbd><span class="option">--no-svn</span></kbd></dt>
+<dd><p>don’t update svn sources</p>
+</dd>
+<dt><kbd><span class="option">--no-git</span></kbd></dt>
+<dd><p>don’t update git sources</p>
+</dd>
+<dt><kbd><span class="option">--only-if-default</span></kbd></dt>
+<dd><p>only perform this step if it is a default step, or
+specified in the “default_steps” option of
+bv_maker.cfg config file. Default steps are normally
+“sources” for source sections, and “configure build”
+for build sections</p>
+</dd>
+<dt><kbd><span class="option">--ignore-git-failure</span></kbd></dt>
+<dd><p>ignore git update failures, useful when working on a
+feature branch</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="status-step">
+<span id="id2"></span><h3>Status step<a class="headerlink" href="#status-step" title="Permalink to this headline">¶</a></h3>
+<p>Usage: bv_maker [global options] status [options]</p>
+<blockquote>
+<div><p>Display a summary of the status of all source repositories.</p>
+</div></blockquote>
+<dl>
+<dt>Options:</dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<dd><p>show this help message and exit</p>
+</dd>
+<dt><kbd><span class="option">--no-svn</span></kbd></dt>
+<dd><p>don’t display the status of svn sources</p>
+</dd>
+<dt><kbd><span class="option">--no-git</span></kbd></dt>
+<dd><p>don’t display the status of git sources</p>
+</dd>
+<dt><kbd><span class="option">--only-if-default</span></kbd></dt>
+<dd><p>only perform this step if it is a default step, or
+specified in the “default_steps” option of
+bv_maker.cfg config file. Default steps are normally
+“sources” for source sections, and “configure build”
+for build sections</p>
+</dd>
+<dt><kbd><span class="option">--git-command=<var>EXTRA_GIT_COMMANDS</var></span></kbd></dt>
+<dd><p>run one or more extra commands in every Git
+repository. The commmands are interpreted in a shell
+so that you can pass arguments.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="configure-step">
+<span id="id3"></span><h3>Configure step<a class="headerlink" href="#configure-step" title="Permalink to this headline">¶</a></h3>
+<p>Usage: bv_maker [global options] configure [options]</p>
+<blockquote>
+<div><p>Create or updated selected build directories.</p>
+</div></blockquote>
+<dl>
+<dt>Options:</dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<dd><p>show this help message and exit</p>
+</dd>
+<dt><kbd><span class="option">-c</span>, <span class="option">--clean</span></kbd></dt>
+<dd><p>clean build tree (using bv_clean_build_tree -d) before
+configuring</p>
+</dd>
+<dt><kbd><span class="option">--only-if-default</span></kbd></dt>
+<dd><p>only perform this step if it is a default step, or
+specified in the “default_steps” option of bv_maker.cfg
+config file. Default steps are normally “sources” for
+source sections, and “configure build” for build sections</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="build-step">
+<span id="id4"></span><h3>Build step<a class="headerlink" href="#build-step" title="Permalink to this headline">¶</a></h3>
+<p>Usage: bv_maker [global options] configure [options]</p>
+<blockquote>
+<div><p>Compile selected build directories.</p>
+</div></blockquote>
+<dl>
+<dt>Options:</dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<dd><p>show this help message and exit</p>
+</dd>
+<dt><kbd><span class="option">-c</span>, <span class="option">--clean</span></kbd></dt>
+<dd><p>clean build tree (using bv_clean_build_tree -b) before
+building</p>
+</dd>
+<dt><kbd><span class="option">--only-if-default</span></kbd></dt>
+<dd><p>only perform this step if it is a default step, or
+specified in the “default_steps” option of bv_maker.cfg
+config file. Default steps are normally “sources” for
+source sections, and “configure build” for build sections</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="doc-step">
+<span id="id5"></span><h3>Doc step<a class="headerlink" href="#doc-step" title="Permalink to this headline">¶</a></h3>
+<p>Usage: bv_maker [global options] doc [options]</p>
+<blockquote>
+<div><p>Generate documentation (docbook, epydoc, doxygen).</p>
+</div></blockquote>
+<dl>
+<dt>Options:</dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<dd><p>show this help message and exit</p>
+</dd>
+<dt><kbd><span class="option">--only-if-default</span></kbd></dt>
+<dd><p>only perform this step if it is a default step, or
+specified in the “default_steps” option of bv_maker.cfg
+config file. Default steps are normally “sources” for
+source sections, and “configure build” for build sections</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="testref-step">
+<span id="id6"></span><h3>Testref step<a class="headerlink" href="#testref-step" title="Permalink to this headline">¶</a></h3>
+<p>Usage: bv_maker [global options] testref</p>
+<blockquote>
+<div><p>Executes tests in the testref mode (used to generate reference files).</p>
+</div></blockquote>
+<dl>
+<dt>Options:</dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<dd><p>show this help message and exit</p>
+</dd>
+<dt><kbd><span class="option">--only-if-default</span></kbd></dt>
+<dd><p>only perform this step if it is a default step, or
+specified in the “default_steps” option of
+bv_maker.cfg config file. Default steps are normally
+“sources” for source sections, and “configure build”
+for build sections</p>
+</dd>
+<dt><kbd><span class="option">-m <var>MAKE_OPTIONS</var></span>, <span class="option">--make_options=<var>MAKE_OPTIONS</var></span></kbd></dt>
+<dd><p>options passed to make (ex: “-j8”) during test
+reference generation. Same as the configuration option
+make_options but specified at runtime. The commandline
+option here overrides the bv_maker.cfg options.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="test-step">
+<span id="id7"></span><h3>Test step<a class="headerlink" href="#test-step" title="Permalink to this headline">¶</a></h3>
+<p>Usage: bv_maker [global options] test</p>
+<blockquote>
+<div><p>Executes ctest.</p>
+</div></blockquote>
+<dl>
+<dt>Options:</dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<dd><p>show this help message and exit</p>
+</dd>
+<dt><kbd><span class="option">--only-if-default</span></kbd></dt>
+<dd><p>only perform this step if it is a default step, or
+specified in the “default_steps” option of
+bv_maker.cfg config file. Default steps are normally
+“sources” for source sections, and “configure build”
+for build sections</p>
+</dd>
+<dt><kbd><span class="option">-t <var>CTEST_OPTIONS</var></span>, <span class="option">--ctest_options=<var>CTEST_OPTIONS</var></span></kbd></dt>
+<dd><p>options passed to ctest (ex: “-VV -R carto*”). Same as
+the configuration option ctest_options but specified
+at runtime. The commandline option here overrides the
+bv_maker.cfg options.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="pack-step">
+<span id="id8"></span><h3>Pack step<a class="headerlink" href="#pack-step" title="Permalink to this headline">¶</a></h3>
+<p>Usage: bv_maker [global options] pack [options]</p>
+<blockquote>
+<div><p>Make installer package for the selected build directory.</p>
+</div></blockquote>
+<dl>
+<dt>Options:</dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<dd><p>show this help message and exit</p>
+</dd>
+<dt><kbd><span class="option">--only-if-default</span></kbd></dt>
+<dd><p>only perform this step if it is a default step, or
+specified in the “default_steps” option of bv_maker.cfg
+config file. Default steps are normally “sources” for
+source sections, “configure build” for build sections.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="install-pack-step">
+<span id="id9"></span><h3>Install_pack step<a class="headerlink" href="#install-pack-step" title="Permalink to this headline">¶</a></h3>
+<p>Usage: bv_maker [global options] install_pack [options]</p>
+<blockquote>
+<div><p>Install a binary package for the selected build directory.</p>
+</div></blockquote>
+<dl>
+<dt>Options:</dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<dd><p>show this help message and exit</p>
+</dd>
+<dt><kbd><span class="option">--only-if-default</span></kbd></dt>
+<dd><p>only perform this step if it is a default step, or
+specified in the “default_steps” option of
+bv_maker.cfg config file. Default steps are normally
+“sources” for source sections, “configure build” for
+build sections.</p>
+</dd>
+<dt><kbd><span class="option">--package-date=<var>PACKAGE_DATE</var></span></kbd></dt>
+<dd><p>sets the date of the pack to install. This is only
+useful if a %(date)s pattern has been used in the
+package directory sections of bv_maker.cfg.</p>
+</dd>
+<dt><kbd><span class="option">--package-time=<var>PACKAGE_TIME</var></span></kbd></dt>
+<dd><p>sets the time of the pack to install. This is only
+useful if a %(time)s pattern has been used in the
+package directory sections of bv_maker.cfg.</p>
+</dd>
+<dt><kbd><span class="option">--package-version=<var>PACKAGE_VERSION</var></span></kbd></dt>
+<dd><p>sets the version of the pack to install. This is only
+useful if a %(version)s pattern has been used in the
+package directory sections of bv_maker.cfg.</p>
+</dd>
+<dt><kbd><span class="option">--prefix=<var>PREFIX</var></span></kbd></dt>
+<dd><p>sets the prefix directory to install the pack.</p>
+</dd>
+<dt><kbd><span class="option">--local</span></kbd></dt>
+<dd><p>True if the installation must be done locally. Default
+is False.</p>
+</dd>
+<dt><kbd><span class="option">--offline</span></kbd></dt>
+<dd><p>True if the installation must be done using offline
+installer. Default is False.</p>
+</dd>
+<dt><kbd><span class="option">--debug</span></kbd></dt>
+<dd><p>True if the installation must be done in debug mode
+(i.e. generated files must not be deleted). Default is
+False.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="testref-pack-step">
+<span id="id10"></span><h3>Testref_pack step<a class="headerlink" href="#testref-pack-step" title="Permalink to this headline">¶</a></h3>
+<p>Usage: bv_maker [global options] testref_pack [options]</p>
+<blockquote>
+<div><p>Create test reference files in installed package for the selected build directory.</p>
+</div></blockquote>
+<dl>
+<dt>Options:</dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<dd><p>show this help message and exit</p>
+</dd>
+<dt><kbd><span class="option">--only-if-default</span></kbd></dt>
+<dd><p>only perform this step if it is a default step, or
+specified in the “default_steps” option of
+bv_maker.cfg config file. Default steps are normally
+“sources” for source sections, “configure build” for
+build sections.</p>
+</dd>
+<dt><kbd><span class="option">-m <var>MAKE_OPTIONS</var></span>, <span class="option">--make_options=<var>MAKE_OPTIONS</var></span></kbd></dt>
+<dd><p>options passed to make (ex: “-j8”) during test
+reference generation. Same as the configuration option
+make_options but specified at runtime. The commandline
+option here overrides the bv_maker.cfg options.</p>
+</dd>
+<dt><kbd><span class="option">--package-date=<var>PACKAGE_DATE</var></span></kbd></dt>
+<dd><p>sets the date of the pack to install. This is only
+useful if a %(date)s pattern has been used in the
+package directory sections of bv_maker.cfg.</p>
+</dd>
+<dt><kbd><span class="option">--package-time=<var>PACKAGE_TIME</var></span></kbd></dt>
+<dd><p>sets the time of the pack to install. This is only
+useful if a %(time)s pattern has been used in the
+package directory sections of bv_maker.cfg.</p>
+</dd>
+<dt><kbd><span class="option">--package-version=<var>PACKAGE_VERSION</var></span></kbd></dt>
+<dd><p>sets the version of the pack to install. This is only
+useful if a %(version)s pattern has been used in the
+package directory sections of bv_maker.cfg.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="test-pack-step">
+<span id="id11"></span><h3>Test_pack step<a class="headerlink" href="#test-pack-step" title="Permalink to this headline">¶</a></h3>
+<p>Usage: bv_maker [global options] test_pack [options]</p>
+<blockquote>
+<div><p>Test in installed package for the selected build directory.</p>
+</div></blockquote>
+<dl>
+<dt>Options:</dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<dd><p>show this help message and exit</p>
+</dd>
+<dt><kbd><span class="option">--only-if-default</span></kbd></dt>
+<dd><p>only perform this step if it is a default step, or
+specified in the “default_steps” option of
+bv_maker.cfg config file. Default steps are normally
+“sources” for source sections, “configure build” for
+build sections.</p>
+</dd>
+<dt><kbd><span class="option">-t <var>CTEST_OPTIONS</var></span>, <span class="option">--ctest_options=<var>CTEST_OPTIONS</var></span></kbd></dt>
+<dd><p>options passed to ctest (ex: “-VV -R carto*”). Same as
+the configuration option ctest_options but specified
+at runtime. The commandline option here overrides the
+bv_maker.cfg options.</p>
+</dd>
+<dt><kbd><span class="option">--package-date=<var>PACKAGE_DATE</var></span></kbd></dt>
+<dd><p>sets the date of the pack to install. This is only
+useful if a %(date)s pattern has been used in the
+package directory sections of bv_maker.cfg.</p>
+</dd>
+<dt><kbd><span class="option">--package-time=<var>PACKAGE_TIME</var></span></kbd></dt>
+<dd><p>sets the time of the pack to install. This is only
+useful if a %(time)s pattern has been used in the
+package directory sections of bv_maker.cfg.</p>
+</dd>
+<dt><kbd><span class="option">--package-version=<var>PACKAGE_VERSION</var></span></kbd></dt>
+<dd><p>sets the version of the pack to install. This is only
+useful if a %(version)s pattern has been used in the
+package directory sections of bv_maker.cfg.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="publish-pack-step">
+<span id="id12"></span><h3>Publish_pack step<a class="headerlink" href="#publish-pack-step" title="Permalink to this headline">¶</a></h3>
+<p>Usage: bv_maker [global options] publish [options]</p>
+<blockquote>
+<div><p>Run command to publish package for the selected publication directory.</p>
+</div></blockquote>
+<dl>
+<dt>Options:</dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<dd><p>show this help message and exit</p>
+</dd>
+<dt><kbd><span class="option">--only-if-default</span></kbd></dt>
+<dd><p>only perform this step if it is a default step, or
+specified in the “default_steps” option of
+bv_maker.cfg config file. Default steps are normally
+“sources” for source sections, “configure build” for
+build sections.</p>
+</dd>
+<dt><kbd><span class="option">-m <var>MAKE_OPTIONS</var></span>, <span class="option">--make_options=<var>MAKE_OPTIONS</var></span></kbd></dt>
+<dd><p>options passed to make (ex: “-j8”) during test
+reference generation. Same as the configuration option
+make_options but specified at runtime. The commandline
+option here overrides the bv_maker.cfg options.</p>
+</dd>
+<dt><kbd><span class="option">--package-date=<var>PACKAGE_DATE</var></span></kbd></dt>
+<dd><p>sets the date of the pack to install. This is only
+useful if a %(date)s pattern has been used in the
+package directory sections of bv_maker.cfg.</p>
+</dd>
+<dt><kbd><span class="option">--package-time=<var>PACKAGE_TIME</var></span></kbd></dt>
+<dd><p>sets the time of the pack to install. This is only
+useful if a %(time)s pattern has been used in the
+package directory sections of bv_maker.cfg.</p>
+</dd>
+<dt><kbd><span class="option">--package-version=<var>PACKAGE_VERSION</var></span></kbd></dt>
+<dd><p>sets the version of the pack to install. This is only
+useful if a %(version)s pattern has been used in the
+package directory sections of bv_maker.cfg.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">bv_maker</a><ul>
+<li><a class="reference internal" href="#help-of-the-commandline">Help of the commandline</a><ul>
+<li><a class="reference internal" href="#info-step">Info step</a></li>
+<li><a class="reference internal" href="#sources-step">Sources step</a></li>
+<li><a class="reference internal" href="#status-step">Status step</a></li>
+<li><a class="reference internal" href="#configure-step">Configure step</a></li>
+<li><a class="reference internal" href="#build-step">Build step</a></li>
+<li><a class="reference internal" href="#doc-step">Doc step</a></li>
+<li><a class="reference internal" href="#testref-step">Testref step</a></li>
+<li><a class="reference internal" href="#test-step">Test step</a></li>
+<li><a class="reference internal" href="#pack-step">Pack step</a></li>
+<li><a class="reference internal" href="#install-pack-step">Install_pack step</a></li>
+<li><a class="reference internal" href="#testref-pack-step">Testref_pack step</a></li>
+<li><a class="reference internal" href="#test-pack-step">Test_pack step</a></li>
+<li><a class="reference internal" href="#publish-pack-step">Publish_pack step</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dependencies.html"
+                        title="previous chapter">Dependencies in brainvisa-cmake</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="bv_env.html"
+                        title="next chapter">bv_env</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/bv_maker.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="bv_env.html" title="bv_env"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dependencies.html" title="Dependencies in brainvisa-cmake"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BrainVisa-Cmake 5.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">bv_maker</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, CEA.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.1.1.
+    </div>
+  </body>
+</html>

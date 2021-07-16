@@ -1,0 +1,167 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Dependencies in brainvisa-cmake &#8212; BrainVisa-Cmake 5.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="bv_maker" href="bv_maker.html" />
+    <link rel="prev" title="How to compile a new project with brainvisa-cmake" href="new_project.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="bv_maker.html" title="bv_maker"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="new_project.html" title="How to compile a new project with brainvisa-cmake"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BrainVisa-Cmake 5.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Dependencies in brainvisa-cmake</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="dependencies-in-brainvisa-cmake">
+<h1>Dependencies in brainvisa-cmake<a class="headerlink" href="#dependencies-in-brainvisa-cmake" title="Permalink to this headline">¶</a></h1>
+<p>There are two kinds of dependencies that are defined in brainvisa-cmake: compilation dependencies and packaging dependencies. Compilation dependencies are declared by standard CMake commands such as find_package. But these commands cannot be used to identify the dependencies of the runtime, development or source packages that will be distributed. For instance, if a component uses the two following lines:</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">find_package</span><span class="p">(</span> <span class="s">libjpeg</span> <span class="p">)</span>
+<span class="nb">find_package</span><span class="p">(</span> <span class="s">doxygen</span> <span class="p">)</span>
+</pre></div>
+</div>
+<p>These two compilation dependencies are identical. However, on the one hand, <code class="docutils literal notranslate"><span class="pre">find_package(</span> <span class="pre">libjpeg</span> <span class="pre">)</span></code> implies that the runtime package depends on a package containing <code class="docutils literal notranslate"><span class="pre">libjpeg.so</span></code> (assuming dynamic link) and the development package requires a package containing the headers (<code class="docutils literal notranslate"><span class="pre">*.h</span></code>) of <em>libjpeg</em>. On the other hand, <code class="docutils literal notranslate"><span class="pre">find_package(</span> <span class="pre">doxygen</span> <span class="pre">)</span></code> implies only that the development package requires Doxygen in order to build the development documentation.</p>
+<p>Therefore it is necessary to explicitly define packaging dependencies in brainvisa-cmake.</p>
+<section id="packaging-dependencies">
+<h2>Packaging dependencies<a class="headerlink" href="#packaging-dependencies" title="Permalink to this headline">¶</a></h2>
+<p>Each component compiled with brainvisa-cmake can lead to several packages:</p>
+<ul class="simple">
+<li><p>The <strong>runtime package</strong> which is the main package containing all necessary files to use the component (e.g. programs, dynamic libraries, configuration files, etc.).</p></li>
+<li><p>The <strong>development</strong> package that contains supplementary files allowing to develop programs that use the component (e.g. C header files, cmake files, etc.).</p></li>
+<li><p>The <strong>documentation</strong> packages contain documentation about the component.
+The documentation itself divides into:</p>
+<ul>
+<li><p><strong>user documentation</strong></p></li>
+<li><p><strong>development documentation</strong></p></li>
+</ul>
+</li>
+<li><p>the <strong>test</strong> package contains test material (scripts, programs, data)</p></li>
+</ul>
+<p>These packages types can lead to several dependency trees.</p>
+<section id="function-brainvisa-dependency">
+<h3>Function BRAINVISA_DEPENDENCY<a class="headerlink" href="#function-brainvisa-dependency" title="Permalink to this headline">¶</a></h3>
+<p><em>Brainvisa-cmake</em> defines a function in order to define the packaging dependencies of each package type:</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span>BRAINVISA_DEPENDENCY( &lt;pack_type&gt; &lt;dependency_type&gt; &lt;component&gt; &lt;component_pack_type&gt; [ &lt;version ranges&gt; ] [BINARY_INDEPENDENT] ).
+</pre></div>
+</div>
+<p>The package types can be: <strong>RUN</strong>, <strong>DEV</strong>, <strong>DOC</strong>, <strong>USRDOC</strong>, <strong>DEVDOC</strong>, <strong>TST</strong>.</p>
+<p><em>Brainvisa-cmake</em> allows to declare four different kinds of relationship between packages: <strong>Depends</strong>, <strong>Recommends</strong>, <strong>Suggests</strong> and <strong>Enhances</strong>. The meaning of these relationships is described in the <a class="reference external" href="https://www.debian.org/doc/debian-policy/ch-relationships.html">Debian Policy Manual</a>.</p>
+<p>More information about the usage of this function can be found in the section <a class="reference internal" href="compile_existing.html"><span class="doc">How to compile BrainVISA projects</span></a>.</p>
+<section id="note-about-how-to-handle-binary-incompatibilities-not-used-yet">
+<h4>Note about how to handle binary incompatibilities (not used yet)<a class="headerlink" href="#note-about-how-to-handle-binary-incompatibilities-not-used-yet" title="Permalink to this headline">¶</a></h4>
+<p>To handle <strong>binary incompatibilities</strong> between packages, it is necessary to provide information to brainvisa-installer. It is possible to rely on the dependency system to code this information. When a package has to be recompiled because one of its dependencies has changed, the new package may be binary incompatible with the old one; even if the source of the component have not been changed. For instance if Aims is modified in a binary incompatible way, it is necessary to recompile Anatomist but the new compiled version will not be binary compatible with the previous one. This situation would lead to two different Anatomist packages containing the same Anatomist versions but with two different binary signatures.</p>
+<p>If we can attach a unique number to each binary signature of a specific version of a component, we would be able to include this number into the package version. For instance, the previous example could lead to two packages <code class="docutils literal notranslate"><span class="pre">anatomist-3.2.0-0</span></code> and <code class="docutils literal notranslate"><span class="pre">anatomist-3.2.0-1</span></code> where <code class="docutils literal notranslate"><span class="pre">3.2.0</span></code> is Anatomist version and the fourth number identifies binary signature changes. With this version system, packages that are binary linked to another package would include a dependency with a full version, including binary signature number. But a package that requires a specific version but without binary linking (such as Python extensions) would ignore the binary signature number in their dependencies.</p>
+<p>The number representing the binary signature can be a counter that is incremented each time a new package with the same version is compiled. The good point for this solution is that it gives easily readable versions on packages. The drawback is that we must provide a way for brainvisa-cmake to store a counter for each component. It can be hard to do if compilation is not always done on the same build tree. Another possibility would be to use compilation date with the format <code class="docutils literal notranslate"><span class="pre">YYYYMMDD</span></code> (assuming that there is not two releases of a component on the same day). For instance a package <code class="docutils literal notranslate"><span class="pre">anatomist-free_3.2.0.20091011_ubuntu-9.04_i686.deb</span></code> would mean Anatomist version <code class="docutils literal notranslate"><span class="pre">3.2.0</span></code> compiled on October, 11th 2009. It is much easier to implement but leads to not very good looking version strings.</p>
+<p>Thanks to the dependencies definition, the use of this binary signature number can be completely managed by brainvisa-cmake during packaging. The developer of a component would only have to indicate, for each runtime dependency, whether there is a binary link or not. I suggest to define a binary link by default unless the <strong>BINARY_INDEPENDENT</strong> option is used.</p>
+</section>
+</section>
+<section id="thirdparty-dependencies">
+<h3>Thirdparty dependencies<a class="headerlink" href="#thirdparty-dependencies" title="Permalink to this headline">¶</a></h3>
+<p>Currently, the Brainvisa packages that we distribute contains a number of thirdparty dependencies in order to enable using the package on several versions of OS. For example, we distribute only one linux package compiled on an old Fedora-4 system and this package is usable on many more recent linux distributions because the package contains all the needed dependencies and does not need to use system libraries.</p>
+<p>This means that we have to be able to package thirdparty component. To do so, we defined several files in brainvisa-cmake that contain the rules to package thirdparty components needed in Brainvisa packages.
+These files are named <code class="docutils literal notranslate"><span class="pre">brainvisa-packaging-*.cmake</span></code> and are located at <code class="docutils literal notranslate"><span class="pre">source:brainvisa-cmake/trunk/cmake</span></code>.</p>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Dependencies in brainvisa-cmake</a><ul>
+<li><a class="reference internal" href="#packaging-dependencies">Packaging dependencies</a><ul>
+<li><a class="reference internal" href="#function-brainvisa-dependency">Function BRAINVISA_DEPENDENCY</a><ul>
+<li><a class="reference internal" href="#note-about-how-to-handle-binary-incompatibilities-not-used-yet">Note about how to handle binary incompatibilities (not used yet)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#thirdparty-dependencies">Thirdparty dependencies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="new_project.html"
+                        title="previous chapter">How to compile a new project with brainvisa-cmake</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="bv_maker.html"
+                        title="next chapter">bv_maker</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/dependencies.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="bv_maker.html" title="bv_maker"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="new_project.html" title="How to compile a new project with brainvisa-cmake"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BrainVisa-Cmake 5.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Dependencies in brainvisa-cmake</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, CEA.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.1.1.
+    </div>
+  </body>
+</html>

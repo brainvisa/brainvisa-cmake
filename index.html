@@ -1,0 +1,254 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>BrainVisa-Cmake &#8212; BrainVisa-Cmake 5.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="How to compile BrainVISA projects" href="compile_existing.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="compile_existing.html" title="How to compile BrainVISA projects"
+             accesskey="N">next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">BrainVisa-Cmake 5.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">BrainVisa-Cmake</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="brainvisa-cmake">
+<h1>BrainVisa-Cmake<a class="headerlink" href="#brainvisa-cmake" title="Permalink to this headline">¶</a></h1>
+<p>Build system based on <a class="reference external" href="https://cmake.org">CMake</a></p>
+<p>It handles all CMake does (compilation for compiled languages, build directopry preparation, test, installation), plus:</p>
+<ul class="simple">
+<li><p>Multi-project handling: builds in a single build directory tree a set of projects</p></li>
+<li><p>Manages easy source repositories syncronization</p></li>
+<li><p>Integrates in a common BrainVisa environment</p></li>
+<li><p>Packaging (see the brainvisa-installer project)</p></li>
+<li><p>Email notification of build, tests and every other operation</p></li>
+</ul>
+<p>BrainVisa-Cmake consists in several connected parts, mainly:</p>
+<ul class="simple">
+<li><p>CMake environment</p></li>
+<li><p>Python modules and tools</p></li>
+<li><p>the bv_maker program</p></li>
+<li><p>the bv_env program</p></li>
+</ul>
+<section id="how-to-compile-brainvisa-projects">
+<h2><a class="reference internal" href="compile_existing.html"><span class="doc">How to compile BrainVISA projects</span></a><a class="headerlink" href="#how-to-compile-brainvisa-projects" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="the-bv-maker-cfg-configuration-file">
+<h2><a class="reference internal" href="configuration.html"><span class="doc">The bv_maker.cfg configuration file</span></a><a class="headerlink" href="#the-bv-maker-cfg-configuration-file" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="how-to-compile-a-new-project-with-brainvisa-cmake">
+<h2><a class="reference internal" href="new_project.html"><span class="doc">How to compile a new project with brainvisa-cmake</span></a><a class="headerlink" href="#how-to-compile-a-new-project-with-brainvisa-cmake" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="dependencies-in-brainvisa-cmake">
+<h2><a class="reference internal" href="dependencies.html"><span class="doc">Dependencies in brainvisa-cmake</span></a><a class="headerlink" href="#dependencies-in-brainvisa-cmake" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="bv-maker-command-documentation">
+<h2><a class="reference internal" href="bv_maker.html"><span class="doc">bv_maker command documentation</span></a><a class="headerlink" href="#bv-maker-command-documentation" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="bv-env-program-and-similar-shell-scripts">
+<h2><a class="reference internal" href="bv_env.html"><span class="doc">bv_env program and similar shell scripts</span></a><a class="headerlink" href="#bv-env-program-and-similar-shell-scripts" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="testing-and-monitoring-infrastructure">
+<h2><a class="reference internal" href="testing_monitoring.html"><span class="doc">Testing and monitoring infrastructure</span></a><a class="headerlink" href="#testing-and-monitoring-infrastructure" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="documenting-projects-using-brainvisa-cmake">
+<h2><a class="reference internal" href="documenting.html"><span class="doc">Documenting projects using brainvisa-cmake</span></a><a class="headerlink" href="#documenting-projects-using-brainvisa-cmake" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="bv-packaging-script">
+<h2><a class="reference internal" href="bv_packaging.html"><span class="doc">bv_packaging script</span></a><a class="headerlink" href="#bv-packaging-script" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="cmake-functions">
+<h2><a class="reference internal" href="cmake_functions.html"><span class="doc">CMake functions</span></a><a class="headerlink" href="#cmake-functions" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="compile_existing.html">How to compile BrainVISA projects</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="compile_existing.html#first-time-configuration">First time configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compile_existing.html#in-case-of-problems">In case of problems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compile_existing.html#git-repositories-and-bv-maker">Git repositories and bv_maker</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">The bv_maker.cfg configuration file</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#general-structure-and-syntax-of-bv-maker-configuration-file">General structure and syntax of bv_maker configuration file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#definition-of-a-general-section">Definition of a general section</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#definition-of-a-source-directory">Definition of a source directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#definition-of-a-build-directory">Definition of a build directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#definition-of-a-package-directory">Definition of a package directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#definition-of-a-publication-directory">Definition of a publication directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#syntax-for-components-selection">Syntax for components selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#conditional-subsections">Conditional subsections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="new_project.html">How to compile a new project with brainvisa-cmake</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="new_project.html#project-info-cmake">Project_info.cmake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new_project.html#how-to-create-version-files-with-brainvisa-cmake">How to create version files with brainvisa-cmake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new_project.html#cmakelists-txt">CMakeLists.txt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="new_project.html#brainvisa-cmake-functions">brainvisa-cmake functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Dependencies in brainvisa-cmake</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dependencies.html#packaging-dependencies">Packaging dependencies</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bv_maker.html">bv_maker</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bv_maker.html#help-of-the-commandline">Help of the commandline</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bv_env.html">bv_env</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="bv_env.html#bv-env-program">bv_env program</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bv_env.html#bv-env-sh-bv-env-csh-bv-env-bat-scripts">bv_env.sh, bv_env.csh, bv_env.bat scripts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bv_env.html#bv-unenv">bv_unenv</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testing_monitoring.html">Testing and monitoring infrastructure</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testing_monitoring.html#running-tests">Running tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing_monitoring.html#notifying-build-and-test-executions">Notifying build and test executions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing_monitoring.html#displaying-build-status">Displaying build status</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing_monitoring.html#setting-up-new-tests-in-a-software-project">Setting up new tests in a software project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing_monitoring.html#configuring-installed-packages-tests">Configuring installed packages tests</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="documenting.html">Documenting projects using brainvisa-cmake</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="documenting.html#doxygen-documentation">Doxygen documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documenting.html#sphinx-documentation">Sphinx documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documenting.html#customization">Customization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bv_packaging.html">bv_packaging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cmake_functions.html">CMake functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-add-command-help">brainvisa_add_command_help</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-add-executable">brainvisa_add_executable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-add-sip-python-module">brainvisa_add_sip_python_module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-add-pytranslation">brainvisa_add_pytranslation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-add-translation">brainvisa_add_translation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-add-test">brainvisa_add_test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-copy-and-install-headers">brainvisa_copy_and_install_headers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-copy-directory">brainvisa_copy_directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-copy-files">brainvisa_copy_files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-copy-python-directory">brainvisa_copy_python_directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-dependency">brainvisa_dependency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-find-fsentry">brainvisa_find_fsentry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-generate-commands-help">brainvisa_generate_commands_help</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-generate-commands-help-index">brainvisa_generate_commands_help_index</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-generate-docbook-doc">brainvisa_generate_docbook_doc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-generate-doxygen-doc">brainvisa_generate_doxygen_doc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-generate-epydoc-doc">brainvisa_generate_epydoc_doc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-generate-sphinx-doc">brainvisa_generate_sphinx_doc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-generate-target-name">brainvisa_generate_target_name</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-get-file-list-from-pro">brainvisa_get_file_list_from_pro</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-get-spaced-quoted-list">brainvisa_get_spaced_quoted_list</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-install">brainvisa_install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-install-directory">brainvisa_install_directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-install-runtime-libraries">brainvisa_install_runtime_libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-project">brainvisa_project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-pyuic">brainvisa_pyuic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-qt-wrap-ui">brainvisa_qt_wrap_ui</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-real-paths">brainvisa_real_paths</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-resolve-symbol-libraries">brainvisa_resolve_symbol_libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-thirdparty-dependency">brainvisa_thirdparty_dependency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cmake_functions.html#brainvisa-version-convert">brainvisa_version_convert</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">BrainVisa-Cmake</a><ul>
+<li><a class="reference internal" href="#how-to-compile-brainvisa-projects"><span class="xref std std-doc">How to compile BrainVISA projects</span></a></li>
+<li><a class="reference internal" href="#the-bv-maker-cfg-configuration-file"><span class="xref std std-doc">The bv_maker.cfg configuration file</span></a></li>
+<li><a class="reference internal" href="#how-to-compile-a-new-project-with-brainvisa-cmake"><span class="xref std std-doc">How to compile a new project with brainvisa-cmake</span></a></li>
+<li><a class="reference internal" href="#dependencies-in-brainvisa-cmake"><span class="xref std std-doc">Dependencies in brainvisa-cmake</span></a></li>
+<li><a class="reference internal" href="#bv-maker-command-documentation"><span class="xref std std-doc">bv_maker command documentation</span></a></li>
+<li><a class="reference internal" href="#bv-env-program-and-similar-shell-scripts"><span class="xref std std-doc">bv_env program and similar shell scripts</span></a></li>
+<li><a class="reference internal" href="#testing-and-monitoring-infrastructure"><span class="xref std std-doc">Testing and monitoring infrastructure</span></a></li>
+<li><a class="reference internal" href="#documenting-projects-using-brainvisa-cmake"><span class="xref std std-doc">Documenting projects using brainvisa-cmake</span></a></li>
+<li><a class="reference internal" href="#bv-packaging-script"><span class="xref std std-doc">bv_packaging script</span></a></li>
+<li><a class="reference internal" href="#cmake-functions"><span class="xref std std-doc">CMake functions</span></a></li>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="compile_existing.html"
+                        title="next chapter">How to compile BrainVISA projects</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="compile_existing.html" title="How to compile BrainVISA projects"
+             >next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">BrainVisa-Cmake 5.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">BrainVisa-Cmake</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, CEA.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.1.1.
+    </div>
+  </body>
+</html>

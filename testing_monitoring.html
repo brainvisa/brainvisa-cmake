@@ -1,0 +1,470 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Testing and monitoring infrastructure &#8212; BrainVisa-Cmake 5.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Documenting projects using brainvisa-cmake" href="documenting.html" />
+    <link rel="prev" title="bv_env" href="bv_env.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="documenting.html" title="Documenting projects using brainvisa-cmake"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="bv_env.html" title="bv_env"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BrainVisa-Cmake 5.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Testing and monitoring infrastructure</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="testing-and-monitoring-infrastructure">
+<h1>Testing and monitoring infrastructure<a class="headerlink" href="#testing-and-monitoring-infrastructure" title="Permalink to this headline">¶</a></h1>
+<p>bv_maker allows to run tests, notify, and log the results of build, tests, and packaging operations.</p>
+<section id="running-tests">
+<h2>Running tests<a class="headerlink" href="#running-tests" title="Permalink to this headline">¶</a></h2>
+<section id="testing-build-directories">
+<h3>Testing build directories<a class="headerlink" href="#testing-build-directories" title="Permalink to this headline">¶</a></h3>
+<p>Basically, tests can be run through the <a class="reference internal" href="bv_maker.html"><span class="doc">bv_maker</span></a> command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_maker <span class="nb">test</span>
+</pre></div>
+</div>
+<p>Of course options may be added to restrict to some build directories for instance using the <code class="docutils literal notranslate"><span class="pre">-d</span></code> option (see <a class="reference internal" href="bv_maker.html"><span class="doc">bv_maker options</span></a> for details).</p>
+<p><code class="docutils literal notranslate"><span class="pre">bv_maker</span></code> also has <a class="reference internal" href="bv_maker.html#test-step"><span class="std std-ref">options specific to the test step</span></a>, namely the <code class="docutils literal notranslate"><span class="pre">-t</span></code> option which may be used to run only a part of tests. For instance:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_maker <span class="nb">test</span> -t <span class="s1">&#39;-VV -R ^carto&#39;</span>
+</pre></div>
+</div>
+<p>will run tests in verbose mode, and run only tests whth names starting with <code class="docutils literal notranslate"><span class="pre">carto</span></code>.</p>
+<p>Basically, this <code class="docutils literal notranslate"><span class="pre">bv_maker</span></code> command runs <a class="reference external" href="https://cmake.org/cmake/help/v3.0/manual/ctest.1.html">ctest</a> so it is also possible to go into a build directory, and run <code class="docutils literal notranslate"><span class="pre">ctest</span></code>, or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">test</span></code>, by hand:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> /home/brutus/build
+ctest -VV -R ^carto
+</pre></div>
+</div>
+<p>These commands will do almost the same as the bv_maker variant, except that notification and logging will not take place.</p>
+</section>
+<section id="testing-installed-packages">
+<h3>Testing installed packages<a class="headerlink" href="#testing-installed-packages" title="Permalink to this headline">¶</a></h3>
+<p>Similarly, bv_maker allows to test installed packages, after bv_maker steps <a class="reference internal" href="bv_maker.html#pack-step"><span class="std std-ref">pack</span></a> and <a class="reference internal" href="bv_maker.html#install-pack-step"><span class="std std-ref">install_pack</span></a> have been successfully done. This is the <a class="reference internal" href="bv_maker.html#test-pack-step"><span class="std std-ref">test_pack</span></a> step.</p>
+<p>In this situation, tests are performed as configured in the corresponding build tree, but are running programs in an installed binary package.</p>
+<p>Tests may be run in a different environment: on a different machine (through <code class="docutils literal notranslate"><span class="pre">ssh</span></code>), or via a <a class="reference external" href="http://www.docker.com">docker container</a> for instance, or both, as configured in the <code class="docutils literal notranslate"><span class="pre">bv_maker.cfg</span></code> file: see <a class="reference internal" href="#configuring-installed-packages-tests">Configuring installed packages tests</a>. This way, tests can be run in a realistic situation as if the software is installed on a different (and minimal) client machine.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_maker test_pack
+</pre></div>
+</div>
+<p>Here again, options are allowed to restrict to specific package directories, part of tests etc. Note that the <code class="docutils literal notranslate"><span class="pre">-d</span></code> option here must refer to a <a class="reference internal" href="configuration.html#package-directory"><span class="std std-ref">package directory</span></a>, which may admit some fancy wildcards, and must be specified the same way. As an example, for our build system for BrainVisa, we may use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_maker -d <span class="s1">&#39;/neurospin/tmp/brainvisa/tests/repositories/public/%(version)s-%(date)s/%(os)s/packages&#39;</span> test_pack -t <span class="s1">&#39;-VV -R carto*&#39;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Contrarily to build directories tests, the <code class="docutils literal notranslate"><span class="pre">test_pack</span></code> step cannot be run through a <code class="docutils literal notranslate"><span class="pre">ctest</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span></code> command equivalent, because <code class="docutils literal notranslate"><span class="pre">bv_maker</span></code> has to setup tesing into the installed package before running tests, in a way that is not recorded in cmake/make configuration.</p>
+</div>
+</section>
+<section id="managing-test-data">
+<h3>Managing test data<a class="headerlink" href="#managing-test-data" title="Permalink to this headline">¶</a></h3>
+<p>Some tests will work fine using internal tests or by generating tempory synthetic data to test its processing. But in some other cases, additional data will be needed. Typically:</p>
+<ul class="simple">
+<li><p>input data may be needed to feed processing tests which should run with “real” data. Such data may be quite large, so the test system may download data from a remote URL or get it from a given read-only directory.</p></li>
+<li><p>reference data: many tests will generate output (processed) data from input data. To check if the output data are OK, some reference data must be compared to tests results. Reference data can be generated through bv_maker by running tests in a special mode: <a class="reference internal" href="bv_maker.html#testref-step"><span class="std std-ref">testref</span></a> or <a class="reference internal" href="bv_maker.html#testref-pack-step"><span class="std std-ref">testref_pack</span></a> for package tests.</p></li>
+<li><p>test data: these data will be produced during regular tests. Normally they could be just temporary files which can be deleted after testing, but it is useful to store them for manual checking and debugging when tests fail.</p></li>
+</ul>
+<p>Hence two additional <a class="reference internal" href="bv_maker.html"><span class="doc">bv_maker</span></a> steps can be used to generate reference data:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="bv_maker.html#testref-step"><span class="std std-ref">testref</span></a> will run tests and write reference results for later comparison during <a class="reference internal" href="bv_maker.html#test-step"><span class="std std-ref">test</span></a> steps</p></li>
+<li><p><a class="reference internal" href="bv_maker.html#testref-pack-step"><span class="std std-ref">testref_pack</span></a> will run tests from installed packages and write reference results for later comparison during <a class="reference internal" href="bv_maker.html#test-pack-step"><span class="std std-ref">test_pack</span></a> steps</p></li>
+</ul>
+<p>Data directoryes are passed to test programs through environment variables, with values that can be specified in <a class="reference internal" href="configuration.html"><span class="doc">The bv_maker.cfg configuration file</span></a> variables:</p>
+<ul class="simple">
+<li><p>input data: <em>Not done yet</em></p></li>
+<li><p>reference data: the <code class="docutils literal notranslate"><span class="pre">bv_maker.cfg</span></code> config file may contain in its build and package directories sections a <code class="docutils literal notranslate"><span class="pre">test_ref_data_dir</span></code> variable, which will specify where reference data will be written (in <a class="reference internal" href="bv_maker.html#testref-step"><span class="std std-ref">testref</span></a>  and <a class="reference internal" href="bv_maker.html#test-pack-step"><span class="std std-ref">test_pack</span></a> steps). The value here may contain environment variables and “python-style” variables substitution to differentiate data directories across configurations or systems. When tests are actually running, the value here will be passed to test programs through the <code class="docutils literal notranslate"><span class="pre">BRAINVISA_TEST_REF_DATA_DIR</span></code> environment variable.</p></li>
+<li><p>run test data: the <code class="docutils literal notranslate"><span class="pre">bv_maker.cfg</span></code> config file may contain in its build and package directories sections a <code class="docutils literal notranslate"><span class="pre">test_run_data_dir</span></code> variable, which will specify where reference data will be written (in <a class="reference internal" href="bv_maker.html#test-step"><span class="std std-ref">test</span></a>  and <a class="reference internal" href="bv_maker.html#test-pack-step"><span class="std std-ref">test_pack</span></a> steps). The value here may contain environment variables and “python-style” variables substitution to differentiate data directories across configurations or systems. When tests are actually running, the value here will be passed to test programs through the <code class="docutils literal notranslate"><span class="pre">BRAINVISA_TEST_RUN_DATA_DIR</span></code> environment variable. If this variable is not defined, then a temporary directory may be used for tests.</p></li>
+</ul>
+</section>
+</section>
+<section id="notifying-build-and-test-executions">
+<h2>Notifying build and test executions<a class="headerlink" href="#notifying-build-and-test-executions" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">bv_maker</span></code> may use several kinds of notification  when its different steps finish, or when they fail.</p>
+<section id="basic-bv-maker-output-and-command-retuern-code">
+<h3>Basic bv_maker output and command retuern code<a class="headerlink" href="#basic-bv-maker-output-and-command-retuern-code" title="Permalink to this headline">¶</a></h3>
+<p>If any step fails, the <a class="reference internal" href="bv_maker.html"><span class="doc">bv_maker</span></a> commend will exit with a non-null exit code, and print a summary of steps status for each build or package directory.</p>
+</section>
+<section id="email-notification">
+<h3>Email notification<a class="headerlink" href="#email-notification" title="Permalink to this headline">¶</a></h3>
+<p>Emails can be sent when a bv_maker step finishes, or only in case of failure.</p>
+<p>Such notification and logging have to be setup in the <a class="reference internal" href="configuration.html"><span class="doc">bv_maker.cfg configuration file</span></a>, more precisely in the <a class="reference internal" href="configuration.html#general-section"><span class="std std-ref">general section</span></a> of it:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> general <span class="o">]</span>
+<span class="nv">email_notification_by_default</span> <span class="o">=</span> ON
+<span class="nv">failure_email</span> <span class="o">=</span> myname@myserver.com
+<span class="nv">success_email</span> <span class="o">=</span> myname@myserver.com
+<span class="nv">smtp_server</span> <span class="o">=</span> mail.myserver.com
+<span class="nv">from_email</span> <span class="o">=</span> myself@myserver.com
+<span class="nv">reply_to_email</span> <span class="o">=</span> support@myserver.com
+</pre></div>
+</div>
+<p>Note that if <code class="docutils literal notranslate"><span class="pre">email_notification_by_default</span></code> is not set to <code class="docutils literal notranslate"><span class="pre">ON</span></code>, bv_maker will need to be invoked with the <code class="docutils literal notranslate"><span class="pre">--email</span></code> option to actually send email notification.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">success_email</span></code> is not filled, notificatioon will only occur upon error.</p>
+</section>
+<section id="log-file">
+<h3>Log file<a class="headerlink" href="#log-file" title="Permalink to this headline">¶</a></h3>
+<p>Additionally it can also maintain a file of past <code class="docutils literal notranslate"><span class="pre">bv_maker</span></code> executions and the status of all steps. These tools are useful for automatic build and testing, continuous integration etc.</p>
+<p>This is setup in the <a class="reference internal" href="configuration.html"><span class="doc">The bv_maker.cfg configuration file</span></a> option <code class="docutils literal notranslate"><span class="pre">global_status_file</span></code> in the <a class="reference internal" href="configuration.html#general-section"><span class="std std-ref">general section</span></a>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> general <span class="o">]</span>
+<span class="nv">global_status_file</span> <span class="o">=</span> /home/tests/bv_maker_log.log
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="#displaying-build-status"><span class="std std-ref">Displaying build status</span></a> below for how to use the log file.</p>
+</section>
+<section id="notification-to-a-jenkins-server">
+<h3>Notification to a Jenkins server<a class="headerlink" href="#notification-to-a-jenkins-server" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="bv_maker.html"><span class="doc">bv_maker</span></a> can connect to a <a class="reference external" href="https://jenkins.io/">Jenkins</a> server to log step results, so as to allow displaying them on a server. This is not the usual way to use Jenkins, which normally operates builds and tests from the server, but here bv_maker runs in its own (typically from a unix crontab), and connects to the Jenkins server to store jobs results (using “external jobs” in Jenkins dialect). This way, builds and tests running on a private network can still log results to a server visible from the internet.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> general <span class="o">]</span>
+<span class="nv">jenkins_build_name</span> <span class="o">=</span> brainvisa-<span class="nv">$HOSTNAME</span>-%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>directory_id<span class="o">)</span>s-%<span class="o">(</span>project<span class="o">)</span>s-%<span class="o">(</span>step<span class="o">)</span>s
+<span class="nv">jenkins_server_url</span> <span class="o">=</span> http://myserver.org/builds
+<span class="nv">jenkins_token</span> <span class="o">=</span> something_to_get_from_jenkins_server
+<span class="nv">jenkins_username</span> <span class="o">=</span> test_login
+</pre></div>
+</div>
+</section>
+</section>
+<section id="displaying-build-status">
+<span id="id1"></span><h2>Displaying build status<a class="headerlink" href="#displaying-build-status" title="Permalink to this headline">¶</a></h2>
+<section id="id2">
+<h3>Log file<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>When <code class="docutils literal notranslate"><span class="pre">bv_maker</span></code> is running, each step execution status may be logged in a single file: a line is appended to it when a step finishes. This is enabled if the <code class="docutils literal notranslate"><span class="pre">bv_maker.cfg</span></code> file has the <a class="reference internal" href="configuration.html#general-section"><span class="std std-ref">global_status_file option</span></a> in its general section:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> general <span class="o">]</span>
+<span class="nv">global_status_file</span> <span class="o">=</span> /home/brutus/bv_builds.log
+</pre></div>
+</div>
+<p>This file is a simple text file, containing just one line per bv_maker step execution, its status, run date, and system name. For instance:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>OK          step test: /neurospin/brainvisa/build/Mandriva-2008.0-x86_64/bug_fix, started: 2017/01/25 06:05, stopped: 2017/01/25 07:31 on i2bm-mdv-64 (linux64-glibc-2.6)
+OK          step test: /neurospin/brainvisa/build/Mandriva-2008.0-x86_64/latest_release, started: 2017/01/25 07:31, stopped: 2017/01/25 07:58 on i2bm-mdv-64 (linux64-glibc-2.6)
+OK          step test: /neurospin/brainvisa/build/Mandriva-2008.0-x86_64/trunk, started: 2017/01/25 07:58, stopped: 2017/01/25 09:21 on i2bm-mdv-64 (linux64-glibc-2.6)
+FAILED      step pack: /neurospin/tmp/brainvisa/tests/repositories/public/%(version)s-%(date)s/%(os)s/packages, started: 2017/01/25 09:21, stopped: 2017/01/25 10:21 on i2bm-mdv-64 (linux64-glibc-2.6)
+UNMET DEP   step install_pack: /neurospin/tmp/brainvisa/tests/repositories/public/%(version)s-%(date)s/%(os)s/packages on i2bm-mdv-64 (linux64-glibc-2.6)
+UNMET DEP   step test_pack: /neurospin/tmp/brainvisa/tests/repositories/public/%(version)s-%(date)s/%(os)s/packages on i2bm-mdv-64 (linux64-glibc-2.6)
+OK          step pack: /neurospin/tmp/brainvisa/tests/repositories/public/%(version)s-%(date)s/data-%(os)s/packages, started: 2017/01/25 10:21, stopped: 2017/01/25 10:34 on i2bm-mdv-64 (linux64-glibc-2.6)
+OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86_64/latest_release, started: 2017/01/25 07:13, stopped: 2017/01/25 07:42 on michael (linux64-glibc-2.5)
+OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86_64/bug_fix, started: 2017/01/25 07:42, stopped: 2017/01/25 09:15 on michael (linux64-glibc-2.5)
+OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86_64/trunk, started: 2017/01/25 09:15, stopped: 2017/01/25 11:07 on michael (linux64-glibc-2.5)
+</pre></div>
+</div>
+</section>
+<section id="displaying-the-log-file">
+<h3>Displaying the log file<a class="headerlink" href="#displaying-the-log-file" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">bv_show_build_logs</span></code> tool allows to display the contents of the above log file in a graphical table:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_show_build_logs -i /home/brutus/bv_builds.log
+</pre></div>
+</div>
+<img alt="_images/bv_show_build_logs.jpg" src="_images/bv_show_build_logs.jpg" />
+<p>The display tool allows to sort by column, which may make it easier to find the status for a specific build step, machine, or date…</p>
+<p><code class="docutils literal notranslate"><span class="pre">bv_show_build_logs</span></code> may also retreive the log file from a distant machine through ssh:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_show_build_logs -i /home/brutus/bv_builds.log -s myhost.com -u brutus
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When options are not used, they have hard-coded default values which suit our build environment for BrainVisa and which will not work in a different place.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Up to now, the full builds and tests logs, which may be notified by email, are not kept and are deleted once sent by email. Thus the display tool cannot display them. This is an improvement which may be developed in the future.</p>
+</div>
+</section>
+</section>
+<section id="setting-up-new-tests-in-a-software-project">
+<h2>Setting up new tests in a software project<a class="headerlink" href="#setting-up-new-tests-in-a-software-project" title="Permalink to this headline">¶</a></h2>
+<p>Tests are “just” a series of commands that are run to use the software and check if it works as expected.</p>
+<section id="in-cmake">
+<h3>In CMake<a class="headerlink" href="#in-cmake" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">brainvisa-cmake</span></code> relies on <a class="reference external" href="http://cmake.org">cmake</a>, and on <a class="reference external" href="https://cmake.org/cmake/help/v3.0/manual/ctest.1.html">ctest</a> for testing. Adding a new test if hence a matter of specifying it in the <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> file of the software project sources, using the <a class="reference external" href="https://cmake.org/cmake/help/v3.0/command/add_test.html">add_test</a> command.</p>
+<p>However <code class="docutils literal notranslate"><span class="pre">brainvisa-cmake</span></code> offers a light wrapper for it: <a class="reference internal" href="cmake_functions.html#brainvisa-add-test"><span class="std std-ref">brainvisa_add_test</span></a>, which handles the runtime test environment (build tree paths, or installed package testing), and also handles invoking python in a potentially cross-compilation environment.</p>
+<p>ex:</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">brainvisa_add_test</span><span class="p">(</span> <span class="s">axon-tests</span> <span class="s2">&quot;${PYTHON_EXECUTABLE_NAME}&quot;</span>
+                    <span class="s">-m</span> <span class="s">brainvisa.tests.test_axon</span> <span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="in-python-projects">
+<h3>In python projects<a class="headerlink" href="#in-python-projects" title="Permalink to this headline">¶</a></h3>
+<p>Some projects managed by <code class="docutils literal notranslate"><span class="pre">brainvisa-cmake</span></code> are “pure python” and do not conrtain explicit CMake instructions in a <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> file. Instead, they should provide a python <code class="docutils literal notranslate"><span class="pre">info</span></code> module in the project (loaded generally as <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">project_name.info</span></code>). This info module may provide tests, which are a list of commands to be executed and are specified in the <code class="docutils literal notranslate"><span class="pre">test_commands</span></code> variable. For instance, in the <a class="reference external" href="http://brainvisa.info/capsul/">CAPSUL</a> project, we have in the sources a file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">capsul</span><span class="o">/</span><span class="n">info</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>which contains, amongst other things, the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># tests to run</span>
+<span class="n">test_commands</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> -m capsul.test.test_capsul&#39;</span> <span class="o">%</span> <span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>This <code class="docutils literal notranslate"><span class="pre">test_commands</span></code> variable will be interpreted by <code class="docutils literal notranslate"><span class="pre">brainvisa-make</span></code> to generate the appropriate <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> file for the project, which will integrate with <code class="docutils literal notranslate"><span class="pre">ctest</span></code> and <code class="docutils literal notranslate"><span class="pre">bv_maker</span></code>.</p>
+<p>Each test command is free to do whatever it likes, and it is a standard practice in python to use tests based on <a class="reference external" href="https://docs.python.org/2/library/unittest.html">the python unittest</a> module.</p>
+</section>
+</section>
+<section id="configuring-installed-packages-tests">
+<h2>Configuring installed packages tests<a class="headerlink" href="#configuring-installed-packages-tests" title="Permalink to this headline">¶</a></h2>
+<section id="config-options">
+<h3>Config options<a class="headerlink" href="#config-options" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">bv_maker</span></code> can run tests of installed packages (after successful <code class="docutils literal notranslate"><span class="pre">pack</span></code> and <code class="docutils literal notranslate"><span class="pre">install_pack</span></code> steps), within the <code class="docutils literal notranslate"><span class="pre">testref_pack</span></code> and <code class="docutils literal notranslate"><span class="pre">test_pack</span></code> steps. Such tests can make use of remote or virtual machines to perform tests in a “clean”, controlled, test environment, different from the build machine. Actually, to be precise, the <code class="docutils literal notranslate"><span class="pre">install_pack</span></code> step also uses the same mechanism and can also take place on a remote or virtual machine, in the same manner as running the tests themselves.</p>
+<p>However tests are always triggered from the build machine, which will in turn, connect to remote or virtual test machines.</p>
+<p>Tests configuration is part of a <a class="reference internal" href="configuration.html#package-directory"><span class="std std-ref">package directory</span></a> specification of the <a class="reference internal" href="configuration.html"><span class="doc">bv_maker.cfg configuration file</span></a>. They are mainly controlled via the <code class="docutils literal notranslate"><span class="pre">remote_test_host_cmd</span></code> variable. The contents of this variable is prepended to test commands, so they can make the connection and indirection trick. For instance:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> package /home/brutus/tests/packages <span class="o">]</span>
+<span class="nv">build_directory</span> <span class="o">=</span> /home/brutus/build
+<span class="nv">installer_filename</span> <span class="o">=</span> /home/brutus/tests/brainvisa_installer
+<span class="nv">data_repos_dir</span> <span class="o">=</span> /home/brutus/tests/data/packages
+<span class="nv">test_install_dir</span> <span class="o">=</span> /home/brutus/tests/test_install
+<span class="nv">remote_test_host_cmd</span> <span class="o">=</span> ssh -t -X test_machine <span class="nv">BRAINVISA_TEST_RUN_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span> <span class="nv">BRAINVISA_TEST_REF_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+<p>Note that test data directories have to be handled manually in remote machines access: bv_maker will setup <strong>locally</strong> the environment variables <code class="docutils literal notranslate"><span class="pre">BRAINVISA_TEST_RUN_DATA_DIR</span></code> and <code class="docutils literal notranslate"><span class="pre">$BRAINVISA_TEST_REF_DATA_DIR</span></code>, but passing them through a ssh connection or to a docker machine is the responsibility of the <code class="docutils literal notranslate"><span class="pre">remote_test_host_cmd</span></code> configuration.</p>
+</section>
+<section id="testing-through-ssh">
+<h3>Testing through SSH<a class="headerlink" href="#testing-through-ssh" title="Permalink to this headline">¶</a></h3>
+<p>Here, the <code class="docutils literal notranslate"><span class="pre">ssh</span> <span class="pre">-t</span> <span class="pre">-X</span> <span class="pre">test_machine</span></code> command will be prepended to tests, so that all tests will connect through <code class="docutils literal notranslate"><span class="pre">ssh</span></code> to the machine named <code class="docutils literal notranslate"><span class="pre">test_machine</span></code>, and use the software installed in the directory <code class="docutils literal notranslate"><span class="pre">/home/brutus/tests/test_install</span></code>.</p>
+</section>
+<section id="testing-using-docker">
+<h3>Testing using Docker<a class="headerlink" href="#testing-using-docker" title="Permalink to this headline">¶</a></h3>
+<p>Another example using <a class="reference external" href="http://docker.com">docker</a> would look the following:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">remote_test_host_cmd</span> <span class="o">=</span> docker run --rm -u <span class="s2">&quot;</span><span class="k">$(</span>id -u<span class="k">)</span><span class="s2">:</span><span class="k">$(</span>id -g<span class="k">)</span><span class="s2">&quot;</span> -e <span class="nv">USER</span><span class="o">=</span><span class="nv">$USER</span> -e <span class="nv">TMPDIR</span><span class="o">=</span>/home/brutus/tmp:/home/brutus/tmp -v <span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span> -e <span class="nv">HOME</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span> -v /tmp/.X11-unix:/tmp/.X11-unix --net<span class="o">=</span>host -e <span class="nv">DISPLAY</span><span class="o">=</span><span class="nv">$DISPLAY</span> -e <span class="nv">BRAINVISA_TEST_REF_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span> -e <span class="nv">BRAINVISA_TEST_RUN_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span> -v <span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span> -v <span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span> cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
+</pre></div>
+</div>
+<p>Thus the appropriate docker command will be prepended to all tests.</p>
+<p>Note that here we are running Docker using the same user as the host machine, and we export the home directory and X11 connection from the host machine, allowing to perform graphical display.</p>
+<p>In addition here we run commands through <a class="reference external" href="https://en.wikipedia.org/wiki/Xvfb">xvfb-run</a>: XVFB is a virtual X server which does not actually perform graphical display on screen. This is used to perform tests on non-graphical build and test machines. This xvfb indirection should replace the X11 redirection (<code class="docutils literal notranslate"><span class="pre">DISPLAY</span></code> and <code class="docutils literal notranslate"><span class="pre">/tmp/.X11-unix</span> <span class="pre">settings</span></code>) thus the latter should not be needed, however we prefer to keep them because it’s easy then to remove the xvfb indirection and get real interactive graphical display to fix some tests when needed.</p>
+<p>Last, the docker image we are using here is: <code class="docutils literal notranslate"><span class="pre">cati/brainvisa-test:ubuntu-16.04</span></code>. This is a docker image of an Ununtu 16.04 system. It should work as is, the image is found on <a class="reference external" href="https://hub.docker.com/">dockerhub</a> so docker should find it directly and download it if it is not already installed.</p>
+<p>This docker image is a minimal system, with minimal software installation: it contains only the libraries required to run the <a class="reference external" href="http://doc.qt.io/qtinstallerframework/">Qt installer</a> which binary installations are using, a X11 server and XVFB. Using this “smallest possible” system allows to find out missing thirdparty software dependencies in the tested software packages. The image and docker container will normally not be modified by the tests, so can be reused for later tests.</p>
+</section>
+<section id="mixing-ssh-and-docker">
+<h3>Mixing SSH and Docker<a class="headerlink" href="#mixing-ssh-and-docker" title="Permalink to this headline">¶</a></h3>
+<p>The above example runs tests through Docker, and assumes that docker is installed and available on the host build system. However this will not always be true, since docker itself cannot run on every system:</p>
+<ul class="simple">
+<li><p>because it needs root permissions to be installed and available</p></li>
+<li><p>because it does not work on very old systems: for instance we are still performing builds on a Mandriva 2008 system, which is not compatible with Docker.</p></li>
+</ul>
+<p>To fix this situation, we can mix the <code class="docutils literal notranslate"><span class="pre">ssh</span></code> and <code class="docutils literal notranslate"><span class="pre">docker</span></code> approaches, to make a remote machine run Docker and perform tests in it. Ex:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">remote_test_host_cmd</span> <span class="o">=</span> ssh -t -X test_machine docker run --rm -u <span class="s2">&quot;</span><span class="k">$(</span>id -u<span class="k">)</span><span class="s2">:</span><span class="k">$(</span>id -g<span class="k">)</span><span class="s2">&quot;</span> -e <span class="nv">USER</span><span class="o">=</span><span class="nv">$USER</span> -e <span class="nv">TMPDIR</span><span class="o">=</span>/home/brutus/tmp:/home/brutus/tmp -v <span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span> -e <span class="nv">HOME</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span> -v /tmp/.X11-unix:/tmp/.X11-unix --net<span class="o">=</span>host -e <span class="nv">DISPLAY</span><span class="o">=</span><span class="nv">$DISPLAY</span> -e <span class="nv">BRAINVISA_TEST_REF_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span> -e <span class="nv">BRAINVISA_TEST_RUN_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span> -v <span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span> -v <span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span> cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
+</pre></div>
+</div>
+<p>which essentially concatenates the config lines of the ssh and the docker variants.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In this ssh + docker situation, the X11 redirection does not work so easily because ssh tunnels the X11 connection and simply assigning the <code class="docutils literal notranslate"><span class="pre">DISPLAY</span></code> variable is not enough. There should be ways to make it work, however the xvfb option is OK.</p>
+</div>
+</section>
+<section id="real-life-example">
+<h3>Real life example<a class="headerlink" href="#real-life-example" title="Permalink to this headline">¶</a></h3>
+<p>Here is a more complete example of a full <code class="docutils literal notranslate"><span class="pre">bv_maker.cfg</span></code> file from our build systems. Only the email addresses have been changed from our actual configuration (to avoid spams).</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> general <span class="o">]</span>
+  <span class="nv">global_status_file</span> <span class="o">=</span> /neurospin/brainvisa/build/builds.log
+  <span class="nv">failure_email</span> <span class="o">=</span> brainvisa-build-notification@cea.fr
+  <span class="nv">smtp_server</span> <span class="o">=</span> mx.intra.cea.fr
+  <span class="nv">from_email</span> <span class="o">=</span> brainvisa-build-notification@cea.fr
+  <span class="nv">reply_to_email</span> <span class="o">=</span> brainvisa-build-notification@cea.fr
+
+<span class="o">[</span> <span class="nb">source</span> /neurospin/brainvisa/sources <span class="o">]</span>
+  <span class="nv">build_condition</span> <span class="o">=</span> gethostname<span class="o">()</span> <span class="o">==</span> <span class="s1">&#39;is220756&#39;</span>
+  + all trunk
+  + all bug_fix
+  + all tag
+  + catidb trunk
+  + catidb bug_fix
+  - ptk:* trunk
+  + brainvisa/development/build-config/trunk development/build-config/trunk
+  - qualicati trunk
+  + brainvisa/casa casa
+
+<span class="o">[</span> build /neurospin/brainvisa/build/<span class="nv">$I2BM_OSID</span>/bug_fix <span class="o">]</span>
+  <span class="nv">default_steps</span> <span class="o">=</span> configure build doc <span class="nb">test</span>
+  <span class="o">[</span> <span class="k">if</span> os.getenv<span class="o">(</span><span class="s1">&#39;I2BM_OSID&#39;</span><span class="o">)</span> <span class="o">==</span> <span class="s1">&#39;CentOS-5.11-x86_64&#39;</span> <span class="o">]</span>
+  <span class="nv">packaging_thirdparty</span> <span class="o">=</span> OFF
+  <span class="o">[</span> <span class="k">else</span> <span class="o">]</span>
+  <span class="nv">packaging_thirdparty</span> <span class="o">=</span> ON
+  <span class="o">[</span> endif <span class="o">]</span>
+  <span class="nv">make_options</span> <span class="o">=</span> -j4
+  <span class="nv">build_type</span> <span class="o">=</span> Release
+  <span class="nv">clean_config</span> <span class="o">=</span> ON
+  <span class="nv">clean_build</span> <span class="o">=</span> ON
+  all bug_fix /neurospin/brainvisa/sources
+  - connectomist-*
+  - nuclear_processing:*
+  - longitudinal_pipelines
+  - sandbox
+  - famis
+  - ptk:*
+  - axon_web
+
+<span class="c1"># data packages and repository (no installer)</span>
+<span class="o">[</span> package /neurospin/tmp/brainvisa/tests/repositories/public/%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>date<span class="o">)</span>s/data-%<span class="o">(</span>os<span class="o">)</span>s/packages <span class="o">]</span>
+  <span class="nv">build_directory</span> <span class="o">=</span> /neurospin/brainvisa/build/<span class="nv">$I2BM_OSID</span>/bug_fix
+  <span class="nv">packaging_options</span> <span class="o">=</span> --data --repository-only
+  <span class="nv">init_components_from_build_dir</span> <span class="o">=</span> OFF
+  <span class="nv">build_condition</span> <span class="o">=</span> <span class="o">(</span>gethostname<span class="o">()</span> !<span class="o">=</span> <span class="s1">&#39;michael&#39;</span><span class="o">)</span> or os.environ.get<span class="o">(</span><span class="s1">&#39;BRAINVISA_FORCE_PACKAGING&#39;</span>, <span class="s1">&#39;OFF&#39;</span><span class="o">)</span> <span class="o">==</span> <span class="s1">&#39;ON&#39;</span>
+  <span class="nv">default_steps</span> <span class="o">=</span> pack
+  brainvisa-share bug_fix /neurospin/brainvisa/sources
+  sulci-models bug_fix /neurospin/brainvisa/sources
+
+<span class="c1"># software packages and repository (with installer and testing)</span>
+<span class="o">[</span> package /neurospin/tmp/brainvisa/tests/repositories/public/%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>date<span class="o">)</span>s/%<span class="o">(</span>os<span class="o">)</span>s/packages <span class="o">]</span>
+  <span class="nv">build_directory</span> <span class="o">=</span> /neurospin/brainvisa/build/<span class="nv">$I2BM_OSID</span>/bug_fix
+  <span class="nv">packaging_options</span> <span class="o">=</span> --online-only
+  <span class="nv">installer_filename</span> <span class="o">=</span> /neurospin/tmp/brainvisa/tests/repositories/public/%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>date<span class="o">)</span>s/%<span class="o">(</span>os<span class="o">)</span>s/brainvisa-installer/brainvisa_installer-%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>os<span class="o">)</span>s-%<span class="o">(</span>online<span class="o">)</span>s
+  <span class="nv">data_repos_dir</span> <span class="o">=</span> /neurospin/tmp/brainvisa/tests/repositories/public/%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>date<span class="o">)</span>s/data-%<span class="o">(</span>os<span class="o">)</span>s/packages
+  <span class="nv">test_install_dir</span> <span class="o">=</span> /neurospin/tmp/brainvisa/tests/repositories/public/%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>date<span class="o">)</span>s/%<span class="o">(</span>os<span class="o">)</span>s/test_install
+  <span class="c1"># build every 5 days, and not on michael (Qt installer is not installed on michael)</span>
+<span class="c1">#  build_condition = gethostname() != &#39;michael&#39; and (time.localtime()[2] % 5 == 1 or os.environ.get(&#39;BRAINVISA_FORCE_PACKAGING&#39;, &#39;OFF&#39;) == &#39;ON&#39;)</span>
+  <span class="nv">build_condition</span> <span class="o">=</span> gethostname<span class="o">()</span> !<span class="o">=</span> <span class="s1">&#39;michael&#39;</span>
+  <span class="nv">default_steps</span> <span class="o">=</span> pack install_pack test_pack
+  <span class="o">[</span> <span class="k">if</span> gethostname<span class="o">()</span> <span class="k">in</span> <span class="o">(</span><span class="s1">&#39;is208611.intra.cea.fr&#39;</span>, <span class="s1">&#39;is220756&#39;</span><span class="o">)</span> <span class="o">]</span>
+    <span class="c1"># tests need fixing</span>
+    <span class="nv">default_steps</span> <span class="o">=</span> pack install_pack
+  <span class="o">[</span> endif <span class="o">]</span>
+  <span class="o">[</span> <span class="k">if</span> gethostname<span class="o">()</span> <span class="o">==</span> <span class="s1">&#39;i2bm-fdr4-32&#39;</span> <span class="o">]</span>
+    <span class="c1"># needs fixing</span>
+    <span class="nv">default_steps</span> <span class="o">=</span> pack install_pack
+  <span class="o">[</span> endif <span class="o">]</span>
+  <span class="o">[</span> <span class="k">if</span> gethostname<span class="o">()</span> <span class="k">in</span> <span class="o">(</span><span class="s1">&#39;is208611.intra.cea.fr&#39;</span>, <span class="s1">&#39;is220756&#39;</span><span class="o">)</span> <span class="o">]</span>
+    <span class="c1"># run in docker, on same host</span>
+    <span class="nv">remote_test_host_cmd</span> <span class="o">=</span> docker run --rm -v /neurospin/brainvisa:/neurospin/brainvisa -v /neurospin/tmp/brainvisa:/neurospin/tmp/brainvisa -u <span class="s2">&quot;</span><span class="k">$(</span>id -u<span class="k">)</span><span class="s2">:</span><span class="k">$(</span>id -g<span class="k">)</span><span class="s2">&quot;</span> -e <span class="nv">USER</span><span class="o">=</span><span class="nv">$USER</span> -v /volatile/a-sac-ns-brainvisa:/volatile/a-sac-ns-brainvisa -e <span class="nv">TMPDIR</span><span class="o">=</span>/volatile/a-sac-ns-brainvisa/tmp -v <span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span> -e <span class="nv">HOME</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span> -v /tmp/.X11-unix:/tmp/.X11-unix --net<span class="o">=</span>host -e <span class="nv">DISPLAY</span><span class="o">=</span><span class="nv">$DISPLAY</span> -e <span class="nv">BRAINVISA_TESTS_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TESTS_DIR</span><span class="s2">&quot;</span> -e <span class="nv">BRAINVISA_TEST_REF_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span> -e <span class="nv">BRAINVISA_TEST_RUN_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span> -e <span class="nv">QT_X11_NO_MITSHM</span><span class="o">=</span><span class="m">1</span> --privileged cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
+  <span class="o">[</span> endif <span class="o">]</span>
+  <span class="o">[</span> <span class="k">if</span> gethostname<span class="o">()</span> <span class="k">in</span> <span class="o">(</span><span class="s1">&#39;i2bm-mdv-64&#39;</span>, <span class="s1">&#39;michael&#39;</span>, <span class="s1">&#39;i2bm-ub1204&#39;</span><span class="o">)</span> <span class="o">]</span>
+    <span class="c1"># run in docker, through a ssh connection to is220756,</span>
+    <span class="c1"># reference for tests: ubuntu 14 (host machine)</span>
+    <span class="nv">remote_test_host_cmd</span> <span class="o">=</span> ssh -t -X is220756 docker run --rm -v /neurospin/brainvisa:/neurospin/brainvisa -v /neurospin/tmp/brainvisa:/neurospin/tmp/brainvisa -u <span class="s2">&quot;</span><span class="k">$(</span>id -u<span class="k">)</span><span class="s2">:</span><span class="k">$(</span>id -g<span class="k">)</span><span class="s2">&quot;</span> -e <span class="nv">USER</span><span class="o">=</span><span class="nv">$USER</span> -v /volatile/a-sac-ns-brainvisa:/volatile/a-sac-ns-brainvisa -e <span class="nv">TMPDIR</span><span class="o">=</span>/volatile/a-sac-ns-brainvisa/tmp -v <span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span> -e <span class="nv">HOME</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span> -v /tmp/.X11-unix:/tmp/.X11-unix -e <span class="nv">BRAINVISA_TESTS_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TESTS_DIR</span><span class="s2">&quot;</span>-test_pack -e <span class="nv">BRAINVISA_TEST_REF_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span> -e <span class="nv">BRAINVISA_TEST_RUN_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span> --net<span class="o">=</span>host -e <span class="nv">DISPLAY</span><span class="o">=</span><span class="nv">$DISPLAY</span> -e <span class="nv">QT_X11_NO_MITSHM</span><span class="o">=</span><span class="m">1</span> --privileged cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
+  <span class="o">[</span> endif <span class="o">]</span>
+  <span class="c1"># remaining hosts (i2bm-fdr4-32) insall/test on themselves</span>
+  <span class="o">[</span> <span class="k">if</span> gethostname<span class="o">()</span> <span class="o">==</span> <span class="s1">&#39;is144451&#39;</span> <span class="o">]</span>
+    <span class="c1"># run via ssh on the other Mac: wake the VM and ssh to the VM inside the mac</span>
+  <span class="c1">#  remote_test_host_cmd = ssh -t is229812 /i2bm/brainvisa/wake_vm &amp;&amp; ssh -t -X macvm BRAINVISA_TESTS_DIR=&quot;$BRAINVISA_TESTS_DIR&quot;-test_pack</span>
+  <span class="nv">remote_test_host_cmd</span> <span class="o">=</span> ssh -t -X is229812 <span class="nv">BRAINVISA_TESTS_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TESTS_DIR</span><span class="s2">&quot;</span>-test_pack <span class="nv">BRAINVISA_TEST_RUN_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span> <span class="nv">BRAINVISA_TEST_REF_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span>
+  - preclinical_imaging_iam
+  <span class="o">[</span> endif <span class="o">]</span>
+  <span class="nv">test_ref_data_dir</span> <span class="o">=</span> /neurospin/brainvisa/tests/<span class="nv">$I2BM_OSID</span>/ref/bug_fix-test-pack
+  <span class="nv">test_run_data_dir</span> <span class="o">=</span> /neurospin/brainvisa/tests/<span class="nv">$I2BM_OSID</span>/test/bug_fix-test-pack
+  - sulci-data
+  - communication
+  - brainvisa-share
+  - brain_segmentation_comparison-private
+  - brain_segmentation_comparison-gpl
+  - highres-cortex
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Testing and monitoring infrastructure</a><ul>
+<li><a class="reference internal" href="#running-tests">Running tests</a><ul>
+<li><a class="reference internal" href="#testing-build-directories">Testing build directories</a></li>
+<li><a class="reference internal" href="#testing-installed-packages">Testing installed packages</a></li>
+<li><a class="reference internal" href="#managing-test-data">Managing test data</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#notifying-build-and-test-executions">Notifying build and test executions</a><ul>
+<li><a class="reference internal" href="#basic-bv-maker-output-and-command-retuern-code">Basic bv_maker output and command retuern code</a></li>
+<li><a class="reference internal" href="#email-notification">Email notification</a></li>
+<li><a class="reference internal" href="#log-file">Log file</a></li>
+<li><a class="reference internal" href="#notification-to-a-jenkins-server">Notification to a Jenkins server</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#displaying-build-status">Displaying build status</a><ul>
+<li><a class="reference internal" href="#id2">Log file</a></li>
+<li><a class="reference internal" href="#displaying-the-log-file">Displaying the log file</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#setting-up-new-tests-in-a-software-project">Setting up new tests in a software project</a><ul>
+<li><a class="reference internal" href="#in-cmake">In CMake</a></li>
+<li><a class="reference internal" href="#in-python-projects">In python projects</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#configuring-installed-packages-tests">Configuring installed packages tests</a><ul>
+<li><a class="reference internal" href="#config-options">Config options</a></li>
+<li><a class="reference internal" href="#testing-through-ssh">Testing through SSH</a></li>
+<li><a class="reference internal" href="#testing-using-docker">Testing using Docker</a></li>
+<li><a class="reference internal" href="#mixing-ssh-and-docker">Mixing SSH and Docker</a></li>
+<li><a class="reference internal" href="#real-life-example">Real life example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="bv_env.html"
+                        title="previous chapter">bv_env</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="documenting.html"
+                        title="next chapter">Documenting projects using brainvisa-cmake</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/testing_monitoring.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="documenting.html" title="Documenting projects using brainvisa-cmake"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="bv_env.html" title="bv_env"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BrainVisa-Cmake 5.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Testing and monitoring infrastructure</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, CEA.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.1.1.
+    </div>
+  </body>
+</html>

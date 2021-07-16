@@ -30,9 +30,8 @@ install:
 script: tox
 
 deploy:
-  strategy: git
-  provider: pages
-  cleanup: false
+  provider: pages:git
+  edge: true  # opt in to dpl v2 as recommended on https://docs.travis-ci.com/user/deployment/pages/
   token: $GITHUB_TOKEN
   target_branch: gh-pages
   local_dir: doc/build_html

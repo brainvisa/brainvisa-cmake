@@ -67,14 +67,34 @@ def setUpModule():
     global TEST_REPO_PATH
     global BRAINVISA_CMAKE_REPO
     try:
+        subprocess.check_call(['git', 'diff', '--no-ext-diff', '--quiet'])
+        subprocess.check_call(['git', 'diff', '--no-ext-diff', '--cached',
+                               '--quiet'])
+    except subprocess.CalledProcessError:
+        raise RuntimeError('The current brainvisa-cmake repository has, '
+                           'uncommitted changes so bv_maker cannot be '
+                           'tested accurately. Please commit any pending '
+                           'changes and try again to run the tests.')
+    try:
         MODULE_TEST_DIR = tempfile.mkdtemp(prefix='test', suffix='.module')
         TEST_REPO_PATH = MODULE_TEST_DIR
         BRAINVISA_CMAKE_REPO = 'file://' + TEST_REPO_PATH
         subprocess.check_call([
             'git', 'clone', '--bare',
-            'https://github.com/brainvisa/brainvisa-cmake.git',
+            # Both tox and direct call of pytest set the working directory to
+            # the root of the Git repository, so we can use '.' to clone the
+            # current repository.
+            '.',
             TEST_REPO_PATH
         ])
+        current_revision = subprocess.check_output(
+            ['git', 'rev-parse', '--verify', 'HEAD'],
+            universal_newlines=True
+        ).rstrip()
+        # To make sure that we are testing the exact same version, we use this
+        # trick of creating a tag to the current revision in the repository.
+        subprocess.check_call(['git', 'tag', '--force', 'current_rev',
+                               current_revision], cwd=TEST_REPO_PATH)
     except BaseException:
         if MODULE_TEST_DIR is not None:
             shutil.rmtree(MODULE_TEST_DIR)
@@ -98,9 +118,9 @@ class TestWithoutRepository(unittest.TestCase):
             with open(cls.bv_maker_cfg, 'w') as f:
                 f.write("""\
 [ source {src_dir} ]
-  git {brainvisa_cmake_repo} master development/brainvisa-cmake/master
+  git {repo} current_rev development/brainvisa-cmake
 """.format(src_dir=cls.src_dir, build_dir=cls.build_dir,
-           brainvisa_cmake_repo=BRAINVISA_CMAKE_REPO))
+           repo=BRAINVISA_CMAKE_REPO))
             cls.env = os.environ.copy()
             cls.env['HOME'] = cls.test_dir
         except BaseException:
@@ -125,7 +145,7 @@ class TestWithoutRepository(unittest.TestCase):
                                    'sources'], env=self.env)
         self.assertEqual(retcode, 0)
         self.assertTrue(os.path.isfile(os.path.join(
-            self.src_dir, 'development', 'brainvisa-cmake', 'master',
+            self.src_dir, 'development', 'brainvisa-cmake',
             'project_info.cmake')))
 
 
@@ -142,13 +162,13 @@ class TestWithRepository(unittest.TestCase):
             with open(cls.bv_maker_cfg, 'w') as f:
                 f.write("""\
 [ source {src_dir} ]
-  git {brainvisa_cmake_repo} master development/brainvisa-cmake/master
+  git {repo} current_rev development/brainvisa-cmake
 
 [ build {build_dir} ]
   cmake_options = -DBRAINVISA_IGNORE_BUG_GCC_5:BOOL=YES
-  + {src_dir}/development/brainvisa-cmake/master
+  + {src_dir}/development/brainvisa-cmake
 """.format(src_dir=cls.src_dir, build_dir=cls.build_dir,
-           brainvisa_cmake_repo=BRAINVISA_CMAKE_REPO))
+           repo=BRAINVISA_CMAKE_REPO))
             cls.env = os.environ.copy()
             cls.env['HOME'] = cls.test_dir
             subprocess.check_call(BV_MAKER + ['-c', cls.bv_maker_cfg,

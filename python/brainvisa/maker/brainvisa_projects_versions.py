@@ -32,7 +32,6 @@ def project_description( projectname ):
         'morphologist-ui' : 'New graphical interface for the Morphologist main pipelines',
         'cortical_surface' : 'Cortex-based surfacic parameterization and analysis toolbox from the <a href="http://www.meca-brain.org/softwares/">MeCA group</a>. Homepage: <a href="http://www.meca-brain.org/softwares/">http://www.meca-brain.org/softwares/</a>.<br/>Also contains the FreeSurfer toolbox for BrainVisa, by the LNAO team.',
         'brainrat' : 'Ex vivo 3D reconstruction and analysis toolbox, from the <a href="http://www-dsv.cea.fr/dsv/instituts/institut-d-imagerie-biomedicale-i2bm/services/mircen-mircen/unite-cnrs-ura2210-lmn/fiches-thematiques/traitement-et-analyse-d-images-biomedicales-multimodales-du-cerveau-normal-ou-de-modeles-precliniques-de-maladies-cerebrales">BioPICSEL CEA team</a>. Homepage: <a href="http://brainvisa.info/doc/brainrat-gpl/brainrat_man/en/html/index.html">http://brainvisa.info/doc/brainrat-gpl/brainrat_man/en/html/index.html</a>',
-        'datamind' : 'Statistics, data mining, machine learning.',
         'capsul': 'New pipelining infrastructure for the future of BrainVISA',
         'connectomist': 'The older (connectomist-1) toolbox for white matter fibers processing',
         'snapbase': 'Automation of snapshots for the QC of large databases',
@@ -80,7 +79,7 @@ def is_default_project(projectname):
     '''Default projects are selected by default in the installer. They are important components.
     '''
     if projectname in ('aims', 'anatomist', 'axon', 'brainrat',
-            'cortical_surface', 'datamind', 'morphologist', 'morphologist_ui',
+            'cortical_surface', 'morphologist', 'morphologist_ui',
             'primatologist', 'snapbase'):
         return True
     return False

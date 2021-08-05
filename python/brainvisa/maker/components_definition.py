@@ -32,8 +32,8 @@ components_definition = [
             ['brainvisa-installer', {
                 'groups': [],
                 'branches': {
-                    'trunk': ('git https://github.com/brainvisa/brainvisa-installer.git branch:master','development/brainvisa-installer/integration'),
-                    'bug_fix': ('git https://github.com/brainvisa/brainvisa-installer.git branch:master','development/brainvisa-installer/master'),
+                    #'trunk': ('git https://github.com/brainvisa/brainvisa-installer.git branch:master','development/brainvisa-installer/integration'),
+                    #'bug_fix': ('git https://github.com/brainvisa/brainvisa-installer.git branch:master','development/brainvisa-installer/master'),
                 },
             }],
             ['casa-distro', {
@@ -237,14 +237,12 @@ components_definition = [
         ],
     }),
     ('datamind', {
-        'description': 'Statistics, data mining, machine learning.',
+        'description': 'Statistics, data mining, machine learning [OBSOLETE].',
         'components': [
             ['datamind', {
                 'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
                            'standard', 'cea', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/datamind/trunk','datamind/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/datamind/branches/bug_fix','datamind/bug_fix'),
                     '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/datamind/branches/5.0','datamind/5.0'),
                 },
             }],

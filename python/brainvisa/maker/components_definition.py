@@ -178,8 +178,8 @@ components_definition = [
                 'groups': ['all', 'anatomist', 'opensource', 'brainvisa',
                            'bvdev', 'standard', 'cea', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/brainvisa/aims-til.git branch:master','aims/aims-til/integration'),
-                    'bug_fix': ('git https://github.com/brainvisa/aims-til.git branch:master','aims/aims-til/master'),
+                    #'trunk': ('git https://github.com/brainvisa/aims-til.git branch:master','aims/aims-til/integration'),
+                    #'bug_fix': ('git https://github.com/brainvisa/aims-til.git branch:master','aims/aims-til/master'),
                     '5.0': ('git https://github.com/brainvisa/aims-til.git branch:5.0','aims/aims-til/5.0'),
                 },
             }],

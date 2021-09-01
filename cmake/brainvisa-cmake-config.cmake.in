@@ -100,9 +100,6 @@ if( NOT config_done )
 #     include( BRAINVISA_ADD_COMPONENT_GROUP )
   endif()
 
-  unset( BRAINVISA_THIRDPARTY_COMPONENTS CACHE )
-  option( BRAINVISA_PACKAGING_THIRDPARTY "Include packaging rules for third-party software" OFF )
-  #mark_as_advanced( BRAINVISA_PACKAGING_THIRDPARTY )
   if( NOT DEFINED BRAINVISA_SYSTEM_IDENTIFICATION )
     execute_process( COMMAND "${brainvisa-cmake_DIR}/../../../bin/bv_system_info" -s
       OUTPUT_VARIABLE output OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -465,9 +462,6 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
     BRAINVISA_ADD_COMPONENT_GROUP( test
                                    DISPLAY_NAME "Test files"
                                    DESCRIPTION "Test programs, scripts, and data files" )
-    BRAINVISA_ADD_COMPONENT_GROUP( thirdparty
-                                   DISPLAY_NAME "Thirdparty"
-                                   DESCRIPTION "External dependencies : qt, sigc++, libxml..." )
 
     add_dependencies( install-dev install-runtime )
 
@@ -549,9 +543,6 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
 #  add_dependencies( install-${PROJECT_NAME}-usrdoc ${PROJECT_NAME}-usrdoc )
 #  add_dependencies( install-${PROJECT_NAME}-devdoc ${PROJECT_NAME}-devdoc )
 
-  BRAINVISA_ADD_COMPONENT_GROUP( "${PROJECT_NAME}-thirdparty"
-                           PARENT_GROUP thirdparty
-                           DESCRIPTION "External dependencies of ${PROJECT_NAME}" )
 endfunction()
 
 
@@ -590,31 +581,7 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
 
   # Check if component is external or not
   list( FIND BRAINVISA_COMPONENTS "${component}" is_brainvisa )
-  if( is_brainvisa EQUAL -1 )
-    # Component is not in BRAINVISA_COMPONENTS, it is considered as a third party component
-    BRAINVISA_DECLARE_THIRDPARTY_COMPONENT( "${component}" )
-    if("${${component}_PACKAGED}" STREQUAL "FALSE")
-      if("${dependency_type}" STREQUAL "DEPENDS")
-        message( SEND_ERROR "Impossible to create packaging rules for ${component} : it was not found.")
-      else()
-        message( STATUS "WARNING: Impossible to create packaging rules for ${component} : it was not found.")
-      endif()
-    endif()
-    if( "${component_pack_type}" STREQUAL "DEV" )
-      BRAINVISA_DECLARE_THIRDPARTY_COMPONENT( "${component}-dev" )
-      set( dest_package "${BRAINVISA_PACKAGE_NAME_${component}}-dev" )
-    elseif( "${component_pack_type}" STREQUAL "DOC" )
-      set( dest_package "${BRAINVISA_PACKAGE_NAME_${component}}-doc" )
-    elseif( "${component_pack_type}" STREQUAL "USRDOC" )
-      set( dest_package "${BRAINVISA_PACKAGE_NAME_${component}}-usrdoc" )
-    elseif( "${component_pack_type}" STREQUAL "DEVDOC" )
-      set( dest_package "${BRAINVISA_PACKAGE_NAME_${component}}-devdoc" )
-    elseif( "${component_pack_type}" STREQUAL "TST" )
-      set( dest_package "${BRAINVISA_PACKAGE_NAME_${component}}-test" )
-    else()
-      set( dest_package "${BRAINVISA_PACKAGE_NAME_${component}}" )
-    endif()
-  else()
+  if( NOT is_brainvisa EQUAL -1 )
     if( "${component_pack_type}" STREQUAL "DEV" )
       set( dest_package "${component}-dev" )
     elseif( "${component_pack_type}" STREQUAL "DOC" )
@@ -640,137 +607,14 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
       set( source_package "${PROJECT_NAME}" )
     endif()
     file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_dependencies.setdefault( '${source_package}', set() ).add( ( '${dependency_type}', '${dest_package}', '${version_ranges}', ${binary_independent}) )\n" )
+  else()
+    # Component is not in BRAINVISA_COMPONENTS, it is considered as a third
+    # party component. Since BrainVISA 5.0 we do not support packaging
+    # third-party components anymore, so this dependency will simply be ignored
   endif()
 endfunction()
 
 
-# BRAINVISA_THIRDPARTY_DEPENDENCY
-# Usage:
-#   BRAINVISA_THIRDPARTY_DEPENDENCY( <source component> <package type> <dependency type> <dest component> <dest component package type> [ <version ranges> ] [BINARY_INDEPENDENT] )
-#
-# Examples:
-#    BRAINVISA_THIRDPARTY_DEPENDENCY( libqtgui4 RUN DEPENDS libqtcore4 RUN )
-#    BRAINVISA_THIRDPARTY_DEPENDENCY( libqtgui4 DEV DEPENDS libqtcore4 DEV )
-function( BRAINVISA_THIRDPARTY_DEPENDENCY source_component source_pack_type dependency_type dest_component dest_pack_type  )
-  # Parse optional arguments
-  if( "${ARGV5}" STREQUAL "BINARY_INDEPENDENT" )
-    set( binary_independent "True" )
-    set( version_ranges )
-  else()
-    if( ARGV5 )
-      if( "${ARGV6}" STREQUAL "BINARY_INDEPENDENT" )
-        set( binary_independent True )
-      else()
-        set( binary_independent False )
-      endif()
-      set( version_ranges "${ARGV5}" )
-    else()
-      set( binary_independent False )
-      set( version_ranges )
-    endif()
-  endif()
-
-  BRAINVISA_DECLARE_THIRDPARTY_COMPONENT( "${source_component}" )
-  if("${${source_component}_PACKAGED}" STREQUAL "FALSE")
-    message( SEND_ERROR "Impossible to create packaging rules for ${source_component} : it was not found.")
-  else()
-    if( "${source_pack_type}" STREQUAL "DEV" )
-      BRAINVISA_DECLARE_THIRDPARTY_COMPONENT( "${source_component}-dev" )
-      set( source_package "${BRAINVISA_PACKAGE_NAME_${source_component}}-dev" )
-    elseif( "${source_pack_type}" STREQUAL "DOC" )
-      set( source_package "${BRAINVISA_PACKAGE_NAME_${source_component}}-doc" )
-    else()
-      set( source_package "${BRAINVISA_PACKAGE_NAME_${source_component}}" )
-    endif()
-  endif()
-  BRAINVISA_DECLARE_THIRDPARTY_COMPONENT( "${dest_component}" )
-  if("${${dest_component}_PACKAGED}" STREQUAL "FALSE")
-    if("${dependency_type}" STREQUAL "DEPENDS")
-      message( SEND_ERROR "Impossible to create packaging rules for ${dest_component} : it was not found.")
-    else()
-      message( STATUS "WARNING: Impossible to create packaging rules for ${dest_component} : it was not found.")
-    endif()
-  else()
-    if( "${dest_pack_type}" STREQUAL "DEV" )
-      BRAINVISA_DECLARE_THIRDPARTY_COMPONENT( "${dest_component}-dev" )
-      set( dest_package "${BRAINVISA_PACKAGE_NAME_${dest_component}}-dev" )
-    elseif( "${dest_pack_type}" STREQUAL "DOC" )
-      set( dest_package "${BRAINVISA_PACKAGE_NAME_${dest_component}}-doc" )
-    else()
-      set( dest_package "${BRAINVISA_PACKAGE_NAME_${dest_component}}" )
-    endif()
-    if( BRAINVISA_COMPILATION_INFO )
-      file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_dependencies.setdefault( '${source_package}', set() ).add( ( '${dependency_type}', '${dest_package}', '${version_ranges}', ${binary_independent}) )\n" )
-    endif()
-  endif()
-endfunction()
-
-
-# BRAINVISA_DECLARE_THIRDPARTY_COMPONENT
-# Private macro
-function( BRAINVISA_DECLARE_THIRDPARTY_COMPONENT component )
-  # Check if third party component has already been considered
-  list( FIND BRAINVISA_THIRDPARTY_COMPONENTS "${component}" result )
-  if( result EQUAL -1 )
-    set( BRAINVISA_THIRDPARTY_COMPONENTS "${BRAINVISA_THIRDPARTY_COMPONENTS}" "${component}" CACHE INTERNAL "" )
-    set( _dev FALSE )
-    string( REGEX MATCH "^(.*)-dev$" _dev ${component} )
-    if( _dev )
-      set( _dev ${CMAKE_MATCH_1} )
-    endif()
-    set( _cmakefile "${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake" )
-    if( _dev AND NOT EXISTS "${_cmakefile}" )
-      set( _cmakefile "${brainvisa-cmake_DIR}/brainvisa-packaging-${_dev}.cmake" )
-    else()
-      set( _dev FALSE )
-    endif()
-    if( EXISTS "${_cmakefile}" )
-      # Define a default empty function for thirdparty dependencies definition
-      message( STATUS "Packaging and dependency rules for ${component}" )
-      include( "${_cmakefile}" )
-
-      # Get component information
-      # if package_name will be different from component
-      if( custom_package_name )
-        # the packaging rule file should set this variable if package_name is different from component, then we call the appropriate function
-        BRAINVISA_PACKAGING_COMPONENT_PACKAGE_NAME( ${component} package_name )
-      else()
-        set( package_name ${component} )
-      endif()
-
-      set( BRAINVISA_PACKAGE_NAME_${component} "${package_name}" CACHE INTERNAL "" )
-
-      BRAINVISA_PACKAGING_COMPONENT_INFO( ${component} package_name package_maintainer package_version )
-
-      if( BRAINVISA_COMPILATION_INFO )
-        file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${package_name}' ] = {\n  'name': '${package_name}',\n  'component' : '${component}',\n  'type': 'thirdparty',\n  'version': '${package_version}',\n  'project': 'thirdparty',\n  'maintainer': '${package_maintainer}',\n}\n" )
-      endif()
-
-      # Package type specific initialization for component
-      BRAINVISA_ADD_COMPONENT( "${component}"
-                      GROUP "${BRAINVISA_PACKAGE_NAME}-thirdparty")
-
-      # Call component specific functions that create install rules
-      if ( BRAINVISA_PACKAGING_THIRDPARTY )
-        include( "${_cmakefile}" )
-        if( _dev AND ${_dev}-dev-installrule )
-          BRAINVISA_PACKAGING_COMPONENT_DEV( "${_dev}" )
-        elseif( NOT _dev )
-          BRAINVISA_PACKAGING_COMPONENT_RUN( "${component}" )
-        else()
-          message( "WARNING: Impossible to package third party component ${component} because file \"${_cmakefile}\" does not set the ${component}-installrule variable and contain a BRAINVISA_PACKAGING_COMPONENT_DEV function." )
-        endif()
-        set(${component}_PACKAGED ${${component}_PACKAGED} PARENT_SCOPE)
-      endif()
-    else()
-      message( "WARNING: Impossible to package third party component ${component} because file \"${brainvisa-cmake_DIR}/brainvisa-packaging-${component}.cmake\" does not exist." )
-      if( BRAINVISA_COMPILATION_INFO )
-        file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${component}' ] = {\n  'name': '${component}',\n  'component' : '${component}',\n  'type': 'thirdparty',\n  'version': '<unknown>',\n  'project': 'thirdparty',\n  'maintainer': '<unknown>',\n}\n" )
-      endif()
-      set( BRAINVISA_PACKAGE_NAME_${component} "${component}" CACHE INTERNAL "" )
-    endif()
-  endif()
-endfunction()
 
 
 # BRAINVISA_VERSION_CONVERT

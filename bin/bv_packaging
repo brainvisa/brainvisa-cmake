@@ -1036,7 +1036,7 @@ if __name__ == '__main__':
     usrdoc: User documentation package
     devdoc: Developper documentation package
     test: Test files package
-    thirdparty: Package corresponding to a thirdparty project not compiled in the build directory
+    thirdparty: Package corresponding to a thirdparty project not compiled in the build directory (OBSOLETE: no longer supported)
 
   Default selection rule:
     +type=run: select all

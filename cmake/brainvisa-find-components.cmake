@@ -169,10 +169,6 @@ if( stop )
   return()
 endif()
 
-if( BRAINVISA_PACKAGING )
-  set( BRAINVISA_THIRDPARTY_COMPONENTS "" CACHE INTERNAL "" )
-endif()
-
 BRAINVISA_CREATE_MAIN_COMPONENTS()
 
 # First pass to configure brainvisa-cmake component    

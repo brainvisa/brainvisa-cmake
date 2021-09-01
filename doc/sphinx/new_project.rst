@@ -496,16 +496,6 @@ At configuration time, the information declared in this function will be written
     BRAINVISA_DEPENDENCY( RUN DEPENDS libqwt5-qt4 RUN)
 
 
-BRAINVISA_THIRDPARTY_DEPENDENCY
-+++++++++++++++++++++++++++++++
-
-.. code-block:: cmake
-
-    BRAINVISA_THIRDPARTY_DEPENDENCY( <source component> <package type> <dependency type> <dest component> <dest component package type> [ <version ranges> ] [BINARY_INDEPENDENT] )
-
-This function enables to declare a dependency of a thirdparty component. There is generally no need to use this function directly in a project ``CMakeLists.txt``. This function is used in *brainvisa-cmake* special files that describes the packaging rules for thirdparty components. These files are in ``development/brainvisa-cmake/trunk/cmake``.
-
-
 Install
 -------
 

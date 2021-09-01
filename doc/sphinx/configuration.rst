@@ -285,7 +285,6 @@ In the build section, it is also possible to define some build options:
 * ``env``: environment variables dictionary
 * ``make_options``: passed to make (ex: ``-j8``)
 * ``build_type``: ``Debug``, ``Release`` or none (no optimization options)
-* ``packaging_thirdparty``: Set this option to ``ON`` if you need to create a BrainVISA package containing thirdparty libraries dependency.
 * ``build_condition``: a condition which must be True to allow configure and build steps, otherwise they will be skipped. The condition is evaluated in **python language**, and is otherwise free: it may typically be used to restrict build to certain systems or hostnames, some dates, etc.
 * ``clean_build``: ``ON`` or ``OFF`` (default), if set, the build tree will be cleaned of obsolete files before the build step (using the command ``bv_clean_build_tree``)
 * ``clean_config``: ``ON`` or ``OFF`` (default), if set, the build tree will be cleaned of obsolete files before the configuration step (using the command ``bv_clean_build_tree``)
@@ -301,7 +300,6 @@ In the build section, it is also possible to define some build options:
 .. code-block:: bash
 
     [ build $HOME/brainvisa/build/bug_fix ]
-      packaging_thirdparty = ON
       build_type = Release
       make_options = -j8
       standard bug_fix $HOME/brainvisa/source
@@ -400,7 +398,7 @@ Variables substitution in the form ``$(variable)s`` can replace the following va
     [ package /home/local/brainvisa_packages/test_data_repository ]
       build_directory = $HOME/brainvisa/build/bug_fix
       build_condition = sys.platform == "linux2"
-      packaging_options = --repository-only --no-thirdparty --no-dependencies --data
+      packaging_options = --repository-only --no-dependencies --data
       init_components_from_build_dir = OFF
       brainvisa-share bug_fix $HOME/brainvisa/sources
 
@@ -573,11 +571,6 @@ Thus a configuration may look like the following:
 
     [ build $HOME/brainvisa/build/bug_fix ]
       build_type = Release
-      [ if '%(os)'.startswith('linux') ]
-        packaging_thirdparty = ON
-      [ else ]
-        packaging_thirdparty = OFF
-      [ endif ]
       [ if gethostname() == 'my_machine' ]
         make_options = -j8
       [ else ]

@@ -35,10 +35,6 @@ add_custom_target( post-install )
 set( CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_BINARY_DIR}" )
 include_directories( "${CMAKE_BINARY_DIR}/include" )
 
-if( BRAINVISA_DEPENDENCY_GRAPH )
-  set( BRAINVISA_THIRDPARTY_COMPONENTS "" CACHE INTERNAL "" )
-endif()
-
 BRAINVISA_CREATE_MAIN_COMPONENTS()
 
 function( silent_execute_process working_directory )

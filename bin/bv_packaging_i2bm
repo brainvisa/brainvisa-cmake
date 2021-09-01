@@ -109,9 +109,6 @@ if platf == 'windows' :
   # No windows version of connectomist project is available
   packages += ' -project=ptk'
 
-if system.startswith( 'Ubuntu' ):
-  packages += " +dependencies -type=thirdparty +name='libvtk*' +name=vtkINRIA3D"
-
 packVersion = fullVersion + "-" + date
 
 packBaseName = 'brainvisa-' + system

@@ -63,8 +63,4 @@ Thanks to the dependencies definition, the use of this binary signature number c
 Thirdparty dependencies
 -----------------------
 
-Currently, the Brainvisa packages that we distribute contains a number of thirdparty dependencies in order to enable using the package on several versions of OS. For example, we distribute only one linux package compiled on an old Fedora-4 system and this package is usable on many more recent linux distributions because the package contains all the needed dependencies and does not need to use system libraries.
-
-This means that we have to be able to package thirdparty component. To do so, we defined several files in brainvisa-cmake that contain the rules to package thirdparty components needed in Brainvisa packages.
-These files are named ``brainvisa-packaging-*.cmake`` and are located at ``source:brainvisa-cmake/trunk/cmake``.
-
+Third-party dependencies used to be packaged but this is not supported anymore starting with the container-based BrainVISA releases (BrainVISA 5.0).

@@ -3576,10 +3576,13 @@ class BuildDirectory(ComponentsConfigParser, ConfigVariableParser):
                                           'test_run_data_dir'))
     _validAdditiveOptions = set(('make_options', 'cmake_options', 'env',
                                  'default_steps', 'ctest_options'))
-    _validOptions = set(('build_type',
-                         'packaging_thirdparty',
-                         'build_condition', 'clean_config',
-                         'clean_build'))
+    _validOptions = set((
+        'build_type',
+        'packaging_thirdparty',  # obsolete but kept for compatibility
+        'build_condition',
+        'clean_config',
+        'clean_build',
+    ))
     _validOptions.update(_validAdditiveOptions)
     _validOptions.update(_variables_with_replacements)
     _validOptions.update(_variables_with_env_only_replacements)
@@ -3625,7 +3628,7 @@ if len(old_file) == 0:
         self.build_type = ''
         self.make_options = []
         self.cmake_options = []
-        self.packaging_thirdparty = ''
+        self.packaging_thirdparty = ''  # obsolete but kept for compatibility
         self.cross_compiling_prefix = ''
         self.cross_compiling_target_system = ''
         self.cross_compiling_to_target_path_cmd = ''
@@ -3874,9 +3877,8 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         command_options = list(self.cmake_options)
         command_options += ['-DCMAKE_BUILD_TYPE:STRING=' + self.build_type]
         if self.packaging_thirdparty.upper() == 'ON':
-            command_options += ['-DBRAINVISA_PACKAGING_THIRDPARTY:BOOL=ON']
-        elif self.packaging_thirdparty.upper() == 'OFF':
-            command_options += ['-DBRAINVISA_PACKAGING_THIRDPARTY:BOOL=OFF']
+            print('ERROR: the packaging_thirdparty option is no longer '
+                  'supported, it will be ignored.')
 
         config_dir = cmake_path(self.directory)
 
@@ -4266,7 +4268,6 @@ class PackageDirectory(ComponentsConfigParser, ConfigVariableParser):
         self.build_directory = ''
         self.package_repository_subdir = 'packages'
         self.packaging_options = []
-        #self.packaging_thirdparty = ''
         self.installer_filename = None
         self.installer_options = ''
         self.offline_installer_filename = None

@@ -449,21 +449,6 @@ library file.</p>
 </pre></div>
 </div>
 </section>
-<section id="brainvisa-thirdparty-dependency">
-<h2>brainvisa_thirdparty_dependency<a class="headerlink" href="#brainvisa-thirdparty-dependency" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_THIRDPARTY_DEPENDENCY</span><span class="p">(</span> <span class="s">&lt;source</span> <span class="s">component&gt;</span> <span class="s">&lt;package</span> <span class="s">type&gt;</span>
-                                 <span class="s">&lt;dependency</span> <span class="s">type&gt;</span> <span class="s">&lt;dest</span> <span class="s">component&gt;</span>
-                                 <span class="s">&lt;dest</span> <span class="s">component</span> <span class="s">package</span> <span class="s">type&gt;</span>
-                                 <span class="s">[</span> <span class="s">&lt;version</span> <span class="s">ranges&gt;</span> <span class="s">]</span>
-                                 <span class="s">[BINARY_INDEPENDENT]</span> <span class="p">)</span>
-</pre></div>
-</div>
-<p>Examples:</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_THIRDPARTY_DEPENDENCY</span><span class="p">(</span> <span class="s">libqtgui4</span> <span class="s">RUN</span> <span class="s">DEPENDS</span> <span class="s">libqtcore4</span> <span class="s">RUN</span> <span class="p">)</span>
-<span class="nb">BRAINVISA_THIRDPARTY_DEPENDENCY</span><span class="p">(</span> <span class="s">libqtgui4</span> <span class="s">DEV</span> <span class="s">DEPENDS</span> <span class="s">libqtcore4</span> <span class="s">DEV</span> <span class="p">)</span>
-</pre></div>
-</div>
-</section>
 <section id="brainvisa-version-convert">
 <h2>brainvisa_version_convert<a class="headerlink" href="#brainvisa-version-convert" title="Permalink to this headline">¶</a></h2>
 <p>Convert version number either to hexadecimal version either to string version.</p>
@@ -518,7 +503,6 @@ library file.</p>
 <li><a class="reference internal" href="#brainvisa-qt-wrap-ui">brainvisa_qt_wrap_ui</a></li>
 <li><a class="reference internal" href="#brainvisa-real-paths">brainvisa_real_paths</a></li>
 <li><a class="reference internal" href="#brainvisa-resolve-symbol-libraries">brainvisa_resolve_symbol_libraries</a></li>
-<li><a class="reference internal" href="#brainvisa-thirdparty-dependency">brainvisa_thirdparty_dependency</a></li>
 <li><a class="reference internal" href="#brainvisa-version-convert">brainvisa_version_convert</a></li>
 </ul>
 </li>

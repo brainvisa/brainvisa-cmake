@@ -264,7 +264,6 @@ Dictionary variables do support both:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">env</span></code>: environment variables dictionary</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">make_options</span></code>: passed to make (ex: <code class="docutils literal notranslate"><span class="pre">-j8</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">build_type</span></code>: <code class="docutils literal notranslate"><span class="pre">Debug</span></code>, <code class="docutils literal notranslate"><span class="pre">Release</span></code> or none (no optimization options)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">packaging_thirdparty</span></code>: Set this option to <code class="docutils literal notranslate"><span class="pre">ON</span></code> if you need to create a BrainVISA package containing thirdparty libraries dependency.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">build_condition</span></code>: a condition which must be True to allow configure and build steps, otherwise they will be skipped. The condition is evaluated in <strong>python language</strong>, and is otherwise free: it may typically be used to restrict build to certain systems or hostnames, some dates, etc.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">clean_build</span></code>: <code class="docutils literal notranslate"><span class="pre">ON</span></code> or <code class="docutils literal notranslate"><span class="pre">OFF</span></code> (default), if set, the build tree will be cleaned of obsolete files before the build step (using the command <code class="docutils literal notranslate"><span class="pre">bv_clean_build_tree</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">clean_config</span></code>: <code class="docutils literal notranslate"><span class="pre">ON</span></code> or <code class="docutils literal notranslate"><span class="pre">OFF</span></code> (default), if set, the build tree will be cleaned of obsolete files before the configuration step (using the command <code class="docutils literal notranslate"><span class="pre">bv_clean_build_tree</span></code>)</p></li>
@@ -277,7 +276,6 @@ Dictionary variables do support both:</p>
 </ul>
 <p><strong>Example</strong></p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> build <span class="nv">$HOME</span>/brainvisa/build/bug_fix <span class="o">]</span>
-  <span class="nv">packaging_thirdparty</span> <span class="o">=</span> ON
   <span class="nv">build_type</span> <span class="o">=</span> Release
   <span class="nv">make_options</span> <span class="o">=</span> -j8
   standard bug_fix <span class="nv">$HOME</span>/brainvisa/source
@@ -356,7 +354,7 @@ Dictionary variables do support both:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> package /home/local/brainvisa_packages/test_data_repository <span class="o">]</span>
   <span class="nv">build_directory</span> <span class="o">=</span> <span class="nv">$HOME</span>/brainvisa/build/bug_fix
   <span class="nv">build_condition</span> <span class="o">=</span> sys.platform <span class="o">==</span> <span class="s2">&quot;linux2&quot;</span>
-  <span class="nv">packaging_options</span> <span class="o">=</span> --repository-only --no-thirdparty --no-dependencies --data
+  <span class="nv">packaging_options</span> <span class="o">=</span> --repository-only --no-dependencies --data
   <span class="nv">init_components_from_build_dir</span> <span class="o">=</span> OFF
   brainvisa-share bug_fix <span class="nv">$HOME</span>/brainvisa/sources
 
@@ -502,11 +500,6 @@ Dictionary variables do support both:</p>
 <p>Thus a configuration may look like the following:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> build <span class="nv">$HOME</span>/brainvisa/build/bug_fix <span class="o">]</span>
   <span class="nv">build_type</span> <span class="o">=</span> Release
-  <span class="o">[</span> <span class="k">if</span> <span class="s1">&#39;%(os)&#39;</span>.startswith<span class="o">(</span><span class="s1">&#39;linux&#39;</span><span class="o">)</span> <span class="o">]</span>
-    <span class="nv">packaging_thirdparty</span> <span class="o">=</span> ON
-  <span class="o">[</span> <span class="k">else</span> <span class="o">]</span>
-    <span class="nv">packaging_thirdparty</span> <span class="o">=</span> OFF
-  <span class="o">[</span> endif <span class="o">]</span>
   <span class="o">[</span> <span class="k">if</span> gethostname<span class="o">()</span> <span class="o">==</span> <span class="s1">&#39;my_machine&#39;</span> <span class="o">]</span>
     <span class="nv">make_options</span> <span class="o">=</span> -j8
   <span class="o">[</span> <span class="k">else</span> <span class="o">]</span>

@@ -535,25 +535,6 @@ Example:
     BRAINVISA_RESOLVE_SYMBOL_LIBRARIES( libxml2 ${LIBXML2_LIBRARIES} )
 
 
-brainvisa_thirdparty_dependency
--------------------------------
-
-::
-
-    BRAINVISA_THIRDPARTY_DEPENDENCY( <source component> <package type>
-                                     <dependency type> <dest component>
-                                     <dest component package type>
-                                     [ <version ranges> ]
-                                     [BINARY_INDEPENDENT] )
-
-Examples:
-
-.. code-block:: cmake
-
-     BRAINVISA_THIRDPARTY_DEPENDENCY( libqtgui4 RUN DEPENDS libqtcore4 RUN )
-     BRAINVISA_THIRDPARTY_DEPENDENCY( libqtgui4 DEV DEPENDS libqtcore4 DEV )
-
-
 brainvisa_version_convert
 -------------------------
 

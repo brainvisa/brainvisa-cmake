@@ -346,11 +346,6 @@ Here is a more complete example of a full ``bv_maker.cfg`` file from our build s
 
     [ build /neurospin/brainvisa/build/$I2BM_OSID/bug_fix ]
       default_steps = configure build doc test
-      [ if os.getenv('I2BM_OSID') == 'CentOS-5.11-x86_64' ]
-      packaging_thirdparty = OFF
-      [ else ]
-      packaging_thirdparty = ON
-      [ endif ]
       make_options = -j4
       build_type = Release
       clean_config = ON

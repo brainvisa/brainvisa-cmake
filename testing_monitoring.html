@@ -297,11 +297,6 @@ OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86
 
 <span class="o">[</span> build /neurospin/brainvisa/build/<span class="nv">$I2BM_OSID</span>/bug_fix <span class="o">]</span>
   <span class="nv">default_steps</span> <span class="o">=</span> configure build doc <span class="nb">test</span>
-  <span class="o">[</span> <span class="k">if</span> os.getenv<span class="o">(</span><span class="s1">&#39;I2BM_OSID&#39;</span><span class="o">)</span> <span class="o">==</span> <span class="s1">&#39;CentOS-5.11-x86_64&#39;</span> <span class="o">]</span>
-  <span class="nv">packaging_thirdparty</span> <span class="o">=</span> OFF
-  <span class="o">[</span> <span class="k">else</span> <span class="o">]</span>
-  <span class="nv">packaging_thirdparty</span> <span class="o">=</span> ON
-  <span class="o">[</span> endif <span class="o">]</span>
   <span class="nv">make_options</span> <span class="o">=</span> -j4
   <span class="nv">build_type</span> <span class="o">=</span> Release
   <span class="nv">clean_config</span> <span class="o">=</span> ON

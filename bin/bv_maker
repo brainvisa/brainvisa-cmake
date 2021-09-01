@@ -151,126 +151,6 @@ def check_ld_library_path_error(fatal):
                 os.environ['LD_LIBRARY_PATH'] = lpath
 
 
-class BrainVISAJenkins:
-    '''
-    Wrapper to access Jenkins server of BrainVISA and push bv_maker results
-    '''
-    
-    job_xml = '''<?xml version='1.1' encoding='UTF-8'?>
-    <hudson.model.ExternalJob plugin="external-monitor-job@1.7">
-    <description>{description}</description>
-    <keepDependencies>false</keepDependencies>
-    <properties>
-        <hudson.plugins.jira.JiraProjectProperty plugin="jira@3.1.1"/>
-        <jenkins.model.BuildDiscarderProperty>
-        <strategy class="hudson.tasks.LogRotator">
-            <daysToKeep>-1</daysToKeep>
-            <numToKeep>20</numToKeep>
-            <artifactDaysToKeep>-1</artifactDaysToKeep>
-            <artifactNumToKeep>-1</artifactNumToKeep>
-        </strategy>
-        </jenkins.model.BuildDiscarderProperty>
-    </properties>
-    </hudson.model.ExternalJob>
-    '''
-
-    build_xml = ('<run>'
-        '<log encoding="hexBinary">{hex_log}</log>'
-        '<result>{result}</result>'
-        '<duration>{duration}</duration>'
-        '<displayName>{build}</displayName>'
-        '<description>{description}</description>'
-        '</run>')
-
-    def __init__(self, server, login, password):
-        '''
-        server = URL of the Jenkins server
-        login = username to use for Jenkins authentication
-        password = password or token for authentication
-        '''
-        self.server = server
-        self.login = login
-        self.password = password
-    
-    def get(self, route, **kwargs):
-        return requests.get('{0}/{1}'.format(self.server, route),
-                            auth=(self.login, self.password),
-                            **kwargs)
-
-    def post(self, route, **kwargs):
-        return requests.post('{0}/{1}'.format(self.server, route),
-                             auth=(self.login, self.password),
-                             **kwargs)
-
-    def delete(self, route, **kwargs):
-        return requests.delete('{0}/{1}'.format(self.server, route),
-                               auth=(self.login, self.password),
-                               **kwargs)
-    
-    def job_exists(self, environment):
-        r = self.get('/job/{0}/api/json'.format(environment))
-        if r.status_code == 404:
-            return False
-        r.raise_for_status()
-        return True
-    
-    def create_job(self, environment, distro, system, branch):
-        '''
-        Create a jenkins job representing a task performed in a casa_distro 
-        environment.The type of the job created is "external task" therefore 
-        the corresponding plugin must be installed on the server. The job is
-        configured to keep only the 20 last build logs (others are destroyed).
-        
-        environment : name of the casa_distro environment.
-        distro      : distro of casa_distro used for this job
-        system      : system of casa_distro used for this job
-        branch      : branch of casa_distro used for this job
-        '''
-        description = '''environment = {0}
-        distro = {1}
-        system = {2}
-        branch = {3}'''.format(environment, distro, system, branch)
-        r = self.post('createItem',
-            params={'name': environment},
-            headers={'Content-Type': 'application/xml'},
-            data=self.job_xml.format(description=description))
-        r.raise_for_status()
-        
-    def delete_job(self, job):
-        r = self.delete('job/{0}/'.format(job))
-        r.raise_for_status()
-
-    def jobs(self):
-        r = self.get('api/json')
-        r.raise_for_status()
-        return [i['name'] for i in r.json()['jobs']]
-    
-    def create_build(self, environment, task, result,
-                     log, duration=None, description=None):
-        '''
-        Add a build report related
-
-        environment : name of the casa_distro environment.
-        task        : name of the task that is performed by this build 
-                      (e.g. src, configure, build, etc.)
-        result      : integer value representing the result of the build
-                      any no zero value means failure
-        log         : console output of the build
-        duration    : (optional) duration of the build in milliseconds
-        description : (optional) description text attached to the build
-        '''
-        # Python 2 need binascii module to convert str
-        # to hex string. In Python 3, bytes have an hex() method.
-        hex_log = binascii.hexlify(log.encode())
-        r = self.post('job/{0}/postBuildResult'.format(environment),
-            headers={'Content-Type': 'application/xml'},
-            data=self.build_xml.format(build=task,
-                                       hex_log=hex_log,
-                                       result=result,
-                                       duration=duration or '0',
-                                       description=description or ''))
-        r.raise_for_status()
-
 
 ASCII_SUBSTITUTIONS = {
     ord('┌'): '/',
@@ -618,9 +498,7 @@ def run_and_log_testref(cwd=None, env=None, options=None, timeout = None):
             or (configuration.general_section.failure_email == ''
                 and configuration.general_section.success_email == ''
                 and configuration.general_section.failure_email_by_project
-                    == {})) \
-            and (not configuration.general_section.jenkins_server_url
-                  or configuration.options.disable_jenkins):
+                    == {})):
         print_output = True
     else:
         print_output = False
@@ -726,9 +604,6 @@ http://brainvisa.info/brainvisa-cmake/
         parser.add_option('-e', '--email', action='store_true',
                           help='Use email notification (if configured in the '
                           'general section of the configuration file)')
-        parser.add_option('--disable-jenkins', action='store_true',
-                          dest='disable_jenkins', default=False,
-                          help='disable Jenkins server logging')
         parser.add_option('--def', '--only-if-default', action='store_true',
                           dest='in_config', default=False,
                           help='apply only steps which are defined as default '
@@ -1158,9 +1033,7 @@ class StepCommand(object):
                 or (configuration.general_section.failure_email == ''
                     and configuration.general_section.success_email == ''
                     and configuration.general_section.failure_email_by_project
-                        == {})) \
-                and (not configuration.general_section.jenkins_server_url
-                     or configuration.options.disable_jenkins):
+                        == {})):
             return
         if o.stdout_file or o.stderr_file:
             # Line buffering is used (buffering=1) because the output from
@@ -1267,8 +1140,6 @@ class StepCommand(object):
                 print('WARNING: notification email could not be sent:',
                       e.message)
                 traceback.print_exc()
-        # Jenkins notification
-        self.jenkins_notification(d, o, step, status)
         # console notification
         if email and status in ('failed', 'interrupted'):
             # original stdout has been changed, we need to print again
@@ -1395,27 +1266,6 @@ Subject: %s - %s %s on %s (%s)
                 % stop[:5]
         with open(log_file, 'a') as f:
             f.write('%s on %s (%s)\n' % (message, machine, osname))
-
-    def jenkins_notification(self, d, o, step, status):
-        ''' Notify job execution (build, test etc) to a Jenkins server
-        '''
-        global jenkins_server, casa_environment
-        
-        if not configuration.general_section.jenkins_server_url \
-                or configuration.options.disable_jenkins:
-            return # don't notify
-        
-        if o.status[step] not in ('interrupted', 'failed'):
-            result = 0
-        else:
-            result = 1
-        
-        log = (self.message_header(d, o, step, status) +
-               self.log_message_content())
-        jenkins_server.create_build(environment=casa_environment,
-            task=step,
-            result=result,
-            log=log)
 
 
 class InfoCommand(StepCommand):
@@ -2315,7 +2165,6 @@ class ConfigVariableParser(object):
 class GeneralSection(ConfigVariableParser):
     _variables_with_replacements = \
         set(('directory_id_by_default',
-             'jenkins_server_url',
              'subprocess_timeout'))
     _variables_with_env_only_replacements = set(('casa_environment', 'env'))
     _validAdditiveOptions = set(('env', ))
@@ -2324,9 +2173,7 @@ class GeneralSection(ConfigVariableParser):
                          'from_email', 'reply_to_email',
                          'email_notification_by_default',
                          'failure_email_by_project',
-                         'casa_environment',
-                         'jenkins_username',
-                         'jenkins_token'))
+                         'casa_environment'))
     _validOptions.update(_variables_with_replacements)
     _validOptions.update(_path_variables)
     _validOptions.update(_variables_with_env_only_replacements)
@@ -2344,11 +2191,7 @@ class GeneralSection(ConfigVariableParser):
         self.reply_to_email = ''
         self.global_status_file = None
         self.email_notification_by_default = 'OFF'
-        self.jenkins_server_url = ''
         self.casa_environment = ''
-        self.jenkins_global_job_name_step_by_default = ''
-        self.jenkins_username = None
-        self.jenkins_token = None
         self.subprocess_timeout = default_subprocess_timeout
         self.directory_id_by_default = ''
         self.env = {}
@@ -5341,15 +5184,6 @@ def display_failure_summary(configuration):
     else:
         status = 'All went good.'
         print(status)
-    if not configuration.options.disable_jenkins and configuration.general_section.jenkins_server_url:
-        global casa_environment
-        global jenkins_server
-        
-        jenkins_server.create_build(environment=casa_environment,
-            task='bv_maker finished',
-            result=(1 if global_failed else 0),
-            log='\n'.join(messages) + '\n')
-
     return global_failed
 
 # ---
@@ -5415,40 +5249,6 @@ for command in ['info', 'status', 'sources', 'configure', 'build',
                 and '-h' not in options_by_command[command] \
                 and '--help' not in options_by_command[command]:
             log_something = True
-
-if not log_something:
-    # if no "real" job is required (help options used or only get info/status), 
-    # then disable Jenkins logging
-    configuration.options.disable_jenkins = True
-    
-if (not configuration.options.disable_jenkins and
-    configuration.general_section.jenkins_server_url):
-    
-    import requests
-    
-    if configuration.general_section.casa_environment:
-        casa_environment = configuration.general_section.casa_environment
-    else:
-        casa_environment = os.environ.get('CASA_ENVIRONMENT')
-        if not casa_environment:
-            raise ValueError('No name for Jenkins environment. '
-                'Either set CASA_ENVIRONMENT env var or set casa_environment '
-                'in bv_maker.cfg [general] section')
-    jenkins_server = BrainVISAJenkins(
-        configuration.general_section.jenkins_server_url,
-        configuration.general_section.jenkins_username,
-        configuration.general_section.jenkins_token)
-    if not jenkins_server.job_exists(casa_environment):
-        jenkins_server.create_job(casa_environment,
-            distro=os.environ.get('CASA_DISTRO', 'unknown'),
-            branch=os.environ.get('CASA_BRANCH', 'unknown'),
-            system=os.environ.get('CASA_SYSTEM', 'unknown'))
-    jenkins_server.create_build(environment=casa_environment,
-        task='start bv_maker',
-        result=0,
-        log=' '.join("'%s'" %i for i in sys.argv) + '\n')
-
-                                  
 
 failed = False
 # Execute selected commands

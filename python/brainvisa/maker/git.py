@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """Management of Git repositories in bv_maker."""
 
+from __future__ import absolute_import, division
+from __future__ import print_function, unicode_literals
+
 import distutils.spawn
 import os
 import subprocess
@@ -557,3 +560,80 @@ repository manually using the following command:
         if (os.path.exists(os.path.join(self.path, '.pre-commit-config.yaml'))
                 and self.have_pre_commit()):
             self.call_nonessential_command(['pre-commit', 'install'])
+
+
+def print_git_status_summary(source_directory, status_list):
+    if not status_list:
+        return
+
+    header = 'Summary of Git repositories in ' + source_directory
+    print('\n' + header)
+    print('=' * len(header))
+
+    def format_head(status_dict):
+        if status_dict.get('current_branch') is not None:
+            return '{current_branch} ({head_short_sha1})'.format(**status_dict)
+        else:
+            return status_dict['describe_head']
+
+    # Calculate optimal field widths
+    head_width = max(max(len(format_head(d)) for d in status_list), 1)
+    bv_upstream_width = max(len(d.get('bv_upstream_info', ''))
+                            for d in status_list)
+    if bv_upstream_width != 0:
+        bv_upstream_format = '{{bv_upstream:{0}s}}'.format(bv_upstream_width)
+    else:
+        bv_upstream_format = ''
+    git_upstream_width = max(len(d.get('git_upstream_info', ''))
+                             for d in status_list)
+    if git_upstream_width != 0:
+        git_upstream_format = '{{git_upstream:{0}s}}'.format(
+            git_upstream_width)
+    else:
+        git_upstream_format = ''
+    update_message_width = max(len(d.get('update_message', u''))
+                               for d in status_list)
+    if update_message_width != 0:
+        update_message_format = '{{update_message:{0}s}} '.format(
+            update_message_width)
+        update_message_width += 1
+    else:
+        update_message_format = ''
+
+    print('┌───── * uncommitted working tree changes')
+    print('│┌──── + uncommitted index changes')
+    print('││┌─── $ stash present')
+    print('│││┌── % untracked files')
+    print('││││ ┌ HEAD')
+    prefix = '││││ │' + ' ' * head_width
+    if update_message_width != 0:
+        print(prefix + '┌ update status')
+        prefix += '│' + ' ' * (update_message_width - 1)
+    print(prefix + '┌ bv_maker upstream state')
+    print(prefix + '│' + ' ' * bv_upstream_width + '┌ Git upstream state')
+    print(prefix + '│' + ' ' * bv_upstream_width + '│'
+          + ' ' * git_upstream_width + '┌ Directory')
+
+    for status_dict in status_list:
+        print(u'{{tree_dirty}}{{index_dirty}}{{stash}}{{untracked}} '
+              '{{head:{head_width}s}} '
+              '{update_message_format}'
+              '{bv_upstream_format} {git_upstream_format} '
+              '{{dest_directory}}'
+              .format(
+                  head_width=head_width,
+                  bv_upstream_format=bv_upstream_format,
+                  git_upstream_format=git_upstream_format,
+                  update_message_format=update_message_format,
+              )
+              .format(
+                  dest_directory=status_dict['dest_directory'],
+                  head=format_head(status_dict),
+                  tree_dirty='*' if status_dict.get('tree_dirty') else ' ',
+                  index_dirty='+' if status_dict.get('index_dirty') else ' ',
+                  stash='$' if status_dict.get('stash') else ' ',
+                  untracked='%' if status_dict.get('untracked') else ' ',
+                  bv_upstream=status_dict.get('bv_upstream_info', ''),
+                  git_upstream=status_dict.get('git_upstream_info', ''),
+                  update_message=status_dict.get('update_message', ''),
+              ))

@@ -192,54 +192,6 @@ def reconfigure_stdout():
 reconfigure_stdout()
 
 
-# This function is copied from the 'six' library, where it was introduced in
-# version 1.12.0, because we do not want to depend on such a recent version.
-#
-# This function is Copyright (c) 2010-2018 Benjamin Peterson, released under
-# the Expat licence.
-def ensure_str(s, encoding='utf-8', errors='strict'):
-    """Coerce *s* to `str`.
-
-    For Python 2:
-      - `unicode` -> encoded to `str`
-      - `str` -> `str`
-
-    For Python 3:
-      - `str` -> `str`
-      - `bytes` -> decoded to `str`
-    """
-    if not isinstance(s, (six.text_type, six.binary_type)):
-        raise TypeError("not expecting type '%s'" % type(s))
-    if six.PY2 and isinstance(s, six.text_type):
-        s = s.encode(encoding, errors)
-    elif six.PY3 and isinstance(s, six.binary_type):
-        s = s.decode(encoding, errors)
-    return s
-
-# This function is copied from the 'six' library, where it was introduced in
-# version 1.12.0, because we do not want to depend on such a recent version.
-#
-# This function is Copyright (c) 2010-2018 Benjamin Peterson, released under
-# the Expat licence.
-def ensure_text(s, encoding='utf-8', errors='strict'):
-    """Coerce *s* to six.text_type.
-
-    For Python 2:
-      - `unicode` -> `unicode`
-      - `str` -> `unicode`
-
-    For Python 3:
-      - `str` -> `str`
-      - `bytes` -> decoded to `str`
-    """
-    if isinstance(s, six.binary_type):
-        return s.decode(encoding, errors)
-    elif isinstance(s, six.text_type):
-        return s
-    else:
-        raise TypeError("not expecting type '%s'" % type(s))
-
-
 def get_target_path_system(platform):
     if platform.startswith('win'):
         # We prefer alternative windows path i.e. pathes separated 
@@ -2523,7 +2475,7 @@ class SourceDirectory(DirectorySection, ConfigVariableParser):
                 try:
                     gr.update_or_clone(source_dir=self)
                 except GitUpdateError as exc:
-                    update_message = u'✗ ' + ensure_text(str(exc))
+                    update_message = u'✗ ' + six.ensure_text(str(exc))
                     git_update_failure = True
                 else:
                     update_message = u'✓'
@@ -3009,7 +2961,7 @@ if len(old_file) == 0:
             if build_model is not None:
                 build_model_class = getattr(__import__(
                     'brainvisa.maker.build_models',
-                    fromlist=[ensure_str('pure_python')], level=0),
+                    fromlist=[six.ensure_str('pure_python')], level=0),
                     build_model)
                 build_model = build_model_class(
                     component, self.components[component][0], self,

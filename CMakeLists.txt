@@ -320,7 +320,6 @@ if( BRAINVISA_BVMAKER )
            bv_svn_to_git
            bv_system_info
            bv_unenv
-           bv_unit_test
            bv_which
            bv_wine_regedit
            svnclient )

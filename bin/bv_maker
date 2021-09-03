@@ -39,7 +39,6 @@ if this_script:
 from brainvisa.maker.build import check_ld_library_path_error
 import brainvisa.maker.commands
 import brainvisa.maker.configuration
-import brainvisa.maker.installer as installer
 from brainvisa.maker.version_number import version_format_short
 
 

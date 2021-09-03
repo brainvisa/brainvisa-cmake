@@ -29,7 +29,6 @@ default_subprocess_timeout = 3600 * 6  # default subprocess timeout is 6 hours
 
 
 def check_filter_condition(filters):
-    from brainvisa.maker import installer
     # for now, use python eval()
     expression = ' '.join(filters)
     # replace %(var)s vars
@@ -186,9 +185,7 @@ http://brainvisa.info/brainvisa-cmake/
     def parse_config_file(self, f, options, extra_build_dir=None):
         """Read configuration from an file object (opened in binary mode)."""
         from brainvisa.maker import build
-        from brainvisa.maker import installer
         from brainvisa.maker import sources
-
         lineCount = 0
         currentDirectoryObject = None
 
@@ -278,11 +275,13 @@ http://brainvisa.info/brainvisa-cmake/
                                 self)
                             build_dirs.append(currentDirectoryObject)
                         elif l[0] == 'package':
+                            from brainvisa.maker import installer
                             currentDirectoryObject = installer.PackageDirectory(
                                 l[1].strip(),
                                 self)
                             package_dirs.append(currentDirectoryObject)
                         elif l[0] == 'package_publication':
+                            from brainvisa.maker import installer
                             currentDirectoryObject = installer.PublicationDirectory(
                                 l[1].strip(),
                                 self)

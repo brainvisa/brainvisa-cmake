@@ -274,7 +274,6 @@ if( BRAINVISA_BVMAKER )
   # disable help for some internal or undocumented commands
   set(__excluded_commands 
       bv_build_installer_i2bm
-      bv_build_nightly
       bv_check_svn_merge
       bv_clean_jenkins
       bv_env.bat

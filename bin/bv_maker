@@ -4,39 +4,21 @@
 from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 
-import binascii
 import codecs
 import io
 import locale
-import sys
-import os
-import re
-import pprint
-import subprocess
-import glob
-import shutil
-import json
-from optparse import OptionParser
-from fnmatch import fnmatchcase
-import tempfile
-import datetime
-import distutils.spawn
-import shlex
-import time
-import traceback
-from smtplib import SMTP
-import gzip
 import multiprocessing  # for cpu_count()
+from optparse import OptionParser
+import os
+import sys
+import traceback
 
 import six
-from six.moves import reload_module, shlex_quote, zip
-from six.moves.urllib.request import urlopen
-
-# the following imports are just to make functions available in tests
-# using eval() in filters/conditions
-from socket import gethostname
 
 
+# -----------------------------------------------------------------------------
+# Make sure that sys.path is set correctly before importing our own modules.
+# -----------------------------------------------------------------------------
 if os.path.exists(sys.argv[0]):
     this_script = sys.argv[0]
 else:
@@ -52,21 +34,13 @@ if this_script:
         os.path.dirname(os.path.dirname(this_script)), 'python')
     if os.path.isdir(python_modules):
         sys.path.insert(0, python_modules)
+# -----------------------------------------------------------------------------
 
 
-import brainvisa.maker.brainvisa_projects as brainvisa_projects
 from brainvisa.maker.build import check_ld_library_path_error
-import brainvisa.maker.components_definition
 import brainvisa.maker.commands
 import brainvisa.maker.configuration
-from brainvisa.maker.environment import environmentPathVariablesSubstitution
-from brainvisa.maker.environment import normalize_path
-from brainvisa.maker.environment import replace_vars
-from brainvisa.maker.environment import VarReplacementType
 import brainvisa.maker.installer as installer
-from brainvisa.maker.subprocess import subprocess32
-from brainvisa.maker.subprocess import system
-from brainvisa.maker.subprocess import system_output_on_error
 from brainvisa.maker.version_number import version_format_short
 
 

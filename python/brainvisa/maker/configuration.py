@@ -9,6 +9,7 @@ import glob
 from optparse import OptionParser
 import os
 import shlex
+from socket import gethostname  # for use in eval()'d expressions
 import sys
 import traceback
 

@@ -8,7 +8,6 @@ import codecs
 import io
 import locale
 import multiprocessing  # for cpu_count()
-from optparse import OptionParser
 import os
 import sys
 import traceback
@@ -114,278 +113,6 @@ def reconfigure_stdout():
 reconfigure_stdout()
 
 
-class InfoCommand(brainvisa.maker.commands.StepCommand):
-
-    def __init__(self, argv, configuration):
-        usage = '''%prog [global options] info [options]
-
-    Display information about configuration, sources directories and build directories.'''
-        parser = OptionParser(usage=usage)
-        parser.add_option('--only-if-default', dest='in_config',
-                          action='store_true',
-                          default=False,
-                          help='only perform this step if it is a default '
-                          'step, or specified in the "default_steps" option '
-                          'of bv_maker.cfg config file. Default steps are '
-                          'normally "sources" for source sections, and '
-                          '"configure build" for build sections')
-        (options, args) = parser.parse_args(argv)
-        if args:
-            raise ValueError('Invalid option: %s' % args[0])
-        
-        super(InfoCommand, self).__init__(argv, configuration)
-        self.options = options
-        self.args = args
-
-    def __call__(self):
-        print('Configuration file:', configuration.configuration_file)
-        dirs = dict(configuration.sourcesDirectories)
-        dirs.update(configuration.buildDirectories)
-        dirs.update(configuration.packageDirectories)
-        dirs.update(configuration.publicationDirectories)
-        self.process('info', list(dirs.values()), 'info')
-
-
-class SourcesCommand(brainvisa.maker.commands.StepCommand):
-
-    def __init__(self, argv, configuration):
-        usage = '''%prog [global options] sources [options]
-
-    Create or updated selected sources directories from Subversion repository.'''
-        parser = OptionParser(usage=usage)
-        parser.add_option('--no-cleanup', dest='cleanup', action='store_false',
-                          default=True,
-                          help='don\'t cleanup svn sources')
-        parser.add_option('--no-svn', dest='svn', action='store_false',
-                          default=True,
-                          help='don\'t update svn sources')
-        parser.add_option('--no-git', dest='git', action='store_false',
-                          default=True,
-                          help='don\'t update git sources')
-        parser.add_option('--only-if-default', dest='in_config',
-                          action='store_true',
-                          default=False,
-                          help='only perform this step if it is a default '
-                          'step, or specified in the "default_steps" option '
-                          'of bv_maker.cfg config file. Default steps are '
-                          'normally "sources" for source sections, and '
-                          '"configure build" for build sections')
-        parser.add_option('--ignore-git-failure', dest='ignore_git_failure',
-                          action='store_true', default=False,
-                          help='ignore git update failures, useful when '
-                          'working on a feature branch')
-        (options, args) = parser.parse_args(argv)
-        if args:
-            raise ValueError('Invalid option: %s' % args[0])
-        
-        super(SourcesCommand, self).__init__(argv, configuration)
-        self.options = options
-        self.args = args
-
-    def __call__(self):
-        self.process('sources', list(configuration.sourcesDirectories.values()),
-                     'process', self.options, self.args)
-
-
-class SourceStatusCommand(brainvisa.maker.commands.StepCommand):
-
-    def __init__(self, argv, configuration):
-        usage = '''%prog [global options] status [options]
-
-    Display a summary of the status of all source repositories.'''
-        parser = OptionParser(usage=usage)
-        parser.add_option('--no-svn', dest='svn', action='store_false',
-                          default=True,
-                          help="don't display the status of svn sources")
-        parser.add_option('--no-git', dest='git', action='store_false',
-                          default=True,
-                          help="don't display the status of git sources")
-        parser.add_option('--only-if-default', dest='in_config',
-                          action='store_true',
-                          default=False,
-                          help='only perform this step if it is a default '
-                          'step, or specified in the "default_steps" option '
-                          'of bv_maker.cfg config file. Default steps are '
-                          'normally "sources" for source sections, and '
-                          '"configure build" for build sections')
-        parser.add_option('--git-command', dest='extra_git_commands',
-                          default=[], action='append',
-                          help="run one or more extra commands in every Git "
-                               "repository. The commmands are interpreted in "
-                               "a shell so that you can pass arguments.")
-        (options, args) = parser.parse_args(argv)
-        if args:
-            raise ValueError('Invalid option: %s' % args[0])
-
-        super(SourceStatusCommand, self).__init__(argv, configuration)
-        self.options = options
-        self.args = args
-
-    def __call__(self):
-        self.process('status',
-                     list(configuration.sourcesDirectories.values()),
-                     'source_status', self.options, self.args)
-
-
-class ConfigureCommand(brainvisa.maker.commands.StepCommand):
-
-    def __init__(self, argv, configuration):
-        usage = '''%prog [global options] configure [options]
-
-    Create or updated selected build directories.'''
-        parser = OptionParser(usage=usage)
-        parser.add_option('-c', '--clean', dest='clean', action='store_true',
-                          default=False,
-                          help='clean build tree (using bv_clean_build_tree '
-                          '-d) before configuring')
-        parser.add_option('--only-if-default', dest='in_config',
-                          action='store_true',
-                          default=False,
-                          help='only perform this step if it is a default '
-                          'step, or specified in the "default_steps" option '
-                          'of bv_maker.cfg config file. Default steps are '
-                          'normally "sources" for source sections, and '
-                          '"configure build" for build sections')
-        (options, args) = parser.parse_args(argv)
-        if args:
-            raise ValueError('Invalid option: %s' % args[0])
-        
-        super(ConfigureCommand, self).__init__(argv, configuration)
-        self.options = options
-        self.args = args
-
-    def __call__(self):
-        self.process('configure', list(configuration.buildDirectories.values()),
-                     'configure', self.options, self.args)
-
-class BuildCommand(brainvisa.maker.commands.StepCommand):
-
-    def __init__(self, argv, configuration):
-        usage = '''%prog [global options] configure [options]
-
-    Compile selected build directories.'''
-        parser = OptionParser(usage=usage)
-        parser.add_option('-c', '--clean', dest='clean', action='store_true',
-                          default=False,
-                          help='clean build tree (using '
-                          'bv_clean_build_tree -b) before building')
-        parser.add_option('--only-if-default', dest='in_config',
-                          action='store_true',
-                          default=False,
-                          help='only perform this step if it is a default '
-                          'step, or specified in the "default_steps" option '
-                          'of bv_maker.cfg config file. Default steps are '
-                          'normally "sources" for source sections, and '
-                          '"configure build" for build sections')
-        (options, args) = parser.parse_args(argv)
-        if args:
-            raise ValueError('Invalid option: %s' % args[0])
-        
-        super(BuildCommand, self).__init__(argv, configuration)
-        self.options = options
-        self.args = args
-
-    def __call__(self):
-        self.process('build', list(configuration.buildDirectories.values()),
-                     'build', self.options, self.args)
-
-
-class DocCommand(brainvisa.maker.commands.StepCommand):
-
-    def __init__(self, argv, configuration):
-        usage = '''%prog [global options] doc [options]
-
-    Generate documentation (docbook, epydoc, doxygen).'''
-        parser = OptionParser(usage=usage)
-        parser.add_option('--only-if-default', dest='in_config',
-                          action='store_true',
-                          default=False,
-                          help='only perform this step if it is a default '
-                          'step, or specified in the "default_steps" option '
-                          'of bv_maker.cfg config file. Default steps are '
-                          'normally "sources" for source sections, and '
-                          '"configure build" for build sections')
-        (options, args) = parser.parse_args(argv)
-        if args:
-            raise ValueError('Invalid option: %s' % args[0])
-        
-        super(DocCommand, self).__init__(argv, configuration)
-        self.options = options
-        self.args = args
-
-    def __call__(self):
-        self.process('doc', list(configuration.buildDirectories.values()), 'doc')
-
-
-class TestCommand(brainvisa.maker.commands.StepCommand):
-
-    def __init__(self, argv, configuration):
-        usage = '''%prog [global options] test
-
-    Executes ctest.'''
-        parser = OptionParser(usage=usage)
-        parser.add_option('--only-if-default', dest='in_config',
-                          action='store_true',
-                          default=False,
-                          help='only perform this step if it is a default '
-                          'step, or specified in the "default_steps" option '
-                          'of bv_maker.cfg config file. Default steps are '
-                          'normally "sources" for source sections, and '
-                          '"configure build" for build sections')
-        parser.add_option('-t', '--ctest_options',
-                          default=None,
-                          help='options passed to ctest (ex: "-VV -R carto*"). '
-                          'Same as the configuration option ctest_options but '
-                          'specified at runtime. The commandline option here '
-                          'overrides the bv_maker.cfg options.')
-        (options, args) = parser.parse_args(argv)
-        if args:
-            raise ValueError('Invalid option: %s' % args[0])
-        
-        super(TestCommand, self).__init__(argv, configuration)
-        self.options = options
-        self.args = args
-
-    def __call__(self):
-        self.process('test', list(configuration.buildDirectories.values()), 'test',
-                     self.options, self.args)
-
-
-class TestrefCommand(brainvisa.maker.commands.StepCommand):
-
-    def __init__(self, argv, configuration):
-        usage = '''%prog [global options] testref
-
-    Executes tests in the testref mode (used to generate reference files).'''
-        parser = OptionParser(usage=usage)
-        parser.add_option('--only-if-default', dest='in_config',
-                          action='store_true',
-                          default=False,
-                          help='only perform this step if it is a default '
-                          'step, or specified in the "default_steps" option '
-                          'of bv_maker.cfg config file. Default steps are '
-                          'normally "sources" for source sections, and '
-                          '"configure build" for build sections')
-        parser.add_option('-m', '--make_options',
-                          default=None,
-                          help='options passed to make (ex: "-j8") during test '
-                          'reference generation. '
-                          'Same as the configuration option make_options but '
-                          'specified at runtime. The commandline option here '
-                          'overrides the bv_maker.cfg options.')
-        (options, args) = parser.parse_args(argv)
-        if args:
-            raise ValueError('Invalid option: %s' % args[0])
-        
-        super(TestrefCommand, self).__init__(argv, configuration)
-        self.options = options
-        self.args = args
-
-    def __call__(self):
-        self.process('testref', list(configuration.buildDirectories.values()), 'testref',
-                     self.options, self.args)
-
-
 def display_failure_summary(configuration):
     sections = [('sourcesDirectories', ['sources']),
                 ('buildDirectories', ['configure', 'build', 'doc', 'testref',
@@ -454,28 +181,13 @@ except NotImplementedError:
 
 check_ld_library_path_error(fatal=False)
 
-commands = {
-    'info': InfoCommand,
-    'sources': SourcesCommand,
-    'status': SourceStatusCommand,
-    'configure': ConfigureCommand,
-    'build': BuildCommand,
-    'doc': DocCommand,
-    'test': TestCommand,
-    'testref': TestrefCommand,
-    'pack': installer.PackCommand,
-    'install_pack': installer.InstallPackCommand,
-    'test_pack': installer.TestPackCommand,
-    'testref_pack': installer.TestrefPackCommand,
-    'publish_pack': installer.PublishPackCommand,
-}
 
 default_commands = ['info', 'sources', 'configure', 'build', 'doc', 'test',
                     'pack', 'install_pack', 'test_pack']
 options_by_command = {None: []}
 command = None
 for i in sys.argv[1:]:
-    if i in commands:
+    if i in brainvisa.maker.commands.COMMANDS:
         command = i
         if command in options_by_command:
             raise ValueError('Command %s used twice' % command)
@@ -499,8 +211,9 @@ for command in ['info', 'status', 'sources', 'configure', 'build',
                 'doc', 'test', 'testref', 'pack', 'install_pack', 'test_pack',
                 'testref_pack', 'publish_pack']:
     if command in options_by_command:
+        command_class = brainvisa.maker.commands.COMMANDS[command]
         todo.append(
-            commands[command](options_by_command[command], configuration))
+            command_class(options_by_command[command], configuration))
         if command not in ('info', 'status') \
                 and '-h' not in options_by_command[command] \
                 and '--help' not in options_by_command[command]:

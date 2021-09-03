@@ -6,6 +6,7 @@ from __future__ import absolute_import, division
 from __future__ import print_function, unicode_literals
 
 import io
+from optparse import OptionParser
 import os
 import platform
 import re
@@ -19,6 +20,11 @@ import traceback
 import six
 
 from brainvisa.maker.environment import normalize_path
+from brainvisa.maker.utils import installer_format_date
+from brainvisa.maker.utils import installer_format_time
+from brainvisa.maker.utils import installer_parse_date
+from brainvisa.maker.utils import installer_parse_time
+from brainvisa.maker.utils import global_installer_datetime
 
 
 IGNORED_STEP = 'ignored'
@@ -353,3 +359,603 @@ Subject: %s - %s %s on %s (%s)
                 % stop[:5]
         with open(log_file, 'a') as f:
             f.write('%s on %s (%s)\n' % (message, machine, osname))
+
+
+class InfoCommand(StepCommand):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] info [options]
+
+    Display information about configuration, sources directories and build directories.'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, and '
+                          '"configure build" for build sections')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+
+        super(InfoCommand, self).__init__(argv, configuration)
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        print('Configuration file:', self.configuration.configuration_file)
+        dirs = dict(self.configuration.sourcesDirectories)
+        dirs.update(self.configuration.buildDirectories)
+        dirs.update(self.configuration.packageDirectories)
+        dirs.update(self.configuration.publicationDirectories)
+        self.process('info', list(dirs.values()), 'info')
+
+
+class SourcesCommand(StepCommand):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] sources [options]
+
+    Create or updated selected sources directories from Subversion repository.'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('--no-cleanup', dest='cleanup', action='store_false',
+                          default=True,
+                          help='don\'t cleanup svn sources')
+        parser.add_option('--no-svn', dest='svn', action='store_false',
+                          default=True,
+                          help='don\'t update svn sources')
+        parser.add_option('--no-git', dest='git', action='store_false',
+                          default=True,
+                          help='don\'t update git sources')
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, and '
+                          '"configure build" for build sections')
+        parser.add_option('--ignore-git-failure', dest='ignore_git_failure',
+                          action='store_true', default=False,
+                          help='ignore git update failures, useful when '
+                          'working on a feature branch')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+
+        super(SourcesCommand, self).__init__(argv, configuration)
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        self.process('sources', list(self.configuration.sourcesDirectories.values()),
+                     'process', self.options, self.args)
+
+
+class SourceStatusCommand(StepCommand):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] status [options]
+
+    Display a summary of the status of all source repositories.'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('--no-svn', dest='svn', action='store_false',
+                          default=True,
+                          help="don't display the status of svn sources")
+        parser.add_option('--no-git', dest='git', action='store_false',
+                          default=True,
+                          help="don't display the status of git sources")
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, and '
+                          '"configure build" for build sections')
+        parser.add_option('--git-command', dest='extra_git_commands',
+                          default=[], action='append',
+                          help="run one or more extra commands in every Git "
+                               "repository. The commmands are interpreted in "
+                               "a shell so that you can pass arguments.")
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+
+        super(SourceStatusCommand, self).__init__(argv, configuration)
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        self.process('status',
+                     list(self.configuration.sourcesDirectories.values()),
+                     'source_status', self.options, self.args)
+
+
+class ConfigureCommand(StepCommand):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] configure [options]
+
+    Create or updated selected build directories.'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('-c', '--clean', dest='clean', action='store_true',
+                          default=False,
+                          help='clean build tree (using bv_clean_build_tree '
+                          '-d) before configuring')
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, and '
+                          '"configure build" for build sections')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+
+        super(ConfigureCommand, self).__init__(argv, configuration)
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        self.process('configure', list(self.configuration.buildDirectories.values()),
+                     'configure', self.options, self.args)
+
+class BuildCommand(StepCommand):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] configure [options]
+
+    Compile selected build directories.'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('-c', '--clean', dest='clean', action='store_true',
+                          default=False,
+                          help='clean build tree (using '
+                          'bv_clean_build_tree -b) before building')
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, and '
+                          '"configure build" for build sections')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+
+        super(BuildCommand, self).__init__(argv, configuration)
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        self.process('build', list(self.configuration.buildDirectories.values()),
+                     'build', self.options, self.args)
+
+
+class DocCommand(StepCommand):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] doc [options]
+
+    Generate documentation (docbook, epydoc, doxygen).'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, and '
+                          '"configure build" for build sections')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+
+        super(DocCommand, self).__init__(argv, configuration)
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        self.process('doc', list(self.configuration.buildDirectories.values()), 'doc')
+
+
+class TestCommand(StepCommand):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] test
+
+    Executes ctest.'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, and '
+                          '"configure build" for build sections')
+        parser.add_option('-t', '--ctest_options',
+                          default=None,
+                          help='options passed to ctest (ex: "-VV -R carto*"). '
+                          'Same as the configuration option ctest_options but '
+                          'specified at runtime. The commandline option here '
+                          'overrides the bv_maker.cfg options.')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+
+        super(TestCommand, self).__init__(argv, configuration)
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        self.process('test', list(self.configuration.buildDirectories.values()), 'test',
+                     self.options, self.args)
+
+
+class TestrefCommand(StepCommand):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] testref
+
+    Executes tests in the testref mode (used to generate reference files).'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, and '
+                          '"configure build" for build sections')
+        parser.add_option('-m', '--make_options',
+                          default=None,
+                          help='options passed to make (ex: "-j8") during test '
+                          'reference generation. '
+                          'Same as the configuration option make_options but '
+                          'specified at runtime. The commandline option here '
+                          'overrides the bv_maker.cfg options.')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+
+        super(TestrefCommand, self).__init__(argv, configuration)
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        self.process('testref', list(self.configuration.buildDirectories.values()), 'testref',
+                     self.options, self.args)
+
+
+class PackCommand(StepCommand):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] pack [options]
+
+    Make installer package for the selected build directory.'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, '
+                          '"configure build" for build sections.')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+
+        super(PackCommand, self).__init__(argv, configuration)
+        self.python_vars = dict(global_installer_datetime())
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        # First, we need to order packages to manage dependencies between
+        # them (especially for offline installer that refer to data package,
+        # because in this case, it is necessary to update data package
+        # repository before software package has been packaged)
+        def __getPackageDirectoriesByDepth():
+            def __getDepth(package_dir):
+                data_dir = package_dir.get_data_dir()
+                if not data_dir:
+                    return 0
+                else:
+                    return __getDepth(data_dir) + 1
+
+            dirs=[]
+            for o in self.configuration.packageDirectories.values():
+                dirs.append((__getDepth(o), o))
+
+            #print([(o, d.directory) for o, d in sorted(dirs)])
+            return [d for o, d in sorted(dirs, key=lambda x: x[0])]
+
+        self.process('pack', __getPackageDirectoriesByDepth(),
+                     'package', self.options, self.args)
+
+
+class InstallPackCommand(StepCommand):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] install_pack [options]
+
+    Install a binary package for the selected build directory.'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, '
+                          '"configure build" for build sections.')
+        parser.add_option('--package-date', dest='package_date',
+                          default=None,
+                          help='sets the date of the pack to install. '
+                          'This is only useful if a %(date)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
+        parser.add_option('--package-time', dest='package_time',
+                          default=None,
+                          help='sets the time of the pack to install. '
+                          'This is only useful if a %(time)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
+        parser.add_option('--package-version', dest='package_version',
+                          default=None,
+                          help='sets the version of the pack to install. '
+                          'This is only useful if a %(version)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
+        parser.add_option('--prefix', dest='prefix',
+                          default=None,
+                          help='sets the prefix directory to install the pack.')
+        parser.add_option('--local', dest='local',
+                          action='store_true',
+                          default=False,
+                          help='True if the installation must be done ' \
+                               'locally. Default is False.')
+        parser.add_option('--offline', dest='offline',
+                          action='store_true',
+                          default=False,
+                          help='True if the installation must be done using ' \
+                               'offline installer. Default is False.')
+        parser.add_option('--debug', dest='debug',
+                          action='store_true',
+                          default=False,
+                          help='True if the installation must be done in debug ' \
+                               'mode (i.e. generated files must not be deleted). ' \
+                               'Default is False.')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+
+        super(InstallPackCommand, self).__init__(argv, configuration)
+
+        date = installer_format_date(installer_parse_date(options.package_date)) \
+               if options.package_date else global_installer_datetime()['date']
+        time = installer_format_time(installer_parse_time(options.package_time)) \
+               if options.package_time else global_installer_datetime()['time']
+        self.python_vars = {'date': date,
+                            'time': time}
+        if options.package_version:
+            self.python_vars.update({'version': options.package_version})
+
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        self.process('install_pack', list(self.configuration.packageDirectories.values()),
+                     'install_package', self.options, self.args)
+
+
+class TestPackCommand(StepCommand):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] test_pack [options]
+
+    Test in installed package for the selected build directory.'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, '
+                          '"configure build" for build sections.')
+        parser.add_option('-t', '--ctest_options',
+                          default=None,
+                          help='options passed to ctest (ex: "-VV -R carto*"). '
+                          'Same as the configuration option ctest_options but '
+                          'specified at runtime. The commandline option here '
+                          'overrides the bv_maker.cfg options.')
+        parser.add_option('--package-date', dest='package_date',
+                          default=None,
+                          help='sets the date of the pack to install. '
+                          'This is only useful if a %(date)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
+        parser.add_option('--package-time', dest='package_time',
+                          default=None,
+                          help='sets the time of the pack to install. '
+                          'This is only useful if a %(time)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
+        parser.add_option('--package-version', dest='package_version',
+                          default=None,
+                          help='sets the version of the pack to install. '
+                          'This is only useful if a %(version)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+
+        super(TestPackCommand, self).__init__(argv, configuration)
+
+        date = installer_format_date(installer_parse_date(options.package_date)) \
+               if options.package_date else global_installer_datetime()['date']
+        time = installer_format_time(installer_parse_time(options.package_time)) \
+               if options.package_time else global_installer_datetime()['time']
+        self.python_vars = {'date': date,
+                            'time': time}
+        if options.package_version:
+            self.python_vars.update({'version': options.package_version})
+
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        self.process('test_pack', list(self.configuration.packageDirectories.values()),
+                     'test_package', self.options, self.args)
+
+
+class TestrefPackCommand(StepCommand):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] testref_pack [options]
+
+    Create test reference files in installed package for the selected build directory.'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, '
+                          '"configure build" for build sections.')
+        parser.add_option('-m', '--make_options',
+                          default=None,
+                          help='options passed to make (ex: "-j8") during test '
+                          'reference generation. '
+                          'Same as the configuration option make_options but '
+                          'specified at runtime. The commandline option here '
+                          'overrides the bv_maker.cfg options.')
+        parser.add_option('--package-date', dest='package_date',
+                          default=None,
+                          help='sets the date of the pack to install. '
+                          'This is only useful if a %(date)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
+        parser.add_option('--package-time', dest='package_time',
+                          default=None,
+                          help='sets the time of the pack to install. '
+                          'This is only useful if a %(time)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
+        parser.add_option('--package-version', dest='package_version',
+                          default=None,
+                          help='sets the version of the pack to install. '
+                          'This is only useful if a %(version)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+
+        super(TestrefPackCommand, self).__init__(argv, configuration)
+
+        date = installer_format_date(installer_parse_date(options.package_date)) \
+               if options.package_date else global_installer_datetime()['date']
+        time = installer_format_time(installer_parse_time(options.package_time)) \
+               if options.package_time else global_installer_datetime()['time']
+        self.python_vars = {'date': date,
+                            'time': time}
+        if options.package_version:
+            self.python_vars.update({'version': options.package_version})
+
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        self.process('testref_pack', list(self.configuration.packageDirectories.values()),
+                     'testref_package', self.options, self.args)
+
+
+class PublishPackCommand(StepCommand):
+
+    def __init__(self, argv, configuration):
+        usage = '''%prog [global options] publish [options]
+
+    Run command to publish package for the selected publication directory.'''
+        parser = OptionParser(usage=usage)
+        parser.add_option('--only-if-default', dest='in_config',
+                          action='store_true',
+                          default=False,
+                          help='only perform this step if it is a default '
+                          'step, or specified in the "default_steps" option '
+                          'of bv_maker.cfg config file. Default steps are '
+                          'normally "sources" for source sections, '
+                          '"configure build" for build sections.')
+        parser.add_option('-m', '--make_options',
+                          default=None,
+                          help='options passed to make (ex: "-j8") during test '
+                          'reference generation. '
+                          'Same as the configuration option make_options but '
+                          'specified at runtime. The commandline option here '
+                          'overrides the bv_maker.cfg options.')
+        parser.add_option('--package-date', dest='package_date',
+                          default=None,
+                          help='sets the date of the pack to install. '
+                          'This is only useful if a %(date)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
+        parser.add_option('--package-time', dest='package_time',
+                          default=None,
+                          help='sets the time of the pack to install. '
+                          'This is only useful if a %(time)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
+        parser.add_option('--package-version', dest='package_version',
+                          default=None,
+                          help='sets the version of the pack to install. '
+                          'This is only useful if a %(version)s pattern '
+                          'has been used in the package directory sections '
+                          'of bv_maker.cfg.')
+        (options, args) = parser.parse_args(argv)
+        if args:
+            raise ValueError('Invalid option: %s' % args[0])
+
+        super(PublishPackCommand, self).__init__(argv, configuration)
+
+        date = installer_format_date(installer_parse_date(options.package_date)) \
+               if options.package_date else global_installer_datetime()['date']
+        time = installer_format_time(installer_parse_time(options.package_time)) \
+               if options.package_time else global_installer_datetime()['time']
+        self.python_vars = {'date': date,
+                            'time': time}
+        if options.package_version:
+            self.python_vars.update({'version': options.package_version})
+
+        self.options = options
+        self.args = args
+
+    def __call__(self):
+        self.process('publish_pack', list(self.configuration.publicationDirectories.values()),
+                     'publish_package', self.options, self.args)
+
+
+COMMANDS = {
+    'info': InfoCommand,
+    'sources': SourcesCommand,
+    'status': SourceStatusCommand,
+    'configure': ConfigureCommand,
+    'build': BuildCommand,
+    'doc': DocCommand,
+    'test': TestCommand,
+    'testref': TestrefCommand,
+    'pack': PackCommand,
+    'install_pack': InstallPackCommand,
+    'test_pack': TestPackCommand,
+    'testref_pack': TestrefPackCommand,
+    'publish_pack': PublishPackCommand,
+}

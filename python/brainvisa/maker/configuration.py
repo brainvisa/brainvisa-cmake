@@ -20,6 +20,7 @@ import brainvisa.maker.components_definition
 from brainvisa.maker.environment import normalize_path
 from brainvisa.maker.environment import replace_vars
 from brainvisa.maker.environment import VarReplacementType
+from brainvisa.maker.utils import global_installer_variables
 from brainvisa.maker.version import version as brainvisa_cmake_version
 
 
@@ -31,7 +32,7 @@ def check_filter_condition(filters):
     # for now, use python eval()
     expression = ' '.join(filters)
     # replace %(var)s vars
-    vars = installer.global_installer_variables()
+    vars = global_installer_variables()
     expression = expression % vars
     try:
         res = bool(eval(expression))
@@ -571,8 +572,7 @@ class ConfigVariableParser(object):
         self.__init_environ()
 
     def __init_python_vars(self):
-        from brainvisa.maker import installer
-        self._python_vars = dict(installer.global_installer_variables())
+        self._python_vars = dict(global_installer_variables())
 
     def __init_environ(self):
         self._env_vars = dict(os.environ)

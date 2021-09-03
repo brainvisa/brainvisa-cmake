@@ -280,7 +280,6 @@ if( BRAINVISA_BVMAKER )
       bv_env.sh
       bv_packaging_i2bm
       bv_patch_libs.sh
-      bv_patch_qtgui_gtk.py
       bv_sendmail
       bv_set_project_versions
       bv_sources_copyright

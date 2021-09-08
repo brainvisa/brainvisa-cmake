@@ -54,9 +54,6 @@ components_definition = [
                 'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
                            'standard', 'cea', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/documentation/trunk','communication/documentation/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/documentation/branches/bug_fix','communication/documentation/bug_fix'),
-                    '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/documentation/branches/5.0','communication/documentation/5.0'),
                 },
             }],
             ['bibliography', {
@@ -320,9 +317,6 @@ components_definition = [
                 'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
                            'standard', 'cea', 'cati_platform'],
                 'branches': {
-                    #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-models/trunk','morphologist/sulci-models/trunk'),
-                    #'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-models/branches/bug_fix','morphologist/sulci-models/bug_fix'),
-                    #'5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-models/branches/5.0','morphologist/sulci-models/5.0'),
                 },
             }],
             ['morphologist-ui', {

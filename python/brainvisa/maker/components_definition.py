@@ -234,10 +234,9 @@ components_definition = [
                 'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
                            'standard', 'cea', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/spm/trunk','spm/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/spm/branches/bug_fix','spm/bug_fix'),
-                    '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/spm/branches/5.0','spm/5.0'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/spm/tags/latest_release','spm/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/brainvisa_spm.git branch:integration','brainvisa_spm/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/brainvisa_spm.git branch:master','brainvisa_spm/master'),
+                    '5.0': ('git https://github.com/brainvisa/brainvisa_spm.git branch:5.0','brainvisa_spm/5.0'),
                 },
             }],
         ],
@@ -249,8 +248,6 @@ components_definition = [
                 'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
                            'standard', 'cea', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/datamind/trunk','datamind/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/datamind/branches/bug_fix','datamind/bug_fix'),
                     '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/datamind/branches/5.0','datamind/5.0'),
                     'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/datamind/tags/latest_release','datamind/latest_release'),
                 },

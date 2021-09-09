@@ -321,19 +321,17 @@ components_definition = [
                     'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-data/tags/2008','morphologist/sulci-data/tags/2008'),
                 },
             }],
-            ['sulci-private', {
+            ['sulci-nonfree', {
                 'groups': ['all', 'brainvisa', 'bvdev', 'standard', 'cea',
                            'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-private/trunk','morphologist/sulci-private/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-private/branches/bug_fix','morphologist/sulci-private/bug_fix'),
-                    '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-private/branches/5.0','morphologist/sulci-private/5.0'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-private/tags/latest_release','morphologist/sulci-private/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/sulci-nonfree.git branch:integration','morphologist/sulci-nonfree/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/sulci-nonfree.git branch:master','morphologist/sulci-nonfree/master'),
+                    '5.0': ('git https://github.com/brainvisa/sulci-nonfree.git branch:5.0','morphologist/sulci-nonfree/5.0'),
                 },
             }],
             ['sulci-models', {
-                'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
-                           'standard', 'cea', 'cati_platform'],
+                'groups': [],
                 'branches': {
                     'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-models/branches/bug_fix','morphologist/sulci-models/latest_release'),
                 },
@@ -450,19 +448,17 @@ components_definition = [
             ['constellation-gpl', {
                 'groups': ['all', 'cea'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/constellation/constellation-gpl/trunk','constellation/constellation-gpl/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/constellation/constellation-gpl/branches/bug_fix','constellation/constellation-gpl/bug_fix'),
-                    '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/constellation/constellation-gpl/branches/5.0','constellation/constellation-gpl/5.0'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/constellation/constellation-gpl/tags/latest_release','constellation/constellation-gpl/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/constellation-gpl.git branch:integration','constellation/constellation-gpl/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/constellation-gpl.git branch:master','constellation/constellation-gpl/master'),
+                    '5.0': ('git https://github.com/brainvisa/constellation-gpl.git branch:5.0','constellation/constellation-gpl/5.0'),
                 },
             }],
-            ['constellation-private', {
+            ['constellation-nonfree', {
                 'groups': ['all', 'cea'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/constellation/constellation-private/trunk','constellation/constellation-private/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/constellation/constellation-private/branches/bug_fix','constellation/constellation-private/bug_fix'),
-                    '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/constellation/constellation-private/branches/5.0','constellation/constellation-private/5.0'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/constellation/constellation-private/tags/latest_release','constellation/constellation-private/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/constellation-nonfree.git branch:integration','constellation/constellation-nonfree/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/constellation-nonfree.git branch:master','constellation/constellation-nonfree/master'),
+                    '5.0': ('git https://github.com/brainvisa/constellation-nonfree.git branch:5.0','constellation/constellation-nonfree/5.0'),
                 },
             }],
         ],
@@ -470,34 +466,31 @@ components_definition = [
     ('cortical_surface', {
         'description': 'Cortex-based surfacic parameterization and analysis toolbox from the <a href="http://www.lsis.org">LSIS team</a>. Homepage: <a href="http://olivier.coulon.perso.esil.univmed.fr/brainvisa.html">http://olivier.coulon.perso.esil.univmed.fr/brainvisa.html</a>.<br/>Also contains the FreeSurfer toolbox for BrainVisa, by the LNAO team.',
         'components': [
-            ['cortical_surface-private', {
+            ['cortical_surface-nonfree', {
                 'groups': ['all', 'brainvisa', 'bvdev', 'standard', 'cea',
                            'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/cortical_surface-private/trunk','cortical_surface/cortical_surface-private/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/cortical_surface-private/branches/bug_fix','cortical_surface/cortical_surface-private/bug_fix'),
-                    '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/cortical_surface-private/branches/5.0','cortical_surface/cortical_surface-private/5.0'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/cortical_surface-private/tags/latest_release','cortical_surface/cortical_surface-private/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/cortical_surface-nonfree.git branch:integration','cortical_surface/cortical_surface-nonfree/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/cortical_surface-nonfree.git branch:master','cortical_surface/cortical_surface-nonfree/master'),
+                    '5.0': ('git https://github.com/brainvisa/cortical_surface-nonfree.git branch:5.0','cortical_surface/cortical_surface-nonfree/5.0'),
                 },
             }],
             ['cortical_surface-gpl', {
                 'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
                            'standard', 'cea', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/cortical_surface-gpl/trunk','cortical_surface/cortical_surface-gpl/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/cortical_surface-gpl/branches/bug_fix','cortical_surface/cortical_surface-gpl/bug_fix'),
-                    '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/cortical_surface-gpl/branches/5.0','cortical_surface/cortical_surface-gpl/5.0'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/cortical_surface-gpl/tags/latest_release','cortical_surface/cortical_surface-gpl/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/cortical_surface-gpl.git branch:integration','cortical_surface/cortical_surface-gpl/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/cortical_surface-gpl.git branch:master','cortical_surface/cortical_surface-gpl/master'),
+                    '5.0': ('git https://github.com/brainvisa/cortical_surface-gpl.git branch:5.0','cortical_surface/cortical_surface-gpl/5.0'),
                 },
             }],
-            ['freesurfer_plugin', {
+            ['brainvisa_freesurfer', {
                 'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
                            'standard', 'cea', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/freesurfer_plugin/trunk','cortical_surface/freesurfer_plugin/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/freesurfer_plugin/branches/bug_fix','cortical_surface/freesurfer_plugin/bug_fix'),
-                    '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/freesurfer_plugin/branches/5.0','cortical_surface/freesurfer_plugin/5.0'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/cortical_surface/freesurfer_plugin/tags/latest_release','cortical_surface/freesurfer_plugin/latest_release'),
+                    'trunk': ('git https://github.com/brainvisa/brainvisa_freesurfer.git branch:integration','cortical_surface/brainvisa_freesurfer/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/brainvisa_freesurfer.git branch:master','cortical_surface/brainvisa_freesurfer/master'),
+                    '5.0': ('git https://github.com/brainvisa/brainvisa_freesurfer.git branch:5.0','cortical_surface/brainvisa_freesurfer/5.0'),
                 },
             }],
         ],
@@ -505,7 +498,7 @@ components_definition = [
     ('data_storage_client', {
         'components': [
             ['data_storage_client', {
-                'groups': ['all', 'cea'],
+                'groups': [],
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/data_storage_client/trunk','data_storage_client/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/data_storage_client/branches/bug_fix','data_storage_client/bug_fix'),

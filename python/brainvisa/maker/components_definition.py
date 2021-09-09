@@ -227,16 +227,16 @@ components_definition = [
             }],
         ],
     }),
-    ('brainvisa_spm', {
+    ('brainvisa-spm', {
         'description': 'Python module and Axon toolbox for SPM.',
         'components': [
-            ['brainvisa_spm', {
+            ['brainvisa-spm', {
                 'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
                            'standard', 'cea', 'cati_platform'],
                 'branches': {
-                    'trunk': ('git https://github.com/brainvisa/brainvisa_spm.git branch:integration','brainvisa_spm/integration'),
-                    'bug_fix': ('git https://github.com/brainvisa/brainvisa_spm.git branch:master','brainvisa_spm/master'),
-                    '5.0': ('git https://github.com/brainvisa/brainvisa_spm.git branch:5.0','brainvisa_spm/5.0'),
+                    'trunk': ('git https://github.com/brainvisa/brainvisa-spm.git branch:integration','brainvisa-spm/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/brainvisa-spm.git branch:master','brainvisa-spm/master'),
+                    '5.0': ('git https://github.com/brainvisa/brainvisa-spm.git branch:5.0','brainvisa-spm/5.0'),
                 },
             }],
         ],

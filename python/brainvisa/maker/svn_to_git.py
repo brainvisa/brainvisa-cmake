@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, division
+from __future__ import print_function, unicode_literals
 
 import os
 import re
@@ -31,8 +32,8 @@ def convert_project(project, repos, svn_repos, authors_file=None,
     auth_args = ''
     if authors_file:
         auth_args = ' --authors-file %s' % authors_file
-    cmd = 'git svn clone --stdlayout --follow-parent%s %s' \
-        % (auth_args, svn_repos)
+    cmd = 'git svn clone --stdlayout --follow-parent%s %s %s' \
+        % (auth_args, svn_repos, project)
     try:
         print(cmd)
         subprocess.check_call(cmd.split())
@@ -166,7 +167,8 @@ def make_tags(repos, latest_release_version=None):
     os.chdir(repos)
     cmd = 'git branch -a'
     print(cmd)
-    branches = subprocess.check_output(cmd.split()).split('\n')
+    branches = subprocess.check_output(cmd.split(),
+                                       universal_newlines=True).split('\n')
     for branch in branches:
         branch = branch.strip()
         if branch.startswith('remotes/origin/tags/'):
@@ -182,7 +184,8 @@ def make_tags(repos, latest_release_version=None):
             # with "git diff" that the contents of this commit are the same as
             # the tag.
             ancestor_commit = subprocess.check_output(
-                ['git', 'merge-base', branch, 'master']
+                ['git', 'merge-base', branch, 'master'],
+                universal_newlines=True,
             ).strip()
             returncode = subprocess.call(['git', 'diff', '--quiet',
                                           ancestor_commit, branch])
@@ -213,11 +216,13 @@ def make_tags(repos, latest_release_version=None):
                     # the person who moved the branch to tags/latest_release).
                     tag_commit = subprocess.check_output(
                         ['git', 'rev-list', '--reverse',
-                         ancestor_commit + '..' + branch]
+                         ancestor_commit + '..' + branch],
+                        universal_newlines=True,
                     ).split('\n', 1)[0]
                     tag_date, tagger_name, tagger_email = subprocess.check_output(
                         ['git', 'show', '--format=%cI%n%cn%n%ce', '--no-patch',
-                         tag_commit]
+                         tag_commit],
+                        universal_newlines=True,
                     ).strip().split('\n')
                     tag_cmd_env = {'GIT_COMMITTER_NAME': tagger_name,
                                    'GIT_COMMITTER_EMAIL': tagger_email,

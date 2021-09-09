@@ -113,13 +113,27 @@ def make_branches(repos):
     '''
     cur_dir = os.getcwd()
     os.chdir(repos)
-    cmd = 'git branch integration refs/remotes/origin/trunk'
+    cmd = 'git branch -a'
     print(cmd)
-    # is allowed to fail for projects that do not have trunk
-    subprocess.call(cmd.split())
-    cmd = 'git checkout -B master refs/remotes/origin/bug_fix'
-    print(cmd)
-    subprocess.check_call(cmd.split())
+    branches = subprocess.check_output(cmd.split(),
+                                       universal_newlines=True).split('\n')
+    for branch in branches:
+        branch = branch.strip()
+        if branch.startswith('remotes/origin/'):
+            svn_branch_name = branch[len('remotes/origin/'):]
+            if '/' in svn_branch_name:
+                continue  # probably a tag, handled in make_tags()
+            print('branch:', svn_branch_name)
+            if svn_branch_name == 'bug_fix':
+                git_branch_name = 'master'
+            elif svn_branch_name == 'trunk':
+                git_branch_name = 'integration'
+            else:
+                git_branch_name = svn_branch_name
+            cmd = ['git', 'checkout', '-B', git_branch_name,
+                   'refs/remotes/origin/' + svn_branch_name]
+            print(' '.join(cmd))
+            subprocess.check_call(cmd)
     os.chdir(cur_dir)
 
 
@@ -135,6 +149,7 @@ def update_branches(repos):
     '''
     cur_dir = os.getcwd()
     os.chdir(repos)
+    raise NotImplementedError('update_branches is not supported anymore')
     cmd = 'git checkout integration'
     print(cmd)
     # is allowed to fail for projects that do not have trunk

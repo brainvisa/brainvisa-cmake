@@ -1494,33 +1494,38 @@ function( BRAINVISA_GENERATE_COMMANDS_HELP_INDEX )
     if(CMAKE_CROSSCOMPILING AND WINE32)
         find_package(Wine)
     endif()
-    add_custom_command( OUTPUT "${_output_directory}/${_index_file}"
-                        COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX}
-                                "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
-                                "${PYTHON_EXECUTABLE}"
-                                ${CREATE_COMMANDS_DOC}
-                                -t "${_helppath}"
-                                -v 0
-                                ${_cmd_options}
-                                "${_output_directory}/${_index_file}"
-                        DEPENDS ${_depends}
-                        COMMENT "Generating documentation commands help index ..."
-                        VERBATIM )
+    if( NOT CREATE_COMMANDS_DOC )
+      message( "bv_create_commands_doc is not found or configured. "
+               "Commands help will not be generated." )
+    else()
+      add_custom_command( OUTPUT "${_output_directory}/${_index_file}"
+                          COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX}
+                                  "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
+                                  "${PYTHON_EXECUTABLE}"
+                                  ${CREATE_COMMANDS_DOC}
+                                  -t "${_helppath}"
+                                  -v 0
+                                  ${_cmd_options}
+                                  "${_output_directory}/${_index_file}"
+                          DEPENDS ${_depends}
+                          COMMENT "Generating documentation commands help index ..."
+                          VERBATIM )
 
-    add_custom_target( bv_commands_doc
-                       DEPENDS "${_output_directory}/${_index_file}"
-                       VERBATIM )
-
-    add_custom_command( OUTPUT "${_install_directory}/${_index_file}"
-                        COMMAND "${CMAKE_COMMAND}" -E make_directory "${_install_directory}"
-                        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_output_directory}/${_index_file}" "${_install_directory}/${_index_file}"
+      add_custom_target( bv_commands_doc
                         DEPENDS "${_output_directory}/${_index_file}"
-                        COMMENT "Installing documentation commands help index ..."
                         VERBATIM )
 
-    add_custom_target( install-bv_commands_doc
-                       DEPENDS "${_install_directory}/${_index_file}"
-                       VERBATIM )
+      add_custom_command( OUTPUT "${_install_directory}/${_index_file}"
+                          COMMAND "${CMAKE_COMMAND}" -E make_directory "${_install_directory}"
+                          COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_output_directory}/${_index_file}" "${_install_directory}/${_index_file}"
+                          DEPENDS "${_output_directory}/${_index_file}"
+                          COMMENT "Installing documentation commands help index ..."
+                          VERBATIM )
+
+      add_custom_target( install-bv_commands_doc
+                        DEPENDS "${_install_directory}/${_index_file}"
+                        VERBATIM )
+    endif()
   endif()
 
   unset(_output_directory)

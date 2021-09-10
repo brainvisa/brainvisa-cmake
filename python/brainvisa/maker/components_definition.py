@@ -475,17 +475,15 @@ components_definition = [
                 'groups': ['all', 'opensource', 'standard', 'cea',
                            'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_imaging/nuclear_imaging-gpl/trunk','nuclear_imaging/nuclear_imaging-gpl/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_imaging/nuclear_imaging-gpl/branches/bug_fix','nuclear_imaging/nuclear_imaging-gpl/bug_fix'),
-                    '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_imaging/nuclear_imaging-gpl/branches/5.0','nuclear_imaging/nuclear_imaging-gpl/5.0'),
+                    'bug_fix': ('git https://github.com/cati-neuroimaging/nuclear_imaging-gpl.git branch:master','nuclear_imaging/nuclear_imaging-gpl/master'),
+                    '5.0': ('git https://github.com/cati-neuroimaging/nuclear_imaging-gpl.git branch:5.0','nuclear_imaging/nuclear_imaging-gpl/5.0'),
                 },
             }],
-            ['nuclear_imaging-private', {
+            ['nuclear_imaging-nonfree', {
                 'groups': ['all', 'standard', 'cea', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_imaging/nuclear_imaging-private/trunk','nuclear_imaging/nuclear_imaging-private/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_imaging/nuclear_imaging-private/branches/bug_fix','nuclear_imaging/nuclear_imaging-private/bug_fix'),
-                    '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/nuclear_imaging/nuclear_imaging-private/branches/5.0','nuclear_imaging/nuclear_imaging-private/5.0'),
+                    'bug_fix': ('git https://github.com/cati-neuroimaging/nuclear_imaging-nonfree.git branch:master','nuclear_imaging/nuclear_imaging-nonfree/master'),
+                    '5.0': ('git https://github.com/cati-neuroimaging/nuclear_imaging-nonfree.git branch:5.0','nuclear_imaging/nuclear_imaging-nonfree/5.0'),
                 },
             }],
         ],
@@ -547,16 +545,16 @@ components_definition = [
     }),
     ('whasa', {
         'components': [
-            ['whasa-private', { # Experimental branch to propose a new organization
+            ['whasa-nonfree', {
                 'groups': ['catidb3_all', 'cati_platform'],
                 'branches': {
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/whasa/whasa-private/branches/bug_fix', 'whasa-private/bug_fix'),
+                    'bug_fix': ('git https://github.com/cati-neuroimaging/whasa-nonfree.git branch:master', 'whasa-nonfree/master'),
                 },
             }],
             ['whasa-gpl', { # Experimental branch to propose a new organization
                 'groups': ['catidb3_all', 'cati_platform'],
                 'branches': {
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/whasa/whasa-gpl/branches/bug_fix', 'whasa-gpl/bug_fix'),
+                    'bug_fix': ('git https://github.com/cati-neuroimaging/whasa-gpl.git branch:master', 'whasa-gpl/bug_fix'),
                     },
             }],
         ],

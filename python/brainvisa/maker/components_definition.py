@@ -50,12 +50,6 @@ components_definition = [
     }),
     ('communication', {
         'components': [
-            ['documentation', {
-                'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
-                           'standard', 'cea', 'cati_platform'],
-                'branches': {
-                },
-            }],
             ['web', {
                 'groups': ['all'],
                 'branches': {
@@ -98,13 +92,6 @@ components_definition = [
                     'trunk': ('git https://github.com/brainvisa/soma-io.git branch:master','soma/soma-io/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/soma-io.git branch:master','soma/soma-io/master'),
                     '5.0': ('git https://github.com/brainvisa/soma-io.git branch:5.0','soma/soma-io/5.0'),
-                },
-            }],
-            ['soma-io-gpl', {
-                'groups': ['all', 'cati_platform'],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io-gpl/trunk','soma/soma-io-gpl/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-io-gpl/branches/bug_fix','soma/soma-io-gpl/bug_fix'),
                 },
             }],
             ['soma-workflow', {
@@ -380,31 +367,6 @@ components_definition = [
             }],
         ],
     }),
-    ('connectomist', {
-        'components': [
-            ['connectomist-private', {
-                'groups': [],
-                'branches': {
-                    #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/connectomist-private/trunk','connectomist/connectomist-private/trunk'),
-                    #'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/connectomist-private/branches/bug_fix','connectomist/connectomist-private/bug_fix'),
-                },
-            }],
-            ['old_connectomist-gpl', {
-                'groups': [],
-                'branches': {
-                    #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/old_connectomist-gpl/trunk','connectomist/old_connectomist-gpl/trunk'),
-                    #'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/old_connectomist-gpl/branches/bug_fix','connectomist/old_connectomist-gpl/bug_fix'),
-                },
-            }],
-            ['old_connectomist-private', {
-                'groups': [],
-                'branches': {
-                    #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/old_connectomist-private/trunk','connectomist/old_connectomist-private/trunk'),
-                    #'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/connectomist/old_connectomist-private/branches/bug_fix','connectomist/old_connectomist-private/bug_fix'),
-                },
-            }],
-        ],
-    }),
     ('constellation', {
         'components': [
             ['constellation-gpl', {
@@ -457,18 +419,6 @@ components_definition = [
             }],
         ],
     }),
-    ('data_storage_client', {
-        'components': [
-            ['data_storage_client', {
-                'groups': [],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/data_storage_client/trunk','data_storage_client/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/data_storage_client/branches/bug_fix','data_storage_client/bug_fix'),
-                    '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/data_storage_client/branches/5.0','data_storage_client/5.0'),
-                },
-            }],
-        ],
-    }),
     ('nuclear_imaging', {
         'components': [
             ['nuclear_imaging-gpl', {
@@ -484,22 +434,6 @@ components_definition = [
                 'branches': {
                     'bug_fix': ('git https://github.com/cati-neuroimaging/nuclear_imaging-nonfree.git branch:master','nuclear_imaging/nuclear_imaging-nonfree/master'),
                     '5.0': ('git https://github.com/cati-neuroimaging/nuclear_imaging-nonfree.git branch:5.0','nuclear_imaging/nuclear_imaging-nonfree/5.0'),
-                },
-            }],
-        ],
-    }),
-    ('ptk', {
-        'components': [
-            ['pyptk', {
-                'groups': [],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/ptk/pyptk/trunk','ptk/pyptk/trunk'),
-                },
-            }],
-            ['fiber-clustering', {
-                'groups': [],
-                'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/ptk/toolbox-fiber-clustering/trunk','ptk/toolbox-fiber-clustering/trunk'),
                 },
             }],
         ],

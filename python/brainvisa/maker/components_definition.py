@@ -603,7 +603,7 @@ components_definition = [
             ['rsfmri', {
                 'groups': ['all', 'cati_platform'],
                 'branches': {
-                    'bug_fix': ('git https://github.com/cati-neuroimaging/sacha-gpl.git branch:master','rsfmri/master'),
+                    'bug_fix': ('git https://github.com/cati-neuroimaging/rsfmri.git branch:master','rsfmri/master'),
                 },
                 'build_model': 'pure_python',
             }],

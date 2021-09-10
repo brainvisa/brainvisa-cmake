@@ -583,20 +583,16 @@ components_definition = [
     }),
     ('sacha', {
         'components': [
-            ['sacha-private', { # Experimental branch to propose a new organization
+            ['sacha-nonfree', {
                 'groups': ['catidb3_all', 'cati_platform'],
                 'branches': {
-                    #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/sacha/sacha-private/trunk', 'sacha-private/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/sacha/sacha-private/branches/bug_fix', 'sacha-private/bug_fix'),
-                    #'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/sacha/sacha-private/tags/latest_release', 'sacha-private/latest_release'),
+                    'bug_fix': ('git https://github.com/cati-neuroimaging/sacha-nonfree.git branch:master', 'sacha-nonfree/bug_fix'),
                 },
             }],
-            ['sacha-gpl', { # Experimental branch to propose a new organization
+            ['sacha-gpl', {
                 'groups': ['catidb3_all', 'cati_platform'],
                 'branches': {
-                    #'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/sacha/sacha-gpl/trunk', 'sacha-gpl/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/sacha/sacha-gpl/branches/bug_fix', 'sacha-gpl/bug_fix'),
-                    #'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/cati/sacha/sacha-gpl/tags/latest_release', 'sacha-gpl/latest_release'),
+                    'bug_fix': ('git https://github.com/cati-neuroimaging/sacha-gpl.git branch:master', 'sacha-gpl/master'),
                 },
             }],
         ],
@@ -636,14 +632,10 @@ components_definition = [
             ['longitudinal_pipelines', {
                 'groups': ['all', 'cea', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/longitudinal_pipelines/trunk',
-                              'longitudinal_pipelines/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/longitudinal_pipelines/branches/bug_fix',
-                              'longitudinal_pipelines/bug_fix'),
-                    '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/longitudinal_pipelines/branches/5.0',
+                    'bug_fix': ('git https://github.com/cati-neuroimaging/longitudinal_pipelines.git branch:master',
+                              'longitudinal_pipelines/master'),
+                    '5.0': ('git https://github.com/cati-neuroimaging/longitudinal_pipelines.git branch:5.0',
                               'longitudinal_pipelines/5.0'),
-                    'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/longitudinal_pipelines/tags/latest_release',
-                              'longitudinal_pipelines/latest_release'),
                 },
             }],
         ],
@@ -679,9 +671,7 @@ components_definition = [
             ['rsfmri', {
                 'groups': ['all', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/fmri/rsfmri/trunk','rsfmri/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/fmri/rsfmri/branches/bug_fix','rsfmri/bug_fix'),
-                    #'latest_release': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/fmri/rsfmri/tags/latest_release','rsfmri/latest_release'),
+                    'bug_fix': ('git https://github.com/cati-neuroimaging/sacha-gpl.git branch:master','rsfmri/master'),
                 },
                 'build_model': 'pure_python',
             }],

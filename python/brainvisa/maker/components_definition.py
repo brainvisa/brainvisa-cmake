@@ -256,37 +256,35 @@ components_definition = [
     ('morphologist', {
         'description': 'Anatomical MRI (T1) analysis toolbox, featuring cortex and sulci segmentation, and sulci analysis tools, by the <a href="http://lnao.fr">LNAO team</a>.',
         'components': [
-            ['morphologist-private', {
+            ['morphologist-nonfree', {
                 'groups': ['all', 'brainvisa', 'bvdev', 'standard', 'cea',
                            'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/morphologist-private/trunk','morphologist/morphologist-private/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/morphologist-private/branches/bug_fix','morphologist/morphologist-private/bug_fix'),
-                    '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/morphologist-private/branches/5.0','morphologist/morphologist-private/5.0'),
+                    'trunk': ('git https://github.com/brainvisa/morphologist-nonfree.git branch:integration','morphologist/morphologist-nonfree/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/morphologist-nonfree.git branch:master','morphologist/morphologist-nonfree/master'),
+                    '5.0': ('git https://github.com/brainvisa/morphologist-nonfree.git branch:5.0','morphologist/morphologist-nonfree/5.0'),
                 },
             }],
             ['morphologist-gpl', {
                 'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
                            'standard', 'cea', 'cati_platform'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/morphologist-gpl/trunk','morphologist/morphologist-gpl/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/morphologist-gpl/branches/bug_fix','morphologist/morphologist-gpl/bug_fix'),
-                    '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/morphologist-gpl/branches/5.0','morphologist/morphologist-gpl/5.0'),
+                    'trunk': ('git https://github.com/brainvisa/morphologist-gpl.git branch:integration','morphologist/morphologist-gpl/integration'),
+                    'bug_fix': ('git https://github.com/brainvisa/morphologist-gpl.git branch:master','morphologist/morphologist-gpl/master'),
+                    '5.0': ('git https://github.com/brainvisa/morphologist-gpl.git branch:5.0','morphologist/morphologist-gpl/5.0'),
                 },
             }],
-            ['baby', {
+            ['morphologist-baby', {
                 'groups': ['all', 'standard', 'cea'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/baby/trunk','morphologist/baby/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/baby/branches/bug_fix','morphologist/baby/bug_fix'),
-                    '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/baby/branches/5.0','morphologist/baby/5.0'),
+                    'trunk': ('git https://bioproj.extra.cea.fr/git/brainvisa-t1mri/morphologist-baby.git branch:integration','morphologist/morphologist-baby/integration'),
+                    'bug_fix': ('git https://bioproj.extra.cea.fr/git/brainvisa-t1mri/morphologist-baby.git branch:master','morphologist/morphologist-baby/master'),
+                    '5.0': ('git https://bioproj.extra.cea.fr/git/brainvisa-t1mri/morphologist-baby.git branch:5.0','morphologist/morphologist-baby/5.0'),
                 },
             }],
             ['tms', {
                 'groups': ['all'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/tms/trunk','morphologist/tms/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/tms/branches/bug_fix','morphologist/tms/bug_fix'),
                 },
             }],
             ['sulci-data', {

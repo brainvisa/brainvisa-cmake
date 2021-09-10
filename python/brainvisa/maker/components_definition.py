@@ -29,13 +29,6 @@ components_definition = [
                     '5.0': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:5.0','development/brainvisa-cmake/5.0'),
                 },
             }],
-            ['brainvisa-installer', {
-                'groups': [],
-                'branches': {
-                    #'trunk': ('git https://github.com/brainvisa/brainvisa-installer.git branch:master','development/brainvisa-installer/integration'),
-                    #'bug_fix': ('git https://github.com/brainvisa/brainvisa-installer.git branch:master','development/brainvisa-installer/master'),
-                },
-            }],
             ['casa-distro', {
                 'groups': ['all', 'anatomist', 'opensource', 'brainvisa',
                            'bvdev', 'standard', 'cea', 'cati_platform'],
@@ -154,8 +147,6 @@ components_definition = [
                 'groups': ['all', 'anatomist', 'opensource', 'brainvisa',
                            'bvdev', 'standard', 'cea', 'cati_platform'],
                 'branches': {
-                    #'trunk': ('git https://github.com/brainvisa/aims-til.git branch:master','aims/aims-til/integration'),
-                    #'bug_fix': ('git https://github.com/brainvisa/aims-til.git branch:master','aims/aims-til/master'),
                     '5.0': ('git https://github.com/brainvisa/aims-til.git branch:5.0','aims/aims-til/5.0'),
                 },
             }],

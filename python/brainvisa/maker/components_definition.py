@@ -59,9 +59,9 @@ components_definition = [
             ['web', {
                 'groups': ['all'],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/web/trunk','communication/web/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/web/branches/bug_fix','communication/web/bug_fix'),
-                    '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/communication/web/branches/bug_fix','communication/web/5.0'),
+                    'trunk': ('git https://bioproj.extra.cea.fr/git/brainvisa-commu/web.git branch:integration','communication/web/trunk'),
+                    'bug_fix': ('git https://bioproj.extra.cea.fr/git/brainvisa-commu/web.git branch:master','communication/web/master'),
+                    '5.0': ('git https://bioproj.extra.cea.fr/git/brainvisa-commu/web.git branch:master','communication/web/5.0'),
                 },
             }],
         ],

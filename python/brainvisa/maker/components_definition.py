@@ -488,20 +488,6 @@ components_definition = [
             }],
         ],
     }),
-    ('release', {
-        'components': [
-            ['brainvisa-release', {
-                'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
-                           'standard', 'cea', 'cati_platform'],
-                'branches': {
-                    'trunk': ('git https://github.com/brainvisa/brainvisa-release.git branch:master','development/brainvisa-release/integration'),
-                    'bug_fix': ('git https://github.com/brainvisa/brainvisa-release.git branch:master','development/brainvisa-release/master'),
-                    '5.0': ('git https://github.com/brainvisa/brainvisa-release.git branch:5.0','development/brainvisa-release/5.0'),
-                    'latest_release': ('git https://github.com/brainvisa/brainvisa-release.git branch:latest_release','development/brainvisa-release/latest_release'),
-                },
-            }],
-        ],
-    }),
     ('longitudinal_pipelines', {
         'components': [
             ['longitudinal_pipelines', {

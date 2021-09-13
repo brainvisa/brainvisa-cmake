@@ -1441,7 +1441,7 @@ function( BRAINVISA_ADD_COMMAND_HELP name)
 
   if ((NOT DEFINED _depends) AND (NOT DEFINED _command))
     # Default dependencies is set using command name
-    set( _depends "bin/${name}" )
+    set( _depends "${CMAKE_BINARY_DIR}/bin/${name}" )
   endif()
 
   if (NOT DEFINED _command)
@@ -1452,13 +1452,13 @@ function( BRAINVISA_ADD_COMMAND_HELP name)
     endif()
 
     if(DEFINED _output_command)
-      set( _command "bin/${_output_command}" "-h" )
+      set( _command "${CMAKE_BINARY_DIR}/bin/${_output_command}" "-h" )
       unset(_output_command)
     else()
       if (${name}-command-is-script)
-        set( _command "bin/${name}" "-h" )
+        set( _command "${CMAKE_BINARY_DIR}/bin/${name}" "-h" )
       else()
-        set( _command "bin/${name}${CMAKE_EXECUTABLE_SUFFIX}" "-h" )
+        set( _command "${CMAKE_BINARY_DIR}/bin/${name}${CMAKE_EXECUTABLE_SUFFIX}" "-h" )
       endif()
     endif()
 
@@ -1467,6 +1467,8 @@ function( BRAINVISA_ADD_COMMAND_HELP name)
       set( _command "${PYTHON_EXECUTABLE}" ${_command})
     endif()
   endif()
+
+#   set( _command "${CMAKE_BINARY_DIR}/${_command}" )
 
   string(REPLACE ";" "', '" _command "${_command}")
   get_filename_component( _output_directory "${CMAKE_BINARY_DIR}/share/doc" ABSOLUTE)

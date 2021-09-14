@@ -408,15 +408,14 @@ components_definition = [
     ('nuclear_imaging', {
         'components': [
             ['nuclear_imaging-gpl', {
-                'groups': ['all', 'opensource', 'standard', 'cea',
-                           'cati_platform'],
+                'groups': ['all', 'cati_platform'],
                 'branches': {
                     'bug_fix': ('git https://github.com/cati-neuroimaging/nuclear_imaging-gpl.git branch:master','nuclear_imaging/nuclear_imaging-gpl/master'),
                     '5.0': ('git https://github.com/cati-neuroimaging/nuclear_imaging-gpl.git branch:5.0','nuclear_imaging/nuclear_imaging-gpl/5.0'),
                 },
             }],
             ['nuclear_imaging-nonfree', {
-                'groups': ['all', 'standard', 'cea', 'cati_platform'],
+                'groups': ['all', 'cati_platform'],
                 'branches': {
                     'bug_fix': ('git https://github.com/cati-neuroimaging/nuclear_imaging-nonfree.git branch:master','nuclear_imaging/nuclear_imaging-nonfree/master'),
                     '5.0': ('git https://github.com/cati-neuroimaging/nuclear_imaging-nonfree.git branch:5.0','nuclear_imaging/nuclear_imaging-nonfree/5.0'),
@@ -448,7 +447,7 @@ components_definition = [
     ('sacha', {
         'components': [
             ['sacha-nonfree', {
-                'groups': ['catidb3_all', 'cati_platform'],
+                'groups': ['all', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'bug_fix': ('git https://github.com/cati-neuroimaging/sacha-nonfree.git branch:master', 'sacha-nonfree/bug_fix'),
                 },
@@ -464,7 +463,7 @@ components_definition = [
     ('whasa', {
         'components': [
             ['whasa-nonfree', {
-                'groups': ['catidb3_all', 'cati_platform'],
+                'groups': ['all', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'bug_fix': ('git https://github.com/cati-neuroimaging/whasa-nonfree.git branch:master', 'whasa-nonfree/master'),
                 },
@@ -480,7 +479,7 @@ components_definition = [
     ('longitudinal_pipelines', {
         'components': [
             ['longitudinal_pipelines', {
-                'groups': ['all', 'cea', 'cati_platform'],
+                'groups': ['all', 'cati_platform'],
                 'branches': {
                     'bug_fix': ('git https://github.com/cati-neuroimaging/longitudinal_pipelines.git branch:master',
                               'longitudinal_pipelines/master'),

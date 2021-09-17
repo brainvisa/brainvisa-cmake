@@ -52,7 +52,6 @@ Options:
   --username=USERNAME   specify user login to use with the svn server
   -e, --email           Use email notification (if configured in the general
                         section of the configuration file)
-  --disable-jenkins     disable Jenkins server logging
   --def, --only-if-default
                         apply only steps which are defined as default steps in
                         the bv_maker.cfg config file. Equivalent to passing

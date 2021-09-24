@@ -449,11 +449,11 @@ components_definition = [
             ['sacha-nonfree', {
                 'groups': ['all', 'catidb3_all', 'cati_platform'],
                 'branches': {
-                    'bug_fix': ('git https://github.com/cati-neuroimaging/sacha-nonfree.git branch:master', 'sacha-nonfree/bug_fix'),
+                    'bug_fix': ('git https://github.com/cati-neuroimaging/sacha-nonfree.git branch:master', 'sacha-nonfree/master'),
                 },
             }],
             ['sacha-gpl', {
-                'groups': ['catidb3_all', 'cati_platform'],
+                'groups': ['all', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'bug_fix': ('git https://github.com/cati-neuroimaging/sacha-gpl.git branch:master', 'sacha-gpl/master'),
                 },
@@ -469,9 +469,9 @@ components_definition = [
                 },
             }],
             ['whasa-gpl', { # Experimental branch to propose a new organization
-                'groups': ['catidb3_all', 'cati_platform'],
+                'groups': ['all', 'catidb3_all', 'cati_platform'],
                 'branches': {
-                    'bug_fix': ('git https://github.com/cati-neuroimaging/whasa-gpl.git branch:master', 'whasa-gpl/bug_fix'),
+                    'bug_fix': ('git https://github.com/cati-neuroimaging/whasa-gpl.git branch:master', 'whasa-gpl/master'),
                     },
             }],
         ],

@@ -3,9 +3,14 @@ string( TOUPPER "@PROJECT_NAME@" _uproject )
 
 find_package( PythonInterp REQUIRED )
 
-get_filename_component( ${_uproject}_BINARY_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH )
-get_filename_component( ${_uproject}_BINARY_DIR "${${_uproject}_BINARY_DIR}" PATH )
-get_filename_component( ${_uproject}_BINARY_DIR "${${_uproject}_BINARY_DIR}" PATH )
-get_filename_component( ${_uproject}_BINARY_DIR "${${_uproject}_BINARY_DIR}" PATH )
+if ( NO_BV_MAKER )
+    get_filename_component( ${_uproject}_BINARY_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH )
+    get_filename_component( ${_uproject}_BINARY_DIR "${${_uproject}_BINARY_DIR}" PATH )
+else()
+    get_filename_component( ${_uproject}_BINARY_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH )
+    get_filename_component( ${_uproject}_BINARY_DIR "${${_uproject}_BINARY_DIR}" PATH )
+    get_filename_component( ${_uproject}_BINARY_DIR "${${_uproject}_BINARY_DIR}" PATH )
+    get_filename_component( ${_uproject}_BINARY_DIR "${${_uproject}_BINARY_DIR}" PATH )
+endif()
 
 set( ${_uproject}_FOUND true )

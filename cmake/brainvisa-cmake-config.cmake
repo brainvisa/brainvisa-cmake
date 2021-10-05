@@ -7,28 +7,28 @@ cmake_policy( SET CMP0057 NEW )
 
 get_property( config_done GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE )
 
-if (WIN32)
-    set(BRAINVISA_CMAKE_LIBRARY_PATH_SUFFIXES lib bin)
-else()
+# if (WIN32)
+#     set(BRAINVISA_CMAKE_LIBRARY_PATH_SUFFIXES lib bin)
+# else()
     set(BRAINVISA_CMAKE_LIBRARY_PATH_SUFFIXES lib)
-endif()
+# endif()
 
-if ( COMPILER_PREFIX AND CMAKE_CROSSCOMPILING)
-  if(WIN32)
+# if ( COMPILER_PREFIX AND CMAKE_CROSSCOMPILING)
+#   if(WIN32)
 
-    # Fix for Windows-GNU.cmake to disable the use of .rsp files
-    # which is not allowed with distcc
-    foreach(_lang C CXX FORTRAN)
-      set( CMAKE_${_lang}_USE_RESPONSE_FILE_FOR_INCLUDES 0 )
-      set( CMAKE_${_lang}_USE_RESPONSE_FILE_FOR_OBJECTS 0 )
-    endforeach()
+#     # Fix for Windows-GNU.cmake to disable the use of .rsp files
+#     # which is not allowed with distcc
+#     foreach(_lang C CXX FORTRAN)
+#       set( CMAKE_${_lang}_USE_RESPONSE_FILE_FOR_INCLUDES 0 )
+#       set( CMAKE_${_lang}_USE_RESPONSE_FILE_FOR_OBJECTS 0 )
+#     endforeach()
 
-    # Add toolchain specific module search path
-    set( CMAKE_MODULE_PATH
-        "${brainvisa-cmake_DIR}/specific/windows/${COMPILER_PREFIX}"
-        ${CMAKE_MODULE_PATH} )
-  endif()
-endif()
+#     # Add toolchain specific module search path
+#     set( CMAKE_MODULE_PATH
+#         "${brainvisa-cmake_DIR}/specific/windows/${COMPILER_PREFIX}"
+#         ${CMAKE_MODULE_PATH} )
+#   endif()
+# endif()
 
 # OS identifier
 if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
@@ -295,7 +295,7 @@ if sys.version_info[0] >= 3:
         exec(compile(file_contents, filename, 'exec'), globals, locals)
 info=os.path.normpath('${info}')
 execfile(info)
-cmake = os.path.join(os.path.normpath('${CMAKE_BINARY_DIR}'),'build_files',NAME,'project_info.cmake')
+cmake = os.path.join(os.path.normpath('${CMAKE_BINARY_DIR}'),'build_files',NAME+'_project_info.cmake')
 if not os.path.exists(cmake) or os.stat(cmake).st_mtime < os.stat(info).st_mtime:
     if 'PROJECT' not in dir():
         PROJECT = NAME # use same name for component and project
@@ -361,15 +361,18 @@ macro( BRAINVISA_PROJECT )
     set( BRAINVISA_PACKAGE_VERSION "${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}.${BRAINVISA_PACKAGE_VERSION_PATCH}" )
   endif()
 
-  if( CMAKE_MAJOR_VERSION GREATER 2 )
-    cmake_policy(SET CMP0048 OLD)
+  cmake_policy( SET CMP0048 NEW )
+  if ( NOT "${ARGN}" STREQUAL "" )
+    set( LANGUAGES "LANGUAGES" ${ARGN})
+  else()
+    set( LANGUAGES )
   endif()
-  project( ${BRAINVISA_PACKAGE_NAME} ${ARGN} )
+  project( ${BRAINVISA_PACKAGE_NAME} ${LANGUAGES} VERSION "${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}.${BRAINVISA_PACKAGE_VERSION_PATCH}" )
 
-  set( ${PROJECT_NAME}_VERSION_MAJOR ${BRAINVISA_PACKAGE_VERSION_MAJOR} )
-  set( ${PROJECT_NAME}_VERSION_MINOR ${BRAINVISA_PACKAGE_VERSION_MINOR} )
-  set( ${PROJECT_NAME}_VERSION_PATCH ${BRAINVISA_PACKAGE_VERSION_PATCH} )
-  set( ${PROJECT_NAME}_VERSION "${BRAINVISA_PACKAGE_VERSION}" )
+  # set( ${PROJECT_NAME}_VERSION_MAJOR ${BRAINVISA_PACKAGE_VERSION_MAJOR} )
+  # set( ${PROJECT_NAME}_VERSION_MINOR ${BRAINVISA_PACKAGE_VERSION_MINOR} )
+  # set( ${PROJECT_NAME}_VERSION_PATCH ${BRAINVISA_PACKAGE_VERSION_PATCH} )
+  # set( ${PROJECT_NAME}_VERSION "${BRAINVISA_PACKAGE_VERSION}" )
   if( DEFINED BRAINVISA_BVMAKER )
     set( ${PROJECT_NAME}_VERSION_MAJOR ${BRAINVISA_PACKAGE_VERSION_MAJOR} PARENT_SCOPE )
     set( ${PROJECT_NAME}_VERSION_MINOR ${BRAINVISA_PACKAGE_VERSION_MINOR} PARENT_SCOPE )
@@ -2484,7 +2487,7 @@ endmacro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _installCompon
 
 function( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
   string( TOUPPER "${PROJECT_NAME}" PROJECT_NAME_UPPER )
-  set( _prefixForCmakeFiles "share/${PROJECT_NAME}-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}/cmake" )
+  set( _prefixForCmakeFiles "cmake" )
   configure_file( cmake/${PROJECT_NAME}-config.cmake.in
                   "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config.cmake"
                   @ONLY )

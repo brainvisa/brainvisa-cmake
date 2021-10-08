@@ -1,19 +1,19 @@
-# if( EXISTS "${CMAKE_BINARY_DIR}/bv_maker.cmake" )
-#   include( "${CMAKE_BINARY_DIR}/bv_maker.cmake" )
-#   foreach( component ${BRAINVISA_COMPONENTS} )
-#     file( GLOB _share_list "${CMAKE_BINARY_DIR}/share/${component}-*" )
-#     foreach( _share ${_share_list} )
-#       get_filename_component(share_dir "${_share}/cmake" ABSOLUTE)
-#       get_filename_component(share_dir "${share_dir}" REALPATH)
-#       get_filename_component(component_dir "${${component}_DIR}" ABSOLUTE)
-#       get_filename_component(component_dir "${component_dir}" REALPATH)
-#       if( NOT "${share_dir}" STREQUAL "${component_dir}" )
-#         message( "WARNING: removing \"${_share}\" directory to avoid confusion with \"${component_dir}\"" )
-#         execute_process( COMMAND "${CMAKE_COMMAND}" -E remove_directory "${_share}" )
-#       endif()
-#     endforeach()
-#   endforeach()
-# endif()
+set_property( GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE YES )
+
+if(NOT DEFINED CCACHE_ENABLED)
+  option( CCACHE_ENABLED "Enable/disable use of ccache if possible" OFF )
+endif()
+
+# Initialize python module containing compilation information
+execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/python/brainvisa" )
+if(CCACHE_ENABLED)
+  find_program(CCACHE_FOUND ccache)
+  if(CCACHE_FOUND)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+  endif(CCACHE_FOUND)
+endif()
+
 
 # Set default Qt desired version
 set( DESIRED_QT_VERSION 5 CACHE STRING

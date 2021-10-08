@@ -5,67 +5,43 @@ if( CMAKE_MAJOR_VERSION GREATER 2 )
 endif()
 cmake_policy( SET CMP0057 NEW )
 
-get_property( config_done GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE )
+# get_property( config_done GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE )
 
-# if (WIN32)
-#     set(BRAINVISA_CMAKE_LIBRARY_PATH_SUFFIXES lib bin)
-# else()
-    set(BRAINVISA_CMAKE_LIBRARY_PATH_SUFFIXES lib)
+set(BRAINVISA_CMAKE_LIBRARY_PATH_SUFFIXES lib)
+
+# # OS identifier
+# if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
+#   if( EXISTS /etc/mandriva-release )
+#       set( LSB_DISTRIB "mandriva"
+#            CACHE STRING "Linux distribution identifier" )
+#       file( READ /etc/mandriva-release _x )
+#       string( REGEX MATCH "Mandriva Linux release ([0-9.]+)" _x "${_x}" )
+#       if( _x )
+#         set( LSB_DISTRIB_RELEASE ${CMAKE_MATCH_1} CACHE STRING "Linux distribution version" )
+#       endif()
+#   elseif( EXISTS /etc/lsb-release )
+#     file( READ /etc/lsb-release _x )
+#     string( REGEX MATCH "DISTRIB_ID=([^\n]+)" _y "${_x}" )
+#     if( _y )
+#       string( TOLOWER ${CMAKE_MATCH_1} _y )
+#       set( LSB_DISTRIB ${_y} CACHE STRING "Linux distribution identifier" )
+#       string( REGEX MATCH "DISTRIB_RELEASE=([0-9.]+)" _ver "${_x}" )
+#       if( _ver )
+#         set( LSB_DISTRIB_RELEASE ${CMAKE_MATCH_1} CACHE STRING "Linux distribution version" )
+#       endif()
+#     endif()
+#   elseif( EXISTS /etc/redhat-release )
+#     file( READ /etc/redhat-release _x )
+#     string( REGEX MATCH "(.+) release ([0-9.]+)" _y "${_x}" )
+#     if( _y )
+#       string( TOLOWER ${CMAKE_MATCH_1} _y )
+#       set( LSB_DISTRIB ${_y} CACHE STRING "Linux distribution identifier" )
+#       set( LSB_DISTRIB_RELEASE ${CMAKE_MATCH_2} CACHE STRING "Linux distribution version" )
+#     endif()
+#   endif()
 # endif()
 
 
-# OS identifier
-if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
-  if( EXISTS /etc/mandriva-release )
-      set( LSB_DISTRIB "mandriva"
-           CACHE STRING "Linux distribution identifier" )
-      file( READ /etc/mandriva-release _x )
-      string( REGEX MATCH "Mandriva Linux release ([0-9.]+)" _x "${_x}" )
-      if( _x )
-        set( LSB_DISTRIB_RELEASE ${CMAKE_MATCH_1} CACHE STRING "Linux distribution version" )
-      endif()
-  elseif( EXISTS /etc/lsb-release )
-    file( READ /etc/lsb-release _x )
-    string( REGEX MATCH "DISTRIB_ID=([^\n]+)" _y "${_x}" )
-    if( _y )
-      string( TOLOWER ${CMAKE_MATCH_1} _y )
-      set( LSB_DISTRIB ${_y} CACHE STRING "Linux distribution identifier" )
-      string( REGEX MATCH "DISTRIB_RELEASE=([0-9.]+)" _ver "${_x}" )
-      if( _ver )
-        set( LSB_DISTRIB_RELEASE ${CMAKE_MATCH_1} CACHE STRING "Linux distribution version" )
-      endif()
-    endif()
-  elseif( EXISTS /etc/redhat-release )
-    file( READ /etc/redhat-release _x )
-    string( REGEX MATCH "(.+) release ([0-9.]+)" _y "${_x}" )
-    if( _y )
-      string( TOLOWER ${CMAKE_MATCH_1} _y )
-      set( LSB_DISTRIB ${_y} CACHE STRING "Linux distribution identifier" )
-      set( LSB_DISTRIB_RELEASE ${CMAKE_MATCH_2} CACHE STRING "Linux distribution version" )
-    endif()
-  endif()
-endif()
-
-set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${brainvisa-cmake_DIR}/modules" )
-if( NOT config_done )
-  set_property( GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE YES )
-
-  if(NOT DEFINED CCACHE_ENABLED)
-    option( CCACHE_ENABLED "Enable/disable use of ccache if possible" OFF )
-  endif()
-
-  # Initialize python module containing compilation information
-  execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/python/brainvisa" )
-
-endif()
-
-if(CCACHE_ENABLED)
-  find_program(CCACHE_FOUND ccache)
-  if(CCACHE_FOUND)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-  endif(CCACHE_FOUND)
-endif()
 
 # This ugly fix allows Boost to detect recent library versions
 # as they are not always defined in FindBoost.cmake. It probably
@@ -135,41 +111,10 @@ starting your container:\
 endif()
 unset(ld_library_path_list)
 
-
-#
-# BRAINVISA_TARGET_SYSTEM_COMMAND
-#   Get a usable command to run on the target system (mainly for cross 
-#   compilation).
-#
-# Usage:
-#  BRAINVISA_TARGET_SYSTEM_COMMAND( <output variable> <command> [<arg1> ... <argn>] )
-#
-# Example:
-#   BRAINVISA_TARGET_SYSTEM_COMMAND( TARGET_COMMAND "program.exe" "--help" )
-#   message( ${p} )
-function(BRAINVISA_TARGET_SYSTEM_COMMAND variable)
-  set(__command "${ARGN}")
-  message("===== TARGET COMMAND: ${__command}")
-  set(${variable} ${__command} PARENT_SCOPE)
-  unset(__command)
-endfunction()
-
-macro( BRAINVISA_FIND_PACKAGE component )
-  if( ${component}_IS_BEING_COMPILED AND NOT ${component}_BINARY_DIR )
-    set( args "${ARGN}" )
-    list( REMOVE_ITEM args REQUIRED ) # We do not want CMake to display an error and stop here
-    list( REMOVE_ITEM args QUIET ) # Avoid to use QUIET twice
-    find_package( "${component}" ${args} QUIET )
-    if( NOT ${component}_FOUND )
-      if( NOT BRAINVISA_FIND_FAILED_${component} )
-        set( BRAINVISA_FIND_FAILED_${component} TRUE CACHE INTERNAL "" )
-        message( SEND_ERROR "BrainVISA component ${component} has to be configured before it can be imported by ${BRAINVISA_PACKAGE_NAME}. Configure one more time to get rid of this error." )
-      endif()
-    endif()
-  else()
-    find_package( "${component}" ${ARGN} )
-  endif()
+macro( BRAINVISA_FIND_PACKAGE )
+    find_package( ${ARGN} )
 endmacro()
+
 
 function(BRAINVISA_TEMPORARY_FILE_NAME variable)
   set(_base "/tmp/bv_maker_")
@@ -251,25 +196,6 @@ sys.stdout.write(cmake)
     endif()
 endfunction()
 
-
-function( BRAINVISA_FIND_COMPONENT_DIRECTORIES variable project_directory )
-    set( result )
-    file( GLOB_RECURSE projects_info "${path}/${project}/project_info.cmake" )
-    foreach( project_info ${projects_info} )
-        get_filename_component( component_dir "${info}" PATH )
-        list(APPEND result "${component_dir}")
-    endforeach()
-    file( GLOB_RECURSE projects_info "${path}/${project}/info.py" )
-    foreach( project_info ${projects_info} )
-        get_filename_component( component_dir "${info}" PATH )
-        get_filename_component( component_dir "${component_dir}" PATH )
-        list(FIND result "${component_dir}" index)
-        if(index EQUAL -1)
-          list(APPEND result "${component_dir}")
-        endif()
-    endforeach()
-    set(${variable} ${result} PARENT_SCOPE)
-endfunction()
 
 macro( BRAINVISA_PROJECT )
   if( BRAINVISA_REAL_SOURCE_DIR )
@@ -497,62 +423,6 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
 
 endfunction()
 
-
-
-
-# BRAINVISA_VERSION_CONVERT
-#   Convert version number either to hexadecimal version
-#   either to string version.
-#
-# Usage:
-#   BRAINVISA_VERSION_CONVERT( <variable> version [HEX] [STR] [BYTES <number_of_bytes>] )
-#
-# Example:
-#   BRAINVISA_VERSION_CONVERT( result "0x30206" STR )
-#   BRAINVISA_VERSION_CONVERT( result "3.2.6" HEX BYTES 2 )
-#
-function( BRAINVISA_VERSION_CONVERT variable version )
-  include(UseVersionConvert) 
-  VERSION_CONVERT(${variable} ${version} ${ARGN})
-endfunction()
-
-# BRAINVISA_SET_PROJECT_VERSION
-#   Read the VERSION file in "${PROJECT_SOURCE_DIR} and parse it to set the
-#   following variables:
-#     ${PROJECT_NAME}_VERSION = full version string (i.e. VERSION file content)
-#     ${PROJECT_NAME}_VERSION_MAJOR = major version number (i.e. first number)
-#     ${PROJECT_NAME}_VERSION_MINOR = minor version number (i.e. second number)
-#     ${PROJECT_NAME}_VERSION_PATCH = patch version number (if any)
-#   The following variables are also set with the same values as above:
-#     BRAINVISA_CURRENT_PROJECT_VERSION
-#     BRAINVISA_CURRENT_PROJECT_VERSION_MAJOR
-#     BRAINVISA_CURRENT_PROJECT_VERSION_MINOR
-#     BRAINVISA_CURRENT_PROJECT_VERSION_PATCH
-#
-# Usage:
-#   BRAINVISA_SET_PROJECT_VERSION()
-MACRO( BRAINVISA_SET_PROJECT_VERSION )
-  SET( _versionVar ${PROJECT_NAME}_VERSION )
-  IF( NOT DEFINED ${_versionVar} )
-    FILE( READ "${PROJECT_SOURCE_DIR}/VERSION" _version )
-    STRING( REGEX REPLACE "([^\n]*)\n" "\\1" _version "${_version}")
-    STRING( REGEX REPLACE "([^.]+)\\.([^.]+)(\\.(.*))?" "\\1" _version_major "${_version}")
-    STRING( REGEX REPLACE "([^.]+)\\.([^.]+)(\\.(.*))?" "\\2" _version_minor "${_version}")
-    STRING( REGEX REPLACE "([^.]+)\\.([^.]+)\\.?(.*)" "\\3" _version_patch "${_version}")
-
-    SET( ${_versionVar} ${_version} )
-    SET( ${_versionVar}_MAJOR ${_version_major} )
-    SET( ${_versionVar}_MINOR ${_version_minor} )
-    SET( ${_versionVar}_PATCH ${_version_patch} )
-
-    SET( BRAINVISA_CURRENT_PROJECT_VERSION  ${${_versionVar}} )
-    SET( BRAINVISA_CURRENT_PROJECT_VERSION_MAJOR ${${_versionVar}_MAJOR} )
-    SET( BRAINVISA_CURRENT_PROJECT_VERSION_MINOR ${${_versionVar}_MINOR} )
-    SET( BRAINVISA_CURRENT_PROJECT_VERSION_PATCH ${${_versionVar}_PATCH} )
-  ENDIF( NOT DEFINED ${_versionVar} )
-ENDMACRO( BRAINVISA_SET_PROJECT_VERSION )
-
-
 function( BRAINVISA_GENERATE_TARGET_NAME _variableName )
   if( DEFINED ${PROJECT_NAME}_TARGET_COUNT )
     math( EXPR ${PROJECT_NAME}_TARGET_COUNT ${${PROJECT_NAME}_TARGET_COUNT}+1 )
@@ -564,7 +434,7 @@ function( BRAINVISA_GENERATE_TARGET_NAME _variableName )
 endfunction( BRAINVISA_GENERATE_TARGET_NAME )
 
 
-# BRAINVISA_GET_FILE_LIST_FROM_PRO
+# BRAINVISA_GET_FILE_LIST_FROM_PRO
 #   Retrieve one (or more) list of file names from an *.pro file. This macro
 #   exists for backward compatibility with build-config.
 #
@@ -1254,202 +1124,6 @@ function( BRAINVISA_GENERATE_COMMANDS_HELP_INDEX )
 
 endfunction()
 
-# BRAINVISA_ADD_COMMAND_HELP
-#   Add target to generate command help files
-#
-# Usage:
-#
-#   BRAINVISA_ADD_COMMAND_HELP( name [COMPONENT <component>]
-#                                    [HELP_COMMAND <command>]
-#                                    [HELP_DEPENDS <dependencies>] )
-#
-function( BRAINVISA_ADD_COMMAND_HELP name)
-  set(_argn ${ARGN})
-
-  # Read options
-  set( arg_index 0 )
-  unset(_command)
-  unset(_depends)
-  unset(_component)
-  unset(_currentarg)
-  foreach( _arg ${_argn} )
-    if( "${_arg}" STREQUAL HELP_COMMAND
-        OR "_${_arg}" STREQUAL _ARGS
-        OR "${_arg}" STREQUAL HELP_DEPENDS
-        OR "_${_arg}" STREQUAL _COMPONENT )
-      set(_currentarg "${_arg}")
-
-    elseif( "${_currentarg}" STREQUAL HELP_COMMAND
-            OR "_${_currentarg}" STREQUAL _ARGS )
-      list( GET _argn ${arg_index} result )
-      if(DEFINED _command)
-        set( _command ${_command} "${result}" )
-      else()
-        set( _command "${result}" )
-      endif()
-
-    elseif( "${_currentarg}" STREQUAL HELP_DEPENDS )
-      list( GET _argn ${arg_index} result )
-      if(DEFINED _depends)
-        set( _depends ${_depends} "${result}" )
-      else()
-        set( _depends "${result}" )
-      endif()
-
-    elseif( "_${_currentarg}" STREQUAL _COMPONENT )
-      list( GET _argn ${arg_index} result )
-      set( _component "${result}" )
-    endif()
-
-    math(EXPR arg_index "${arg_index} + 1")
-  endforeach()
-
-  unset(_currentarg)
-  unset(_arg)
-
-  get_filename_component( _namewe "${name}" NAME_WE)
-
-  # Set default option values
-  if (NOT DEFINED _component)
-    set( _component "${PROJECT_NAME}" )
-  endif()
-
-  if ((NOT DEFINED _depends) AND (NOT DEFINED _command))
-    # Default dependencies is set using command name
-    set( _depends "${CMAKE_BINARY_DIR}/bin/${name}" )
-  endif()
-
-  if (NOT DEFINED _command)
-    # Default is set to command name --help
-    # but in some cases output name of the target is not the same as target name
-    if(TARGET ${name})
-      get_property( _output_command TARGET "${name}" PROPERTY OUTPUT_NAME )
-    endif()
-
-    if(DEFINED _output_command)
-      set( _command "${CMAKE_BINARY_DIR}/bin/${_output_command}" "-h" )
-      unset(_output_command)
-    else()
-      if (${name}-command-is-script)
-        set( _command "${CMAKE_BINARY_DIR}/bin/${name}" "-h" )
-      else()
-        set( _command "${CMAKE_BINARY_DIR}/bin/${name}${CMAKE_EXECUTABLE_SUFFIX}" "-h" )
-      endif()
-    endif()
-
-    if (${name}-command-is-script)
-      # Execute command using python interpreter
-      set( _command "${PYTHON_EXECUTABLE}" ${_command})
-    endif()
-  endif()
-
-#   set( _command "${CMAKE_BINARY_DIR}/${_command}" )
-
-  string(REPLACE ";" "', '" _command "${_command}")
-  get_filename_component( _output_directory "${CMAKE_BINARY_DIR}/share/doc" ABSOLUTE)
-  get_filename_component( _component_help_directory "${_output_directory}/commands-help/${_component}-${${_component}_VERSION}" ABSOLUTE)
-
-#   message("--BRAINVISA_ADD_COMMAND_HELP - name : ${name}")
-#   message("--BRAINVISA_ADD_COMMAND_HELP - _namewe : ${_namewe}")
-#   message("--BRAINVISA_ADD_COMMAND_HELP - _output_directory : ${_output_directory}")
-#   message("--BRAINVISA_ADD_COMMAND_HELP - _component_help_directory : ${_component_help_directory}")
-#   message("--BRAINVISA_ADD_COMMAND_HELP - _depends : ${_depends}")
-
-  if (NOT TARGET ${_component}-command-help)
-    add_custom_target( ${_component}-command-help )
-  endif()
-
-  if(TARGET "${name}-help")
-    message( FATAL_ERROR "Target: ${name}-help already exists. Impossible to use it for BRAINVISA_ADD_COMMAND_HELP" )
-  else()
-    # Add help generation target
-    add_custom_command( OUTPUT "${_component_help_directory}/${name}"
-                        COMMAND "${CMAKE_COMMAND}" -E make_directory "${_component_help_directory}"
-                        COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX}
-                                "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}" 
-                                "${PYTHON_EXECUTABLE}" -c "import sys, subprocess; subprocess.call( ['${_command}'], stdout = sys.stdout, stderr = sys.stdout )" > ${_component_help_directory}/${name}
-                        DEPENDS ${_depends}
-                        COMMENT "Generating ${name} help file ..."
-                        VERBATIM )
-
-    # It is necessary to remove the extension, because cmake
-    # does not support '.' in target names
-    add_custom_target( ${name}-help
-                       DEPENDS "${_component_help_directory}/${name}"
-                       VERBATIM )
-
-    add_dependencies(${_component}-command-help ${name}-help)
-
-  endif()
-
-  unset(_command)
-  unset(_namewe)
-  unset(_depends)
-  unset(_component)
-  unset(_output_directory)
-
-endfunction()
-
-# BRAINVISA_GENERATE_COMMANDS_HELP
-#   Add targets to generate commands help
-#
-# Usage:
-#
-#   BRAINVISA_GENERATE_COMMANDS_HELP( [COMPONENT] <component_1> ... <component_N>  )
-#
-function( BRAINVISA_GENERATE_COMMANDS_HELP )
-  set(_argn ${ARGN})
-
-  # Read options
-  set( arg_index 0 )
-  unset(_currentarg)
-  unset(_components)
-  foreach( _arg ${_argn} )
-    if( "_${_arg}" STREQUAL _COMPONENT )
-      set(_currentarg "${_arg}")
-
-    else()
-      list( GET _argn ${arg_index} result )
-      if (DEFINED _components)
-        list(APPEND _components "${result}")
-      else()
-        set( _components "${result}" )
-      endif()
-    endif()
-
-    math(EXPR arg_index "${arg_index} + 1")
-  endforeach()
-  unset(_currentarg)
-  unset(_arg)
-
-  # Set default option values
-  if (DEFINED _components)
-    list(REMOVE_DUPLICATES _components)
-  else()
-    set( _components "${BRAINVISA_COMPONENTS}" )
-  endif()
-
-  #if ( BRAINVISA_ADVANCED_FEATURE_TEST_MODE )
-  foreach(_component ${_components})
-    if (DEFINED ${_component}-commands)
-      foreach(_command ${${_component}-commands})
-        if((NOT DEFINED ${_command}-help-generate)
-            OR ${_command}-help-generate)
-
-          # Add help generation
-          BRAINVISA_ADD_COMMAND_HELP( "${_command}"
-                                      HELP_COMMAND ${${_command}-help-command}
-                                      COMPONENT ${_component} )
-        endif()
-      endforeach()
-    endif()
-  endforeach()
-  #endif()
-
-  unset(_command)
-  unset(_component)
-  unset(_components)
-endfunction()
 
 # BRAINVISA_ADD_EXECUTABLE
 #   Add executable target and reference executable for the component.
@@ -2256,7 +1930,7 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
       "${PYQT${DESIRED_QT_VERSION}_SIP_FLAGS}" )
   endif()
   set( _sipFlags ${SIP_FLAGS} ${_sipFlags} )
-  if( ${SIP4MAKE_EXECUTABLE} STREQUAL ${SIP_EXECUTABLE} )
+  if( "${SIP4MAKE_EXECUTABLE}" STREQUAL "${SIP_EXECUTABLE}" )
     # use regular sip
     add_custom_command(
       OUTPUT ${_sipOutputFiles}
@@ -2426,132 +2100,6 @@ function( BRAINVISA_RESOLVE_SYMBOL_LIBRARIES output_variable )
   set( ${output_variable} ${result} PARENT_SCOPE )
 endfunction()
 
-# BRAINVISA_INSTALL_RUNTIME_LIBRARIES
-#   Checks and creates install rules for the libraries of the given component.
-#   A list of library files is given in parameter, and the function gets the absolute path of these files, check existance,
-#   and check that it is a dynamic library. The library files are set in an install rule for the component.
-#   The symlinks that point to the library are found and created in the install directory via a custom command attached to the install target of the component.
-#
-# Usage:
-#
-#   BRAINVISA_INSTALL_RUNTIME_LIBRARIES( <component> <list of library files> )
-#
-# Example:
-#    find_package(LibXml2)
-#    BRAINVISA_INSTALL_RUNTIME_LIBRARIES( libxml2 ${LIBXML2_LIBRARIES} )
-#
-function( BRAINVISA_INSTALL_RUNTIME_LIBRARIES component )
-  set(args ${ARGN})
-  set(destination "lib")
-  list( FIND args DESTINATION result )
-  if( NOT result EQUAL -1 )
-    math(EXPR index_dest "${result} + 1")
-    list(GET args ${index_dest} destination)
-    list(REMOVE_AT args ${result} ${index_dest})
-  endif()
-
-  set( librariesToInstall )
-  foreach( lib ${args} )
-    set( macFramework "" )
-    if( APPLE )
-      get_filename_component( olib "${lib}" EXT )
-      if( "${olib}" STREQUAL ".framework" )
-        # get_filename_component( olib "${lib}" NAME_WE )
-        # set( lib "${lib}/${olib}" )
-        set( macFramework "1" )
-      endif()
-    endif()
-    get_filename_component( real "${lib}" REALPATH )
-    get_filename_component( realname "${real}" NAME )
-    get_filename_component( ext "${lib}" EXT )
-    string(REGEX REPLACE "\\${CMAKE_SHARED_LIBRARY_SUFFIX}.*" "" realpathwe "${real}")
-    get_filename_component(realnamewe "${realpathwe}" NAME)
-    get_filename_component(realdir ${real} PATH)
-    get_filename_component( name "${lib}" NAME_WE)
-    get_filename_component( dirname "${lib}" PATH)
-    if(EXISTS "${real}")
-      # check if it is a dynamic library: if it is a static library, no need to package it.
-      if( WIN32 )
-        # On windows, in some cases, files with static extension can be symbol files
-        BRAINVISA_RESOLVE_SYMBOL_LIBRARIES( real PATHS "${lib}" )
-        #message("WIN32 resolved library: ${lib} --> ${real}")
-      elseif( ext MATCHES ${CMAKE_SHARED_LIBRARY_SUFFIX} OR macFramework )
-        # Recreate in the lib install directory the symlinks on the library file
-        if( UNIX OR APPLE )
-          # get the link with version number
-          if( ${macFramework} )
-            file( GLOB othernames "${lib}" )
-          else()
-            # in case the realname of the lib is not the same as the link name, search with 2 glob expressions
-            # ex: libsqlite3.so and libsqlite3-3.6.2.so.0
-            if(realnamewe STREQUAL name)
-              if(NOT realdir STREQUAL dirname)
-                file(GLOB othernames "${lib}*"
-                  "${realdir}/${realnamewe}${ext}*"
-                  "${realdir}/${realnamewe}.*${ext}")
-              else()
-                file( GLOB othernames "${lib}*"
-                  "${realdir}/${realnamewe}.*${ext}")
-              endif()
-            else()
-              #message("search glob expressions : ${lib}* ${realdir}/${realnamewe}${ext}*")
-              file( GLOB othernames "${lib}*"
-                "${realdir}/${realnamewe}${ext}*"
-                "${realdir}/${realnamewe}.*${ext}"
-                "${realdir}/${name}${ext}*"
-                "${realdir}/${name}.*${ext}" )
-            endif()
-          endif()
-          list( REMOVE_DUPLICATES othernames )
-          # message("othernames of the lib ${real} in ${realdir}/${realnamewe}:" )
-          # message( "othernames : ${othernames}")
-          # create linknames list to store the processed link names to avoid create several times the same link
-          set(linknames)
-          foreach(link ${othernames})
-            get_filename_component(linkname ${link} NAME)
-            list(FIND linknames ${linkname} link_found)
-            # check it is a new linkname
-            if(link_found EQUAL -1)
-              list(APPEND linknames ${linkname})
-              get_filename_component(linkreal ${link} REALPATH)
-	      # if it is really a symlink and it has a name different from the name of the lib and the link points to the real library
-              if(NOT link STREQUAL linkreal AND NOT linkname STREQUAL realname AND linkreal STREQUAL real)
-                add_custom_command( TARGET install-${component} POST_BUILD
-                        COMMAND if [ -n \"$(BRAINVISA_INSTALL_PREFIX)\" ] \; then cd "$(BRAINVISA_INSTALL_PREFIX)/${destination}" && "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}" \; else cd "${CMAKE_INSTALL_PREFIX}/${destination}" && "${CMAKE_COMMAND}" -E create_symlink "${realname}" "${linkname}" \; fi )
-                #message("Create symlink $(BRAINVISA_INSTALL_PREFIX)/${destination}/${linkname} -> $(BRAINVISA_INSTALL_PREFIX)/${destination}/${realname}")
-              endif()
-            endif()
-          endforeach()
-        endif()
-        if ( NOT real )
-          message( "WARNING: Cannot find valid library files for ${lib}." )
-        endif()
-      else()
-        unset( real )
-      endif()
-
-      if ( real )
-        set( librariesToInstall ${librariesToInstall} "${real}" )
-      endif()
-
-    else()
-      message( "WARNING: Cannot install non existing library file ${lib}." )
-    endif()
-  endforeach()
-  # install libraries
-  #message("libraries to install : ${librariesToInstall}")
-  if( macFramework )
-    BRAINVISA_INSTALL( DIRECTORY ${librariesToInstall}
-        DESTINATION "${destination}"
-        COMPONENT "${component}"
-        USE_SOURCE_PERMISSIONS )
-  else()
-    BRAINVISA_INSTALL( FILES ${librariesToInstall}
-        DESTINATION "${destination}"
-        COMPONENT "${component}"
-        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE )
-  endif()
-endfunction( BRAINVISA_INSTALL_RUNTIME_LIBRARIES )
 
 # BRAINVISA_ADD_TRANSLATION
 #   Search recursively qt linguist source files (*.ts) in the directory source share directory
@@ -2820,9 +2368,3 @@ MACRO ( BRAINVISA_QT_WRAP_UI outfiles inputfiles input_outdir )
   endif()
   set(CMAKE_CURRENT_BINARY_DIR ${_old_dir})
 ENDMACRO()
-
-# compatibility function. Obsolete. Use BRAINVISA_QT_WRAP_UI instead.
-MACRO ( BRAINVISA_QT4_WRAP_UI outfiles inputfiles input_outdir )
-  BRAINVISA_QT_WRAP_UI( ${outfiles} ${inputfiles} ${input_outdir} )
-ENDMACRO()
-

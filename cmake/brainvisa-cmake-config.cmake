@@ -13,22 +13,6 @@ get_property( config_done GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE )
     set(BRAINVISA_CMAKE_LIBRARY_PATH_SUFFIXES lib)
 # endif()
 
-# if ( COMPILER_PREFIX AND CMAKE_CROSSCOMPILING)
-#   if(WIN32)
-
-#     # Fix for Windows-GNU.cmake to disable the use of .rsp files
-#     # which is not allowed with distcc
-#     foreach(_lang C CXX FORTRAN)
-#       set( CMAKE_${_lang}_USE_RESPONSE_FILE_FOR_INCLUDES 0 )
-#       set( CMAKE_${_lang}_USE_RESPONSE_FILE_FOR_OBJECTS 0 )
-#     endforeach()
-
-#     # Add toolchain specific module search path
-#     set( CMAKE_MODULE_PATH
-#         "${brainvisa-cmake_DIR}/specific/windows/${COMPILER_PREFIX}"
-#         ${CMAKE_MODULE_PATH} )
-#   endif()
-# endif()
 
 # OS identifier
 if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
@@ -66,71 +50,12 @@ set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${brainvisa-cmake_DIR}/modules" )
 if( NOT config_done )
   set_property( GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE YES )
 
-  option( CMAKE_OVERRIDE_COMPILER_MISMATCH "Avoid CMake to completely erase the cache if a compiler mismatch is detected (for instance with find_package( VTK ))" ON )
-
-  # Include code specific to a platform or site
-  if( EXISTS /etc/mandriva-release )
-    include( "${brainvisa-cmake_DIR}/specific/linux_distribution/mandriva.cmake" )
-  elseif( EXISTS /etc/lsb-release )
-    file( READ /etc/lsb-release _x )
-    string( REGEX MATCH Ubuntu _x "${_x}" )
-    if( _x )
-      include( "${brainvisa-cmake_DIR}/specific/linux_distribution/ubuntu.cmake" )
-    endif()
-  elseif( EXISTS /etc/redhat-release )
-    file( READ /etc/redhat-release _x )
-    string( REGEX MATCH CentOS _x "${_x}" )
-    if( _x )
-      include( "${brainvisa-cmake_DIR}/specific/linux_distribution/centos.cmake" )
-    endif()
-  endif()
-  file( GLOB _files "${brainvisa-cmake_DIR}/specific/*.cmake" )
-  foreach( _file ${_files} )
-    include( "${_file}" )
-  endforeach()
-
-  if( WIN32 AND CMAKE_CROSSCOMPILING )
-    link_directories( "${BRAINVISA_CROSSCOMPILATION_DIR}/lib" "${BRAINVISA_CROSSCOMPILATION_DIR}/bin" )
-    set( ENV{PKG_CONFIG_PATH} ${BRAINVISA_CROSSCOMPILATION_DIR}/lib/pkgconfig PARENT_SCOPE )
-    set(CMAKE_FIND_ROOT_PATH "${BRAINVISA_CROSSCOMPILATION_DIR}" "${CMAKE_FIND_ROOT_PATH}")
-  endif( WIN32 AND CMAKE_CROSSCOMPILING )
-
-  # Requires CPack for its argument parsing macro
-  if(NOT CPack_CMake_INCLUDED)
-#     include( BRAINVISA_ADD_COMPONENT_GROUP )
-  endif()
-
-  if( NOT DEFINED BRAINVISA_SYSTEM_IDENTIFICATION )
-    execute_process( COMMAND "${brainvisa-cmake_DIR}/../../../bin/bv_system_info" -s
-      OUTPUT_VARIABLE output OUTPUT_STRIP_TRAILING_WHITESPACE
-      RESULT_VARIABLE result )
-    if( output AND result EQUAL 0 )
-      set( BRAINVISA_SYSTEM_IDENTIFICATION "${output}" )
-    else()
-      set( BRAINVISA_SYSTEM_IDENTIFICATION "${CMAKE_SYSTEM_NAME}" )
-    endif()
-    set( BRAINVISA_SYSTEM_IDENTIFICATION "${BRAINVISA_SYSTEM_IDENTIFICATION}" CACHE STRING "Suffix for system identification in packages name" )
-  endif()
-
-  if (NOT DEFINED BRAINVISA_SYSTEM_VERSION)
-    # Get system version
-    set(result)
-    string( REGEX REPLACE "[^-]+-(.*)" "\\1" result "${BRAINVISA_SYSTEM_IDENTIFICATION}" )
-    set( BRAINVISA_SYSTEM_VERSION "${result}" CACHE STRING "Version for system identification in packages name" )
-  endif()
-
-  if(NOT DEFINED BRAINVISA_ADVANCED_FEATURE_TEST_MODE)
-    option( BRAINVISA_ADVANCED_FEATURE_TEST_MODE "Enable/disable BrainVISA advanced feature test mode" OFF )
-  endif()
-
   if(NOT DEFINED CCACHE_ENABLED)
     option( CCACHE_ENABLED "Enable/disable use of ccache if possible" OFF )
   endif()
 
   # Initialize python module containing compilation information
-  set( BRAINVISA_COMPILATION_INFO "${CMAKE_BINARY_DIR}/python/brainvisa/compilation_info.py" )
   execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/python/brainvisa" )
-  configure_file( "${brainvisa-cmake_DIR}/compilation_info.py.in" "${BRAINVISA_COMPILATION_INFO}" @ONLY )
 
 endif()
 
@@ -224,16 +149,6 @@ unset(ld_library_path_list)
 #   message( ${p} )
 function(BRAINVISA_TARGET_SYSTEM_COMMAND variable)
   set(__command "${ARGN}")
-  if(CMAKE_CROSSCOMPILING)
-    if(WIN32)
-      find_package(Wine)
-      if(WINE_FOUND)
-        set(__command "${WINE_RUNTIME}" ${__command})
-      else()
-        message(SEND_ERROR "Unable to build command for target system wine, because wine was not found")
-      endif()
-    endif()
-  endif()
   message("===== TARGET COMMAND: ${__command}")
   set(${variable} ${__command} PARENT_SCOPE)
   unset(__command)
@@ -277,11 +192,16 @@ function(BRAINVISA_READ_PROJECT_INFO directory)
         set(BRAINVISA_PACKAGE_MAINTAINER ${BRAINVISA_PACKAGE_MAINTAINER} PARENT_SCOPE)
         set(BRAINVISA_PACKAGE_LICENCES ${BRAINVISA_PACKAGE_LICENCES} PARENT_SCOPE)
     else()
-        file(GLOB infos1 "${directory}/info.py")
-        file(GLOB infos2 "${directory}/*/info.py")
-        file(GLOB infos3 "${directory}/python/*/info.py")
-        set(infos ${infos1} ${infos2} ${infos3})
-        list(GET infos 0 info)
+        file(GLOB info "${directory}/info.py")
+        if ( NOT info )
+          file(GLOB info "${directory}/*/info.py")
+          if ( NOT info )
+            file(GLOB info "${directory}/python/*/info.py")
+            if( NOT info )
+              message( FATAL_ERROR "Cannot find info.py in '${directory}'")
+            endif()
+          endif()
+        endif()
         file(TO_CMAKE_PATH "${info}" info)
         BRAINVISA_TEMPORARY_FILE_NAME(script)
         set(script "${script}.py")
@@ -320,7 +240,7 @@ if not os.path.exists(cmake) or os.stat(cmake).st_mtime < os.stat(info).st_mtime
         f.close()
 sys.stdout.write(cmake)
 ")
-        execute_process(COMMAND "${PYTHON_HOST_EXECUTABLE}" "${script}" OUTPUT_VARIABLE cmake ERROR_VARIABLE error)
+        execute_process(COMMAND "${PYTHON_EXECUTABLE}" "${script}" OUTPUT_VARIABLE cmake ERROR_VARIABLE error)
         if(error)
             message(FATAL_ERROR "${error}")
         endif()
@@ -409,13 +329,6 @@ macro( BRAINVISA_PROJECT )
       set( _test_install "True" )
     endif()
   endforeach()
-
-  file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${PROJECT_NAME}' ] = {\n  'name': '${PROJECT_NAME}',\n  'component' : '${PROJECT_NAME}',\n  'type': 'run',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n  'licences': [${_licences}],\n  'default_install': ${_run_install},\n}\n" )
-  file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${PROJECT_NAME}-dev' ] = {\n  'name': '${PROJECT_NAME}-dev',\n  'component' : '${PROJECT_NAME}-dev',\n  'type': 'dev',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n  'licences': [${_licences}],\n  'default_install': ${_dev_install},\n}\n" )
-  file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${PROJECT_NAME}-doc' ] = {\n  'name': '${PROJECT_NAME}-doc',\n  'component' : '${PROJECT_NAME}-doc',\n  'type': 'doc',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n  'licences': [${_licences}],\n  'default_install': ${_doc_install},\n}\n" )
-  file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${PROJECT_NAME}-usrdoc' ] = {\n  'name': '${PROJECT_NAME}-usrdoc',\n  'component' : '${PROJECT_NAME}-usrdoc',\n  'type': 'usrdoc',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n  'licences': [${_licences}],\n  'default_install': ${_usrdoc_install},\n}\n" )
-  file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${PROJECT_NAME}-devdoc' ] = {\n  'name': '${PROJECT_NAME}-devdoc',\n  'component' : '${PROJECT_NAME}-devdoc',\n  'type': 'devdoc',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n  'licences': [${_licences}],\n  'default_install': ${_devdoc_install},\n}\n" )
-  file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_info[ '${PROJECT_NAME}-test' ] = {\n  'name': '${PROJECT_NAME}-test',\n  'component' : '${PROJECT_NAME}-test',\n  'type': 'test',\n  'version': '${BRAINVISA_PACKAGE_VERSION}',\n  'project': '${BRAINVISA_PACKAGE_MAIN_PROJECT}',\n  'maintainer': '${BRAINVISA_PACKAGE_MAINTAINER}',\n  'licences': [${_licences}],\n  'default_install': ${_test_install},\n}\n" )
 
   if(NOT CPack_CMake_INCLUDED)
     include( CPack )
@@ -582,39 +495,6 @@ function( BRAINVISA_DEPENDENCY pack_type dependency_type component component_pac
     endif()
   endif()
 
-  # Check if component is external or not
-  list( FIND BRAINVISA_COMPONENTS "${component}" is_brainvisa )
-  if( NOT is_brainvisa EQUAL -1 )
-    if( "${component_pack_type}" STREQUAL "DEV" )
-      set( dest_package "${component}-dev" )
-    elseif( "${component_pack_type}" STREQUAL "DOC" )
-      set( dest_package "${component}-doc" )
-    elseif( "${component_pack_type}" STREQUAL "TST" )
-      set( dest_package "${component}-test" )
-    else()
-      set( dest_package "${component}" )
-    endif()
-  endif()
-  if( BRAINVISA_COMPILATION_INFO )
-    if( "${pack_type}" STREQUAL "DEV" )
-      set( source_package "${PROJECT_NAME}-dev" )
-    elseif( "${pack_type}" STREQUAL "DOC" )
-      set( source_package "${PROJECT_NAME}-doc" )
-    elseif( "${pack_type}" STREQUAL "USRDOC" )
-      set( source_package "${PROJECT_NAME}-usrdoc" )
-    elseif( "${pack_type}" STREQUAL "DEVDOC" )
-      set( source_package "${PROJECT_NAME}-devdoc" )
-    elseif( "${pack_type}" STREQUAL "TST" )
-      set( source_package "${PROJECT_NAME}-test" )
-    else()
-      set( source_package "${PROJECT_NAME}" )
-    endif()
-    file( APPEND "${BRAINVISA_COMPILATION_INFO}" "packages_dependencies.setdefault( '${source_package}', set() ).add( ( '${dependency_type}', '${dest_package}', '${version_ranges}', ${binary_independent}) )\n" )
-  else()
-    # Component is not in BRAINVISA_COMPONENTS, it is considered as a third
-    # party component. Since BrainVISA 5.0 we do not support packaging
-    # third-party components anymore, so this dependency will simply be ignored
-  endif()
 endfunction()
 
 
@@ -731,7 +611,7 @@ function( BRAINVISA_COPY_AND_INSTALL_HEADERS _headersVariable _includeDir target
   set( destHeaders )
   foreach( _currentHeader ${${_headersVariable}} )
     set( _destFile "${CMAKE_BINARY_DIR}/include/${_includeDir}/${_currentHeader}" )
-    if( symlinks AND ( UNIX OR APPLE OR CMAKE_CROSSCOMPILING) )
+    if( symlinks AND ( UNIX OR APPLE ) )
       # Make a symlink instead of copying Python source allows to
       # execute code from the build tree and directly benefit from
       # modifications in the source tree (without typing make)
@@ -868,7 +748,7 @@ function( BRAINVISA_COPY_FILES component )
                           "${CMAKE_BINARY_DIR}/${_destination}/${_file}"
                           COPYONLY )
         else()
-          if( symlinks AND ( UNIX OR APPLE OR CMAKE_CROSSCOMPILING) )
+          if( symlinks AND ( UNIX OR APPLE ) )
             # Make a symlink instead of copying Python source allows to
             # execute code from the build tree and directly benefit from
             # modifications in the source tree (without typing make)
@@ -1051,14 +931,9 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
     get_filename_component( _destDir "${_pythonDirectory}" NAME )
   endif()
 
-  # Make sure Python can be executed
-  if( NOT DEFINED PYTHON_EXECUTABLE )
-    find_package( PythonInterp REQUIRED )
-  endif( NOT DEFINED PYTHON_EXECUTABLE )
-
   # detect python version
   string( REGEX MATCH "^([0-9]+).([0-9]+)$" _py_ver "${PYTHON_SHORT_VERSION}" )
-  if( ${CMAKE_MATCH_1} GREATER 2 )
+  if( CMAKE_MATCH_1 GREATER 2 )
     set( _py3_suffix "cpython-${CMAKE_MATCH_1}${CMAKE_MATCH_2}" )
   endif()
 
@@ -1106,7 +981,7 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
     endif()
 
     if( NOT install_only )
-        if( UNIX OR APPLE OR CMAKE_CROSSCOMPILING)
+        if( UNIX OR APPLE)
             # Make a symlink instead of copying Python source allows to
             # execute code from the build tree and directly benefit from
             # modifications in the source tree (without typing make)
@@ -1127,11 +1002,11 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
 
         # Byte compile python code (creating *.pyc and *.pyo)
         add_custom_command( OUTPUT "${_pyc}"
-                            COMMAND "${PYTHON_HOST_EXECUTABLE}" -c "import py_compile;py_compile.main()" "${_fileBuild}"
+                            COMMAND "${PYTHON_EXECUTABLE}" -c "import py_compile;py_compile.main()" "${_fileBuild}"
                             DEPENDS "${_fileBuild}"
                             VERBATIM )
         add_custom_command( OUTPUT "${_pyo}"
-                            COMMAND "${PYTHON_HOST_EXECUTABLE}" -O -c "import py_compile;py_compile.main()" "${_fileBuild}"
+                            COMMAND "${PYTHON_EXECUTABLE}" -O -c "import py_compile;py_compile.main()" "${_fileBuild}"
                             DEPENDS "${_fileBuild}"
                             VERBATIM )
     endif()
@@ -1148,7 +1023,7 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
   foreach(_file ${_nonPythonSources})
     if( NOT install_only )
         set( _fileBuild "${CMAKE_BINARY_DIR}/${_destDir}/${_file}" )
-        if( UNIX OR APPLE OR CMAKE_CROSSCOMPILING)
+        if( UNIX OR APPLE)
         # Make a symlink instead of copying Python source allows to
         # execute code from the build tree and directly benefit from
         # modifications in the source tree (without typing make)
@@ -1338,9 +1213,6 @@ function( BRAINVISA_GENERATE_COMMANDS_HELP_INDEX )
 #             ${_cmd_options}
 #             "${_output_directory}/${_index_file}")
 #     message("===== TARGET SYSTEM COMMAND: ${__target_cmd}")
-    if(CMAKE_CROSSCOMPILING AND WINE32)
-        find_package(Wine)
-    endif()
     if( NOT CREATE_COMMANDS_DOC )
       message( "bv_create_commands_doc is not found or configured. "
                "Commands help will not be generated." )
@@ -1490,9 +1362,6 @@ function( BRAINVISA_ADD_COMMAND_HELP name)
   if(TARGET "${name}-help")
     message( FATAL_ERROR "Target: ${name}-help already exists. Impossible to use it for BRAINVISA_ADD_COMMAND_HELP" )
   else()
-    if(CMAKE_CROSSCOMPILING AND WINE32)
-      find_package(Wine)
-    endif()
     # Add help generation target
     add_custom_command( OUTPUT "${_component_help_directory}/${name}"
                         COMMAND "${CMAKE_COMMAND}" -E make_directory "${_component_help_directory}"
@@ -1830,33 +1699,6 @@ function( BRAINVISA_ADD_TEST )
     math(EXPR _arg_index "${_arg_index} + 1")
   endforeach()
 
-  if(CMAKE_CROSSCOMPILING)
-    # Replaces python interpreter with target python interpreter
-    # in test command arguments
-    set(_arg_index 0)
-
-    # Get host python interpreter real path
-    get_filename_component(_python_executable "${PYTHON_HOST_EXECUTABLE}" REALPATH)
-
-    # Get target python interpreter name
-    get_filename_component(_python_test "${PYTHON_EXECUTABLE}" NAME)
-    foreach( _arg ${_command_args} )
-      list( GET _command_args ${_arg_index} result )
-      if(EXISTS "${result}")
-        get_filename_component(result "${result}" REALPATH)
-        if("${result}" STREQUAL "${_python_executable}")
-          list(REMOVE_AT _command_args ${_arg_index})
-          list(INSERT _command_args ${_arg_index} "${_python_test}")
-        endif()
-      endif()
-
-      math(EXPR _arg_index "${_arg_index} + 1")
-    endforeach()
-
-    unset(_python_test)
-    unset(_python_executable)
-  endif()
-
   if( NOT _timeout )
     # use the same default timeout as ctest
     if( "${DART_TESTING_TIMEOUT}" STREQUAL "" )
@@ -1881,17 +1723,6 @@ function( BRAINVISA_ADD_TEST )
     set( _command_args_run ${_command_args} )
     set( _command_args_ref ${_command_args} )
   endif()
-
-#   if(CMAKE_CROSSCOMPILING)
-#     if(WIN32)
-#       # For cross compilation on windows it is necessary to start commands
-#       # using a command interpreter (cmd) to get an environment
-#       BRAINVISA_GET_SPACED_QUOTED_LIST( _command_args_run _command_args_run )
-#       BRAINVISA_GET_SPACED_QUOTED_LIST( _command_args_ref _command_args_ref )
-#       set( _command_args_run "cmd" "/c" "${_command_args_run}" )
-#       set( _command_args_ref "cmd" "/c" "${_command_args_ref}" )
-#     endif()
-#   endif()
 
   # Add bv_env_test encapsulation
   set(_command_args_run "${brainvisa-cmake_DIR}/../../../bin/bv_env_test"
@@ -2198,9 +2029,6 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
 
     if( NOT target )
       set( target ${PROJECT_NAME}-${default_target} )
-    endif()
-    if(CMAKE_CROSSCOMPILING AND WINE32)
-      find_package(Wine)
     endif()
     add_custom_target( ${target}
                       COMMAND "${CMAKE_COMMAND}" -E make_directory

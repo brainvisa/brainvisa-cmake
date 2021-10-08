@@ -31,7 +31,7 @@ else()
 
   find_file( _find_pyqt_py FindPyQt.py PATHS ${CMAKE_MODULE_PATH} )
 
-  execute_process(COMMAND "${PYTHON_HOST_EXECUTABLE}" "${_find_pyqt_py}" "5" OUTPUT_VARIABLE pyqt_config )
+  execute_process(COMMAND "${PYTHON_EXECUTABLE}" "${_find_pyqt_py}" "5" OUTPUT_VARIABLE pyqt_config )
   if( pyqt_config )
     string( REGEX REPLACE "^pyqt_version:([^\n]+).*$" "\\1" PYQT5_VERSION ${pyqt_config} )
     set( PYQT5_VERSION "${PYQT5_VERSION}" CACHE STRING "The version of PyQt5 found expressed as a 6 digit hex number suitable for comparision as a string" )

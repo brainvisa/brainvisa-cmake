@@ -4,12 +4,6 @@
 # The following variables are set:
 #
 #  PYTHON_FOUND - Was Python found
-#  PYTHON_HOST_EXECUTABLE  - path to the Python interpreter
-#  PYTHON_HOST_EXECUTABLE_NAME - name of the python interpreter
-#  PYTHON_HOST_PREFIX - path to the install directory of the python interpreter
-#  PYTHON_HOST_MODULES_PATH - path to main Python modules
-#  PYTHON_HOST_VERSION - Python full version (e.g. "2.7.12")
-#  PYTHON_HOST_SHORT_VERSION - Python short version (e.g. "2.7")
 #  PYTHON_EXECUTABLE - path to the target python interpreter
 #  PYTHON_EXECUTABLE_NAME - name of the target python interpreter
 #  PYTHON_PREFIX - path to the install directory of the target python interpreter
@@ -19,7 +13,7 @@
 #  PYTHON_INCLUDE_PATH - path to target python header files
 #  PYTHON_LIBRARY - path to target python dynamic library
 #  PYTHON_FLAGS - flags used to compile target python dynamic library
-function(__GET_PYTHON_INFO __python_executable __output_prefix __translate_path __target_system_prefix)
+function(__GET_PYTHON_INFO __python_executable __output_prefix  __target_system_prefix)
 
   get_filename_component("${__output_prefix}_EXECUTABLE_NAME" 
                          "${__python_executable}" NAME CACHE)
@@ -28,10 +22,6 @@ function(__GET_PYTHON_INFO __python_executable __output_prefix __translate_path 
                            "${__python_executable}"
                            "-c" "import sys, os; sys.stdout.write(os.path.normpath( sys.prefix ))"
     OUTPUT_VARIABLE _prefix )
-  if(__translate_path AND COMMAND TARGET_TO_HOST_PATH)
-    #message("==== __GET_PYTHON_INFO, TARGET_TO_HOST_PATH is defined")
-    TARGET_TO_HOST_PATH( "${_prefix}" _prefix ) 
-  endif()
   FILE( TO_CMAKE_PATH "${_prefix}" "${__output_prefix}_PREFIX" )
   set("${__output_prefix}_PREFIX" "${${__output_prefix}_PREFIX}"
         CACHE FILEPATH "Python install prefix")
@@ -111,52 +101,15 @@ function(__GET_PYTHON_INFO __python_executable __output_prefix __translate_path 
 
 endfunction()
 
-if ( PYTHON_VERSION AND PYTHON_EXECUTABLE AND PYTHON_PREFIX
-    AND PYTHON_HOST_VERSION AND PYTHON_HOST_EXECUTABLE AND PYTHON_HOST_PREFIX)
+if ( PYTHON_VERSION AND PYTHON_EXECUTABLE AND PYTHON_PREFIX )
   # Python already found, do nothing
   set( PYTHON_FOUND TRUE )
 else()
-  find_package( PythonInterp REQUIRED )
-  include( CMakeFindFrameworks )
-  # Search for the python framework on Apple.
-  cmake_find_frameworks( Python )
+  find_package( PythonInterp 3 REQUIRED )
 
   # Get python information for the host python interpreter
-  __GET_PYTHON_INFO("${PYTHON_HOST_EXECUTABLE}" PYTHON_HOST NO "")
+  __GET_PYTHON_INFO("${PYTHON_EXECUTABLE}" PYTHON "")
   
-  # Also get target python interpreter information if possible
-  if(CMAKE_CROSSCOMPILING)
-    if(WIN32)
-        find_package(Wine)
-    endif()
-    if(CMAKE_CROSSCOMPILING_RUNNABLE)
-        # Get python information for the target Python interpreter
-        __GET_PYTHON_INFO("${PYTHON_EXECUTABLE}" PYTHON YES "${CMAKE_TARGET_SYSTEM_PREFIX}")
-    endif()
-  else()
-    set(PYTHON_EXECUTABLE_NAME "${PYTHON_HOST_EXECUTABLE_NAME}" 
-        CACHE STRING "Target python name")
-    set(PYTHON_VERSION ${PYTHON_HOST_VERSION}
-        CACHE STRING "Target python version") 
-    set(PYTHON_SHORT_VERSION ${PYTHON_HOST_SHORT_VERSION}
-        CACHE STRING "Target python short version") 
-    set(PYTHON_MODULES_PATH ${PYTHON_HOST_MODULES_PATH}
-        CACHE STRING "Target python modules")
-    set(PYTHON_PREFIX ${PYTHON_HOST_PREFIX}
-        CACHE FILEPATH "Target python install prefix")
-  endif()
-  
-  # Get library and include path
-  set( PYTHON_FRAMEWORK_INCLUDES )
-  set( PYTHON_FRAMEWORK_LIBRARIES )
-  if( Python_FRAMEWORKS AND NOT PYTHON_INCLUDE_PATH )
-    foreach( _dir ${Python_FRAMEWORKS} )
-      set( PYTHON_FRAMEWORK_INCLUDES ${PYTHON_FRAMEWORK_INCLUDES}
-          "${_dir}/Versions/${PYTHON_SHORT_VERSION}/include/python${PYTHON_SHORT_VERSION}" )
-      set( PYTHON_FRAMEWORK_LIBRARIES ${PYTHON_FRAMEWORK_LIBRARIES}
-          "${_dir}/Versions/${PYTHON_SHORT_VERSION}/lib" )
-    endforeach()
-  endif()
   find_path( PYTHON_INCLUDE_PATH
     NAMES Python.h
     PATHS
@@ -165,14 +118,6 @@ else()
       python${PYTHON_SHORT_VERSION}m
       python${PYTHON_SHORT_VERSION}
     NO_DEFAULT_PATH
-  )
-  find_path( PYTHON_INCLUDE_PATH
-    NAMES Python.h
-    PATHS
-      ${PYTHON_FRAMEWORK_INCLUDES}
-      [HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${PYTHON_SHORT_VERSION}\\InstallPath]/include
-    PATH_SUFFIXES
-      python${PYTHON_SHORT_VERSION}
   )
   mark_as_advanced( PYTHON_INCLUDE_PATH )
   
@@ -188,30 +133,23 @@ else()
 
   find_package(PythonLibs REQUIRED)
 
-  if( WIN64 )
-    set( PYTHON_FLAGS MS_WIN64 CACHE STRING "Flags used to compile target python interpreter" )
-  endif()
   
-#   message("==== Python host interpreter")
-#   message("PYTHON_HOST_EXECUTABLE: ${PYTHON_HOST_EXECUTABLE}") 
-#   message("PYTHON_HOST_EXECUTABLE_NAME: ${PYTHON_HOST_EXECUTABLE_NAME}") 
-#   message("PYTHON_HOST_PREFIX: ${PYTHON_HOST_PREFIX}")
-#   message("PYTHON_HOST_VERSION: ${PYTHON_HOST_VERSION}") 
-#   message("PYTHON_HOST_SHORT_VERSION: ${PYTHON_HOST_SHORT_VERSION}")
-#   message("PYTHON_HOST_MODULES_PATH: ${PYTHON_HOST_MODULES_PATH}")
-#   message("==== Python target interpreter") 
-#   message("PYTHON_EXECUTABLE: ${PYTHON_EXECUTABLE}") 
-#   message("PYTHON_EXECUTABLE_NAME: ${PYTHON_EXECUTABLE_NAME}") 
-#   message("PYTHON_PREFIX: ${PYTHON_PREFIX}")
-#   message("PYTHON_VERSION: ${PYTHON_VERSION}") 
-#   message("PYTHON_SHORT_VERSION: ${PYTHON_SHORT_VERSION}")
-#   message("PYTHON_INCLUDE_PATH: ${PYTHON_INCLUDE_PATH}")
-#   message("PYTHON_LIBRARY: ${PYTHON_LIBRARY}")
-#   message("PYTHON_MODULES_PATH: ${PYTHON_MODULES_PATH}")
-#   message("====")
-#   
+  # message("==== Python interpreter") 
+  # message("PYTHON_EXECUTABLE: ${PYTHON_EXECUTABLE}") 
+  # message("PYTHON_EXECUTABLE_NAME: ${PYTHON_EXECUTABLE_NAME}") 
+  # message("PYTHON_PREFIX: ${PYTHON_PREFIX}")
+  # message("PYTHON_VERSION: ${PYTHON_VERSION}") 
+  # message("PYTHON_SHORT_VERSION: ${PYTHON_SHORT_VERSION}")
+  # message("PYTHON_INCLUDE_PATH: ${PYTHON_INCLUDE_PATH}")
+  # message("PYTHON_LIBRARY: ${PYTHON_LIBRARY}")
+  # message("PYTHON_MODULES_PATH: ${PYTHON_MODULES_PATH}")
+  # message("====")
+   
   # handle the QUIETLY and REQUIRED arguments and set PYTHONINTERP_FOUND to TRUE if
   # all listed variables are TRUE
   INCLUDE(FindPackageHandleStandardArgs)
   FIND_PACKAGE_HANDLE_STANDARD_ARGS(python DEFAULT_MSG PYTHON_INCLUDE_PATH PYTHON_LIBRARY)
 endif()
+
+# Compatibility with components code
+set( PYTHON_HOST_EXECUTABLE "${PYTHON_EXECUTABLE}" )

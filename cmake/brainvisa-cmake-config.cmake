@@ -5,43 +5,8 @@ if( CMAKE_MAJOR_VERSION GREATER 2 )
 endif()
 cmake_policy( SET CMP0057 NEW )
 
-# get_property( config_done GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE )
 
 set(BRAINVISA_CMAKE_LIBRARY_PATH_SUFFIXES lib)
-
-# # OS identifier
-# if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
-#   if( EXISTS /etc/mandriva-release )
-#       set( LSB_DISTRIB "mandriva"
-#            CACHE STRING "Linux distribution identifier" )
-#       file( READ /etc/mandriva-release _x )
-#       string( REGEX MATCH "Mandriva Linux release ([0-9.]+)" _x "${_x}" )
-#       if( _x )
-#         set( LSB_DISTRIB_RELEASE ${CMAKE_MATCH_1} CACHE STRING "Linux distribution version" )
-#       endif()
-#   elseif( EXISTS /etc/lsb-release )
-#     file( READ /etc/lsb-release _x )
-#     string( REGEX MATCH "DISTRIB_ID=([^\n]+)" _y "${_x}" )
-#     if( _y )
-#       string( TOLOWER ${CMAKE_MATCH_1} _y )
-#       set( LSB_DISTRIB ${_y} CACHE STRING "Linux distribution identifier" )
-#       string( REGEX MATCH "DISTRIB_RELEASE=([0-9.]+)" _ver "${_x}" )
-#       if( _ver )
-#         set( LSB_DISTRIB_RELEASE ${CMAKE_MATCH_1} CACHE STRING "Linux distribution version" )
-#       endif()
-#     endif()
-#   elseif( EXISTS /etc/redhat-release )
-#     file( READ /etc/redhat-release _x )
-#     string( REGEX MATCH "(.+) release ([0-9.]+)" _y "${_x}" )
-#     if( _y )
-#       string( TOLOWER ${CMAKE_MATCH_1} _y )
-#       set( LSB_DISTRIB ${_y} CACHE STRING "Linux distribution identifier" )
-#       set( LSB_DISTRIB_RELEASE ${CMAKE_MATCH_2} CACHE STRING "Linux distribution version" )
-#     endif()
-#   endif()
-# endif()
-
-
 
 # This ugly fix allows Boost to detect recent library versions
 # as they are not always defined in FindBoost.cmake. It probably
@@ -1937,6 +1902,15 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
       # Sip can generate less files than requested. The touch
       # command make sure that all the files are created (necessary)
       # for dependencies).
+      COMMAND echo "!1!"
+              "${SIP_EXECUTABLE}"
+              -j ${_sipSplitGeneratedCode}
+              ${_sipIncludeOptions}
+              -c "${CMAKE_CURRENT_BINARY_DIR}"
+              -e
+              ${_sipFlags}
+              -x VendorID -x Qt_STYLE_WINDOWSXP -x Qt_STYLE_INTERLACE
+              ${_mainSipFile}
       COMMAND "${CMAKE_COMMAND}" -E remove ${_sipOutputFiles}
       COMMAND "${SIP_EXECUTABLE}"
               -j ${_sipSplitGeneratedCode}
@@ -1954,6 +1928,16 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
     # use bv_sip4make, taking care of creating the expected number of files
     add_custom_command(
       OUTPUT ${_sipOutputFiles}
+      COMMAND echo "!2!"
+              "${SIP4MAKE_EXECUTABLE}"
+              -S "${SIP_EXECUTABLE}"
+              -j ${_sipSplitGeneratedCode}
+              ${_sipIncludeOptions}
+              -c "${CMAKE_CURRENT_BINARY_DIR}"
+              -e
+              ${_sipFlags}
+              -x VendorID -x Qt_STYLE_WINDOWSXP -x Qt_STYLE_INTERLACE
+              ${_mainSipFile}
       COMMAND "${SIP4MAKE_EXECUTABLE}"
               -S "${SIP_EXECUTABLE}"
               -j ${_sipSplitGeneratedCode}

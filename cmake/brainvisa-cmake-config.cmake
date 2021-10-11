@@ -1902,15 +1902,6 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
       # Sip can generate less files than requested. The touch
       # command make sure that all the files are created (necessary)
       # for dependencies).
-      COMMAND echo "!1!"
-              "${SIP_EXECUTABLE}"
-              -j ${_sipSplitGeneratedCode}
-              ${_sipIncludeOptions}
-              -c "${CMAKE_CURRENT_BINARY_DIR}"
-              -e
-              ${_sipFlags}
-              -x VendorID -x Qt_STYLE_WINDOWSXP -x Qt_STYLE_INTERLACE
-              ${_mainSipFile}
       COMMAND "${CMAKE_COMMAND}" -E remove ${_sipOutputFiles}
       COMMAND "${SIP_EXECUTABLE}"
               -j ${_sipSplitGeneratedCode}
@@ -1928,16 +1919,6 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
     # use bv_sip4make, taking care of creating the expected number of files
     add_custom_command(
       OUTPUT ${_sipOutputFiles}
-      COMMAND echo "!2!"
-              "${SIP4MAKE_EXECUTABLE}"
-              -S "${SIP_EXECUTABLE}"
-              -j ${_sipSplitGeneratedCode}
-              ${_sipIncludeOptions}
-              -c "${CMAKE_CURRENT_BINARY_DIR}"
-              -e
-              ${_sipFlags}
-              -x VendorID -x Qt_STYLE_WINDOWSXP -x Qt_STYLE_INTERLACE
-              ${_mainSipFile}
       COMMAND "${SIP4MAKE_EXECUTABLE}"
               -S "${SIP_EXECUTABLE}"
               -j ${_sipSplitGeneratedCode}

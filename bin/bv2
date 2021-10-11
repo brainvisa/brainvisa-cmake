@@ -1,11 +1,401 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import json
 import os
 import os.path as osp
+import re
+import shutil
 import signal
 import subprocess
 import sys
+import tempfile
+
+MINIMUM_SINGULARITY_VERSION = (3, 0, 0)
+
+def singularity_major_version():
+    return singularity_version()[0]
+
+
+def singularity_version():
+    raw_version = singularity_raw_version()
+    m = re.search(r'([0-9]+(\.[0-9]+)*)', raw_version)
+    if m:
+        version = m.group(1)
+        return tuple(int(x) for x in version.split('.'))
+    else:
+        raise RuntimeError(
+            'Cannot determine singularity numerical version : '
+            'version string = "{0}"'.format(raw_version))
+
+
+_singularity_raw_version = None
+
+def singularity_raw_version():
+    global _singularity_raw_version
+    if _singularity_raw_version is None:
+        output = subprocess.check_output(
+            ['singularity', '--version'],
+            universal_newlines=True,  # backward-compatible text=True
+            bufsize=-1,
+        )
+        _singularity_raw_version = output.strip()
+    return _singularity_raw_version
+
+def prepare_environment_homedir(casa_home_host_path):
+    """Create or complete a home directory for an environment.
+
+    This function has two roles:
+    - It must create and initialize a home directory at setup time (it is
+      called by setup_user or setup_dev).
+
+    - It is also called every time a command is started in an environment,
+      because the home directory may need to be created (in the per-user
+      homedir scenario, i.e. shared installations). For that reason, please
+      keep this function nice and short. It must also be idempotent.
+    """
+    if not osp.exists(casa_home_host_path):
+        os.makedirs(casa_home_host_path)
+    bashrc = osp.join(casa_home_host_path, '.bashrc')
+    if not osp.exists(bashrc):
+        with open(bashrc, 'w') as f:
+            print(r'''
+# .bashrc
+#
+# The default bashrc settings are stored in the Singularity images, so that
+# they can be updated appropriately when the images evolve. Please keep this as
+# the first command of this file.
+. /casa/bashrc
+
+# Users can customize their bash environment below this line. Example
+# customizations are included, please uncomment them to try them out.
+
+# If set, the pattern "**" used in a pathname expansion context will
+# match all files and zero or more directories and subdirectories.
+#shopt -s globstar
+
+# colored GCC warnings and errors
+#export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+
+# Include the current Git branch and Git status in the prompt. VERY USEFUL for
+# developers, but disabled by default because it slows down the prompt on slow
+# filesystems.
+#source /usr/lib/git-core/git-sh-prompt
+#GIT_PS1_SHOWDIRTYSTATE=true
+#GIT_PS1_SHOWSTASHSTATE=true
+#GIT_PS1_SHOWUNTRACKEDFILES=true
+#GIT_PS1_SHOWUPSTREAM=auto
+#GIT_PS1_DESCRIBE_STYLE=describe
+#GIT_PS1_SHOWCOLORHINTS=true
+#PS1='${CASA_ENVIRONMENT:+($CASA_ENVIRONMENT)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\[\033[01m\]$(__git_ps1 " (%s)")\[\033[00m\]\$ '
+
+# Allow quickly changing the current directory to sub-directories of
+# /casa/host, for example:
+#     cd src/axon/master
+#CDPATH=:/casa/host
+''', file=f)  # noqa: E501
+    # Create an (empty) .sudo_as_admin_successful file to prevent the startup
+    # message telling to use "sudo" in the container, which does not work under
+    # Singularity.
+    silence_file = osp.join(casa_home_host_path, '.sudo_as_admin_successful')
+    if not osp.exists(silence_file):
+        with open(silence_file, 'w') as f:
+            pass
+
+def _X_has_proprietary_nvidia():
+    """Test if the X server is configured for the proprietary NVidia driver.
+    """
+    try:
+        with open(os.devnull, 'w') as devnull:
+            stdoutdata = subprocess.check_output('xdpyinfo', bufsize=-1,
+                                                 stderr=devnull,
+                                                 universal_newlines=True)
+    except (OSError, subprocess.CalledProcessError):
+        # xdpyinfo cannot be found or returns an error. Stay on the safe side
+        # by returning False, which triggers the fallback to software
+        # rendering.
+        return False
+    else:
+        return bool(re.search(r'^\s+NV-GLX\s*$', stdoutdata, re.M))
+
+
+def _guess_opengl_mode():
+    """Guess a working OpenGL configuration for opengl=auto.
+
+    See https://github.com/brainvisa/casa-distro/issues/160 for the rationale
+    behind this heuristic. If it does not work for you, please reopen that
+    issue.
+    """
+    # Although Singularity supports --nv even without nvidia-container-cli, it
+    # has been found to generate random failures at runtime, see
+    # https://github.com/brainvisa/casa-distro/issues/153.
+    if os.access('/dev/nvidiactl', os.R_OK | os.W_OK):
+        if find_executable('nvidia-container-cli'):
+            # This is the option that provides the best graphical performance
+            # on NVidia hardware, and enables the use of CUDA. It seems to work
+            # in all tested configurations (physical X server, CLI, Xvnc,
+            # x2go).
+            return 'nv'
+        else:
+            # Although Singularity supports --nv without nvidia-container-cli,
+            # it has been found to generate random failures at runtime, see
+            # https://github.com/brainvisa/casa-distro/issues/153.
+            if _X_has_proprietary_nvidia():
+                # In that case, we cannot fall back to 'container' because that
+                # is not compatible with a X server that has the proprietary
+                # NVidia module, so we have to fall back to the software-only
+                # libGL.
+                return 'software'
+            else:
+                # When nvidia-container-cli is not present, --nv causes
+                # systematic segfaults on a X server that is *not* configured
+                # to use the NVidia proprietary driver (such as Xvnc or x2go).
+                # It seems safe to fall back to 'container' in those cases.
+                return 'container'
+    else:
+        # When the system does not have NVidia hardware, the in-container
+        # DRI-enabled OpenGL libraries seem to work in all cases. If we find
+        # cases where they do not, we will need to add a quirk here.
+        return 'container'
+
+
+def _nv_libs_binds():
+    '''Workaround for missing NVidia libraries.
+
+    This is a workaround for some cases where Singularity with the --nv option
+    fails to mount all libraries required for OpenGL programs to function
+    properly, see <https://github.com/brainvisa/casa-distro/issues/153>.
+
+    Singularity seems to miss one library (or directory):
+    libnvidia-tls is present twice in their drivers, ie:
+    /usr/lib/x86_64-linux-gnu/libnvidia-tls.so.390.138
+    /usr/lib/x86_64-linux-gnu/tls/libnvidia-tls.so.390.138
+    the latter is not mounted through nvidia-container-cli and this seems to
+    cause random crashes in OpenGL applications (ramdom: from one container
+    start to another, but within the same singularity run the behaviour is
+    consistent).
+
+    _nv_libs_binds() adds the additional missing lib directory (tls/)
+
+    '''
+    try:
+        with open(os.devnull, 'w') as devnull:
+            out_data = subprocess.check_output(
+                ['nvidia-container-cli', 'list', '--libraries'],
+                bufsize=-1, stderr=devnull,
+                universal_newlines=True,  # return decoded str instead of bytes
+            )
+    except OSError:
+        return []  # nvidia-container-cli not found
+    except subprocess.CalledProcessError:
+        return []  # nvidia-container-cli returns an error
+
+    libs = out_data.strip().split()
+    added_libs = []
+    for lib in libs:
+        ldir, blib = osp.split(lib)
+        if blib.startswith('libnvidia-tls.so'):
+            if osp.exists(osp.join(ldir, 'tls')):
+                added_libs.append(osp.join(ldir, 'tls'))
+            elif osp.basename(ldir) == 'tls':
+                # 'tls' is already the dir for libnvidia-tls. Unfortunately
+                # singularity doesn't bind it but takes its parent dir's
+                # libnvidia-tls...
+                added_libs.append(ldir)
+            break
+    return added_libs
+
+def run_singularity(image,
+                    command,
+                    cwd=None,
+                    home=None,
+                    mounts=None,
+                    gui=True, 
+                    opengl='auto',
+                    root=False, 
+                    env=None,
+                    overlay=None,
+                    options=None,
+                    verbose=False):
+    """
+    Run a command in the container defined in the environment
+
+    Return the exit code of the command, or raise an exception if the command
+    cannot be run.
+    """
+    singularity = ['singularity', 'run', '--cleanenv']
+    effective_env = {}
+    effective_mounts = {}
+
+    if cwd:
+        singularity += ['--pwd', cwd]
+    if root:
+        singularity += ['--fakeroot']
+    if writable:
+        singularity += ['--writable']
+    if overlay:
+        singularity += ['--overlay', overlay]
+    if options:
+        # --nv option can interfere, unset it
+        singularity += [i for i in options if i != '--nv']
+    if not home:
+        home = os.path.abspath(os.environ['HOME'])
+    singularity += ['--home', home]
+    effective_mounts[home] = home
+    if env:
+        # This environment variables can interfere, unset it.
+        env.pop('SOFTWARE_OPENGL', None)
+    if gui:
+        display = os.environ.get('DISPLAY')
+        if display:
+            effective_env['DISPLAY'] = display
+        # Make the host ssh-agent usable in the container
+        ssh_auth_sock = os.environ.get('SSH_AUTH_SOCK')
+        if ssh_auth_sock:
+            effective_env['SSH_AUTH_SOCK'] = ssh_auth_sock
+            effective_mounts[ssh_auth_sock] = ssh_auth_sock
+    
+    temps= []
+    try:
+        if gui and os.environ.get('DISPLAY'):
+            # Use a temporary file for each run, because a single ~/.Xauthority
+            # file could be overwritten by concurrent runs... which may not all be
+            # using the same X server.
+            with tempfile.NamedTemporaryFile(prefix='bv-',
+                                             suffix='.Xauthority',
+                                             delete=False) as f:
+                xauthority_tmpfile = f.name
+            temps.append(xauthority_tmpfile)
+            retcode = subprocess.call(['xauth', 'extract', xauthority_tmpfile,
+                                      os.environ['DISPLAY']], bufsize=-1)
+            if retcode == 0:
+                effective_mounts['/casa/Xauthority'] = xauthority_tmpfile
+                effective_env['XAUTHORITY'] = '/casa/Xauthority'
+
+        if env:
+            effective_env.update(env)
+
+        if mounts:
+            effective_mounts.update(mounts)
+
+        for dest, source in effective_mounts.items():
+            if not source:
+                continue  # a mount can be deactivated by setting it to None (null)
+            source = osp.expandvars(source)
+            dest = osp.expandvars(dest)
+            if not os.path.exists(source):
+                print('WARNING: the path {0} cannot be found on your system, '
+                    'so it cannot be mounted in the container as requested by '
+                    'your casa-distro configuration.'.format(source),
+                    file=sys.stderr)
+                continue
+            singularity += ['--bind', '{}:{}'.format(source, dest)]
+
+
+        # if needed, write an ini.sh mounted in /casa/start_scripts
+        init_script = []
+
+        if opengl == 'auto':
+            opengl = _guess_opengl_mode()
+
+
+        if opengl == 'nv':
+            singularity += ['--nv']
+            nv_binds = _nv_libs_binds()
+            for ldir in nv_binds:
+                singularity += ['--bind',
+                                '{}:/usr/local/lib/{}'.format(
+                                    ldir, osp.basename(ldir))]
+                init_script += [
+                    '# add missing nvidia libs in LD_LIBRARY_PATH',
+                    'export LD_LIBRARY_PATH=/usr/local/lib/tls'
+                    '${LD_LIBRARY_PATH+:}${LD_LIBRARY_PATH}']
+        elif opengl == 'software':
+            # activate mesa path in entrypoint
+            effective_env['SOFTWARE_OPENGL'] = '1'
+            # this variable avoids to use "funny" transparent visuals
+            effective_env['XLIB_SKIP_ARGB_VISUALS'] = '1'
+        elif opengl == 'container':
+            pass  # nothing to do
+        else:
+            raise ValueError('Invalid value for the opengl option')
+
+        with tempfile.NamedTemporaryFile(prefix='bv-',
+                                         suffix='.env',
+                                         delete=False,
+                                         mode='w') as f:
+            temps.append(f.name)
+            singularity += ['--env-file', f.name]
+            for k, v in effective_env.items():
+                print(k, '=', "'", v, "'", sep='', file=f)
+
+        if singularity_version()[:3] == (3, 3, 0) and sys.platform == 'darwin':
+            # the beta of singularity 3.3 for Mac doesn't pass envars in any way
+            # (no --env option, --home doesn't work, SINGULARITYENV_something vars
+            # are not transmitted). We work around this using a mount and a bash
+            # script.
+            forbidden = set(['HOME', 'SINGULARITYENV_HOME', 'PWD', 'PATH',
+                            'LD_LIBRARY_PATH', 'PYTHONPATH'])
+            for var, value in container_env.items():
+                if var not in forbidden:
+                    if var.startswith('SINGULARITYENV_'):
+                        init_script.append('export %s="%s"'
+                                        % (var[15:], value))
+                    else:
+                        init_script.append('export %s="%s"' % (var, value))
+            # --home does not work either
+            init_script.append('export HOME=%s' % singularity_home)
+
+        if init_script:
+            tmpdir = tempfile.mkdtemp(prefix='casa_singularity')
+            script = osp.join(tmpdir, 'init.sh')
+            with open(script, 'w') as f:
+                print('#!/bin/bash\n', file=f)
+                for line in init_script:
+                    print(line, file=f)
+            container_options += ['--bind', '%s:/casa/start_scripts' % tmpdir]
+            temps.append(tmpdir)
+
+
+        singularity += [image]
+        singularity += command
+        if verbose:
+            print('-' * 40, file=verbose)
+            print('Running singularity with the following command:',
+                  file=verbose)
+            print(*("'{}'".format(i) for i in singularity), file=verbose)
+            print('\nUsing the following environment:', file=verbose)
+            for n in sorted(effective_env):
+                v = effective_env[n]
+                print('    {}={}'.format(n, v), file=verbose)
+            print('-' * 40, file=verbose)
+            verbose.flush()
+        retval = 127
+        try:
+            retval = subprocess.call(singularity)
+        except KeyboardInterrupt:
+            pass  # avoid displaying a stack trace
+        if retval == 255:
+            # This exit code is returned by Singularity 2 when it is given a .sif
+            # image.
+            if singularity_version() < MINIMUM_SINGULARITY_VERSION:
+                print('Your version of Singularity ({0}) is not supported, '
+                    'please install Singularity {1} or later '
+                    '(see https://brainvisa.info/).'
+                    .format(
+                        singularity_raw_version(),
+                        '.'.join(str(i) for i in MINIMUM_SINGULARITY_VERSION),
+                    )
+                    , file=sys.stderr)
+        return retval
+    finally:
+        for temp in temps:
+            if os.path.isdir(temp):
+                shutil.rmtree(temp)
+            else:
+                os.unlink(temp)
+
+
 
 
 def failure(message):
@@ -15,6 +405,43 @@ def failure(message):
 
 help = False
 verbose = None
+gui = True
+opengl = 'auto'
+root = False
+writable=False
+cwd = os.getcwd()
+image = None
+
+i = 1
+while i < len(sys.argv):
+    option = sys.argv[i]
+    if option == '--':
+        i += 1
+        break
+    elif option in ('-h', '--help'):
+        help = True
+    elif option in ('-v', '--verbose'):
+        verbose = sys.stdout
+    elif option == '--no-gui':
+        gui = False
+    elif option == '--root':
+        root = True
+    elif option == '--opengl':
+        i += 1
+        cwd = sys.argv[i]
+    elif option == '--writable':
+        writable = True
+    elif option == '--cwd':
+        i += 1
+        cwd = sys.argv[i]
+    elif option == '--image':
+        i += 1
+        image = sys.argv[i]
+    else:
+        break
+    i += 1
+command = sys.argv[i:]
+
 
 me = osp.basename(sys.argv[0])
 if me != 'bv2':
@@ -33,17 +460,6 @@ if me != 'bv2':
             bv = osp.join(osp.dirname(sys.argv[0]), bv)
         sys.argv[0] = bv
 
-i = 1
-while i < len(sys.argv):
-    option = sys.argv[i]
-    if option in ('-h', '--help'):
-        help = True
-    elif option in ('-v', '--verbose'):
-        verbose = sys.stdout
-    else:
-        break
-    i += 1
-command = sys.argv[i:]
 
 
 if help:
@@ -71,18 +487,62 @@ if 'SINGULARITY_CONTAINER' in os.environ:
 
 bv = osp.normpath(osp.abspath(sys.argv[0]))
 real_bv = osp.realpath(bv)
-environment_dir = osp.dirname(osp.dirname(osp.dirname(osp.dirname(real_bv))))
-command = sys.argv[1:]
-host_command = ['singularity', 'run', osp.join(environment_dir, 'image')]
-host_command += command
+base_directory = osp.dirname(osp.dirname(osp.dirname(osp.dirname(real_bv))))
 
-if verbose:
-    print('Container command =', ' '.join("'{}'".format(i) for i in command))
-    print('Host command =', ' '.join("'{}'".format(i) for i in host_command))
+home = osp.join(base_directory, 'home')
+
+if not os.path.exists(home):
+    full_environment_path_flat = (
+        osp.normcase(osp.abspath(base_directroy))
+        .lstrip(os.sep)
+        .replace(os.sep, '_')
+    )
+    xdg_data_home = os.environ.get('XDG_DATA_HOME', '')
+    if not xdg_data_home:
+        xdg_data_home = os.path.join(os.path.expanduser('~'),
+                                     '.local', 'share')
+        home = os.path.join(
+            xdg_data_home, 'casa-distro',
+            full_environment_path_flat, 'home')
+
+    # Prepare the home directory of the container (create it if needed, and
+    # ensure that necessary files are present.)
+    prepare_environment_homedir(host_path_of_container_home)
+    prepare_user_config()
+
+
+mounts_file = osp.join(base_directory, 'container_mounts.json')
+if osp.exists(mounts_file):
+    with open(mounts_file) as f:
+        mounts = json.load(f)
+else:
+    mounts = None
+
+env_file = osp.join(base_directory, 'container_env.json')
+if osp.exists(env_file):
+    with open(env_file) as f:
+        env = json.load(f)
+else:
+    env = None
+
+if image is None:
+    image = osp.join(base_directory, 'image')
 
 # Avoid displaying a stack trace if the child command is interrupted with
 # Ctrl+C
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-retcode = subprocess.call(host_command)
+retcode = run_singularity(
+    image=image,
+    command=command,
+    cwd=cwd,
+    home=home,
+    mounts=mounts,
+    gui=gui, 
+    opengl=opengl,
+    root=root, 
+    env=env,
+    # overlay=None,
+    # options=None,
+    verbose=(sys.stdout if verbose else None))
 sys.exit(retcode)

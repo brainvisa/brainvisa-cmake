@@ -1,0 +1,464 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import itertools
+import logging
+import os
+import pathlib
+import re
+import shlex
+import sys
+
+from brainvisa.maker.components_definition import components_definition
+
+try:
+    from brainvisa.maker.git import GitRepository, GitUpdateError
+except ModuleNotFoundError:
+    # Hack for using a local Git module for doing the update on the 5.0 branch,
+    # which still has the monolithic bv_maker
+    sys.stderr.write(f'Hack: prepending {os.path.dirname(sys.argv[0])} '
+                     f'to sys.path\n')
+    sys.stderr.flush()
+    sys.path.insert(0, os.path.dirname(sys.argv[0]))
+    from git import GitRepository, GitUpdateError
+
+
+logger = logging.getLogger(__name__)
+
+
+def user_confirms(message, *, dry_run, dry_run_reply):
+    if dry_run:
+        logger.info('Dry-run: would ask "%s", assuming user replies "%s"',
+                    message.strip(), 'y' if dry_run_reply else 'n')
+        return dry_run_reply
+    while True:
+        answer = input(message)
+        if answer.lower() == 'y':
+            return True
+        elif answer.lower() == 'n':
+            return False
+        elif answer.lower() == 'q':
+            sure = user_confirms('Are you sure you want to quit? [y/n] ')
+            if sure:
+                sys.exit(1)
+        print('Answer not recognized. Please try again [y/n/q].')
+
+
+def iterate_git_repositories(distro, major, minor):
+    """Iterate through repositories of the given distro on the release branch.
+
+    The generator yields tuples in the form: (local_path, repo_url, branch):
+
+    - local_path is the local path to the repository, relative to the root of
+      the source directory
+    - url is the URL of the Git repository
+    - branch is the name of the release branch for that repository
+    (typically {major}.{minor} or brainvisa-{major}.{minor}).
+    """
+    release_branch = f'{major:d}.{minor:d}'
+    for category_name, category_contents in components_definition:
+        for component_name, component_dict in category_contents['components']:
+            if distro in component_dict['groups']:
+                if release_branch in component_dict['branches']:
+                    repo_string, local_path = (
+                        component_dict['branches'][release_branch]
+                    )
+                    repo_info = repo_string.split()
+                    if repo_info[0] == 'git':
+                        yield (
+                            local_path,
+                            repo_info[1],
+                            repo_info[2].split(':')[1],
+                        )
+                    else:
+                        logger.warning('Non-Git repository of type %s at %s '
+                                       'will need to be handled manually.',
+                                       repo_info[0], local_path)
+
+
+class SourceVersionError(Exception):
+    """Exception for source version parse failures."""
+    pass
+
+
+def find_source_version_file_and_syntax(source_path):
+    source_path = pathlib.Path(source_path)
+    if (source_path / 'project_info.cmake').exists():
+        return ('project_info.cmake', 'project_info.cmake')
+    info_py_candidates = list(source_path.glob('*/info.py'))
+    if info_py_candidates:
+        if len(info_py_candidates) == 1:
+            return (str(info_py_candidates[0].relative_to(source_path)), 'py')
+    info_py_candidates = list(source_path.glob('python/*/info.py'))
+    if info_py_candidates:
+        if len(info_py_candidates) == 1:
+            return (str(info_py_candidates[0].relative_to(source_path)), 'py')
+    info_py_candidates = list(source_path.glob('info.py'))
+    if info_py_candidates:
+        if len(info_py_candidates) == 1:
+            return (str(info_py_candidates[0].relative_to(source_path)), 'py')
+    raise SourceVersionError(f'cannot find a version file in {source_path}')
+
+
+# Each regex must have 3 groups: before the version number, the version number
+# itself, and after the version number.
+CMAKE_VERSION_REGEXPS = (
+    re.compile(r'(\bset\s*\(\s*BRAINVISA_PACKAGE_VERSION_MAJOR\s*)'
+               r'([0-9]+)(\s*\))',
+               re.IGNORECASE),
+    re.compile(r'(\bset\s*\(\s*BRAINVISA_PACKAGE_VERSION_MINOR\s*)'
+               r'([0-9]+)(\s*\))',
+               re.IGNORECASE),
+    re.compile(r'(\bset\s*\(\s*BRAINVISA_PACKAGE_VERSION_PATCH\s*)'
+               r'([0-9]+)(\s*\))',
+               re.IGNORECASE),
+)
+
+
+PY_VERSION_REGEXPS = (
+    re.compile(r'(\bversion_major\s*=\s*)([0-9]+)(\b)'),
+    re.compile(r'(\bversion_minor\s*=\s*)([0-9]+)(\b)'),
+    re.compile(r'(\bversion_micro\s*=\s*)([0-9]+)(\b)'),
+)
+
+
+def iterate_source_version_regexes(syntax):
+    if syntax == 'project_info.cmake':
+        regexps = CMAKE_VERSION_REGEXPS
+    elif syntax == 'py':
+        regexps = PY_VERSION_REGEXPS
+    else:
+        raise RuntimeError(f'unknown syntax {syntax}')
+    for regex in regexps:
+        yield regex
+
+
+def get_source_version_components(source_path):
+    version_file, syntax = find_source_version_file_and_syntax(source_path)
+    with open(os.path.join(source_path, version_file), 'rt') as f:
+        file_contents = f.read()
+    for regex in iterate_source_version_regexes(syntax):
+        match = regex.search(file_contents)
+        if match is None:
+            raise SourceVersionError(
+                f'cannot find a version number component in {source_path} '
+                f'(regex pattern: {regex.pattern})'
+            )
+        yield int(match.group(2))
+
+
+def get_source_version_tuple(source_path):
+    try:
+        return tuple(get_source_version_components(source_path))
+    except SourceVersionError as exc:
+        logger.error(str(exc))
+        return None
+
+
+def set_source_version_tuple(source_path, version_tuple, *, dry_run=False):
+    version_file, syntax = find_source_version_file_and_syntax(source_path)
+    version_file_fullpath = os.path.join(source_path, version_file)
+    with open(version_file_fullpath, 'rt') as f:
+        file_contents = f.read()
+    for regex, version_component in itertools.zip_longest(
+            iterate_source_version_regexes(syntax), version_tuple):
+        assert regex is not None and version_component is not None, \
+            f'version_tuple has an incorrect length {len(version_tuple)}'
+        file_contents, nsubs = regex.subn(f'\\g<1>{version_component:d}\\g<3>',
+                                          file_contents)
+        if nsubs != 1:
+            logger.error(
+                f'cannot substitute a version number component in '
+                f'{source_path} ({nsubs:d} substitutions done, regex pattern: '
+                f'{regex.pattern})'
+            )
+            return None
+    if not dry_run:
+        with open(version_file_fullpath, 'wt') as f:
+            f.write(file_contents)
+    return version_file
+
+
+def bv_tag_release(source_root, version_to_tag, *,
+                   distro='cea', dry_run=True,
+                   fix_source_version_numbers=False):
+    # Parse the version_to_tag
+    major, minor, micro = version_to_tag.split('.')
+    major = int(major)
+    minor = int(minor)
+    micro = int(micro)
+    assert version_to_tag == f'{major:d}.{minor:d}.{micro:d}'
+
+    for local_path, repo_url, branch in iterate_git_repositories(
+            distro, major, minor):
+        logger.debug('Now handling repository at %s (branch: %s, URL: %s)',
+                     local_path, branch, repo_url)
+        gr = GitRepository(source_root, local_path, repo_url, branch)
+
+        if branch == f'{major:d}.{minor:d}':
+            project_version_follows_brainvisa = True
+        elif branch == f'brainvisa-{major:d}.{minor:d}':
+            project_version_follows_brainvisa = False
+        else:
+            logger.error('skipping %s: unexpected release branch name %r '
+                         f'(expected either {major:d}.{minor:d} or '
+                         f'brainvisa-{major:d}.{minor:d})',
+                         local_path, branch)
+            continue
+
+        # Verify the current branch is major.minor or brainvisa-major.minor
+        if gr.local_branch != branch:
+            logger.error('skipping %s: repository must be on the %s branch',
+                         local_path, branch)
+            continue
+
+        # Verify that there are no uncommitted changes
+        if gr.dirty:
+            logger.error('skipping %s: repository has uncommitted changes',
+                         local_path)
+            continue
+
+        # Verify the current version in project_info.cmake / info.py
+        source_version_tuple = get_source_version_tuple(os.path.join(
+            source_root, local_path))
+        if source_version_tuple is None:
+            logger.error('skipping %s: cannot find version number in the '
+                         'sources', local_path)
+            continue
+        logger.debug('Found version number %s in %s',
+                     source_version_tuple, local_path)
+        if (project_version_follows_brainvisa
+                and source_version_tuple != (major, minor, micro)):
+            if fix_source_version_numbers:
+                logger.warning('Will now set the version number to %d.%d.%d '
+                               'in %s', major, minor, micro,
+                               local_path)
+                set_version_number_and_commit(source_root, local_path,
+                                              (major, minor, micro),
+                                              branch, gr,
+                                              dry_run=dry_run)
+            else:
+                logger.error('skipping %s: source version number %s differs from '
+                             'the BrainVISA version about to be released',
+                             local_path,
+                             '.'.join(str(n) for n in source_version_tuple))
+        if (fix_source_version_numbers
+                and not project_version_follows_brainvisa):
+            logger.warning('project %s has source version number %s, '
+                           'please change it manually if needed.',
+                           local_path,
+                           '.'.join(str(n) for n in source_version_tuple))
+
+        if fix_source_version_numbers:
+            continue  # In this mode we do not tag
+
+        # Create the annotated tag and push it
+        if project_version_follows_brainvisa:
+            tag_name = f'v{version_to_tag}'
+            tag_message = f'Version {version_to_tag}'
+        else:
+            tag_name = f'brainvisa-{version_to_tag}'
+            tag_message = (f'Version incorporated in '
+                           f'BrainVISA {version_to_tag}')
+        cmd = ['git', 'tag', '-a', '-m', tag_message, tag_name, 'HEAD']
+        if dry_run:
+            logger.info('Dry-run: would now call %s',
+                        ' '.join(shlex.quote(arg) for arg in cmd))
+        else:
+            retcode = gr.call_command(cmd, echo=True)
+            if retcode != 0:
+                logger.error('Git error while creating the tag named %s in %s.'
+                             'Leaving the repository in its current state.',
+                             tag_name, local_path)
+                continue
+        try:
+            gr.ensure_origin_remote()
+        except GitUpdateError:
+            logger.error('Git error setting the origin remote. The tag has '
+                         'been created locally but cannot be pushed. Leaving '
+                         'the repository in its current state.')
+            continue
+        cmd = ['git', 'push', 'origin',
+               f'refs/tags/{tag_name}:refs/tags/{tag_name}']
+        if dry_run:
+            logger.info('Dry-run: would now call %s',
+                        ' '.join(shlex.quote(arg) for arg in cmd))
+        else:
+            retcode = gr.call_command(cmd, echo=True)
+            if retcode != 0:
+                logger.error('failed to push the new tag for %s. Will now '
+                             'carry on to bumping the version number. Please '
+                             'push the tag yourself afterwards.',
+                             local_path)
+            else:
+                logger.info('Successfully tagged %s', local_path)
+
+        # Bump the micro version in project_info.cmake / info.py, commit, and
+        # push
+        if project_version_follows_brainvisa:
+            set_version_number_and_commit(source_root, local_path,
+                                          (major, minor, micro + 1),
+                                          branch, gr,
+                                          dry_run=dry_run)
+        else:
+            candidate_version = source_version_tuple[:2] + (micro + 1,)
+            candidate_version_str = '.'.join(str(n) for n in candidate_version)
+            if user_confirms(f'Bump version of {local_path} to '
+                             f'{candidate_version_str}? [y/n] ',
+                             dry_run=dry_run, dry_run_reply=True):
+                set_version_number_and_commit(source_root, local_path,
+                                              candidate_version,
+                                              branch, gr,
+                                              dry_run=dry_run)
+
+
+def set_version_number_and_commit(source_root, local_path,
+                                  version_tuple, branch,
+                                  gr, *,
+                                  dry_run=True):
+    major, minor, micro = version_tuple
+    version_file = set_source_version_tuple(
+        os.path.join(source_root, local_path),
+        (major, minor, micro),
+        dry_run=dry_run,
+    )
+    if version_file is None:
+        logger.error('Could not bump the source version number in %s',
+                     local_path)
+        return
+    cmd = ['git', 'add', version_file]
+    if dry_run:
+        logger.info('Dry-run: would now call %s',
+                    ' '.join(shlex.quote(arg) for arg in cmd))
+    else:
+        retcode = gr.call_command(cmd, echo=True)
+        gr.invalidate_cache()
+        if retcode != 0:
+            logger.error('Cannot index the version number bump in %s. '
+                         'Leaving the repository in its current state',
+                         os.path.join(local_path, version_file))
+            return
+
+    cmd = ['git', '--no-pager', 'diff', '--cached']
+    if dry_run:
+        logger.info('Dry-run: would now call %s',
+                    ' '.join(shlex.quote(arg) for arg in cmd))
+    else:
+        gr.call_command(cmd, echo=True)
+        if not user_confirms('Commit and push? [y/n/q] ',
+                             dry_run=dry_run, dry_run_reply=True):
+            return
+
+    cmd = ['git', 'commit', '-m',
+           f'Bump version to {major:d}.{minor:d}.{micro:d}']
+    if dry_run:
+        logger.info('Dry-run: would now call %s',
+                    ' '.join(shlex.quote(arg) for arg in cmd))
+    else:
+        retcode = gr.call_command(cmd, echo=True)
+        gr.invalidate_cache()
+        if retcode != 0:
+            logger.error('Cannot commit the version number bump in %s. '
+                         'Leaving the repository in its current state',
+                         local_path)
+            return
+    cmd = ['git', 'push', 'origin',
+           f'refs/heads/{branch}:refs/heads/{branch}']
+    if dry_run:
+        logger.info('Dry-run: would now call %s',
+                    ' '.join(shlex.quote(arg) for arg in cmd))
+    else:
+        retcode = gr.call_command(cmd, echo=True)
+        if retcode != 0:
+            logger.error('Could not push the version number bump in %s',
+                         local_path)
+            return
+        logger.info('Successfully bumped the version number in %s',
+                    local_path)
+
+    # We should merge also the version number bump into master (fake-merge
+    # to avoid people messing up the version number on master)?
+    # ...
+    # Let's do this in a separate script to avoid adding complexity here.
+
+
+def parse_command_line(argv=sys.argv):
+    """Parse the script's command line."""
+    import argparse
+    parser = argparse.ArgumentParser(description="""\
+Add a tag to every Git project, bump the version in sources, and push.
+
+For each Git repository in the distro:
+  -  Verify the current branch is major.minor or brainvisa-major.minor
+  -  Verify that there are no uncommitted changes
+  -  Verify the current version in project_info.cmake / info.py
+  -  Create the annotated tag and push it
+  -  Bump the micro version in project_info.cmake / info.py, commit and push
+""")
+    parser.add_argument('source_root',
+                        help='Root of the BrainVISA source directory, '
+                        'typically /casa/host/src.')
+    parser.add_argument('version_to_tag', type=str,
+                        help='Version that is about to be tagged '
+                        '(e.g. "5.0.3")')
+    parser.add_argument('--fix-source-version-numbers', action='store_true',
+                        help='In this mode no tags are created, but the source'
+                        'version numbers are set to version_to_tag in projects'
+                        'that follow the BrainVISA version.')
+    parser.add_argument('--distro', default='cea',
+                        help='Distro to release. Note that you should use a '
+                        'source directory that has the largest set of '
+                        'components, typically the cea distro.')
+    parser.add_argument('--dry-run', default=True, action='store_true',
+                        help="List every step but don't actually perform "
+                        "anything that would write to the repositories.")
+    parser.add_argument('--really-do-it', dest='dry_run', action='store_false',
+                        help="List every step but don't actually perform "
+                        "anything that would write to the repositories.")
+    parser.add_argument('--debug', dest='logging_level', action='store_const',
+                        const=logging.DEBUG, default=logging.INFO,
+                        help='Enable debugging messages')
+
+    args = parser.parse_args(argv[1:])
+    return args
+
+
+def main(argv=sys.argv):
+    """The script's entry point."""
+    prog = os.path.basename(argv[0])
+    args = parse_command_line(argv)
+
+    # Configure logging
+    logging.basicConfig(
+        level=min(args.logging_level, logging.INFO),
+        filename='bv_tag_release.log',
+        filemode='a',
+    )
+    root_logger = logging.getLogger()
+    formatter = logging.Formatter(f'{prog}: %(levelname)s: %(message)s')
+    try:
+        from logutils.colorize import ColorizingStreamHandler
+        handler = ColorizingStreamHandler(sys.stderr)
+        handler.setFormatter(formatter)
+        handler.setLevel(args.logging_level)
+        root_logger.addHandler(handler)
+    except ModuleNotFoundError:
+        handler = logging.StreamHandler(sys.stderr)
+        handler.setFormatter(formatter)
+        handler.setLevel(args.logging_level)
+        root_logger.addHandler(handler)
+        logger.info('You can activate colorful logging by installing '
+                    'the "logutils" Python package (e.g. with '
+                    'python3 -m pip install logutils)')
+
+    return bv_tag_release(
+        args.source_root,
+        args.version_to_tag,
+        distro=args.distro,
+        dry_run=args.dry_run,
+        fix_source_version_numbers=args.fix_source_version_numbers,
+    ) or 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

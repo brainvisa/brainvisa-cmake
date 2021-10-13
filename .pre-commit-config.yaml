@@ -19,7 +19,7 @@ repos:
     -   id: flake8
         name: flake8 under python2
         language_version: python2
-        exclude: ^doc/sphinx/sphinxext/
+        exclude: ^(doc/sphinx/sphinxext/|release/)
     -   id: flake8
         name: flake8 under python3
         language_version: python3

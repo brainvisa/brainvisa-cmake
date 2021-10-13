@@ -60,7 +60,7 @@ class GitRepository(object):
         """Call a command in the repository, returning its exit code."""
         if echo:
             if isinstance(args, six.string_types):
-                print('$ ' + args)
+                print('$ ' + shlex_quote(args))
             else:
                 print('$ ' + ' '.join(shlex_quote(arg) for arg in args))
         return subprocess.call(args, cwd=self.path, **kwargs)
@@ -155,6 +155,25 @@ class GitRepository(object):
                 stderr=DEVNULL, cwd=self.path).rstrip())
         except subprocess.CalledProcessError:
             return None
+
+    @cached_property
+    def tree_dirty(self):
+        """Test if the repository has uncommitted changes in the worktree."""
+        retcode = self.call_command(['git', 'diff', '--no-ext-diff',
+                                     '--quiet'])
+        return (retcode != 0)
+
+    @cached_property
+    def index_dirty(self):
+        """Test if the repository has uncommitted changes in the index."""
+        retcode = self.call_command(['git', 'diff', '--no-ext-diff',
+                                     '--quiet'])
+        return (retcode != 0)
+
+    @property
+    def dirty(self):
+        """Test if the repository has uncommitted changes."""
+        return self.tree_dirty or self.index_dirty
 
     def update_origin_and_bv_head(self):
         """Fetch all branches and tags from the 'origin' remote."""
@@ -350,14 +369,6 @@ uncommitted local changes (see above).""")
             except subprocess.CalledProcessError:
                 pass
 
-        # Get the dirty state of the repository
-        retcode = self.call_command(['git', 'diff', '--no-ext-diff',
-                                     '--quiet'])
-        tree_dirty = (retcode != 0)
-        retcode = self.call_command(['git', 'diff', '--no-ext-diff',
-                                     '--cached', '--quiet'])
-        index_dirty = (retcode != 0)
-
         # Show the stash state of the repository
         retcode = self.call_command(['git', 'rev-parse', '--verify', '--quiet',
                                      'refs/stash'],
@@ -398,8 +409,8 @@ uncommitted local changes (see above).""")
             'describe_head': describe_head,
             'current_branch': self.local_branch,
             'head_short_sha1': self.head_short_sha1,
-            'tree_dirty': tree_dirty,
-            'index_dirty': index_dirty,
+            'tree_dirty': self.tree_dirty,
+            'index_dirty': self.index_dirty,
             'stash': stash,
             'untracked': untracked,
             'bv_upstream_info': bv_upstream_info,
@@ -454,6 +465,19 @@ uncommitted local changes (see above).""")
             )
         return cls._have_pre_commit
 
+    def ensure_origin_remote(self):
+        """Ensure the 'origin' remote is configured to the bv_maker URL."""
+        retcode = self.call_command(
+            ['git', 'remote', 'set-url', 'origin', self.remote_url],
+            stderr=DEVNULL,
+        )
+        if retcode != 0:
+            retcode = self.call_command(
+                ['git', 'remote', 'add', '--tags',
+                 'origin', self.remote_url], echo=True)
+            if retcode == 0:
+                raise GitUpdateError('remote set-up failed')
+
     def update_or_clone(self, source_dir):
         """Update or clone the repository."""
         print("\n")
@@ -472,18 +496,7 @@ to keep in this directory and delete it to make "bv_maker sources" work.'''
             system('git', 'clone', '--branch', self.remote_ref,
                    self.remote_url, self.path)
         else:
-            # Make sure that the origin remote is configured and points to the
-            # URL configured in bv_maker
-            retcode = self.call_command(
-                ['git', 'remote', 'set-url', 'origin', self.remote_url],
-                stderr=DEVNULL,
-            )
-            if retcode != 0:
-                retcode = self.call_command(
-                    ['git', 'remote', 'add', '--tags',
-                     'origin', self.remote_url], echo=True)
-                if retcode == 0:
-                    raise GitUpdateError('remote set-up failed')
+            self.ensure_origin_remote()
 
         # Fetch the remote ref specified in bv_maker.cfg into refs/bv_head
         #

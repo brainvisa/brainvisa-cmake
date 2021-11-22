@@ -21,8 +21,9 @@ components_definition = [
     ('development', {
         'components': [
             ['brainvisa-cmake', {
-                'groups': ['all', 'anatomist', 'opensource', 'brainvisa',
-                           'bvdev', 'standard', 'cea', 'cati_platform'],
+                'groups': ['all', 'core', 'anatomist', 'opensource',
+                           'brainvisa', 'bvdev', 'standard', 'cea',
+                           'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:master','development/brainvisa-cmake/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:master','development/brainvisa-cmake/master'),
@@ -30,8 +31,9 @@ components_definition = [
                 },
             }],
             ['casa-distro', {
-                'groups': ['all', 'anatomist', 'opensource', 'brainvisa',
-                           'bvdev', 'standard', 'cea', 'cati_platform'],
+                'groups': ['all', 'core', 'anatomist', 'opensource',
+                           'brainvisa', 'bvdev', 'standard', 'cea',
+                           'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/casa-distro.git branch:master','development/casa-distro/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/casa-distro.git branch:master','development/casa-distro/master'),
@@ -56,8 +58,9 @@ components_definition = [
     ('brainvisa-share', {
         'components': [
             ['brainvisa-share', {
-                'groups': ['all', 'anatomist', 'opensource', 'brainvisa',
-                           'bvdev', 'standard', 'cea', 'cati_platform'],
+                'groups': ['all', 'core', 'anatomist', 'opensource',
+                           'brainvisa', 'bvdev', 'standard', 'cea',
+                           'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/brainvisa-share.git branch:master','brainvisa-share/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/brainvisa-share.git branch:master','brainvisa-share/master'),
@@ -70,8 +73,9 @@ components_definition = [
         'description': 'Set of lower-level libraries for neuroimaging processing infrastructure',
         'components': [
             ['soma-base', {
-                'groups': ['all', 'anatomist', 'opensource', 'brainvisa',
-                           'bvdev', 'standard', 'cea', 'cati_platform'],
+                'groups': ['all', 'core', 'anatomist', 'opensource',
+                           'brainvisa', 'bvdev', 'standard', 'cea',
+                           'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/populse/soma-base.git branch:master','soma/soma-base/integration'),
                     'bug_fix': ('git https://github.com/populse/soma-base.git branch:master','soma/soma-base/master'),
@@ -79,8 +83,9 @@ components_definition = [
                 },
             }],
             ['soma-io', {
-                'groups': ['all', 'anatomist', 'opensource', 'brainvisa',
-                           'bvdev', 'standard', 'cea', 'cati_platform'],
+                'groups': ['all', 'core', 'anatomist', 'opensource',
+                           'brainvisa', 'bvdev', 'standard', 'cea',
+                           'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/soma-io.git branch:master','soma/soma-io/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/soma-io.git branch:master','soma/soma-io/master'),
@@ -88,7 +93,7 @@ components_definition = [
                 },
             }],
             ['soma-workflow', {
-                'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
+                'groups': ['all', 'core', 'opensource', 'brainvisa', 'bvdev',
                            'standard', 'cea', 'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/populse/soma-workflow.git branch:master','soma/soma-workflow/integration'),
@@ -101,7 +106,7 @@ components_definition = [
     ('populse', {
         'components': [
             ['capsul', {
-                'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
+                'groups': ['all', 'core', 'opensource', 'brainvisa', 'bvdev',
                            'standard', 'cea', 'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/populse/capsul.git branch:master','capsul/integration'),
@@ -111,7 +116,7 @@ components_definition = [
                 'build_model': 'pure_python',
             }],
             ['populse_db', {
-                'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
+                'groups': ['all', 'core', 'opensource', 'brainvisa', 'bvdev',
                            'standard', 'cea', 'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/populse/populse_db.git default:master','populse/populse_db/integration'),
@@ -126,8 +131,9 @@ components_definition = [
         'description': '3D/4D neuroimaging data manipulation and processing library and commands. Includes C++ libraries, command lines, and a Python API.',
         'components': [
             ['aims-free', {
-                'groups': ['all', 'anatomist', 'opensource', 'brainvisa',
-                           'bvdev', 'standard', 'cea', 'cati_platform'],
+                'groups': ['all', 'core', 'anatomist', 'opensource',
+                           'brainvisa', 'bvdev', 'standard', 'cea',
+                           'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/aims-free.git branch:master','aims/aims-free/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/aims-free.git branch:master','aims/aims-free/master'),
@@ -135,8 +141,9 @@ components_definition = [
                 },
             }],
             ['aims-gpl', {
-                'groups': ['all', 'anatomist', 'opensource', 'brainvisa',
-                           'bvdev', 'standard', 'cea', 'cati_platform'],
+                'groups': ['all', 'core', 'anatomist', 'opensource',
+                           'brainvisa', 'bvdev', 'standard', 'cea',
+                           'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/aims-gpl.git branch:master','aims/aims-gpl/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/aims-gpl.git branch:master','aims/aims-gpl/master'),
@@ -144,8 +151,9 @@ components_definition = [
                 },
             }],
             ['aims-til', {
-                'groups': ['all', 'anatomist', 'opensource', 'brainvisa',
-                           'bvdev', 'standard', 'cea', 'cati_platform'],
+                'groups': ['all', 'core', 'anatomist', 'opensource',
+                           'brainvisa', 'bvdev', 'standard', 'cea',
+                           'cati_platform'],
                 'branches': {
                     '5.0': ('git https://github.com/brainvisa/aims-til.git branch:5.0','aims/aims-til/5.0'),
                 },
@@ -156,8 +164,9 @@ components_definition = [
         'description': '3D/4D neuroimaging data viewer. Modular and versatile, Anatomist can display any kind of neuroimaging data (3D/4D images, meshes and textures, fiber tracts, and structured sets of objects such as cortical sulci), in an arbitrary number of views. Allows C++ and Python programming, both for plugins add-ons, as well as complete custom graphical applications design.',
         'components': [
             ['anatomist-free', {
-                'groups': ['all', 'anatomist', 'opensource', 'brainvisa',
-                           'bvdev', 'standard', 'cea', 'cati_platform'],
+                'groups': ['all', 'core', 'anatomist', 'opensource',
+                           'brainvisa', 'bvdev', 'standard', 'cea',
+                           'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/anatomist-free.git branch:master','anatomist/anatomist-free/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/anatomist-free.git branch:master','anatomist/anatomist-free/master'),
@@ -165,8 +174,9 @@ components_definition = [
                 },
             }],
             ['anatomist-gpl', {
-                'groups': ['all', 'anatomist', 'opensource', 'brainvisa',
-                           'bvdev', 'standard', 'cea', 'cati_platform'],
+                'groups': ['all', 'core', 'anatomist', 'opensource',
+                           'brainvisa', 'bvdev', 'standard', 'cea',
+                           'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/anatomist-gpl.git branch:master','anatomist/anatomist-gpl/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/anatomist-gpl.git branch:master','anatomist/anatomist-gpl/master'),
@@ -179,7 +189,7 @@ components_definition = [
         'description': 'Axon organizes processing, pipelining, and data management for neuroimaging. It works both as a graphical user interface or batch and programming interfaces, and allows transparent processing distribution on a computing resource.',
         'components': [
             ['axon', {
-                'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
+                'groups': ['all', 'core', 'opensource', 'brainvisa', 'bvdev',
                            'standard', 'cea', 'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/axon.git branch:master','axon/integration'),

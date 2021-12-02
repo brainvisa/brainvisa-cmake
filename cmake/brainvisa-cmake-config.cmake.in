@@ -1338,33 +1338,38 @@ function( BRAINVISA_GENERATE_COMMANDS_HELP_INDEX )
     if(CMAKE_CROSSCOMPILING AND WINE32)
         find_package(Wine)
     endif()
-    add_custom_command( OUTPUT "${_output_directory}/${_index_file}"
-                        COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX}
-                                "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
-                                "${PYTHON_EXECUTABLE}"
-                                ${CREATE_COMMANDS_DOC}
-                                -t "${_helppath}"
-                                -v 0
-                                ${_cmd_options}
-                                "${_output_directory}/${_index_file}"
-                        DEPENDS ${_depends}
-                        COMMENT "Generating documentation commands help index ..."
-                        VERBATIM )
+    if( NOT CREATE_COMMANDS_DOC )
+      message( "bv_create_commands_doc is not found or configured. "
+               "Commands help will not be generated." )
+    else()
+      add_custom_command( OUTPUT "${_output_directory}/${_index_file}"
+                          COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX}
+                                  "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
+                                  "${PYTHON_EXECUTABLE}"
+                                  ${CREATE_COMMANDS_DOC}
+                                  -t "${_helppath}"
+                                  -v 0
+                                  ${_cmd_options}
+                                  "${_output_directory}/${_index_file}"
+                          DEPENDS ${_depends}
+                          COMMENT "Generating documentation commands help index ..."
+                          VERBATIM )
 
-    add_custom_target( bv_commands_doc
-                       DEPENDS "${_output_directory}/${_index_file}"
-                       VERBATIM )
-
-    add_custom_command( OUTPUT "${_install_directory}/${_index_file}"
-                        COMMAND "${CMAKE_COMMAND}" -E make_directory "${_install_directory}"
-                        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_output_directory}/${_index_file}" "${_install_directory}/${_index_file}"
+      add_custom_target( bv_commands_doc
                         DEPENDS "${_output_directory}/${_index_file}"
-                        COMMENT "Installing documentation commands help index ..."
                         VERBATIM )
 
-    add_custom_target( install-bv_commands_doc
-                       DEPENDS "${_install_directory}/${_index_file}"
-                       VERBATIM )
+      add_custom_command( OUTPUT "${_install_directory}/${_index_file}"
+                          COMMAND "${CMAKE_COMMAND}" -E make_directory "${_install_directory}"
+                          COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_output_directory}/${_index_file}" "${_install_directory}/${_index_file}"
+                          DEPENDS "${_output_directory}/${_index_file}"
+                          COMMENT "Installing documentation commands help index ..."
+                          VERBATIM )
+
+      add_custom_target( install-bv_commands_doc
+                        DEPENDS "${_install_directory}/${_index_file}"
+                        VERBATIM )
+    endif()
   endif()
 
   unset(_output_directory)
@@ -1436,7 +1441,7 @@ function( BRAINVISA_ADD_COMMAND_HELP name)
 
   if ((NOT DEFINED _depends) AND (NOT DEFINED _command))
     # Default dependencies is set using command name
-    set( _depends "bin/${name}" )
+    set( _depends "${CMAKE_BINARY_DIR}/bin/${name}" )
   endif()
 
   if (NOT DEFINED _command)
@@ -1447,13 +1452,13 @@ function( BRAINVISA_ADD_COMMAND_HELP name)
     endif()
 
     if(DEFINED _output_command)
-      set( _command "bin/${_output_command}" "-h" )
+      set( _command "${CMAKE_BINARY_DIR}/bin/${_output_command}" "-h" )
       unset(_output_command)
     else()
       if (${name}-command-is-script)
-        set( _command "bin/${name}" "-h" )
+        set( _command "${CMAKE_BINARY_DIR}/bin/${name}" "-h" )
       else()
-        set( _command "bin/${name}${CMAKE_EXECUTABLE_SUFFIX}" "-h" )
+        set( _command "${CMAKE_BINARY_DIR}/bin/${name}${CMAKE_EXECUTABLE_SUFFIX}" "-h" )
       endif()
     endif()
 
@@ -1462,6 +1467,8 @@ function( BRAINVISA_ADD_COMMAND_HELP name)
       set( _command "${PYTHON_EXECUTABLE}" ${_command})
     endif()
   endif()
+
+#   set( _command "${CMAKE_BINARY_DIR}/${_command}" )
 
   string(REPLACE ";" "', '" _command "${_command}")
   get_filename_component( _output_directory "${CMAKE_BINARY_DIR}/share/doc" ABSOLUTE)
@@ -2210,117 +2217,6 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
                        USE_SOURCE_PERMISSIONS
                        COMPONENT ${PROJECT_NAME}-${doctype} )
   endif()
-endfunction()
-
-
-# BRAINVISA_GENERATE_DOCBOOK_DOC
-#    Add rules to generate docbook documentation with "make doc" or "make <component>-doc"
-#    or "make usrdoc" or "make <component>-usrdoc" if it a user manual or tutorial
-#    or "make devdoc" or make <component>-devdoc if it is developer manual.
-#
-# Usage:
-#
-#   BRAINVISA_GENERATE_DOCBOOK_DOC( [EXCLUDE docbook_project_name] )
-#
-function( BRAINVISA_GENERATE_DOCBOOK_DOC )
-  BRAINVISA_FIND_PACKAGE(documentation QUIET)
-  if(DOCUMENTATION_FOUND AND DOCUMENTATION_DOCBOOK AND documentation_SOURCE_DIR)
-    set( args "${ARGN}" )
-    list( FIND args EXCLUDE result )
-    set( exclude )
-    if( NOT result EQUAL -1 )
-      list( REMOVE_AT args ${result} )
-      list( GET args ${result} exclude )
-      list( REMOVE_AT args ${result} )
-    endif()
-    # search doc projects in docbook directory
-    set(source_directory "${CMAKE_CURRENT_SOURCE_DIR}/docbook" )
-    if(EXISTS "${source_directory}")
-
-      # Make sure Python can be executed
-      if( NOT DEFINED PYTHON_EXECUTABLE )
-        find_package( PythonInterp REQUIRED )
-      endif( NOT DEFINED PYTHON_EXECUTABLE )
-
-      # subdirectories : doc project name
-      file(GLOB doc_projects RELATIVE "${source_directory}" "${source_directory}/[^.]*")
-      foreach( doc_project ${doc_projects} )
-        # user doc
-        #BRAINVISA_GENERATE_TARGET_NAME( usrdoc_target )
-        set(usrdoc_target ${doc_project}-usrdocbook)
-        add_custom_target( ${usrdoc_target}
-          COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env_host${CMAKE_HOST_EXECUTABLE_SUFFIX}" "${PYTHON_HOST_EXECUTABLE}" "${BUILDDOC_COMMAND}" -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m m -p "${doc_project}" --total --id --doc_ver  "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" --base_dir "${documentation_SOURCE_DIR}" --xalan "${XALAN_EXECUTABLE}" --xsl_stylesheet "${DOCBOOK_XSL_STYLESHEET}" --dtd "${DOCBOOK_DTD}"
-          COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env_host${CMAKE_HOST_EXECUTABLE_SUFFIX}" "${PYTHON_HOST_EXECUTABLE}" "${BUILDDOC_COMMAND}" -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m t -p "${doc_project}" --total --id --doc_ver  "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" --base_dir "${documentation_SOURCE_DIR}" --xalan "${XALAN_EXECUTABLE}" --xsl_stylesheet "${DOCBOOK_XSL_STYLESHEET}" --dtd "${DOCBOOK_DTD}" )
-        add_dependencies(${PROJECT_NAME}-usrdoc ${usrdoc_target})
-        # dev doc
-        #BRAINVISA_GENERATE_TARGET_NAME( devdoc_target )
-        set(devdoc_target ${doc_project}-devdocbook)
-        add_custom_target( ${devdoc_target}
-          COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env_host${CMAKE_HOST_EXECUTABLE_SUFFIX}" "${PYTHON_HOST_EXECUTABLE}" "${BUILDDOC_COMMAND}" -f html -l all -o "${CMAKE_BINARY_DIR}/share/doc" -c --verbose -m p -p "${doc_project}" --total --id --doc_ver "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}" --sources "${source_directory}" --base_dir "${documentation_SOURCE_DIR}" --xalan "${XALAN_EXECUTABLE}" --xsl_stylesheet "${DOCBOOK_XSL_STYLESHEET}" --dtd "${DOCBOOK_DTD}" )
-        add_dependencies(${PROJECT_NAME}-devdoc ${devdoc_target})
-
-        list( FIND exclude ${doc_project} result )
-        if (result EQUAL -1) # if the docbook project is not in exclude list, create install rules
-          # install rules
-          if(APPLE)
-            # There is a bug in CMake with MacOS system, so files_matching regex doesn't work in install rules
-            # So, for MacOS, there's no files_matching rule but several exclude rules instead...
-            BRAINVISA_INSTALL(DIRECTORY "${CMAKE_BINARY_DIR}/share/doc/${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
-              DESTINATION share/doc
-              USE_SOURCE_PERMISSIONS
-              COMPONENT ${PROJECT_NAME}-usrdoc
-              REGEX "${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/html" EXCLUDE
-              REGEX "${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/en" EXCLUDE
-              REGEX "${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/fr" EXCLUDE
-              REGEX "${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/images" EXCLUDE
-              REGEX "${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/[^/]*\\..*" EXCLUDE
-              PATTERN "doxygen" EXCLUDE
-              PATTERN "*_pg" EXCLUDE
-              PATTERN "epydoc" EXCLUDE
-              )
-            BRAINVISA_INSTALL(DIRECTORY "${CMAKE_BINARY_DIR}/share/doc/${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
-              DESTINATION share/doc
-              USE_SOURCE_PERMISSIONS
-              COMPONENT ${PROJECT_NAME}-devdoc
-              REGEX "${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/html" EXCLUDE
-              REGEX "${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/en" EXCLUDE
-              REGEX "${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/fr" EXCLUDE
-              REGEX "${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/images" EXCLUDE
-              REGEX "${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/[^/]*\\..*" EXCLUDE
-              PATTERN "doxygen" EXCLUDE
-              PATTERN "epydoc" EXCLUDE
-              PATTERN "*_training" EXCLUDE
-              PATTERN "*_man" EXCLUDE
-              )
-          else()
-            BRAINVISA_INSTALL(DIRECTORY "${CMAKE_BINARY_DIR}/share/doc/${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
-              DESTINATION share/doc
-              USE_SOURCE_PERMISSIONS
-              COMPONENT ${PROJECT_NAME}-usrdoc
-              FILES_MATCHING REGEX "_training/"
-              REGEX "_man/"
-              PATTERN "doxygen" EXCLUDE
-              PATTERN "*_pg" EXCLUDE
-              PATTERN "epydoc" EXCLUDE
-              )
-            BRAINVISA_INSTALL(DIRECTORY "${CMAKE_BINARY_DIR}/share/doc/${doc_project}-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}"
-              DESTINATION share/doc
-              USE_SOURCE_PERMISSIONS
-              COMPONENT ${PROJECT_NAME}-devdoc
-              FILES_MATCHING REGEX "_pg/"
-              PATTERN "doxygen" EXCLUDE
-              PATTERN "epydoc" EXCLUDE
-              PATTERN "*_training" EXCLUDE
-              PATTERN "*_man" EXCLUDE
-              )
-        endif()
-        endif()
-      endforeach()
-    endif() # exists source directory
-  else() # documentation project not found
-    message("WARNING: Documentation project not found or docbook not available : cannot build docbook documentation.")
-  endif()
-
 endfunction()
 
 

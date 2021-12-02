@@ -63,22 +63,6 @@ Variables
 ---------
 A few additional optional variables may be set in project_info.cmake:
 
-BRAINVISA_PACKAGE_DEFAULT_INSTALL
-+++++++++++++++++++++++++++++++++
-
-.. code-block:: cmake
-
-    set( BRAINVISA_PACKAGE_DEFAULT_INSTALL "run" "usrdoc" )
-
-Specifies that the package should be pre-selectionned for installation in the installer, for its "run" and "usrdoc" categories components.
-Packages components are divided into several categories:
-
-* "run" is the runtime files, used when using the software
-* "dev" is the development files, used when developing software using this component as a library
-* "test" is the test files, used to test the component (generally only useful for developers)
-* "usrdoc" is the user documentation files
-* "devdoc" is the development documentation files
-
 Info.py alternative
 -------------------
 
@@ -483,7 +467,7 @@ This function enables to declare that the current brainvisa component has a depe
 * ``<version ranges>``: required version of the dependency package.
 * ``BINARY_INDEPENDENT`` can be added to indicate that the component and its dependency are binary independent (dependency between python modules for example) but this information is not used currently.
 
-At configuration time, the information declared in this function will be written in a file named ``compilation_info.py`` in the directory ``<build_directory>/python/brainvisa``. This file is used by the :doc:`bv_packaging` script to create Brainvisa packages with the needed dependencies.
+At configuration time, the information declared in this function will be written in a file named ``compilation_info.py`` in the directory ``<build_directory>/python/brainvisa``. This file was used by the :doc:`bv_packaging` script to create Brainvisa packages with the needed dependencies.
 
 **Examples** (from anatomist-free ``CMakeLists.txt``)
 
@@ -499,9 +483,7 @@ At configuration time, the information declared in this function will be written
 Install
 -------
 
-Install rules will be used by :doc:`bv_packaging` script to create Brainvisa packages.
-
-Be careful, if you want to use directly the ``make install`` command to install files of the build directory in another location, you'll have to specify the variable ``BRAINVISA_INSTALL_PREFIX`` in the make install command. Indeed, to be able to specify an install location when using :doc:`bv_packaging` script, we had to use a variable that have to be defined at installation step instead of the ``CMAKE_INSTALL_PREFIX`` which is defined at configuration step.
+Be careful, if you want to use directly the ``make install`` command to install files of the build directory in another location, you'll have to specify the variable ``BRAINVISA_INSTALL_PREFIX`` in the make install command. The historical justification is that in order to be able to specify an install location when using :doc:`bv_packaging` script, we had to use a variable that have to be defined at installation step instead of the ``CMAKE_INSTALL_PREFIX`` which is defined at configuration step.
 
 **Example**
 

@@ -273,19 +273,11 @@ if( BRAINVISA_BVMAKER )
        CACHE INTERNAL "Commands list for component brainvisa-cmake" FORCE )
   # disable help for some internal or undocumented commands
   set(__excluded_commands 
-      bv_build_installer_i2bm
-      bv_build_nightly
-      bv_check_svn_merge
       bv_clean_jenkins
       bv_env.bat
       bv_env.sh
-      bv_packaging_i2bm
-      bv_patch_libs.sh
-      bv_patch_qtgui_gtk.py
       bv_sendmail
-      bv_set_project_versions
       bv_sources_copyright
-      bv_tar_source_distribution
       bv_unenv.sh)
   
   if(WIN32)
@@ -293,9 +285,6 @@ if( BRAINVISA_BVMAKER )
     list(APPEND __excluded_commands
          bv_env_host
          bv_env_test
-         cgrep
-         cmgrep
-         pygrep
          meld_svn
          kompare_svn
          kdiff3_svn)
@@ -313,18 +302,10 @@ if( BRAINVISA_BVMAKER )
            bv_copy_tree
            bv_maker
            bv_nobadlink
-           bv_packaging
-           bv_projects_info
-           bv_release
-           bv_show_build_logs
            bv_sip4make
            bv_svn_to_git
            bv_system_info
-           bv_unenv
-           bv_unit_test
-           bv_which
-           bv_wine_regedit
-           svnclient )
+           bv_unenv )
         set(${_command}-command-is-script TRUE CACHE INTERNAL 
             "${_command} command is script")
   endforeach()

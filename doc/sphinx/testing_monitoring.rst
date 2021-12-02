@@ -178,34 +178,6 @@ This file is a simple text file, containing just one line per bv_maker step exec
     OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86_64/trunk, started: 2017/01/25 09:15, stopped: 2017/01/25 11:07 on michael (linux64-glibc-2.5)
 
 
-Displaying the log file
------------------------
-
-The ``bv_show_build_logs`` tool allows to display the contents of the above log file in a graphical table:
-
-.. code-block:: bash
-
-    bv_show_build_logs -i /home/brutus/bv_builds.log
-
-.. image:: _static/bv_show_build_logs.jpg
-
-The display tool allows to sort by column, which may make it easier to find the status for a specific build step, machine, or date...
-
-``bv_show_build_logs`` may also retreive the log file from a distant machine through ssh:
-
-.. code-block:: bash
-
-    bv_show_build_logs -i /home/brutus/bv_builds.log -s myhost.com -u brutus
-
-.. note::
-
-    When options are not used, they have hard-coded default values which suit our build environment for BrainVisa and which will not work in a different place.
-
-.. note::
-
-    Up to now, the full builds and tests logs, which may be notified by email, are not kept and are deleted once sent by email. Thus the display tool cannot display them. This is an improvement which may be developed in the future.
-
-
 Setting up new tests in a software project
 ==========================================
 

@@ -10,17 +10,13 @@ In this file you can configure several types of directories:
 
 * **build directory**: A build directory will contain compiled version of the projects. A build directory can contain any project but only one version per project is allowed. You can define as many source directory as you want.
 
-* **package directory**: A package directory is an installer repository directory. It is built from a build directory, and can be used to make a repository, to install the package, and to run tests on the installed packages.
-
-* **publication directory**: A publication directory is where a "finished" package will be copied to be published. Several operations can be performed during this step (like ploading to a web server etc).
-
 A section may also contain conditional parts. See the `Conditional subsections`_ section for details.
 
 
 General structure and syntax of bv_maker configuration file
 ===========================================================
 
-The :doc:`bv_maker` configuration file is composed of sections delimited by a line enclosed in square brackets: ``[ ... ]``. Each section contains the definition of a directory (either a source directory, a build directory, or a packaging directoty), or a "general" section. In this file, blank lines are ignored and spaces at the begining or end of lines are also ignored. It means that you can indent and separate lines as you wish. For instance:
+The :doc:`bv_maker` configuration file is composed of sections delimited by a line enclosed in square brackets: ``[ ... ]``. Each section contains the definition of a directory (either a source directory, or a build directory), or a "general" section. In this file, blank lines are ignored and spaces at the begining or end of lines are also ignored. It means that you can indent and separate lines as you wish. For instance:
 
 .. code-block:: bash
 
@@ -134,7 +130,7 @@ Option variables are stored in this section using the syntax ``option = value``.
 
 * ``env``: environment variables dictionary. Note that the ``env`` dictionary in the general section is handled a bit differently than the one in the other sections: in other sections variables defined this way are local to the current section, and only passed to the actual environment when a commandline is run (such as ``cmake``, ``make`` etc.). In the general sections variables are actually set globally to the environment, thus they are available all along the bv_maker session, including within the run of bv_maker: this means that variables which are to be used during path substitutions inside ``bv_maker.cfg`` should be defined here.
 * ``email_notification_by_default``: ``ON```or ``OFF`` (default). If set to ``ON``, email notification will always be used if ``failure_email`` or ``success_email`` are provided. Otherwise, the default behavior is to use email notification only when the ``bv_maker`` commandline is invoked with the ``--email`` option.
-* ``global_status_file``: if this file is specified, a line will be appended to it for each source/build/package directory. This line will log the build status for the given directory: OK/FAILED, last step executed, directory, start and stop date and time, machine and system. It can be parsed and displayed using the command ``bv_show_build_log``.
+* ``global_status_file``: if this file is specified, a line will be appended to it for each source/build directory. This line will log the build status for the given directory: OK/FAILED, last step executed, directory, start and stop date and time, machine and system. It can be parsed and displayed using the command ``bv_show_build_log``.
 * ``failure_email``: email address where bv_maker outputs are sent in case of failure. If not specified, no email will be sent and bv_maker outputs will be sent to the standard output. One email will be sent for each directory and build step that fail.
 * ``failure_email_by_project``: dictionary of email addresses, in a project-indexed dictionary (json or python syntax). Adresses can be lists of strings. Ex:
 
@@ -319,133 +315,6 @@ A build directory may also be a *python virtualenv* directory. To specify it the
 A virtualenv directory will be initialized the first time it is used, and a python virtualenv environment will be installed there. Then it will be used as a build directory in addition. This allows to use ``pip install`` commands within it with a local install, just for this build directory.
 
 
-.. _package_directory:
-
-Definition of a package directory
-=================================
-
-A package directory definition section starts with a line with the following syntax:
-
-.. code-block:: bash
-
-    [ package <directory> ]
-
-where ``<directory>`` is the name of the directory where the packaging results will be written (packages repository). As the source and build directories, the package directory name can contain environment variable substitution.
-
-The package section allows 4 additional steps in :doc:`bv_maker`: ``pack``, ``install_pack``, ``testref_pack`` and ``test_pack``
-
-* :ref:`pack <pack_step>` will build a packages repository and an installer program
-* :ref:`install_pack <install_pack_step>` will install the previously built installer, possibly on a remote machine or docker machine
-* :ref:`testref_pack <testref_pack_step>` will run tests (same as ``bv_maker testref``) on the installed package, possibly on a remote or docker machine, to generate reference data for tests comparison. This step may produce slightly different data as the :ref:`testeref step <testref_step>` because it may run on a remote or docker machine, which may behave slightly differently as the build system (floating- point arithmetics etc)
-* :ref:`test_pack <test_pack_step>` will run tests (same as ``bv_maker test``) on the installed package, possibly on a remote or docker machine
-
-The package section must define some variables which specify which build directory will be packaged and how.
-
-* ``build_directory``: references a build directory, which must exist in the configuration file. It is mandatory.
-* ``ctest_options``: passed to ctest in the test_pack step (ex: ``-j4 -VV -R carto*``)
-* ``data_repos_dir``: Data repository directory. Mandatory when installing a non-data package (dependencies on data packages must be satisfied to install runtime packages)
-* ``default_steps``: steps performed for this package directory when bv_maker is invoked without specifying steps (typically just ``bv_maker``). Defaults to none, may include ``pack``, ``install_pack`` and ``test_pack``.
-* ``directory_id``: used in Jenkins notification
-* ``env``: environment variables dictionary
-* ``keep_n_older_repos``: if the package directory contains a date substitution pattern ("``%(date)s``"), a new package directory will be created every day (in automatic tests situation). This option specifies how to delete older package directories, by keeping only the specified latest ones. The default is 1: remove all but the last one.
-*  ``init_components_from_build_dir``: if ``ON`` (default), the build directory will provide the initial list of projects and components to be packaged. If ``OFF``, the initial list of projects and components to be packages is empty.
-* ``installer_filename``: output installer program file name. If not specified, no installer program will actually be generated, only the packages repository will be done.
-* ``installer_options``: options passed to the insteller program when running its install script, typically: ``--verbose``
-* ``make_options``: passed to make (ex: ``-j8``). Package direcories normally do not call ``make``; the only situation it will do so is in the ``testref_pack`` mode.
-* ``offline_installer_filename``: output installer program file name for an offline installer. If not specified, it will not be generated. Both an online and an offline installer (containing all packages) can be built.
-* ``pack_version``: package version string. Optional. If not specified, it will be guessed from the python module ``brainvisa.config`` (from the *axon* project) if it is present.
-* ``packaging_options``: options passed to the *bv_packaging* program (in *brainvisa-installer* project). Typically: --i2bm
-* ``build_condition``: As in build sections, condition when the package section steps are performed.
-* ``remote_test_host_cmd``: The contents of this variable is actually prepended to package install and package test commands. It it typically used to perform remote connections to a test machine, using ssh and/or docker for instance:
-
-  .. code-block:: bash
-
-      remote_test_host_cmd = ssh -t -X testmachine
-
-  or:
-
-  .. code-block:: bash
-
-      remote_test_host_cmd = docker run --rm -v /tests:/tests -u "$(id -u):$(id -g)" -e USER=$USER custom_test_image xvfb-run
-
-* ``stderr_file``: file used to redirect the standard error stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If not specified, it will be mixed with standard output.
-* ``stdout_file``: file used to redirect the standard output stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If neither it nor ``stderr_file`` are specified, then a temporary file will be used, and erased when each step is finished.
-* ``test_install_dir``: Package installation directory. Mandatory if ``install_pack`` or ``test_pack`` steps are performed.
-* ``test_ref_data_dir``: directory where reference data will be written (during :ref:`testref_pack step <testref_pack_step>`) and read (during :ref:`test step <test_step>`) for comparison.
-* ``test_run_data_dir``: directory where data will be written during the :ref:`test_pack step <test_pack_step>`.
-
-In addition to variables definition, the *package* section may contain components selection definitions, in the same format as in the build section.
-
-In the package section, the package directory definition, and other path variables (``installer_filename``, ``test_install_dir``, ``data_repos_dir``) will undergo environment variables substitution, and an additional variables substiuttion in "python-style":
-
-.. code-block:: bash
-
-    installer_filename = $HOME/build-cmake/tests/repository/brainvisa-installer-%(version)s-%(os)s
-
-Variables substitution in the form ``$(variable)s`` can replace the following variables:
-
-* ``i2bm``: ``public`` or ``i2bm`` if ``packaging_options`` contain the option ``--i2bm``
-* ``os``: ``linux64-glibc-2.15``, ``osx``, ``win32`` for instance
-* ``version``: package version
-* ``public``: empty for public packages, ``-i2bm`` if ``packaging_options`` contain the option ``--i2bm``
-* ``online``: ``online`` or ``offline``
-
-
-**Example**
-
-.. code-block:: bash
-
-    [ package /home/local/brainvisa_packages/test_data_repository ]
-      build_directory = $HOME/brainvisa/build/bug_fix
-      build_condition = sys.platform == "linux2"
-      packaging_options = --repository-only --no-dependencies --data
-      init_components_from_build_dir = OFF
-      brainvisa-share bug_fix $HOME/brainvisa/sources
-
-    [ package /home/local/brainvisa_packages/test_repository ]
-      build_directory = $HOME/brainvisa/build/bug_fix
-      installer_filename = /home/local/brainvisa_packages/test_installer
-      build_condition = sys.platform == "linux2"
-      test_install_dir = /home/local/brainvisa_packages/test_install
-      data_repos_dir = /home/local/brainvisa_packages/test_data_repository
-      - communication
-      - web
-
-
-Definition of a publication directory
-=====================================
-
-A publication directory definition section starts with a line with the following syntax:
-
-.. code-block:: bash
-
-    [ package_publication <directory> ]
-
-where ``<directory>`` is the name of the directory where the package publication results will be written. As the source, build and package directories, the publicatioon directory name can contain environment variable substitution.
-
-The package_publication section allows a dedicated step in :doc:`bv_maker`: ``publish_pack``.
-
-* :ref:`publish_pack <publish_pack_step>` will copy a packages repository to a given location
-
-The package_publication section must define some variables which specify which package directory will be published and how.
-
-* ``package_directory``: references a package directory, which must exist in the configuration file. It is mandatory.
-* ``directory_id``: used in Jenkins notification
-* ``env``: environment variables dictionary
-* ``build_condition``: As in build sections, condition when the package section steps are performed.
-* ``publication_commands``: commands to be performed to actually do the "publication" work. If not specified, the default publication commands will copy the package repository and installers to the publication directory.
-* ``stderr_file``: file used to redirect the standard error stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If not specified, it will be mixed with standard output.
-* ``stdout_file``: file used to redirect the standard output stream of bv_maker when email notification is used. This file is "persistant" and will not be deleted. If neither it nor ``stderr_file`` are specified, then a temporary file will be used, and erased when each step is finished.
-
-**Example**
-
-.. code-block:: bash
-
-    [ package_publication /home/local/brainvisa_release ]
-      package_directory = $HOME/brainvisa/brainvisa_packages/test_repository
-      build_condition = sys.platform == "linux2"
-
-
 Syntax for components selection
 ===============================
 
@@ -538,7 +407,7 @@ A section of the configuration file may contain conditional parts. This allows t
 Condition blocks
 ----------------
 
-A conditional subsection should be located inside an existing section (sources, build or package). It follows the syntax:
+A conditional subsection should be located inside an existing section (sources or build). It follows the syntax:
 
 .. code-block:: bash
 
@@ -555,7 +424,7 @@ The ``[ else ]`` block is of course optional, and a global section end also ends
 Condition expressions
 ---------------------
 
-The condition expression may contain substitution variables as in the shape ``%(variable)s`` syntax, like in the package section, at the difference that only the following variables are recognized:
+The condition expression may contain substitution variables as in the shape ``%(variable)s`` syntax. The following variables are recognized:
 
 * os
 * date

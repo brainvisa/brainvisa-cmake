@@ -9,7 +9,6 @@ It handles all CMake does (compilation for compiled languages, build directopry 
 * Multi-project handling: builds in a single build directory tree a set of projects
 * Manages easy source repositories syncronization
 * Integrates in a common BrainVisa environment
-* Packaging (see the brainvisa-installer project)
 * Email notification of build, tests and every other operation
 
 BrainVisa-Cmake consists in several connected parts, mainly:
@@ -44,9 +43,6 @@ BrainVisa-Cmake consists in several connected parts, mainly:
 :doc:`Documenting projects using brainvisa-cmake <documenting>`
 ===============================================================
 
-:doc:`bv_packaging script <bv_packaging>`
-=========================================
-
 :doc:`CMake functions <cmake_functions>`
 ========================================
 
@@ -64,6 +60,5 @@ Contents
     bv_env
     testing_monitoring
     documenting
-    bv_packaging
     cmake_functions
 

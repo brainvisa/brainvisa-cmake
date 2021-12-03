@@ -50,13 +50,11 @@
 <ul class="simple">
 <li><p><strong>source directory</strong>: A source directory contains the source code of a set of selected projects. This source code will be updated (to reflect the changes that occured on BioProj or GitHub servers) each time you use bv_maker sources. You can define as many source directories as you want. In a source directory configuration you can select any project and combine several versions of the same project.</p></li>
 <li><p><strong>build directory</strong>: A build directory will contain compiled version of the projects. A build directory can contain any project but only one version per project is allowed. You can define as many source directory as you want.</p></li>
-<li><p><strong>package directory</strong>: A package directory is an installer repository directory. It is built from a build directory, and can be used to make a repository, to install the package, and to run tests on the installed packages.</p></li>
-<li><p><strong>publication directory</strong>: A publication directory is where a “finished” package will be copied to be published. Several operations can be performed during this step (like ploading to a web server etc).</p></li>
 </ul>
 <p>A section may also contain conditional parts. See the <a class="reference internal" href="#conditional-subsections">Conditional subsections</a> section for details.</p>
 <section id="general-structure-and-syntax-of-bv-maker-configuration-file">
 <h2>General structure and syntax of bv_maker configuration file<a class="headerlink" href="#general-structure-and-syntax-of-bv-maker-configuration-file" title="Permalink to this headline">¶</a></h2>
-<p>The <a class="reference internal" href="bv_maker.html"><span class="doc">bv_maker</span></a> configuration file is composed of sections delimited by a line enclosed in square brackets: <code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">...</span> <span class="pre">]</span></code>. Each section contains the definition of a directory (either a source directory, a build directory, or a packaging directoty), or a “general” section. In this file, blank lines are ignored and spaces at the begining or end of lines are also ignored. It means that you can indent and separate lines as you wish. For instance:</p>
+<p>The <a class="reference internal" href="bv_maker.html"><span class="doc">bv_maker</span></a> configuration file is composed of sections delimited by a line enclosed in square brackets: <code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">...</span> <span class="pre">]</span></code>. Each section contains the definition of a directory (either a source directory, or a build directory), or a “general” section. In this file, blank lines are ignored and spaces at the begining or end of lines are also ignored. It means that you can indent and separate lines as you wish. For instance:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> <span class="nb">source</span> <span class="nv">$HOME</span>/brainvisa/source <span class="o">]</span>
   + standard trunk
   + standard bug_fix
@@ -140,7 +138,7 @@ Dictionary variables do support both:</p>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">env</span></code>: environment variables dictionary. Note that the <code class="docutils literal notranslate"><span class="pre">env</span></code> dictionary in the general section is handled a bit differently than the one in the other sections: in other sections variables defined this way are local to the current section, and only passed to the actual environment when a commandline is run (such as <code class="docutils literal notranslate"><span class="pre">cmake</span></code>, <code class="docutils literal notranslate"><span class="pre">make</span></code> etc.). In the general sections variables are actually set globally to the environment, thus they are available all along the bv_maker session, including within the run of bv_maker: this means that variables which are to be used during path substitutions inside <code class="docutils literal notranslate"><span class="pre">bv_maker.cfg</span></code> should be defined here.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">email_notification_by_default</span></code>: <code class="docutils literal notranslate"><span class="pre">ON```or</span> <span class="pre">``OFF</span></code> (default). If set to <code class="docutils literal notranslate"><span class="pre">ON</span></code>, email notification will always be used if <code class="docutils literal notranslate"><span class="pre">failure_email</span></code> or <code class="docutils literal notranslate"><span class="pre">success_email</span></code> are provided. Otherwise, the default behavior is to use email notification only when the <code class="docutils literal notranslate"><span class="pre">bv_maker</span></code> commandline is invoked with the <code class="docutils literal notranslate"><span class="pre">--email</span></code> option.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">global_status_file</span></code>: if this file is specified, a line will be appended to it for each source/build/package directory. This line will log the build status for the given directory: OK/FAILED, last step executed, directory, start and stop date and time, machine and system. It can be parsed and displayed using the command <code class="docutils literal notranslate"><span class="pre">bv_show_build_log</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">global_status_file</span></code>: if this file is specified, a line will be appended to it for each source/build directory. This line will log the build status for the given directory: OK/FAILED, last step executed, directory, start and stop date and time, machine and system. It can be parsed and displayed using the command <code class="docutils literal notranslate"><span class="pre">bv_show_build_log</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">failure_email</span></code>: email address where bv_maker outputs are sent in case of failure. If not specified, no email will be sent and bv_maker outputs will be sent to the standard output. One email will be sent for each directory and build step that fail.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">failure_email_by_project</span></code>: dictionary of email addresses, in a project-indexed dictionary (json or python syntax). Adresses can be lists of strings. Ex:</p>
 <blockquote>
@@ -291,112 +289,6 @@ Dictionary variables do support both:</p>
 <p>A virtualenv directory will be initialized the first time it is used, and a python virtualenv environment will be installed there. Then it will be used as a build directory in addition. This allows to use <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code> commands within it with a local install, just for this build directory.</p>
 </section>
 </section>
-<section id="definition-of-a-package-directory">
-<span id="package-directory"></span><h2>Definition of a package directory<a class="headerlink" href="#definition-of-a-package-directory" title="Permalink to this headline">¶</a></h2>
-<p>A package directory definition section starts with a line with the following syntax:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> package &lt;directory&gt; <span class="o">]</span>
-</pre></div>
-</div>
-<p>where <code class="docutils literal notranslate"><span class="pre">&lt;directory&gt;</span></code> is the name of the directory where the packaging results will be written (packages repository). As the source and build directories, the package directory name can contain environment variable substitution.</p>
-<p>The package section allows 4 additional steps in <a class="reference internal" href="bv_maker.html"><span class="doc">bv_maker</span></a>: <code class="docutils literal notranslate"><span class="pre">pack</span></code>, <code class="docutils literal notranslate"><span class="pre">install_pack</span></code>, <code class="docutils literal notranslate"><span class="pre">testref_pack</span></code> and <code class="docutils literal notranslate"><span class="pre">test_pack</span></code></p>
-<ul class="simple">
-<li><p><a class="reference internal" href="bv_maker.html#pack-step"><span class="std std-ref">pack</span></a> will build a packages repository and an installer program</p></li>
-<li><p><a class="reference internal" href="bv_maker.html#install-pack-step"><span class="std std-ref">install_pack</span></a> will install the previously built installer, possibly on a remote machine or docker machine</p></li>
-<li><p><a class="reference internal" href="bv_maker.html#testref-pack-step"><span class="std std-ref">testref_pack</span></a> will run tests (same as <code class="docutils literal notranslate"><span class="pre">bv_maker</span> <span class="pre">testref</span></code>) on the installed package, possibly on a remote or docker machine, to generate reference data for tests comparison. This step may produce slightly different data as the <a class="reference internal" href="bv_maker.html#testref-step"><span class="std std-ref">testeref step</span></a> because it may run on a remote or docker machine, which may behave slightly differently as the build system (floating- point arithmetics etc)</p></li>
-<li><p><a class="reference internal" href="bv_maker.html#test-pack-step"><span class="std std-ref">test_pack</span></a> will run tests (same as <code class="docutils literal notranslate"><span class="pre">bv_maker</span> <span class="pre">test</span></code>) on the installed package, possibly on a remote or docker machine</p></li>
-</ul>
-<p>The package section must define some variables which specify which build directory will be packaged and how.</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">build_directory</span></code>: references a build directory, which must exist in the configuration file. It is mandatory.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ctest_options</span></code>: passed to ctest in the test_pack step (ex: <code class="docutils literal notranslate"><span class="pre">-j4</span> <span class="pre">-VV</span> <span class="pre">-R</span> <span class="pre">carto*</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">data_repos_dir</span></code>: Data repository directory. Mandatory when installing a non-data package (dependencies on data packages must be satisfied to install runtime packages)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">default_steps</span></code>: steps performed for this package directory when bv_maker is invoked without specifying steps (typically just <code class="docutils literal notranslate"><span class="pre">bv_maker</span></code>). Defaults to none, may include <code class="docutils literal notranslate"><span class="pre">pack</span></code>, <code class="docutils literal notranslate"><span class="pre">install_pack</span></code> and <code class="docutils literal notranslate"><span class="pre">test_pack</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">directory_id</span></code>: used in Jenkins notification</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">env</span></code>: environment variables dictionary</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">keep_n_older_repos</span></code>: if the package directory contains a date substitution pattern (”<code class="docutils literal notranslate"><span class="pre">%(date)s</span></code>”), a new package directory will be created every day (in automatic tests situation). This option specifies how to delete older package directories, by keeping only the specified latest ones. The default is 1: remove all but the last one.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">init_components_from_build_dir</span></code>: if <code class="docutils literal notranslate"><span class="pre">ON</span></code> (default), the build directory will provide the initial list of projects and components to be packaged. If <code class="docutils literal notranslate"><span class="pre">OFF</span></code>, the initial list of projects and components to be packages is empty.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">installer_filename</span></code>: output installer program file name. If not specified, no installer program will actually be generated, only the packages repository will be done.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">installer_options</span></code>: options passed to the insteller program when running its install script, typically: <code class="docutils literal notranslate"><span class="pre">--verbose</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">make_options</span></code>: passed to make (ex: <code class="docutils literal notranslate"><span class="pre">-j8</span></code>). Package direcories normally do not call <code class="docutils literal notranslate"><span class="pre">make</span></code>; the only situation it will do so is in the <code class="docutils literal notranslate"><span class="pre">testref_pack</span></code> mode.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">offline_installer_filename</span></code>: output installer program file name for an offline installer. If not specified, it will not be generated. Both an online and an offline installer (containing all packages) can be built.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pack_version</span></code>: package version string. Optional. If not specified, it will be guessed from the python module <code class="docutils literal notranslate"><span class="pre">brainvisa.config</span></code> (from the <em>axon</em> project) if it is present.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">packaging_options</span></code>: options passed to the <em>bv_packaging</em> program (in <em>brainvisa-installer</em> project). Typically: –i2bm</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">build_condition</span></code>: As in build sections, condition when the package section steps are performed.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">remote_test_host_cmd</span></code>: The contents of this variable is actually prepended to package install and package test commands. It it typically used to perform remote connections to a test machine, using ssh and/or docker for instance:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">remote_test_host_cmd</span> <span class="o">=</span> ssh -t -X testmachine
-</pre></div>
-</div>
-<p>or:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">remote_test_host_cmd</span> <span class="o">=</span> docker run --rm -v /tests:/tests -u <span class="s2">&quot;</span><span class="k">$(</span>id -u<span class="k">)</span><span class="s2">:</span><span class="k">$(</span>id -g<span class="k">)</span><span class="s2">&quot;</span> -e <span class="nv">USER</span><span class="o">=</span><span class="nv">$USER</span> custom_test_image xvfb-run
-</pre></div>
-</div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">stderr_file</span></code>: file used to redirect the standard error stream of bv_maker when email notification is used. This file is “persistant” and will not be deleted. If not specified, it will be mixed with standard output.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">stdout_file</span></code>: file used to redirect the standard output stream of bv_maker when email notification is used. This file is “persistant” and will not be deleted. If neither it nor <code class="docutils literal notranslate"><span class="pre">stderr_file</span></code> are specified, then a temporary file will be used, and erased when each step is finished.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">test_install_dir</span></code>: Package installation directory. Mandatory if <code class="docutils literal notranslate"><span class="pre">install_pack</span></code> or <code class="docutils literal notranslate"><span class="pre">test_pack</span></code> steps are performed.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">test_ref_data_dir</span></code>: directory where reference data will be written (during <a class="reference internal" href="bv_maker.html#testref-pack-step"><span class="std std-ref">testref_pack step</span></a>) and read (during <a class="reference internal" href="bv_maker.html#test-step"><span class="std std-ref">test step</span></a>) for comparison.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">test_run_data_dir</span></code>: directory where data will be written during the <a class="reference internal" href="bv_maker.html#test-pack-step"><span class="std std-ref">test_pack step</span></a>.</p></li>
-</ul>
-<p>In addition to variables definition, the <em>package</em> section may contain components selection definitions, in the same format as in the build section.</p>
-<p>In the package section, the package directory definition, and other path variables (<code class="docutils literal notranslate"><span class="pre">installer_filename</span></code>, <code class="docutils literal notranslate"><span class="pre">test_install_dir</span></code>, <code class="docutils literal notranslate"><span class="pre">data_repos_dir</span></code>) will undergo environment variables substitution, and an additional variables substiuttion in “python-style”:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">installer_filename</span> <span class="o">=</span> <span class="nv">$HOME</span>/build-cmake/tests/repository/brainvisa-installer-%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>os<span class="o">)</span>s
-</pre></div>
-</div>
-<p>Variables substitution in the form <code class="docutils literal notranslate"><span class="pre">$(variable)s</span></code> can replace the following variables:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">i2bm</span></code>: <code class="docutils literal notranslate"><span class="pre">public</span></code> or <code class="docutils literal notranslate"><span class="pre">i2bm</span></code> if <code class="docutils literal notranslate"><span class="pre">packaging_options</span></code> contain the option <code class="docutils literal notranslate"><span class="pre">--i2bm</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">os</span></code>: <code class="docutils literal notranslate"><span class="pre">linux64-glibc-2.15</span></code>, <code class="docutils literal notranslate"><span class="pre">osx</span></code>, <code class="docutils literal notranslate"><span class="pre">win32</span></code> for instance</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">version</span></code>: package version</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">public</span></code>: empty for public packages, <code class="docutils literal notranslate"><span class="pre">-i2bm</span></code> if <code class="docutils literal notranslate"><span class="pre">packaging_options</span></code> contain the option <code class="docutils literal notranslate"><span class="pre">--i2bm</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">online</span></code>: <code class="docutils literal notranslate"><span class="pre">online</span></code> or <code class="docutils literal notranslate"><span class="pre">offline</span></code></p></li>
-</ul>
-<p><strong>Example</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> package /home/local/brainvisa_packages/test_data_repository <span class="o">]</span>
-  <span class="nv">build_directory</span> <span class="o">=</span> <span class="nv">$HOME</span>/brainvisa/build/bug_fix
-  <span class="nv">build_condition</span> <span class="o">=</span> sys.platform <span class="o">==</span> <span class="s2">&quot;linux2&quot;</span>
-  <span class="nv">packaging_options</span> <span class="o">=</span> --repository-only --no-dependencies --data
-  <span class="nv">init_components_from_build_dir</span> <span class="o">=</span> OFF
-  brainvisa-share bug_fix <span class="nv">$HOME</span>/brainvisa/sources
-
-<span class="o">[</span> package /home/local/brainvisa_packages/test_repository <span class="o">]</span>
-  <span class="nv">build_directory</span> <span class="o">=</span> <span class="nv">$HOME</span>/brainvisa/build/bug_fix
-  <span class="nv">installer_filename</span> <span class="o">=</span> /home/local/brainvisa_packages/test_installer
-  <span class="nv">build_condition</span> <span class="o">=</span> sys.platform <span class="o">==</span> <span class="s2">&quot;linux2&quot;</span>
-  <span class="nv">test_install_dir</span> <span class="o">=</span> /home/local/brainvisa_packages/test_install
-  <span class="nv">data_repos_dir</span> <span class="o">=</span> /home/local/brainvisa_packages/test_data_repository
-  - communication
-  - web
-</pre></div>
-</div>
-</section>
-<section id="definition-of-a-publication-directory">
-<h2>Definition of a publication directory<a class="headerlink" href="#definition-of-a-publication-directory" title="Permalink to this headline">¶</a></h2>
-<p>A publication directory definition section starts with a line with the following syntax:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> package_publication &lt;directory&gt; <span class="o">]</span>
-</pre></div>
-</div>
-<p>where <code class="docutils literal notranslate"><span class="pre">&lt;directory&gt;</span></code> is the name of the directory where the package publication results will be written. As the source, build and package directories, the publicatioon directory name can contain environment variable substitution.</p>
-<p>The package_publication section allows a dedicated step in <a class="reference internal" href="bv_maker.html"><span class="doc">bv_maker</span></a>: <code class="docutils literal notranslate"><span class="pre">publish_pack</span></code>.</p>
-<ul class="simple">
-<li><p><a class="reference internal" href="bv_maker.html#publish-pack-step"><span class="std std-ref">publish_pack</span></a> will copy a packages repository to a given location</p></li>
-</ul>
-<p>The package_publication section must define some variables which specify which package directory will be published and how.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">package_directory</span></code>: references a package directory, which must exist in the configuration file. It is mandatory.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">directory_id</span></code>: used in Jenkins notification</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">env</span></code>: environment variables dictionary</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">build_condition</span></code>: As in build sections, condition when the package section steps are performed.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">publication_commands</span></code>: commands to be performed to actually do the “publication” work. If not specified, the default publication commands will copy the package repository and installers to the publication directory.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">stderr_file</span></code>: file used to redirect the standard error stream of bv_maker when email notification is used. This file is “persistant” and will not be deleted. If not specified, it will be mixed with standard output.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">stdout_file</span></code>: file used to redirect the standard output stream of bv_maker when email notification is used. This file is “persistant” and will not be deleted. If neither it nor <code class="docutils literal notranslate"><span class="pre">stderr_file</span></code> are specified, then a temporary file will be used, and erased when each step is finished.</p></li>
-</ul>
-<p><strong>Example</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> package_publication /home/local/brainvisa_release <span class="o">]</span>
-  <span class="nv">package_directory</span> <span class="o">=</span> <span class="nv">$HOME</span>/brainvisa/brainvisa_packages/test_repository
-  <span class="nv">build_condition</span> <span class="o">=</span> sys.platform <span class="o">==</span> <span class="s2">&quot;linux2&quot;</span>
-</pre></div>
-</div>
-</section>
 <section id="syntax-for-components-selection">
 <h2>Syntax for components selection<a class="headerlink" href="#syntax-for-components-selection" title="Permalink to this headline">¶</a></h2>
 <p>Components can be selected according to their name and (in some context) to their version. This paragraph explain how to use component_selection and version_selection and gives some examples of their usage.</p>
@@ -476,7 +368,7 @@ Dictionary variables do support both:</p>
 <p>A section of the configuration file may contain conditional parts. This allows to specialize parts of the configuration according to host system, host name, or whatever.</p>
 <section id="condition-blocks">
 <h3>Condition blocks<a class="headerlink" href="#condition-blocks" title="Permalink to this headline">¶</a></h3>
-<p>A conditional subsection should be located inside an existing section (sources, build or package). It follows the syntax:</p>
+<p>A conditional subsection should be located inside an existing section (sources or build). It follows the syntax:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> <span class="k">if</span> &lt;expression&gt; <span class="o">]</span>
   &lt;config lines&gt;
   ...
@@ -489,7 +381,7 @@ Dictionary variables do support both:</p>
 </section>
 <section id="condition-expressions">
 <h3>Condition expressions<a class="headerlink" href="#condition-expressions" title="Permalink to this headline">¶</a></h3>
-<p>The condition expression may contain substitution variables as in the shape <code class="docutils literal notranslate"><span class="pre">%(variable)s</span></code> syntax, like in the package section, at the difference that only the following variables are recognized:</p>
+<p>The condition expression may contain substitution variables as in the shape <code class="docutils literal notranslate"><span class="pre">%(variable)s</span></code> syntax. The following variables are recognized:</p>
 <ul class="simple">
 <li><p>os</p></li>
 <li><p>date</p></li>
@@ -588,8 +480,6 @@ Dictionary variables do support both:</p>
 <li><a class="reference internal" href="#variants-of-build-directories">Variants of build directories</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#definition-of-a-package-directory">Definition of a package directory</a></li>
-<li><a class="reference internal" href="#definition-of-a-publication-directory">Definition of a publication directory</a></li>
 <li><a class="reference internal" href="#syntax-for-components-selection">Syntax for components selection</a><ul>
 <li><a class="reference internal" href="#component-selection">Component selection</a></li>
 <li><a class="reference internal" href="#version-selection">Version selection</a></li>
@@ -655,7 +545,7 @@ Dictionary variables do support both:</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2021, CEA.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.1.
     </div>
   </body>
 </html>

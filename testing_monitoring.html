@@ -75,7 +75,7 @@ ctest -VV -R ^carto
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_maker test_pack
 </pre></div>
 </div>
-<p>Here again, options are allowed to restrict to specific package directories, part of tests etc. Note that the <code class="docutils literal notranslate"><span class="pre">-d</span></code> option here must refer to a <a class="reference internal" href="configuration.html#package-directory"><span class="std std-ref">package directory</span></a>, which may admit some fancy wildcards, and must be specified the same way. As an example, for our build system for BrainVisa, we may use:</p>
+<p>Here again, options are allowed to restrict to specific package directories, part of tests etc. Note that the <code class="docutils literal notranslate"><span class="pre">-d</span></code> option here must refer to a <span class="xref std std-ref">package directory</span>, which may admit some fancy wildcards, and must be specified the same way. As an example, for our build system for BrainVisa, we may use:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_maker -d <span class="s1">&#39;/neurospin/tmp/brainvisa/tests/repositories/public/%(version)s-%(date)s/%(os)s/packages&#39;</span> test_pack -t <span class="s1">&#39;-VV -R carto*&#39;</span>
 </pre></div>
 </div>
@@ -173,27 +173,6 @@ OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86
 </pre></div>
 </div>
 </section>
-<section id="displaying-the-log-file">
-<h3>Displaying the log file<a class="headerlink" href="#displaying-the-log-file" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">bv_show_build_logs</span></code> tool allows to display the contents of the above log file in a graphical table:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_show_build_logs -i /home/brutus/bv_builds.log
-</pre></div>
-</div>
-<img alt="_images/bv_show_build_logs.jpg" src="_images/bv_show_build_logs.jpg" />
-<p>The display tool allows to sort by column, which may make it easier to find the status for a specific build step, machine, or date…</p>
-<p><code class="docutils literal notranslate"><span class="pre">bv_show_build_logs</span></code> may also retreive the log file from a distant machine through ssh:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_show_build_logs -i /home/brutus/bv_builds.log -s myhost.com -u brutus
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>When options are not used, they have hard-coded default values which suit our build environment for BrainVisa and which will not work in a different place.</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Up to now, the full builds and tests logs, which may be notified by email, are not kept and are deleted once sent by email. Thus the display tool cannot display them. This is an improvement which may be developed in the future.</p>
-</div>
-</section>
 </section>
 <section id="setting-up-new-tests-in-a-software-project">
 <h2>Setting up new tests in a software project<a class="headerlink" href="#setting-up-new-tests-in-a-software-project" title="Permalink to this headline">¶</a></h2>
@@ -229,7 +208,7 @@ OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86
 <h3>Config options<a class="headerlink" href="#config-options" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bv_maker</span></code> can run tests of installed packages (after successful <code class="docutils literal notranslate"><span class="pre">pack</span></code> and <code class="docutils literal notranslate"><span class="pre">install_pack</span></code> steps), within the <code class="docutils literal notranslate"><span class="pre">testref_pack</span></code> and <code class="docutils literal notranslate"><span class="pre">test_pack</span></code> steps. Such tests can make use of remote or virtual machines to perform tests in a “clean”, controlled, test environment, different from the build machine. Actually, to be precise, the <code class="docutils literal notranslate"><span class="pre">install_pack</span></code> step also uses the same mechanism and can also take place on a remote or virtual machine, in the same manner as running the tests themselves.</p>
 <p>However tests are always triggered from the build machine, which will in turn, connect to remote or virtual test machines.</p>
-<p>Tests configuration is part of a <a class="reference internal" href="configuration.html#package-directory"><span class="std std-ref">package directory</span></a> specification of the <a class="reference internal" href="configuration.html"><span class="doc">bv_maker.cfg configuration file</span></a>. They are mainly controlled via the <code class="docutils literal notranslate"><span class="pre">remote_test_host_cmd</span></code> variable. The contents of this variable is prepended to test commands, so they can make the connection and indirection trick. For instance:</p>
+<p>Tests configuration is part of a <span class="xref std std-ref">package directory</span> specification of the <a class="reference internal" href="configuration.html"><span class="doc">bv_maker.cfg configuration file</span></a>. They are mainly controlled via the <code class="docutils literal notranslate"><span class="pre">remote_test_host_cmd</span></code> variable. The contents of this variable is prepended to test commands, so they can make the connection and indirection trick. For instance:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> package /home/brutus/tests/packages <span class="o">]</span>
 <span class="nv">build_directory</span> <span class="o">=</span> /home/brutus/build
 <span class="nv">installer_filename</span> <span class="o">=</span> /home/brutus/tests/brainvisa_installer
@@ -394,7 +373,6 @@ OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86
 </li>
 <li><a class="reference internal" href="#displaying-build-status">Displaying build status</a><ul>
 <li><a class="reference internal" href="#id2">Log file</a></li>
-<li><a class="reference internal" href="#displaying-the-log-file">Displaying the log file</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#setting-up-new-tests-in-a-software-project">Setting up new tests in a software project</a><ul>
@@ -459,7 +437,7 @@ OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2021, CEA.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.1.
     </div>
   </body>
 </html>

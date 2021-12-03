@@ -48,6 +48,18 @@ def get_default_sip_dir():
     pyqt_sip_dir = os.path.join(c.default_sip_dir, 'Qt%d' % pyqt_ver)
     if os.path.isdir(pyqt_sip_dir):
         return pyqt_sip_dir
+    # in ubuntu 22.04 install of sip 4.19.25, default_sip_dir is wrong as it
+    # returns /usr/share/sip and PyQt sip files are in
+    # /usr/lib/python3/dist-packages/PyQt5/bindings/
+    paths = [
+        '/usr/lib/python%d/dist-packages/PyQt%d/bindings'
+        % (sys.version_info[0], pyqt_ver),
+        '/usr/lib/python%d.%d/dist-packages/PyQt%d/bindings'
+        % (sys.version_info[0], sys.version_info[1], pyqt_ver),
+    ]
+    for p in paths:
+        if os.path.exists(p):
+            return p
     return c.default_sip_dir
 
 def get_qt_tag(sip_flags):

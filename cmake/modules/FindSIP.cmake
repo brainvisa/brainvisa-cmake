@@ -55,9 +55,9 @@ else( SIP_VERSION )
         # statements which make sip segfault
         set( SIP_FLAGS "-t" "SIPTHROW_BUG" CACHE STRING "options passed to SIP program" )
       elseif( ${SIP_VERSION} VERSION_GREATER 4.19.9 )
-        # using sip >= 4.19.9, the sip module is a "private copy" inside PyQt, we must use
-        # the module as it is named in PyQt.
-        execute_process( COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX} ${PYTHON_EXECUTABLE} -c "import PyQt${DESIRED_QT_VERSION}"
+        # using sip >= 4.19.9, the sip module may be a "private copy" inside
+        # PyQt, we must use the module as it is named in PyQt.
+        execute_process( COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX} ${PYTHON_EXECUTABLE} -c "import PyQt${DESIRED_QT_VERSION}.sip"
             RESULT_VARIABLE _new_module )
         if( _new_module EQUAL 0 )
           set(SIP_FLAGS "-n" "PyQt${DESIRED_QT_VERSION}.sip" CACHE STRING "options passed to SIP program" )

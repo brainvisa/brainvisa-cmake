@@ -83,35 +83,35 @@ make anatomist-free-devdoc
 <li><p><code class="docutils literal notranslate"><span class="pre">Brainvisa-cmake</span></code> provides a function <a class="reference internal" href="cmake_functions.html#brainvisa-generate-doxygen-doc"><span class="std std-ref">brainvisa_generate_doxygen_doc</span></a> to build Doxygen doc:</p></li>
 </ul>
 <p>Exaple, from the Cartobase project:</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">find_package</span><span class="p">(</span> <span class="s">Doxygen</span> <span class="p">)</span>
-<span class="nb">if</span><span class="p">(</span> <span class="s">DOXYGEN_FOUND</span> <span class="p">)</span>
-  <span class="nb">set</span><span class="p">(</span> <span class="s">DOXYFILE_PREDEFINED</span> <span class="s2">&quot;${SOMA-IO_DEFINITIONS}&quot;</span><span class="p">)</span>
-  <span class="nb">set</span><span class="p">(</span> <span class="s">_doxyheaders</span> <span class="o">${</span><span class="nv">_headers</span><span class="o">}</span> <span class="s2">&quot;config/config.h&quot;</span> <span class="p">)</span> <span class="c"># add config.h file</span>
-  <span class="nb">BRAINVISA_GENERATE_DOXYGEN_DOC</span><span class="p">(</span>
-    <span class="s">_doxyheaders</span>
-    <span class="s">INPUT_PREFIX</span> <span class="s2">&quot;${CMAKE_BINARY_DIR}/include/cartobase&quot;</span>
-    <span class="s">COMPONENT</span> <span class="s2">&quot;cartobase&quot;</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">find_package</span><span class="p">(</span><span class="w"> </span><span class="s">Doxygen</span><span class="w"> </span><span class="p">)</span>
+<span class="nb">if</span><span class="p">(</span><span class="w"> </span><span class="s">DOXYGEN_FOUND</span><span class="w"> </span><span class="p">)</span>
+<span class="w">  </span><span class="nb">set</span><span class="p">(</span><span class="w"> </span><span class="s">DOXYFILE_PREDEFINED</span><span class="w"> </span><span class="s2">&quot;${SOMA-IO_DEFINITIONS}&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="nb">set</span><span class="p">(</span><span class="w"> </span><span class="s">_doxyheaders</span><span class="w"> </span><span class="o">${</span><span class="nv">_headers</span><span class="o">}</span><span class="w"> </span><span class="s2">&quot;config/config.h&quot;</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="c"># add config.h file</span>
+<span class="w">  </span><span class="nb">BRAINVISA_GENERATE_DOXYGEN_DOC</span><span class="p">(</span>
+<span class="w">    </span><span class="s">_doxyheaders</span>
+<span class="w">    </span><span class="s">INPUT_PREFIX</span><span class="w"> </span><span class="s2">&quot;${CMAKE_BINARY_DIR}/include/cartobase&quot;</span>
+<span class="w">    </span><span class="s">COMPONENT</span><span class="w"> </span><span class="s2">&quot;cartobase&quot;</span><span class="w"> </span><span class="p">)</span>
 <span class="nb">endif</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>A more complete example, from Anatomist:</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">find_package</span><span class="p">(</span> <span class="s">Doxygen</span> <span class="p">)</span>
-<span class="nb">if</span><span class="p">(</span> <span class="s">DOXYGEN_FOUND</span> <span class="p">)</span>
-  <span class="nb">set</span><span class="p">(</span> <span class="s">DOXYFILE_HTML_HEADER</span> <span class="s2">&quot;\&quot;</span><span class="o">${</span><span class="nv">CMAKE_CURRENT_SOURCE_DIR</span><span class="o">}</span><span class="s">/head_anatomist.html\</span><span class="s2">&quot;&quot;</span> <span class="p">)</span>
-  <span class="nb">set</span><span class="p">(</span> <span class="s">_doxygenInput</span> <span class="o">${</span><span class="nv">HEADERS</span><span class="o">}</span> <span class="p">)</span>
-  <span class="nb">set</span><span class="p">(</span> <span class="s">DOXYFILE_PREDEFINED</span> <span class="o">${</span><span class="nv">ANATOMIST_DEFINITIONS</span><span class="o">}</span> <span class="o">${</span><span class="nv">AIMS-FREE_DEFINITIONS</span><span class="o">}</span>
-    <span class="o">${</span><span class="nv">SOMA-IO_DEFINITIONS</span><span class="o">}</span> <span class="s">CARTO_USE_BLITZ</span> <span class="p">)</span>
-  <span class="nb">set</span><span class="p">(</span><span class="s">aims-free_version</span>
-    <span class="s2">&quot;${aims-free_VERSION_MAJOR}.${aims-free_VERSION_MINOR}&quot;</span><span class="p">)</span>
-  <span class="nb">set</span><span class="p">(</span><span class="s">_somaio_version</span> <span class="s2">&quot;${soma-io_VERSION_MAJOR}.${soma-io_VERSION_MINOR}&quot;</span><span class="p">)</span>
-  <span class="nb">set</span><span class="p">(</span> <span class="s">DOXYFILE_TAGFILES</span>
-    <span class="s2">&quot;${CMAKE_BINARY_DIR}/share/doc/aimsgui-${aims-free_version}/doxygen/aimsgui.tag=../../aimsgui-${aims-free_version}/doxygen ${CMAKE_BINARY_DIR}/share/doc/aimsdata-${aims-free_version}/doxygen/aimsdata.tag=../../aimsdata-${aims-free_version}/doxygen ${CMAKE_BINARY_DIR}/share/doc/graph-${aims-free_version}/doxygen/graph.tag=../../graph-${aims-free_version}/doxygen ${CMAKE_BINARY_DIR}/share/doc/cartobase-${_somaio_version}/doxygen/cartobase.tag=../../cartobase-${_somaio_version}/doxygen ${CMAKE_BINARY_DIR}/share/doc/soma-io-${_somaio_version}/doxygen/soma-io.tag=../../cartobase-${_somaio_version}/doxygen ${CMAKE_BINARY_DIR}/share/doc/cartodata-${aims-free_version}/doxygen/cartodata.tag=../../cartodata-${aims-free_version}/doxygen&quot;</span><span class="p">)</span>
-  <span class="nb">BRAINVISA_GENERATE_DOXYGEN_DOC</span><span class="p">(</span>
-    <span class="s">_doxygenInput</span>
-    <span class="s">head_anatomist.html</span> <span class="s">anatomist.png</span> <span class="s">anatomist.gif</span>
-    <span class="s">INPUT_PREFIX</span> <span class="s2">&quot;${CMAKE_BINARY_DIR}/include/anatomist&quot;</span>
-    <span class="s">COMPONENT</span> <span class="s2">&quot;anatomist&quot;</span> <span class="p">)</span>
-  <span class="nb">add_dependencies</span><span class="p">(</span> <span class="s">anatomist-doxygen</span> <span class="s">aimsgui-doxygen</span> <span class="s">aimsdata-doxygen</span> <span class="s">graph-doxygen</span> <span class="s">soma-io-doxygen</span> <span class="s">cartobase-doxygen</span> <span class="s">cartodata-doxygen</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">find_package</span><span class="p">(</span><span class="w"> </span><span class="s">Doxygen</span><span class="w"> </span><span class="p">)</span>
+<span class="nb">if</span><span class="p">(</span><span class="w"> </span><span class="s">DOXYGEN_FOUND</span><span class="w"> </span><span class="p">)</span>
+<span class="w">  </span><span class="nb">set</span><span class="p">(</span><span class="w"> </span><span class="s">DOXYFILE_HTML_HEADER</span><span class="w"> </span><span class="s2">&quot;\&quot;</span><span class="o">${</span><span class="nv">CMAKE_CURRENT_SOURCE_DIR</span><span class="o">}</span><span class="s">/head_anatomist.html\</span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="p">)</span>
+<span class="w">  </span><span class="nb">set</span><span class="p">(</span><span class="w"> </span><span class="s">_doxygenInput</span><span class="w"> </span><span class="o">${</span><span class="nv">HEADERS</span><span class="o">}</span><span class="w"> </span><span class="p">)</span>
+<span class="w">  </span><span class="nb">set</span><span class="p">(</span><span class="w"> </span><span class="s">DOXYFILE_PREDEFINED</span><span class="w"> </span><span class="o">${</span><span class="nv">ANATOMIST_DEFINITIONS</span><span class="o">}</span><span class="w"> </span><span class="o">${</span><span class="nv">AIMS-FREE_DEFINITIONS</span><span class="o">}</span>
+<span class="w">    </span><span class="o">${</span><span class="nv">SOMA-IO_DEFINITIONS</span><span class="o">}</span><span class="w"> </span><span class="s">CARTO_USE_BLITZ</span><span class="w"> </span><span class="p">)</span>
+<span class="w">  </span><span class="nb">set</span><span class="p">(</span><span class="s">aims-free_version</span>
+<span class="w">    </span><span class="s2">&quot;${aims-free_VERSION_MAJOR}.${aims-free_VERSION_MINOR}&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="nb">set</span><span class="p">(</span><span class="s">_somaio_version</span><span class="w"> </span><span class="s2">&quot;${soma-io_VERSION_MAJOR}.${soma-io_VERSION_MINOR}&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="nb">set</span><span class="p">(</span><span class="w"> </span><span class="s">DOXYFILE_TAGFILES</span>
+<span class="w">    </span><span class="s2">&quot;${CMAKE_BINARY_DIR}/share/doc/aimsgui-${aims-free_version}/doxygen/aimsgui.tag=../../aimsgui-${aims-free_version}/doxygen ${CMAKE_BINARY_DIR}/share/doc/aimsdata-${aims-free_version}/doxygen/aimsdata.tag=../../aimsdata-${aims-free_version}/doxygen ${CMAKE_BINARY_DIR}/share/doc/graph-${aims-free_version}/doxygen/graph.tag=../../graph-${aims-free_version}/doxygen ${CMAKE_BINARY_DIR}/share/doc/cartobase-${_somaio_version}/doxygen/cartobase.tag=../../cartobase-${_somaio_version}/doxygen ${CMAKE_BINARY_DIR}/share/doc/soma-io-${_somaio_version}/doxygen/soma-io.tag=../../cartobase-${_somaio_version}/doxygen ${CMAKE_BINARY_DIR}/share/doc/cartodata-${aims-free_version}/doxygen/cartodata.tag=../../cartodata-${aims-free_version}/doxygen&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="nb">BRAINVISA_GENERATE_DOXYGEN_DOC</span><span class="p">(</span>
+<span class="w">    </span><span class="s">_doxygenInput</span>
+<span class="w">    </span><span class="s">head_anatomist.html</span><span class="w"> </span><span class="s">anatomist.png</span><span class="w"> </span><span class="s">anatomist.gif</span>
+<span class="w">    </span><span class="s">INPUT_PREFIX</span><span class="w"> </span><span class="s2">&quot;${CMAKE_BINARY_DIR}/include/anatomist&quot;</span>
+<span class="w">    </span><span class="s">COMPONENT</span><span class="w"> </span><span class="s2">&quot;anatomist&quot;</span><span class="w"> </span><span class="p">)</span>
+<span class="w">  </span><span class="nb">add_dependencies</span><span class="p">(</span><span class="w"> </span><span class="s">anatomist-doxygen</span><span class="w"> </span><span class="s">aimsgui-doxygen</span><span class="w"> </span><span class="s">aimsdata-doxygen</span><span class="w"> </span><span class="s">graph-doxygen</span><span class="w"> </span><span class="s">soma-io-doxygen</span><span class="w"> </span><span class="s">cartobase-doxygen</span><span class="w"> </span><span class="s">cartodata-doxygen</span><span class="w"> </span><span class="p">)</span>
 <span class="nb">endif</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -122,11 +122,11 @@ make anatomist-free-devdoc
 <section id="in-cmake-configuration">
 <h3>In CMake configuration<a class="headerlink" href="#in-cmake-configuration" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">brainvisa-cmake</span></code> provides a function to build sphinx documentation for a project: <a class="reference internal" href="cmake_functions.html#brainvisa-generate-sphinx-doc"><span class="std std-ref">brainvisa_generate_sphinx_doc</span></a>.</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">find_package</span><span class="p">(</span> <span class="s">Sphinx</span> <span class="p">)</span>
-<span class="nb">BRAINVISA_GENERATE_SPHINX_DOC</span><span class="p">(</span> <span class="s2">&quot;sphinxdoc/user_doc&quot;</span>
-  <span class="s2">&quot;share/doc/axon-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}/user_doc&quot;</span> <span class="s">USER</span> <span class="p">)</span>
-<span class="nb">BRAINVISA_GENERATE_SPHINX_DOC</span><span class="p">(</span> <span class="s2">&quot;sphinxdoc/dev_doc&quot;</span>
-  <span class="s2">&quot;share/doc/axon-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}/dev_doc&quot;</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">find_package</span><span class="p">(</span><span class="w"> </span><span class="s">Sphinx</span><span class="w"> </span><span class="p">)</span>
+<span class="nb">BRAINVISA_GENERATE_SPHINX_DOC</span><span class="p">(</span><span class="w"> </span><span class="s2">&quot;sphinxdoc/user_doc&quot;</span>
+<span class="w">  </span><span class="s2">&quot;share/doc/axon-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}/user_doc&quot;</span><span class="w"> </span><span class="s">USER</span><span class="w"> </span><span class="p">)</span>
+<span class="nb">BRAINVISA_GENERATE_SPHINX_DOC</span><span class="p">(</span><span class="w"> </span><span class="s2">&quot;sphinxdoc/dev_doc&quot;</span>
+<span class="w">  </span><span class="s2">&quot;share/doc/axon-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}/dev_doc&quot;</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

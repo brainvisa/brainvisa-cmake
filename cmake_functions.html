@@ -45,10 +45,10 @@
 <section id="brainvisa-add-command-help">
 <h2>brainvisa_add_command_help<a class="headerlink" href="#brainvisa-add-command-help" title="Permalink to this headline">¶</a></h2>
 <p>Add target to generate command help files</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_ADD_COMMAND_HELP</span><span class="p">(</span> <span class="s">name</span>
-                            <span class="s">[COMPONENT</span> <span class="s">&lt;component&gt;]</span>
-                            <span class="s">[HELP_COMMAND</span> <span class="s">&lt;command&gt;]</span>
-                            <span class="s">[HELP_DEPENDS</span> <span class="s">&lt;dependencies&gt;]</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_ADD_COMMAND_HELP</span><span class="p">(</span><span class="w"> </span><span class="s">name</span>
+<span class="w">                            </span><span class="s">[COMPONENT</span><span class="w"> </span><span class="s">&lt;component&gt;]</span>
+<span class="w">                            </span><span class="s">[HELP_COMMAND</span><span class="w"> </span><span class="s">&lt;command&gt;]</span>
+<span class="w">                            </span><span class="s">[HELP_DEPENDS</span><span class="w"> </span><span class="s">&lt;dependencies&gt;]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -57,14 +57,14 @@
 <p>Add executable target and reference executable for the component.
 Executables added with <code class="docutils literal notranslate"><span class="pre">BRAINVISA_ADD_EXECUTABLE</span></code> are referenced a
 cache variable named <code class="docutils literal notranslate"><span class="pre">${component}-commands</span></code>.</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_ADD_EXECUTABLE</span><span class="p">(</span> <span class="s">&lt;name&gt;</span>
-                          <span class="s">[WIN32]</span> <span class="s">[MACOSX_BUNDLE]</span> <span class="s">[EXCLUDE_FROM_ALL]</span>
-                          <span class="s">source1</span> <span class="s">...</span> <span class="s">sourceN</span>
-                          <span class="s">[COMPONENT</span> <span class="s">&lt;component&gt;]</span>
-                          <span class="s">[IS_SCRIPT]</span>
-                          <span class="s">[HELP_COMMAND</span> <span class="s">&lt;command&gt;</span> <span class="s">arg1</span> <span class="s">...</span> <span class="s">argN]</span>
-                          <span class="s">[HELP_GENERATE</span> <span class="s">On/Off]</span>
-                          <span class="s">[OUTPUT_NAME</span> <span class="s">commandname]</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_ADD_EXECUTABLE</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;name&gt;</span>
+<span class="w">                          </span><span class="s">[WIN32]</span><span class="w"> </span><span class="s">[MACOSX_BUNDLE]</span><span class="w"> </span><span class="s">[EXCLUDE_FROM_ALL]</span>
+<span class="w">                          </span><span class="s">source1</span><span class="w"> </span><span class="s">...</span><span class="w"> </span><span class="s">sourceN</span>
+<span class="w">                          </span><span class="s">[COMPONENT</span><span class="w"> </span><span class="s">&lt;component&gt;]</span>
+<span class="w">                          </span><span class="s">[IS_SCRIPT]</span>
+<span class="w">                          </span><span class="s">[HELP_COMMAND</span><span class="w"> </span><span class="s">&lt;command&gt;</span><span class="w"> </span><span class="s">arg1</span><span class="w"> </span><span class="s">...</span><span class="w"> </span><span class="s">argN]</span>
+<span class="w">                          </span><span class="s">[HELP_GENERATE</span><span class="w"> </span><span class="s">On/Off]</span>
+<span class="w">                          </span><span class="s">[OUTPUT_NAME</span><span class="w"> </span><span class="s">commandname]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 <p>if <code class="docutils literal notranslate"><span class="pre">OUTPUT_NAME</span></code> is set, <code class="docutils literal notranslate"><span class="pre">set_property(</span> <span class="pre">TARGET</span> <span class="pre">&lt;name&gt;</span> <span class="pre">PROPERTY</span> <span class="pre">OUTPUT_NAME</span> <span class="pre">&lt;commandname&gt;</span> <span class="pre">)</span></code>
@@ -72,10 +72,10 @@ is called, and the command help is set with the name <code class="docutils liter
 </section>
 <section id="brainvisa-add-sip-python-module">
 <h2>brainvisa_add_sip_python_module<a class="headerlink" href="#brainvisa-add-sip-python-module" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_ADD_SIP_PYTHON_MODULE</span><span class="p">(</span> <span class="s">&lt;module&gt;</span> <span class="s">&lt;directory&gt;</span> <span class="s">&lt;mainSipFile&gt;</span>
-                                 <span class="s">[</span> <span class="s">SIP_SOURCES</span> <span class="s">&lt;file&gt;</span> <span class="s">...</span> <span class="s">]</span>
-                                 <span class="s">[</span> <span class="s">SIP_INCLUDE</span> <span class="s">&lt;directory&gt;</span> <span class="s">...</span> <span class="s">]</span>
-                                 <span class="s">[</span> <span class="s">SIP_INSTALL</span> <span class="s">&lt;directory&gt;</span> <span class="s">]</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_ADD_SIP_PYTHON_MODULE</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;module&gt;</span><span class="w"> </span><span class="s">&lt;directory&gt;</span><span class="w"> </span><span class="s">&lt;mainSipFile&gt;</span>
+<span class="w">                                 </span><span class="s">[</span><span class="w"> </span><span class="s">SIP_SOURCES</span><span class="w"> </span><span class="s">&lt;file&gt;</span><span class="w"> </span><span class="s">...</span><span class="w"> </span><span class="s">]</span>
+<span class="w">                                 </span><span class="s">[</span><span class="w"> </span><span class="s">SIP_INCLUDE</span><span class="w"> </span><span class="s">&lt;directory&gt;</span><span class="w"> </span><span class="s">...</span><span class="w"> </span><span class="s">]</span>
+<span class="w">                                 </span><span class="s">[</span><span class="w"> </span><span class="s">SIP_INSTALL</span><span class="w"> </span><span class="s">&lt;directory&gt;</span><span class="w"> </span><span class="s">]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -86,9 +86,9 @@ is called, and the command help is set with the name <code class="docutils liter
 and generates the commands to create the associated <code class="docutils literal notranslate"><span class="pre">*.qm</span></code> files in the build
 share directory and creates associated install rules.</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_ADD_PYTRANSLATION</span><span class="p">(</span>
-  <span class="s">&lt;name</span> <span class="s">of</span> <span class="s">the</span> <span class="s">source</span> <span class="s">share</span> <span class="s">directory</span> <span class="s">where</span> <span class="s">finding</span> <span class="s">the</span> <span class="s">*.ts</span> <span class="s">files&gt;</span>
-  <span class="s">&lt;name</span> <span class="s">of</span> <span class="s">the</span> <span class="s">destination</span> <span class="s">share</span> <span class="s">directory</span> <span class="s">where</span> <span class="s">writing</span> <span class="s">the</span> <span class="s">*.qm</span> <span class="s">files&gt;</span> <span class="s">&lt;component&gt;</span>
-  <span class="s">[source</span> <span class="s">directory</span> <span class="s">to</span> <span class="s">search</span> <span class="s">python</span> <span class="s">files]</span> <span class="p">)</span>
+<span class="w">  </span><span class="s">&lt;name</span><span class="w"> </span><span class="s">of</span><span class="w"> </span><span class="s">the</span><span class="w"> </span><span class="s">source</span><span class="w"> </span><span class="s">share</span><span class="w"> </span><span class="s">directory</span><span class="w"> </span><span class="s">where</span><span class="w"> </span><span class="s">finding</span><span class="w"> </span><span class="s">the</span><span class="w"> </span><span class="s">*.ts</span><span class="w"> </span><span class="s">files&gt;</span>
+<span class="w">  </span><span class="s">&lt;name</span><span class="w"> </span><span class="s">of</span><span class="w"> </span><span class="s">the</span><span class="w"> </span><span class="s">destination</span><span class="w"> </span><span class="s">share</span><span class="w"> </span><span class="s">directory</span><span class="w"> </span><span class="s">where</span><span class="w"> </span><span class="s">writing</span><span class="w"> </span><span class="s">the</span><span class="w"> </span><span class="s">*.qm</span><span class="w"> </span><span class="s">files&gt;</span><span class="w"> </span><span class="s">&lt;component&gt;</span>
+<span class="w">  </span><span class="s">[source</span><span class="w"> </span><span class="s">directory</span><span class="w"> </span><span class="s">to</span><span class="w"> </span><span class="s">search</span><span class="w"> </span><span class="s">python</span><span class="w"> </span><span class="s">files]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -98,18 +98,18 @@ share directory and creates associated install rules.</p>
 and generates the commands to create the associated <code class="docutils literal notranslate"><span class="pre">*.qm</span></code> files in the build share directory
 and creates associated install rules.</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_ADD_TRANSLATION</span><span class="p">(</span>
-  <span class="s">&lt;name</span> <span class="s">of</span> <span class="s">the</span> <span class="s">source</span> <span class="s">share</span> <span class="s">directory</span> <span class="s">where</span> <span class="s">finding</span> <span class="s">the</span> <span class="s">*.ts</span> <span class="s">files&gt;</span>
-  <span class="s">&lt;name</span> <span class="s">of</span> <span class="s">the</span> <span class="s">destination</span> <span class="s">share</span> <span class="s">directory</span> <span class="s">where</span> <span class="s">writing</span> <span class="s">the</span> <span class="s">*.qm</span> <span class="s">files&gt;</span> <span class="s">&lt;component&gt;</span>
-  <span class="s">[source</span> <span class="s">directory</span> <span class="s">to</span> <span class="s">search</span> <span class="s">c++</span> <span class="s">files]</span> <span class="p">)</span>
+<span class="w">  </span><span class="s">&lt;name</span><span class="w"> </span><span class="s">of</span><span class="w"> </span><span class="s">the</span><span class="w"> </span><span class="s">source</span><span class="w"> </span><span class="s">share</span><span class="w"> </span><span class="s">directory</span><span class="w"> </span><span class="s">where</span><span class="w"> </span><span class="s">finding</span><span class="w"> </span><span class="s">the</span><span class="w"> </span><span class="s">*.ts</span><span class="w"> </span><span class="s">files&gt;</span>
+<span class="w">  </span><span class="s">&lt;name</span><span class="w"> </span><span class="s">of</span><span class="w"> </span><span class="s">the</span><span class="w"> </span><span class="s">destination</span><span class="w"> </span><span class="s">share</span><span class="w"> </span><span class="s">directory</span><span class="w"> </span><span class="s">where</span><span class="w"> </span><span class="s">writing</span><span class="w"> </span><span class="s">the</span><span class="w"> </span><span class="s">*.qm</span><span class="w"> </span><span class="s">files&gt;</span><span class="w"> </span><span class="s">&lt;component&gt;</span>
+<span class="w">  </span><span class="s">[source</span><span class="w"> </span><span class="s">directory</span><span class="w"> </span><span class="s">to</span><span class="w"> </span><span class="s">search</span><span class="w"> </span><span class="s">c++</span><span class="w"> </span><span class="s">files]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="brainvisa-add-test">
 <span id="id1"></span><h2>brainvisa_add_test<a class="headerlink" href="#brainvisa-add-test" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_ADD_TEST</span><span class="p">(</span> <span class="s">NAME</span> <span class="s">&lt;name&gt;</span> <span class="s">[CONFIGURATIONS</span> <span class="s">[Debug|Release|...]]</span>
-                    <span class="s">[WORKING_DIRECTORY</span> <span class="s">dir]</span>
-                    <span class="s">COMMAND</span> <span class="s">&lt;command&gt;</span> <span class="s">[arg1</span> <span class="s">[arg2</span> <span class="s">...]]</span>
-                    <span class="s">[TYPE</span> <span class="s">Exe|Python]</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_ADD_TEST</span><span class="p">(</span><span class="w"> </span><span class="s">NAME</span><span class="w"> </span><span class="s">&lt;name&gt;</span><span class="w"> </span><span class="s">[CONFIGURATIONS</span><span class="w"> </span><span class="s">[Debug|Release|...]]</span>
+<span class="w">                    </span><span class="s">[WORKING_DIRECTORY</span><span class="w"> </span><span class="s">dir]</span>
+<span class="w">                    </span><span class="s">COMMAND</span><span class="w"> </span><span class="s">&lt;command&gt;</span><span class="w"> </span><span class="s">[arg1</span><span class="w"> </span><span class="s">[arg2</span><span class="w"> </span><span class="s">...]]</span>
+<span class="w">                    </span><span class="s">[TYPE</span><span class="w"> </span><span class="s">Exe|Python]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Add a test to the project with the specified arguments.
@@ -118,16 +118,16 @@ If <code class="docutils literal notranslate"><span class="pre">TYPE</span> <spa
 start the test (i.e.: target python for cross compiling case).
 Test command is also launched through bv_env_test command.</p>
 <p>ex:</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">brainvisa_add_test</span><span class="p">(</span> <span class="s">axon-tests</span> <span class="s2">&quot;${PYTHON_EXECUTABLE_NAME}&quot;</span>
-                    <span class="s">-m</span> <span class="s">brainvisa.tests.test_axon</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">brainvisa_add_test</span><span class="p">(</span><span class="w"> </span><span class="s">axon-tests</span><span class="w"> </span><span class="s2">&quot;${PYTHON_EXECUTABLE_NAME}&quot;</span>
+<span class="w">                    </span><span class="s">-m</span><span class="w"> </span><span class="s">brainvisa.tests.test_axon</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="brainvisa-copy-and-install-headers">
 <h2>brainvisa_copy_and_install_headers<a class="headerlink" href="#brainvisa-copy-and-install-headers" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_COPY_AND_INSTALL_HEADERS</span><span class="p">(</span> <span class="s">&lt;headers</span> <span class="s">list&gt;</span> <span class="s">&lt;include</span> <span class="s">directory&gt;</span>
-                                    <span class="s">&lt;install</span> <span class="s">component&gt;</span>
-                                    <span class="s">[NO_SYMLINKS]</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_COPY_AND_INSTALL_HEADERS</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;headers</span><span class="w"> </span><span class="s">list&gt;</span><span class="w"> </span><span class="s">&lt;include</span><span class="w"> </span><span class="s">directory&gt;</span>
+<span class="w">                                    </span><span class="s">&lt;install</span><span class="w"> </span><span class="s">component&gt;</span>
+<span class="w">                                    </span><span class="s">[NO_SYMLINKS]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -135,24 +135,24 @@ Test command is also launched through bv_env_test command.</p>
 <h2>brainvisa_copy_directory<a class="headerlink" href="#brainvisa-copy-directory" title="Permalink to this headline">¶</a></h2>
 <p>Recursively copy and install all files in &lt;source directory&gt; except files named
 <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code>, <code class="docutils literal notranslate"><span class="pre">*~</span></code> or <code class="docutils literal notranslate"><span class="pre">*/.svn/*</span></code>.</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_COPY_DIRECTORY</span><span class="p">(</span> <span class="s">&lt;source</span> <span class="s">directory&gt;</span> <span class="s">&lt;destination</span> <span class="s">directory&gt;</span>
-                          <span class="s">&lt;component&gt;</span>
-                          <span class="s">[IMMEDIATE]</span>
-                          <span class="s">[GET_TARGET</span> <span class="s">&lt;target</span> <span class="s">variable&gt;]</span>
-                          <span class="s">[NO_SYMLINKS]</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_COPY_DIRECTORY</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;source</span><span class="w"> </span><span class="s">directory&gt;</span><span class="w"> </span><span class="s">&lt;destination</span><span class="w"> </span><span class="s">directory&gt;</span>
+<span class="w">                          </span><span class="s">&lt;component&gt;</span>
+<span class="w">                          </span><span class="s">[IMMEDIATE]</span>
+<span class="w">                          </span><span class="s">[GET_TARGET</span><span class="w"> </span><span class="s">&lt;target</span><span class="w"> </span><span class="s">variable&gt;]</span>
+<span class="w">                          </span><span class="s">[NO_SYMLINKS]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="brainvisa-copy-files">
 <h2>brainvisa_copy_files<a class="headerlink" href="#brainvisa-copy-files" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_COPY_FILES</span><span class="p">(</span> <span class="s">&lt;component&gt;</span> <span class="s">&lt;source</span> <span class="s">files&gt;</span>
-                      <span class="s">[SOURCE_DIRECTORY</span> <span class="s">&lt;directory&gt;]</span>
-                      <span class="s">DESTINATION</span> <span class="s">&lt;destination</span> <span class="s">directory&gt;</span>
-                      <span class="s">[IMMEDIATE]</span>
-                      <span class="s">[GET_TARGET</span> <span class="s">&lt;target</span> <span class="s">variable&gt;]</span>
-                      <span class="s">[TARGET</span> <span class="s">&lt;target</span> <span class="s">name&gt;]</span>
-                      <span class="s">[GET_OUTPUT_FILES</span> <span class="s">&lt;target</span> <span class="s">variable&gt;]</span>
-                      <span class="s">[NO_SYMLINKS]</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_COPY_FILES</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;component&gt;</span><span class="w"> </span><span class="s">&lt;source</span><span class="w"> </span><span class="s">files&gt;</span>
+<span class="w">                      </span><span class="s">[SOURCE_DIRECTORY</span><span class="w"> </span><span class="s">&lt;directory&gt;]</span>
+<span class="w">                      </span><span class="s">DESTINATION</span><span class="w"> </span><span class="s">&lt;destination</span><span class="w"> </span><span class="s">directory&gt;</span>
+<span class="w">                      </span><span class="s">[IMMEDIATE]</span>
+<span class="w">                      </span><span class="s">[GET_TARGET</span><span class="w"> </span><span class="s">&lt;target</span><span class="w"> </span><span class="s">variable&gt;]</span>
+<span class="w">                      </span><span class="s">[TARGET</span><span class="w"> </span><span class="s">&lt;target</span><span class="w"> </span><span class="s">name&gt;]</span>
+<span class="w">                      </span><span class="s">[GET_OUTPUT_FILES</span><span class="w"> </span><span class="s">&lt;target</span><span class="w"> </span><span class="s">variable&gt;]</span>
+<span class="w">                      </span><span class="s">[NO_SYMLINKS]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -160,10 +160,10 @@ Test command is also launched through bv_env_test command.</p>
 <h2>brainvisa_copy_python_directory<a class="headerlink" href="#brainvisa-copy-python-directory" title="Permalink to this headline">¶</a></h2>
 <p>Create targets to copy, byte compile and install all Python code
 contained in a directory.</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_COPY_PYTHON_DIRECTORY</span><span class="p">(</span> <span class="s">&lt;python</span> <span class="s">directory&gt;</span> <span class="s">&lt;component&gt;</span>
-                                 <span class="s">&lt;destination</span> <span class="s">directory&gt;</span>
-                                 <span class="s">[NO_SYMLINKS]</span>
-                                 <span class="s">[INSTALL_ONLY]</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_COPY_PYTHON_DIRECTORY</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;python</span><span class="w"> </span><span class="s">directory&gt;</span><span class="w"> </span><span class="s">&lt;component&gt;</span>
+<span class="w">                                 </span><span class="s">&lt;destination</span><span class="w"> </span><span class="s">directory&gt;</span>
+<span class="w">                                 </span><span class="s">[NO_SYMLINKS]</span>
+<span class="w">                                 </span><span class="s">[INSTALL_ONLY]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="simple">
@@ -175,51 +175,51 @@ contained in a directory.</p>
 (relative to build directory).</p>
 </dd>
 </dl>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_COPY_PYTHON_DIRECTORY</span><span class="p">(</span> <span class="s">&lt;python</span> <span class="s">directory&gt;</span> <span class="s">&lt;component&gt;</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_COPY_PYTHON_DIRECTORY</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;python</span><span class="w"> </span><span class="s">directory&gt;</span><span class="w"> </span><span class="s">&lt;component&gt;</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">&lt;destination</span> <span class="pre">directory&gt;</span></code> is set to the right most directory
 name in <code class="docutils literal notranslate"><span class="pre">&lt;python</span> <span class="pre">directory&gt;</span></code></p>
 <p>Example:</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_COPY_PYTHON_DIRECTORY</span><span class="p">(</span> <span class="o">${</span><span class="nv">CMAKE_CURRENT_SOURCE_DIR</span><span class="o">}</span><span class="s">/python</span>
-                                 <span class="s">brainvisa_python</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_COPY_PYTHON_DIRECTORY</span><span class="p">(</span><span class="w"> </span><span class="o">${</span><span class="nv">CMAKE_CURRENT_SOURCE_DIR</span><span class="o">}</span><span class="s">/python</span>
+<span class="w">                                 </span><span class="s">brainvisa_python</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="brainvisa-dependency">
 <h2>brainvisa_dependency<a class="headerlink" href="#brainvisa-dependency" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_DEPENDENCY</span><span class="p">(</span> <span class="s">&lt;package</span> <span class="s">type&gt;</span> <span class="s">&lt;dependency</span> <span class="s">type&gt;</span> <span class="s">&lt;component&gt;</span>
-                      <span class="s">&lt;component</span> <span class="s">package</span> <span class="s">type&gt;</span>
-                      <span class="s">[</span> <span class="s">&lt;version</span> <span class="s">ranges&gt;</span> <span class="s">]</span>
-                      <span class="s">[BINARY_INDEPENDENT]</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_DEPENDENCY</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;package</span><span class="w"> </span><span class="s">type&gt;</span><span class="w"> </span><span class="s">&lt;dependency</span><span class="w"> </span><span class="s">type&gt;</span><span class="w"> </span><span class="s">&lt;component&gt;</span>
+<span class="w">                      </span><span class="s">&lt;component</span><span class="w"> </span><span class="s">package</span><span class="w"> </span><span class="s">type&gt;</span>
+<span class="w">                      </span><span class="s">[</span><span class="w"> </span><span class="s">&lt;version</span><span class="w"> </span><span class="s">ranges&gt;</span><span class="w"> </span><span class="s">]</span>
+<span class="w">                      </span><span class="s">[BINARY_INDEPENDENT]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Examples:</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_DEPENDENCY</span><span class="p">(</span> <span class="s">RUN</span> <span class="s">DEPENDS</span> <span class="s">libblitz</span> <span class="s">RUN</span> <span class="s2">&quot;2.0.3-4&quot;</span> <span class="p">)</span>
-<span class="nb">BRAINVISA_DEPENDENCY</span><span class="p">(</span> <span class="s">DEV</span> <span class="s">DEPENDS</span> <span class="s">libblitz</span> <span class="s">DEV</span> <span class="s2">&quot;&gt;= 2.0&quot;</span> <span class="p">)</span>
-<span class="nb">BRAINVISA_DEPENDENCY</span><span class="p">(</span> <span class="s">RUN</span> <span class="s">RECOMMENDS</span> <span class="s">dcmtk</span> <span class="s">RUN</span> <span class="s2">&quot;3.1.2&quot;</span> <span class="p">)</span>
-<span class="nb">BRAINVISA_DEPENDENCY</span><span class="p">(</span> <span class="s">DEV</span> <span class="s">RECOMMENDS</span> <span class="s">dcmtk</span> <span class="s">DEV</span> <span class="p">)</span>
-<span class="nb">BRAINVISA_DEPENDENCY</span><span class="p">(</span> <span class="s">RUN</span> <span class="s">DEPENDS</span> <span class="s">soma-io</span> <span class="s">RUN</span> <span class="s2">&quot;3.2.4-20100908&quot;</span> <span class="p">)</span>
-<span class="nb">BRAINVISA_DEPENDENCY</span><span class="p">(</span> <span class="s">DEV</span> <span class="s">DEPENDS</span> <span class="s">soma-io</span> <span class="s">DEV</span> <span class="s2">&quot;&gt;= 3.2.0;&lt;&lt; 3.3.0&quot;</span> <span class="p">)</span>
-<span class="nb">BRAINVISA_DEPENDENCY</span><span class="p">(</span> <span class="s">RUN</span> <span class="s">DEPENDS</span> <span class="s">soma-base</span> <span class="s">RUN</span> <span class="s2">&quot;&gt;= 3.2.0;&lt;&lt; 3.3.0&quot;</span>
-                      <span class="s">BINARY_INDEPENDENT</span> <span class="p">)</span>
-<span class="nb">BRAINVISA_DEPENDENCY</span><span class="p">(</span> <span class="s">DEV</span> <span class="s">DEPENDS</span> <span class="s">soma-base</span> <span class="s">DEV</span> <span class="s2">&quot;&gt;= 3.2.0;&lt;&lt; 3.3.0&quot;</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_DEPENDENCY</span><span class="p">(</span><span class="w"> </span><span class="s">RUN</span><span class="w"> </span><span class="s">DEPENDS</span><span class="w"> </span><span class="s">libblitz</span><span class="w"> </span><span class="s">RUN</span><span class="w"> </span><span class="s2">&quot;2.0.3-4&quot;</span><span class="w"> </span><span class="p">)</span>
+<span class="nb">BRAINVISA_DEPENDENCY</span><span class="p">(</span><span class="w"> </span><span class="s">DEV</span><span class="w"> </span><span class="s">DEPENDS</span><span class="w"> </span><span class="s">libblitz</span><span class="w"> </span><span class="s">DEV</span><span class="w"> </span><span class="s2">&quot;&gt;= 2.0&quot;</span><span class="w"> </span><span class="p">)</span>
+<span class="nb">BRAINVISA_DEPENDENCY</span><span class="p">(</span><span class="w"> </span><span class="s">RUN</span><span class="w"> </span><span class="s">RECOMMENDS</span><span class="w"> </span><span class="s">dcmtk</span><span class="w"> </span><span class="s">RUN</span><span class="w"> </span><span class="s2">&quot;3.1.2&quot;</span><span class="w"> </span><span class="p">)</span>
+<span class="nb">BRAINVISA_DEPENDENCY</span><span class="p">(</span><span class="w"> </span><span class="s">DEV</span><span class="w"> </span><span class="s">RECOMMENDS</span><span class="w"> </span><span class="s">dcmtk</span><span class="w"> </span><span class="s">DEV</span><span class="w"> </span><span class="p">)</span>
+<span class="nb">BRAINVISA_DEPENDENCY</span><span class="p">(</span><span class="w"> </span><span class="s">RUN</span><span class="w"> </span><span class="s">DEPENDS</span><span class="w"> </span><span class="s">soma-io</span><span class="w"> </span><span class="s">RUN</span><span class="w"> </span><span class="s2">&quot;3.2.4-20100908&quot;</span><span class="w"> </span><span class="p">)</span>
+<span class="nb">BRAINVISA_DEPENDENCY</span><span class="p">(</span><span class="w"> </span><span class="s">DEV</span><span class="w"> </span><span class="s">DEPENDS</span><span class="w"> </span><span class="s">soma-io</span><span class="w"> </span><span class="s">DEV</span><span class="w"> </span><span class="s2">&quot;&gt;= 3.2.0;&lt;&lt; 3.3.0&quot;</span><span class="w"> </span><span class="p">)</span>
+<span class="nb">BRAINVISA_DEPENDENCY</span><span class="p">(</span><span class="w"> </span><span class="s">RUN</span><span class="w"> </span><span class="s">DEPENDS</span><span class="w"> </span><span class="s">soma-base</span><span class="w"> </span><span class="s">RUN</span><span class="w"> </span><span class="s2">&quot;&gt;= 3.2.0;&lt;&lt; 3.3.0&quot;</span>
+<span class="w">                      </span><span class="s">BINARY_INDEPENDENT</span><span class="w"> </span><span class="p">)</span>
+<span class="nb">BRAINVISA_DEPENDENCY</span><span class="p">(</span><span class="w"> </span><span class="s">DEV</span><span class="w"> </span><span class="s">DEPENDS</span><span class="w"> </span><span class="s">soma-base</span><span class="w"> </span><span class="s">DEV</span><span class="w"> </span><span class="s2">&quot;&gt;= 3.2.0;&lt;&lt; 3.3.0&quot;</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="brainvisa-find-fsentry">
 <h2>brainvisa_find_fsentry<a class="headerlink" href="#brainvisa-find-fsentry" title="Permalink to this headline">¶</a></h2>
 <p>Find file system entries from PATHS using search PATTERNS.</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_FIND_FSENTRY</span><span class="p">(</span> <span class="s">output_variable</span>
-                        <span class="s">PATTERNS</span> <span class="s">[</span> <span class="s">&lt;pattern&gt;</span> <span class="s">...</span> <span class="s">]</span>
-                        <span class="s">PATHS</span> <span class="s">[</span> <span class="s">&lt;path&gt;</span> <span class="s">...</span> <span class="s">]</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_FIND_FSENTRY</span><span class="p">(</span><span class="w"> </span><span class="s">output_variable</span>
+<span class="w">                        </span><span class="s">PATTERNS</span><span class="w"> </span><span class="s">[</span><span class="w"> </span><span class="s">&lt;pattern&gt;</span><span class="w"> </span><span class="s">...</span><span class="w"> </span><span class="s">]</span>
+<span class="w">                        </span><span class="s">PATHS</span><span class="w"> </span><span class="s">[</span><span class="w"> </span><span class="s">&lt;path&gt;</span><span class="w"> </span><span class="s">...</span><span class="w"> </span><span class="s">]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Example:</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_FIND_FSENTRY</span><span class="p">(</span> <span class="s">real_files</span>
-                        <span class="s">PATTERNS</span> <span class="s">*.so</span> <span class="s">PATHS</span> <span class="s">/usr/lib/</span> <span class="p">)</span>
-<span class="nb">foreach</span><span class="p">(</span> <span class="s">file</span> <span class="o">${</span><span class="nv">real_files</span><span class="o">}</span> <span class="p">)</span>
-  <span class="nb">message</span><span class="p">(</span> <span class="s2">&quot;${file}&quot;</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_FIND_FSENTRY</span><span class="p">(</span><span class="w"> </span><span class="s">real_files</span>
+<span class="w">                        </span><span class="s">PATTERNS</span><span class="w"> </span><span class="s">*.so</span><span class="w"> </span><span class="s">PATHS</span><span class="w"> </span><span class="s">/usr/lib/</span><span class="w"> </span><span class="p">)</span>
+<span class="nb">foreach</span><span class="p">(</span><span class="w"> </span><span class="s">file</span><span class="w"> </span><span class="o">${</span><span class="nv">real_files</span><span class="o">}</span><span class="w"> </span><span class="p">)</span>
+<span class="w">  </span><span class="nb">message</span><span class="p">(</span><span class="w"> </span><span class="s2">&quot;${file}&quot;</span><span class="w"> </span><span class="p">)</span>
 <span class="nb">endforeach</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -227,15 +227,15 @@ name in <code class="docutils literal notranslate"><span class="pre">&lt;python<
 <section id="brainvisa-generate-commands-help">
 <h2>brainvisa_generate_commands_help<a class="headerlink" href="#brainvisa-generate-commands-help" title="Permalink to this headline">¶</a></h2>
 <p>Add targets to generate commands help</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_COMMANDS_HELP</span><span class="p">(</span> <span class="s">[COMPONENT]</span>
-                                  <span class="s">&lt;component_1&gt;</span> <span class="s">...</span> <span class="s">&lt;component_N&gt;</span>  <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_COMMANDS_HELP</span><span class="p">(</span><span class="w"> </span><span class="s">[COMPONENT]</span>
+<span class="w">                                  </span><span class="s">&lt;component_1&gt;</span><span class="w"> </span><span class="s">...</span><span class="w"> </span><span class="s">&lt;component_N&gt;</span><span class="w">  </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="brainvisa-generate-commands-help-index">
 <h2>brainvisa_generate_commands_help_index<a class="headerlink" href="#brainvisa-generate-commands-help-index" title="Permalink to this headline">¶</a></h2>
 <p>Add target to generate command help index</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_COMMANDS_HELP_INDEX</span><span class="p">(</span> <span class="s">COMPONENT</span> <span class="s">&lt;component&gt;</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_COMMANDS_HELP_INDEX</span><span class="p">(</span><span class="w"> </span><span class="s">COMPONENT</span><span class="w"> </span><span class="s">&lt;component&gt;</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -244,7 +244,7 @@ name in <code class="docutils literal notranslate"><span class="pre">&lt;python<
 <p>Add rules to generate docbook documentation with <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">doc</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">&lt;component&gt;-doc</span></code>
 or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">usrdoc</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">&lt;component&gt;-usrdoc</span></code> if it a user manual or tutorial
 or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">devdoc</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">&lt;component&gt;-devdoc</span></code> if it is developer manual.</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_DOCBOOK_DOC</span><span class="p">(</span> <span class="s">[EXCLUDE</span> <span class="s">docbook_project_name]</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_DOCBOOK_DOC</span><span class="p">(</span><span class="w"> </span><span class="s">[EXCLUDE</span><span class="w"> </span><span class="s">docbook_project_name]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -255,10 +255,10 @@ or <code class="docutils literal notranslate"><span class="pre">make</span> <spa
 <section id="brainvisa-generate-doxygen-doc">
 <span id="id2"></span><h2>brainvisa_generate_doxygen_doc<a class="headerlink" href="#brainvisa-generate-doxygen-doc" title="Permalink to this headline">¶</a></h2>
 <p>Add rules to generate doxygen documentation with “make doc” or “make devdoc”.</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_DOXYGEN_DOC</span><span class="p">(</span> <span class="s">&lt;input_variable&gt;</span>
-                                <span class="s">[&lt;file</span> <span class="s">to</span> <span class="s">copy&gt;</span> <span class="s">...]</span>
-                                <span class="s">[INPUT_PREFIX</span> <span class="s">&lt;path&gt;]</span>
-                                <span class="s">[COMPONENT</span> <span class="s">&lt;name&gt;]</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_DOXYGEN_DOC</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;input_variable&gt;</span>
+<span class="w">                                </span><span class="s">[&lt;file</span><span class="w"> </span><span class="s">to</span><span class="w"> </span><span class="s">copy&gt;</span><span class="w"> </span><span class="s">...]</span>
+<span class="w">                                </span><span class="s">[INPUT_PREFIX</span><span class="w"> </span><span class="s">&lt;path&gt;]</span>
+<span class="w">                                </span><span class="s">[COMPONENT</span><span class="w"> </span><span class="s">&lt;name&gt;]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="simple">
@@ -283,26 +283,26 @@ By default it is the <code class="docutils literal notranslate"><span class="pre
 </pre></div>
 </div>
 <p>Example:</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">find_package</span><span class="p">(</span> <span class="s">Doxygen</span> <span class="p">)</span>
-<span class="nb">if</span><span class="p">(</span> <span class="s">DOXYGEN_FOUND</span> <span class="p">)</span>
-  <span class="nb">set</span><span class="p">(</span> <span class="s">component_name</span> <span class="s2">&quot;cartodata&quot;</span> <span class="p">)</span>
-  <span class="nb">set</span><span class="p">(</span> <span class="s">DOXYFILE_PREDEFINED</span> <span class="s2">&quot;${AIMS_DEFINITIONS}&quot;</span> <span class="p">)</span>
-  <span class="nb">set</span><span class="p">(</span> <span class="s">DOXYFILE_TAGFILES</span> <span class="s2">&quot;cartobase.tag=../../cartobase-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/doxygen&quot;</span> <span class="p">)</span>
-  <span class="nb">BRAINVISA_GENERATE_DOXYGEN_DOC</span><span class="p">(</span>
-    <span class="s">_headers</span>
-    <span class="s">INPUT_PREFIX</span> <span class="s2">&quot;${CMAKE_BINARY_DIR}/include/${component_name}&quot;</span>
-    <span class="s">COMPONENT</span> <span class="s2">&quot;${component_name}&quot;</span> <span class="p">)</span>
-<span class="nb">endif</span><span class="p">(</span> <span class="s">DOXYGEN_FOUND</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">find_package</span><span class="p">(</span><span class="w"> </span><span class="s">Doxygen</span><span class="w"> </span><span class="p">)</span>
+<span class="nb">if</span><span class="p">(</span><span class="w"> </span><span class="s">DOXYGEN_FOUND</span><span class="w"> </span><span class="p">)</span>
+<span class="w">  </span><span class="nb">set</span><span class="p">(</span><span class="w"> </span><span class="s">component_name</span><span class="w"> </span><span class="s2">&quot;cartodata&quot;</span><span class="w"> </span><span class="p">)</span>
+<span class="w">  </span><span class="nb">set</span><span class="p">(</span><span class="w"> </span><span class="s">DOXYFILE_PREDEFINED</span><span class="w"> </span><span class="s2">&quot;${AIMS_DEFINITIONS}&quot;</span><span class="w"> </span><span class="p">)</span>
+<span class="w">  </span><span class="nb">set</span><span class="p">(</span><span class="w"> </span><span class="s">DOXYFILE_TAGFILES</span><span class="w"> </span><span class="s2">&quot;cartobase.tag=../../cartobase-${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}/doxygen&quot;</span><span class="w"> </span><span class="p">)</span>
+<span class="w">  </span><span class="nb">BRAINVISA_GENERATE_DOXYGEN_DOC</span><span class="p">(</span>
+<span class="w">    </span><span class="s">_headers</span>
+<span class="w">    </span><span class="s">INPUT_PREFIX</span><span class="w"> </span><span class="s2">&quot;${CMAKE_BINARY_DIR}/include/${component_name}&quot;</span>
+<span class="w">    </span><span class="s">COMPONENT</span><span class="w"> </span><span class="s2">&quot;${component_name}&quot;</span><span class="w"> </span><span class="p">)</span>
+<span class="nb">endif</span><span class="p">(</span><span class="w"> </span><span class="s">DOXYGEN_FOUND</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="brainvisa-generate-epydoc-doc">
 <h2>brainvisa_generate_epydoc_doc<a class="headerlink" href="#brainvisa-generate-epydoc-doc" title="Permalink to this headline">¶</a></h2>
 <p>Add rules to generate epydoc documentation with <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">doc</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">&lt;component&gt;-doc</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">devdoc</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">&lt;component&gt;-devdoc</span></code>.</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_EPYDOC_DOC</span><span class="p">(</span> <span class="s">&lt;source</span> <span class="s">directory&gt;</span>
-                               <span class="s">[</span> <span class="s">&lt;source</span> <span class="s">directory&gt;</span> <span class="s">...</span> <span class="s">]</span>
-                               <span class="s">&lt;output</span> <span class="s">directory&gt;</span>
-                               <span class="s">[</span> <span class="s">EXCLUDE</span> <span class="s">&lt;exclude</span> <span class="s">list&gt;</span> <span class="s">]</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_EPYDOC_DOC</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;source</span><span class="w"> </span><span class="s">directory&gt;</span>
+<span class="w">                               </span><span class="s">[</span><span class="w"> </span><span class="s">&lt;source</span><span class="w"> </span><span class="s">directory&gt;</span><span class="w"> </span><span class="s">...</span><span class="w"> </span><span class="s">]</span>
+<span class="w">                               </span><span class="s">&lt;output</span><span class="w"> </span><span class="s">directory&gt;</span>
+<span class="w">                               </span><span class="s">[</span><span class="w"> </span><span class="s">EXCLUDE</span><span class="w"> </span><span class="s">&lt;exclude</span><span class="w"> </span><span class="s">list&gt;</span><span class="w"> </span><span class="s">]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -310,23 +310,23 @@ By default it is the <code class="docutils literal notranslate"><span class="pre
 <p>Epydoc has been deprecated in brainvisa-cmake, Shinx is now much preferred.</p>
 </div>
 <p>Example:</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_EPYDOC_DOC</span><span class="p">(</span> <span class="s2">&quot;${CMAKE_BINARY_DIR}/python/soma&quot;</span>
-  <span class="s2">&quot;share/doc/${PROJECT_NAME}-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}/epydoc/html&quot;</span>
-  <span class="s">EXCLUDE</span> <span class="s">soma.aims*</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_EPYDOC_DOC</span><span class="p">(</span><span class="w"> </span><span class="s2">&quot;${CMAKE_BINARY_DIR}/python/soma&quot;</span>
+<span class="w">  </span><span class="s2">&quot;share/doc/${PROJECT_NAME}-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}/epydoc/html&quot;</span>
+<span class="w">  </span><span class="s">EXCLUDE</span><span class="w"> </span><span class="s">soma.aims*</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="brainvisa-generate-sphinx-doc">
 <span id="id3"></span><h2>brainvisa_generate_sphinx_doc<a class="headerlink" href="#brainvisa-generate-sphinx-doc" title="Permalink to this headline">¶</a></h2>
 <p>Add rules to generate sphinx documentation with <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">doc</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">&lt;component&gt;-doc</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">devdoc</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">&lt;component&gt;-devdoc</span></code>.</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_SPHINX_DOC</span><span class="p">(</span> <span class="s">&lt;source</span> <span class="s">directory&gt;</span> <span class="s">&lt;output</span> <span class="s">directory&gt;</span>
-                               <span class="s">[TARGET</span> <span class="s">&lt;target_name&gt;]</span>
-                               <span class="s">[USER]</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_SPHINX_DOC</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;source</span><span class="w"> </span><span class="s">directory&gt;</span><span class="w"> </span><span class="s">&lt;output</span><span class="w"> </span><span class="s">directory&gt;</span>
+<span class="w">                               </span><span class="s">[TARGET</span><span class="w"> </span><span class="s">&lt;target_name&gt;]</span>
+<span class="w">                               </span><span class="s">[USER]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Example:</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_SPHINX_DOC</span><span class="p">(</span> <span class="s2">&quot;doc/source&quot;</span>
-  <span class="s2">&quot;share/doc/soma-workflow-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}&quot;</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_SPHINX_DOC</span><span class="p">(</span><span class="w"> </span><span class="s2">&quot;doc/source&quot;</span>
+<span class="w">  </span><span class="s2">&quot;share/doc/soma-workflow-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}&quot;</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 <p>if <code class="docutils literal notranslate"><span class="pre">TARGET</span></code> argument is not specified, the target name defaults to <code class="docutils literal notranslate"><span class="pre">${PROJECT_NAME}-sphinx</span></code></p>
@@ -344,14 +344,14 @@ Otherwise, by default, sphinx docs are considered developer docs (devdoc)</p>
 <h2>brainvisa_get_file_list_from_pro<a class="headerlink" href="#brainvisa-get-file-list-from-pro" title="Permalink to this headline">¶</a></h2>
 <p>Retrieve one (or more) list of file names from a <code class="docutils literal notranslate"><span class="pre">.pro</span></code> file. This macro
 exists for backward compatibility with the older <code class="docutils literal notranslate"><span class="pre">build-config</span></code> tool (now abandoned).</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GET_FILE_LIST_FROM_PRO</span><span class="p">(</span> <span class="s">&lt;pro</span> <span class="s">file</span> <span class="s">name&gt;</span> <span class="s">&lt;pro</span> <span class="s">variable&gt;</span>
-                                  <span class="s">&lt;cmake</span> <span class="s">variable&gt;</span>
-                                  <span class="s">[&lt;pro</span> <span class="s">variable&gt;</span> <span class="s">&lt;cmake</span> <span class="s">variable&gt;...]</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GET_FILE_LIST_FROM_PRO</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;pro</span><span class="w"> </span><span class="s">file</span><span class="w"> </span><span class="s">name&gt;</span><span class="w"> </span><span class="s">&lt;pro</span><span class="w"> </span><span class="s">variable&gt;</span>
+<span class="w">                                  </span><span class="s">&lt;cmake</span><span class="w"> </span><span class="s">variable&gt;</span>
+<span class="w">                                  </span><span class="s">[&lt;pro</span><span class="w"> </span><span class="s">variable&gt;</span><span class="w"> </span><span class="s">&lt;cmake</span><span class="w"> </span><span class="s">variable&gt;...]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Example:</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GET_FILE_LIST_FROM_PRO</span><span class="p">(</span>
-  <span class="o">${</span><span class="nv">CMAKE_CURRENT_SOURCE_DIR</span><span class="o">}</span><span class="s">/libvip.pro</span> <span class="s2">&quot;HEADERS&quot;</span> <span class="s">_h</span> <span class="s2">&quot;SOURCES&quot;</span> <span class="s">_s</span> <span class="p">)</span>
+<span class="w">  </span><span class="o">${</span><span class="nv">CMAKE_CURRENT_SOURCE_DIR</span><span class="o">}</span><span class="s">/libvip.pro</span><span class="w"> </span><span class="s2">&quot;HEADERS&quot;</span><span class="w"> </span><span class="s">_h</span><span class="w"> </span><span class="s2">&quot;SOURCES&quot;</span><span class="w"> </span><span class="s">_s</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -359,12 +359,12 @@ exists for backward compatibility with the older <code class="docutils literal n
 <h2>brainvisa_get_spaced_quoted_list<a class="headerlink" href="#brainvisa-get-spaced-quoted-list" title="Permalink to this headline">¶</a></h2>
 <p>Transform a list into a string containing space separated items. Each item
 is surounded by double quotes.</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GET_SPACED_QUOTED_LIST</span><span class="p">(</span> <span class="s">&lt;list</span> <span class="s">variable&gt;</span> <span class="s">&lt;output</span> <span class="s">variable&gt;</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GET_SPACED_QUOTED_LIST</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;list</span><span class="w"> </span><span class="s">variable&gt;</span><span class="w"> </span><span class="s">&lt;output</span><span class="w"> </span><span class="s">variable&gt;</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Example:</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="p">(</span> <span class="s">_list</span> <span class="s">a</span> <span class="s">b</span> <span class="s2">&quot;c d&quot;</span> <span class="p">)</span>
-<span class="nb">BRAINVISA_GET_SPACED_QUOTED_LIST</span><span class="p">(</span> <span class="s">_list</span> <span class="s">_quotedList</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="p">(</span><span class="w"> </span><span class="s">_list</span><span class="w"> </span><span class="s">a</span><span class="w"> </span><span class="s">b</span><span class="w"> </span><span class="s2">&quot;c d&quot;</span><span class="w"> </span><span class="p">)</span>
+<span class="nb">BRAINVISA_GET_SPACED_QUOTED_LIST</span><span class="p">(</span><span class="w"> </span><span class="s">_list</span><span class="w"> </span><span class="s">_quotedList</span><span class="w"> </span><span class="p">)</span>
 <span class="c"># equivalent to SET( _quotedList &quot;\&quot;a\&quot; \&quot;b\&quot; \&quot;c d\&quot;&quot; )</span>
 </pre></div>
 </div>
@@ -375,12 +375,12 @@ is surounded by double quotes.</p>
 <section id="brainvisa-install-directory">
 <h2>brainvisa_install_directory<a class="headerlink" href="#brainvisa-install-directory" title="Permalink to this headline">¶</a></h2>
 <p>Install a directory without copying it into the build tree.</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_INSTALL_DIRECTORY</span><span class="p">(</span> <span class="s">&lt;directory&gt;</span> <span class="s">&lt;destination&gt;</span> <span class="s">&lt;component&gt;</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_INSTALL_DIRECTORY</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;directory&gt;</span><span class="w"> </span><span class="s">&lt;destination&gt;</span><span class="w"> </span><span class="s">&lt;component&gt;</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Example:</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_INSTALL_DIRECTORY</span><span class="p">(</span> <span class="s2">&quot;/usr/lib/python2.7&quot;</span> <span class="s2">&quot;python&quot;</span>
-                             <span class="s2">&quot;brainvisa-python&quot;</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_INSTALL_DIRECTORY</span><span class="p">(</span><span class="w"> </span><span class="s2">&quot;/usr/lib/python2.7&quot;</span><span class="w"> </span><span class="s2">&quot;python&quot;</span>
+<span class="w">                             </span><span class="s2">&quot;brainvisa-python&quot;</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -390,12 +390,12 @@ is surounded by double quotes.</p>
 A list of library files is given in parameter, and the function gets the absolute path of these files, check existance,
 and check that it is a dynamic library. The library files are set in an install rule for the component.
 The symlinks that point to the library are found and created in the install directory via a custom command attached to the install target of the component.</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_INSTALL_RUNTIME_LIBRARIES</span><span class="p">(</span> <span class="s">&lt;component&gt;</span> <span class="s">&lt;list</span> <span class="s">of</span> <span class="s">library</span> <span class="s">files&gt;</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_INSTALL_RUNTIME_LIBRARIES</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;component&gt;</span><span class="w"> </span><span class="s">&lt;list</span><span class="w"> </span><span class="s">of</span><span class="w"> </span><span class="s">library</span><span class="w"> </span><span class="s">files&gt;</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Example:</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">find_package</span><span class="p">(</span><span class="s">LibXml2</span><span class="p">)</span>
-<span class="nb">BRAINVISA_INSTALL_RUNTIME_LIBRARIES</span><span class="p">(</span> <span class="s">libxml2</span> <span class="o">${</span><span class="nv">LIBXML2_LIBRARIES</span><span class="o">}</span> <span class="p">)</span>
+<span class="nb">BRAINVISA_INSTALL_RUNTIME_LIBRARIES</span><span class="p">(</span><span class="w"> </span><span class="s">libxml2</span><span class="w"> </span><span class="o">${</span><span class="nv">LIBXML2_LIBRARIES</span><span class="o">}</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -406,7 +406,7 @@ The symlinks that point to the library are found and created in the install dire
 <h2>brainvisa_pyuic<a class="headerlink" href="#brainvisa-pyuic" title="Permalink to this headline">¶</a></h2>
 <p>Run <code class="docutils literal notranslate"><span class="pre">pyside-uic</span></code> / <code class="docutils literal notranslate"><span class="pre">pyuic4</span></code> / <code class="docutils literal notranslate"><span class="pre">pyuic</span></code> on a <code class="docutils literal notranslate"><span class="pre">.ui</span></code> file to generate the
 corresponding <code class="docutils literal notranslate"><span class="pre">.py</span></code> module</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_PYUIC</span><span class="p">(</span> <span class="s">&lt;source_ui_file&gt;</span> <span class="s">&lt;dest_py_file&gt;</span> <span class="s">&lt;relative_path&gt;</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_PYUIC</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;source_ui_file&gt;</span><span class="w"> </span><span class="s">&lt;dest_py_file&gt;</span><span class="w"> </span><span class="s">&lt;relative_path&gt;</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -414,7 +414,7 @@ corresponding <code class="docutils literal notranslate"><span class="pre">.py</
 <h2>brainvisa_qt_wrap_ui<a class="headerlink" href="#brainvisa-qt-wrap-ui" title="Permalink to this headline">¶</a></h2>
 <p>Works like <code class="docutils literal notranslate"><span class="pre">QT4_WRAP_UI</span></code>, but in addition, the directory of
 generated files is user-defined (<code class="docutils literal notranslate"><span class="pre">&lt;input_outdir&gt;</span></code>).</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_QT_WRAP_UI</span><span class="p">(</span> <span class="s">&lt;outfiles&gt;</span> <span class="s">&lt;inputfile&gt;</span> <span class="s">&lt;input_outdir&gt;</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_QT_WRAP_UI</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;outfiles&gt;</span><span class="w"> </span><span class="s">&lt;inputfile&gt;</span><span class="w"> </span><span class="s">&lt;input_outdir&gt;</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -422,14 +422,14 @@ generated files is user-defined (<code class="docutils literal notranslate"><spa
 <h2>brainvisa_real_paths<a class="headerlink" href="#brainvisa-real-paths" title="Permalink to this headline">¶</a></h2>
 <p>Remove all symlinks from a list of paths by applying <code class="docutils literal notranslate"><span class="pre">get_filename_component(</span> <span class="pre">...</span> <span class="pre">REALPATH</span> <span class="pre">)</span></code>
 to each element of the list.</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_REAL_PATHS</span><span class="p">(</span> <span class="s">output_variable</span> <span class="s">[</span> <span class="s">&lt;path&gt;</span> <span class="s">...</span> <span class="s">]</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_REAL_PATHS</span><span class="p">(</span><span class="w"> </span><span class="s">output_variable</span><span class="w"> </span><span class="s">[</span><span class="w"> </span><span class="s">&lt;path&gt;</span><span class="w"> </span><span class="s">...</span><span class="w"> </span><span class="s">]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Example:</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">file</span><span class="p">(</span> <span class="s">GLOB</span> <span class="s">glob_result</span> <span class="s">/usr/lib/*.so</span> <span class="p">)</span>
-<span class="nb">BRAINVISA_REAL_PATHS</span><span class="p">(</span> <span class="s">real_files</span> <span class="o">${</span><span class="nv">glob_result</span><span class="o">}</span> <span class="p">)</span>
-<span class="nb">foreach</span><span class="p">(</span> <span class="s">file</span> <span class="o">${</span><span class="nv">real_files</span><span class="o">}</span> <span class="p">)</span>
-  <span class="nb">message</span><span class="p">(</span> <span class="s2">&quot;${file}&quot;</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">file</span><span class="p">(</span><span class="w"> </span><span class="s">GLOB</span><span class="w"> </span><span class="s">glob_result</span><span class="w"> </span><span class="s">/usr/lib/*.so</span><span class="w"> </span><span class="p">)</span>
+<span class="nb">BRAINVISA_REAL_PATHS</span><span class="p">(</span><span class="w"> </span><span class="s">real_files</span><span class="w"> </span><span class="o">${</span><span class="nv">glob_result</span><span class="o">}</span><span class="w"> </span><span class="p">)</span>
+<span class="nb">foreach</span><span class="p">(</span><span class="w"> </span><span class="s">file</span><span class="w"> </span><span class="o">${</span><span class="nv">real_files</span><span class="o">}</span><span class="w"> </span><span class="p">)</span>
+<span class="w">  </span><span class="nb">message</span><span class="p">(</span><span class="w"> </span><span class="s2">&quot;${file}&quot;</span><span class="w"> </span><span class="p">)</span>
 <span class="nb">endforeach</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -439,26 +439,26 @@ to each element of the list.</p>
 <p>Resolve symbol library pathes. A list of library or symbol files is given in parameter, and the function gets the absolute path of these files,
 check existance, and check that it is a symbol for dynamic library. If the file is a symbol file for dynamic library, try to find the matching
 library file.</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_RESOLVE_SYMBOL_LIBRARIES</span><span class="p">(</span> <span class="s">&lt;output_variable&gt;</span>
-                                    <span class="s">PATHS</span> <span class="s">&lt;list</span> <span class="s">of</span> <span class="s">library</span> <span class="s">files&gt;</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_RESOLVE_SYMBOL_LIBRARIES</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;output_variable&gt;</span>
+<span class="w">                                    </span><span class="s">PATHS</span><span class="w"> </span><span class="s">&lt;list</span><span class="w"> </span><span class="s">of</span><span class="w"> </span><span class="s">library</span><span class="w"> </span><span class="s">files&gt;</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Example:</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">find_package</span><span class="p">(</span><span class="s">LibXml2</span><span class="p">)</span>
-<span class="nb">BRAINVISA_RESOLVE_SYMBOL_LIBRARIES</span><span class="p">(</span> <span class="s">libxml2</span> <span class="o">${</span><span class="nv">LIBXML2_LIBRARIES</span><span class="o">}</span> <span class="p">)</span>
+<span class="nb">BRAINVISA_RESOLVE_SYMBOL_LIBRARIES</span><span class="p">(</span><span class="w"> </span><span class="s">libxml2</span><span class="w"> </span><span class="o">${</span><span class="nv">LIBXML2_LIBRARIES</span><span class="o">}</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="brainvisa-version-convert">
 <h2>brainvisa_version_convert<a class="headerlink" href="#brainvisa-version-convert" title="Permalink to this headline">¶</a></h2>
 <p>Convert version number either to hexadecimal version either to string version.</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_VERSION_CONVERT</span><span class="p">(</span> <span class="s">&lt;variable&gt;</span> <span class="s">version</span>
-                           <span class="s">[HEX]</span> <span class="s">[STR]</span> <span class="s">[BYTES</span> <span class="s">&lt;number_of_bytes&gt;]</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_VERSION_CONVERT</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;variable&gt;</span><span class="w"> </span><span class="s">version</span>
+<span class="w">                           </span><span class="s">[HEX]</span><span class="w"> </span><span class="s">[STR]</span><span class="w"> </span><span class="s">[BYTES</span><span class="w"> </span><span class="s">&lt;number_of_bytes&gt;]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Example:</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_VERSION_CONVERT</span><span class="p">(</span> <span class="s">result</span> <span class="s2">&quot;0x30206&quot;</span> <span class="s">STR</span> <span class="p">)</span>
-<span class="nb">BRAINVISA_VERSION_CONVERT</span><span class="p">(</span> <span class="s">result</span> <span class="s2">&quot;3.2.6&quot;</span> <span class="s">HEX</span> <span class="s">BYTES</span> <span class="s">2</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_VERSION_CONVERT</span><span class="p">(</span><span class="w"> </span><span class="s">result</span><span class="w"> </span><span class="s2">&quot;0x30206&quot;</span><span class="w"> </span><span class="s">STR</span><span class="w"> </span><span class="p">)</span>
+<span class="nb">BRAINVISA_VERSION_CONVERT</span><span class="p">(</span><span class="w"> </span><span class="s">result</span><span class="w"> </span><span class="s2">&quot;3.2.6&quot;</span><span class="w"> </span><span class="s">HEX</span><span class="w"> </span><span class="s">BYTES</span><span class="w"> </span><span class="s">2</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

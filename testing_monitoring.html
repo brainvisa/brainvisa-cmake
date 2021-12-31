@@ -182,8 +182,8 @@ OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86
 <p><code class="docutils literal notranslate"><span class="pre">brainvisa-cmake</span></code> relies on <a class="reference external" href="http://cmake.org">cmake</a>, and on <a class="reference external" href="https://cmake.org/cmake/help/v3.0/manual/ctest.1.html">ctest</a> for testing. Adding a new test if hence a matter of specifying it in the <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> file of the software project sources, using the <a class="reference external" href="https://cmake.org/cmake/help/v3.0/command/add_test.html">add_test</a> command.</p>
 <p>However <code class="docutils literal notranslate"><span class="pre">brainvisa-cmake</span></code> offers a light wrapper for it: <a class="reference internal" href="cmake_functions.html#brainvisa-add-test"><span class="std std-ref">brainvisa_add_test</span></a>, which handles the runtime test environment (build tree paths, or installed package testing), and also handles invoking python in a potentially cross-compilation environment.</p>
 <p>ex:</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">brainvisa_add_test</span><span class="p">(</span> <span class="s">axon-tests</span> <span class="s2">&quot;${PYTHON_EXECUTABLE_NAME}&quot;</span>
-                    <span class="s">-m</span> <span class="s">brainvisa.tests.test_axon</span> <span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">brainvisa_add_test</span><span class="p">(</span><span class="w"> </span><span class="s">axon-tests</span><span class="w"> </span><span class="s2">&quot;${PYTHON_EXECUTABLE_NAME}&quot;</span>
+<span class="w">                    </span><span class="s">-m</span><span class="w"> </span><span class="s">brainvisa.tests.test_axon</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

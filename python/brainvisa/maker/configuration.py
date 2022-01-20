@@ -304,7 +304,7 @@ http://brainvisa.info/brainvisa-cmake/
             except SyntaxError as e:
                 # FIXME: SyntaxError should be reserved for Python syntax
                 # errors, use a custom exception instead
-                msg = e.message
+                msg = str(e)
                 if msg == '':
                     msg = 'Syntax error'
                 raise SyntaxError('%s in ' % msg + repr(

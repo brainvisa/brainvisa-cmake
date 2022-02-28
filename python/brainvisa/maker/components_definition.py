@@ -522,6 +522,16 @@ components_definition = [
             }],
         ],
     }),
+    ('deidentification', {
+        'components': [
+            ['deidentification', {
+                'groups': ['cati_platform'],
+                'branches': {
+                    'bug_fix': ('git https://github.com/cati-neuroimaging/deidentification.git default:master', 'deidentification'),
+                },
+            }],
+        ],
+    }),
     ('fmri', {
         'description': 'Functional MRI processing toolboxes.',
         'components': [

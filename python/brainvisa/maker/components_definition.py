@@ -5,13 +5,16 @@ import os
 import sys
 
 # groups:
+# core: non-applicatice open access sources (aims, anatomist, axon, capsul,
+#       soma-base, soma-workflow, populse_db, brainvisa-cmake, casa-distro...)
+# opensource: obsolete
 # anatomist: projects needed for anatomist (aims, soma-io and dependencies)
-# opensource
-# brainvisa: public brainvisa distro
+# brainvisa: public brainvisa distro (includes some closed-source projects!)
 # bvdev: same as brainvisa but excludes restricted access projects
 #        (such as brainrat-private)
 # standard: most useful projects. Includes internal, non-open projects,
 #           but not restricted ones (such as brainrat-private)
+#           actually bvdev + morphologist-baby.
 # cea: CEA (Neurospin/MirCen/SHFJ) distro including internal projects
 # cati_platform: standard + CATI projects
 # all: all projects except those really not useful

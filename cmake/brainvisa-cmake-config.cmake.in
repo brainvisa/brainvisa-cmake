@@ -1135,9 +1135,19 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
 
     # Install source file and byte compiled files
     get_filename_component( _path "${_file}" PATH )
-    BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}" "${_pyc}" "${_pyo}"
-                       DESTINATION "${_destDir}/${_path}"
-                       COMPONENT ${_component} )
+    if( _py3_suffix )
+      BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}"
+                        DESTINATION "${_destDir}/${_path}"
+                        COMPONENT ${_component} )
+      BRAINVISA_INSTALL( FILES "${_pyc}" "${_pyo}"
+                         DESTINATION "${_destDir}/${_path}/__pycache__"
+                         OPTIONAL
+                         COMPONENT ${_component} )
+    else()
+      BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}" "${_pyc}" "${_pyo}"
+                         DESTINATION "${_destDir}/${_path}"
+                         COMPONENT ${_component} )
+    endif()
     set( _targetDepends ${_targetDepends} "${_fileBuild}" "${_pyc}" "${_pyo}" )
   endforeach(_file ${_pythonSources})
 

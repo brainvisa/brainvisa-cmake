@@ -7,6 +7,7 @@
 # LIBMINC_DEFINITIONS  - macros
 #
 # Need to look for Netcdf and hdf5 as well
+# message("==== FindMINC")
 if(LIBMINC_INCLUDE_DIRS AND LIBMINC_LIBRARIES AND LIBMINC_DEFINITIONS)
     set( MINC_FOUND "YES" )
     if( MINC_INCLUDE_DIR )
@@ -20,6 +21,7 @@ if(LIBMINC_INCLUDE_DIRS AND LIBMINC_LIBRARIES AND LIBMINC_DEFINITIONS)
     endif()
 else()
 
+#     message("looking...")
     IF( MINC_FIND_QUIETLY )
         FIND_PACKAGE(NETCDF QUIET)
         FIND_PACKAGE(HDF5   QUIET)
@@ -31,7 +33,7 @@ else()
     IF( NETCDF_FOUND OR HDF5_FOUND )
 
         set( _directories
-            "${MINC_DIR}" "/usr/lib/x86_64-linux-gnu"
+            "${MINC_DIR}" "/usr/local/lib" "/usr/lib/x86_64-linux-gnu"
         )
         set( _librarySuffixes
             lib
@@ -70,11 +72,13 @@ else()
                     set( MINC_INCLUDE_DIR ${MINC2_INCLUDE_DIR} )
                 endif()
 
+#                 message("==== MINC search path: ${_directories}")
                 if( NOT MINC_minc_LIBRARY )
                 find_library( MINC_minc_LIBRARY minc2
                     PATHS ${_directories}
                     PATH_SUFFIXES ${_librarySuffixes}
                 )
+#                 message("found: ${MINC_minc_LIBRARY}")
                 endif( NOT MINC_minc_LIBRARY )
             endif()
         endif()
@@ -88,13 +92,13 @@ else()
 
         find_library( MINC_volumeio_LIBRARY volume_io2
             PATHS ${_directories}
-            HINTS /usr/lib/x86_64-linux-gnu
+#             HINTS /usr/lib/x86_64-linux-gnu
             PATH_SUFFIXES ${_librarySuffixes}
         )
         if( NOT MINC_volumeio_LIBRARY OR NOT EXISTS ${MINC_volumeio_LIBRARY} )
             find_library( MINC_volumeio_LIBRARY minc_io
                 PATHS ${_directories}
-                HINTS /usr/lib/x86_64-linux-gnu
+#                 HINTS /usr/lib/x86_64-linux-gnu
                 PATH_SUFFIXES ${_librarySuffixes}
             )
             if( MINC_volumeio_LIBRARY AND EXISTS ${MINC_volumeio_LIBRARY} )
@@ -105,7 +109,7 @@ else()
         if( NOT MINC_volumeio_LIBRARY OR NOT EXISTS ${MINC_volumeio_LIBRARY} )
             find_library( MINC_volumeio_LIBRARY volume_io
                 PATHS ${_directories}
-                HINTS /usr/lib/x86_64-linux-gnu
+#                 HINTS /usr/lib/x86_64-linux-gnu
                 PATH_SUFFIXES ${_librarySuffixes}
             )
         endif()

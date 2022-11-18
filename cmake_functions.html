@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>CMake functions &#8212; BrainVisa-Cmake 5.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -14,7 +14,9 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -40,10 +42,10 @@
           <div class="body" role="main">
             
   <section id="cmake-functions">
-<h1>CMake functions<a class="headerlink" href="#cmake-functions" title="Permalink to this headline">¶</a></h1>
+<h1>CMake functions<a class="headerlink" href="#cmake-functions" title="Permalink to this heading">¶</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">Brainvisa-cmake</span></code> provides a set of CMake functions which help configuring Brainbisa-cmake projects. They can (should) be used within <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> files of peojects.</p>
 <section id="brainvisa-add-command-help">
-<h2>brainvisa_add_command_help<a class="headerlink" href="#brainvisa-add-command-help" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_add_command_help<a class="headerlink" href="#brainvisa-add-command-help" title="Permalink to this heading">¶</a></h2>
 <p>Add target to generate command help files</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_ADD_COMMAND_HELP</span><span class="p">(</span><span class="w"> </span><span class="s">name</span>
 <span class="w">                            </span><span class="s">[COMPONENT</span><span class="w"> </span><span class="s">&lt;component&gt;]</span>
@@ -53,7 +55,7 @@
 </div>
 </section>
 <section id="brainvisa-add-executable">
-<h2>brainvisa_add_executable<a class="headerlink" href="#brainvisa-add-executable" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_add_executable<a class="headerlink" href="#brainvisa-add-executable" title="Permalink to this heading">¶</a></h2>
 <p>Add executable target and reference executable for the component.
 Executables added with <code class="docutils literal notranslate"><span class="pre">BRAINVISA_ADD_EXECUTABLE</span></code> are referenced a
 cache variable named <code class="docutils literal notranslate"><span class="pre">${component}-commands</span></code>.</p>
@@ -71,7 +73,7 @@ cache variable named <code class="docutils literal notranslate"><span class="pre
 is called, and the command help is set with the name <code class="docutils literal notranslate"><span class="pre">&lt;commandname&gt;</span></code> instead of <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;</span></code>.</p>
 </section>
 <section id="brainvisa-add-sip-python-module">
-<h2>brainvisa_add_sip_python_module<a class="headerlink" href="#brainvisa-add-sip-python-module" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_add_sip_python_module<a class="headerlink" href="#brainvisa-add-sip-python-module" title="Permalink to this heading">¶</a></h2>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_ADD_SIP_PYTHON_MODULE</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;module&gt;</span><span class="w"> </span><span class="s">&lt;directory&gt;</span><span class="w"> </span><span class="s">&lt;mainSipFile&gt;</span>
 <span class="w">                                 </span><span class="s">[</span><span class="w"> </span><span class="s">SIP_SOURCES</span><span class="w"> </span><span class="s">&lt;file&gt;</span><span class="w"> </span><span class="s">...</span><span class="w"> </span><span class="s">]</span>
 <span class="w">                                 </span><span class="s">[</span><span class="w"> </span><span class="s">SIP_INCLUDE</span><span class="w"> </span><span class="s">&lt;directory&gt;</span><span class="w"> </span><span class="s">...</span><span class="w"> </span><span class="s">]</span>
@@ -80,7 +82,7 @@ is called, and the command help is set with the name <code class="docutils liter
 </div>
 </section>
 <section id="brainvisa-add-pytranslation">
-<h2>brainvisa_add_pytranslation<a class="headerlink" href="#brainvisa-add-pytranslation" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_add_pytranslation<a class="headerlink" href="#brainvisa-add-pytranslation" title="Permalink to this heading">¶</a></h2>
 <p>Search recursively PyQt linguist source files (<code class="docutils literal notranslate"><span class="pre">*.ts</span></code>) generated from python
 (PyQt) sources, in the directory source share directory
 and generates the commands to create the associated <code class="docutils literal notranslate"><span class="pre">*.qm</span></code> files in the build
@@ -93,7 +95,7 @@ share directory and creates associated install rules.</p>
 </div>
 </section>
 <section id="brainvisa-add-translation">
-<h2>brainvisa_add_translation<a class="headerlink" href="#brainvisa-add-translation" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_add_translation<a class="headerlink" href="#brainvisa-add-translation" title="Permalink to this heading">¶</a></h2>
 <p>Search recursively qt linguist source files (<code class="docutils literal notranslate"><span class="pre">*.ts</span></code>) in the directory source share directory
 and generates the commands to create the associated <code class="docutils literal notranslate"><span class="pre">*.qm</span></code> files in the build share directory
 and creates associated install rules.</p>
@@ -105,7 +107,7 @@ and creates associated install rules.</p>
 </div>
 </section>
 <section id="brainvisa-add-test">
-<span id="id1"></span><h2>brainvisa_add_test<a class="headerlink" href="#brainvisa-add-test" title="Permalink to this headline">¶</a></h2>
+<span id="id1"></span><h2>brainvisa_add_test<a class="headerlink" href="#brainvisa-add-test" title="Permalink to this heading">¶</a></h2>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_ADD_TEST</span><span class="p">(</span><span class="w"> </span><span class="s">NAME</span><span class="w"> </span><span class="s">&lt;name&gt;</span><span class="w"> </span><span class="s">[CONFIGURATIONS</span><span class="w"> </span><span class="s">[Debug|Release|...]]</span>
 <span class="w">                    </span><span class="s">[WORKING_DIRECTORY</span><span class="w"> </span><span class="s">dir]</span>
 <span class="w">                    </span><span class="s">COMMAND</span><span class="w"> </span><span class="s">&lt;command&gt;</span><span class="w"> </span><span class="s">[arg1</span><span class="w"> </span><span class="s">[arg2</span><span class="w"> </span><span class="s">...]]</span>
@@ -124,7 +126,7 @@ Test command is also launched through bv_env_test command.</p>
 </div>
 </section>
 <section id="brainvisa-copy-and-install-headers">
-<h2>brainvisa_copy_and_install_headers<a class="headerlink" href="#brainvisa-copy-and-install-headers" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_copy_and_install_headers<a class="headerlink" href="#brainvisa-copy-and-install-headers" title="Permalink to this heading">¶</a></h2>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_COPY_AND_INSTALL_HEADERS</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;headers</span><span class="w"> </span><span class="s">list&gt;</span><span class="w"> </span><span class="s">&lt;include</span><span class="w"> </span><span class="s">directory&gt;</span>
 <span class="w">                                    </span><span class="s">&lt;install</span><span class="w"> </span><span class="s">component&gt;</span>
 <span class="w">                                    </span><span class="s">[NO_SYMLINKS]</span><span class="w"> </span><span class="p">)</span>
@@ -132,7 +134,7 @@ Test command is also launched through bv_env_test command.</p>
 </div>
 </section>
 <section id="brainvisa-copy-directory">
-<h2>brainvisa_copy_directory<a class="headerlink" href="#brainvisa-copy-directory" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_copy_directory<a class="headerlink" href="#brainvisa-copy-directory" title="Permalink to this heading">¶</a></h2>
 <p>Recursively copy and install all files in &lt;source directory&gt; except files named
 <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code>, <code class="docutils literal notranslate"><span class="pre">*~</span></code> or <code class="docutils literal notranslate"><span class="pre">*/.svn/*</span></code>.</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_COPY_DIRECTORY</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;source</span><span class="w"> </span><span class="s">directory&gt;</span><span class="w"> </span><span class="s">&lt;destination</span><span class="w"> </span><span class="s">directory&gt;</span>
@@ -144,7 +146,7 @@ Test command is also launched through bv_env_test command.</p>
 </div>
 </section>
 <section id="brainvisa-copy-files">
-<h2>brainvisa_copy_files<a class="headerlink" href="#brainvisa-copy-files" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_copy_files<a class="headerlink" href="#brainvisa-copy-files" title="Permalink to this heading">¶</a></h2>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_COPY_FILES</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;component&gt;</span><span class="w"> </span><span class="s">&lt;source</span><span class="w"> </span><span class="s">files&gt;</span>
 <span class="w">                      </span><span class="s">[SOURCE_DIRECTORY</span><span class="w"> </span><span class="s">&lt;directory&gt;]</span>
 <span class="w">                      </span><span class="s">DESTINATION</span><span class="w"> </span><span class="s">&lt;destination</span><span class="w"> </span><span class="s">directory&gt;</span>
@@ -157,7 +159,7 @@ Test command is also launched through bv_env_test command.</p>
 </div>
 </section>
 <section id="brainvisa-copy-python-directory">
-<h2>brainvisa_copy_python_directory<a class="headerlink" href="#brainvisa-copy-python-directory" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_copy_python_directory<a class="headerlink" href="#brainvisa-copy-python-directory" title="Permalink to this heading">¶</a></h2>
 <p>Create targets to copy, byte compile and install all Python code
 contained in a directory.</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_COPY_PYTHON_DIRECTORY</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;python</span><span class="w"> </span><span class="s">directory&gt;</span><span class="w"> </span><span class="s">&lt;component&gt;</span>
@@ -187,7 +189,7 @@ name in <code class="docutils literal notranslate"><span class="pre">&lt;python<
 </div>
 </section>
 <section id="brainvisa-dependency">
-<h2>brainvisa_dependency<a class="headerlink" href="#brainvisa-dependency" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_dependency<a class="headerlink" href="#brainvisa-dependency" title="Permalink to this heading">¶</a></h2>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_DEPENDENCY</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;package</span><span class="w"> </span><span class="s">type&gt;</span><span class="w"> </span><span class="s">&lt;dependency</span><span class="w"> </span><span class="s">type&gt;</span><span class="w"> </span><span class="s">&lt;component&gt;</span>
 <span class="w">                      </span><span class="s">&lt;component</span><span class="w"> </span><span class="s">package</span><span class="w"> </span><span class="s">type&gt;</span>
 <span class="w">                      </span><span class="s">[</span><span class="w"> </span><span class="s">&lt;version</span><span class="w"> </span><span class="s">ranges&gt;</span><span class="w"> </span><span class="s">]</span>
@@ -208,7 +210,7 @@ name in <code class="docutils literal notranslate"><span class="pre">&lt;python<
 </div>
 </section>
 <section id="brainvisa-find-fsentry">
-<h2>brainvisa_find_fsentry<a class="headerlink" href="#brainvisa-find-fsentry" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_find_fsentry<a class="headerlink" href="#brainvisa-find-fsentry" title="Permalink to this heading">¶</a></h2>
 <p>Find file system entries from PATHS using search PATTERNS.</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_FIND_FSENTRY</span><span class="p">(</span><span class="w"> </span><span class="s">output_variable</span>
 <span class="w">                        </span><span class="s">PATTERNS</span><span class="w"> </span><span class="s">[</span><span class="w"> </span><span class="s">&lt;pattern&gt;</span><span class="w"> </span><span class="s">...</span><span class="w"> </span><span class="s">]</span>
@@ -225,7 +227,7 @@ name in <code class="docutils literal notranslate"><span class="pre">&lt;python<
 </div>
 </section>
 <section id="brainvisa-generate-commands-help">
-<h2>brainvisa_generate_commands_help<a class="headerlink" href="#brainvisa-generate-commands-help" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_generate_commands_help<a class="headerlink" href="#brainvisa-generate-commands-help" title="Permalink to this heading">¶</a></h2>
 <p>Add targets to generate commands help</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_COMMANDS_HELP</span><span class="p">(</span><span class="w"> </span><span class="s">[COMPONENT]</span>
 <span class="w">                                  </span><span class="s">&lt;component_1&gt;</span><span class="w"> </span><span class="s">...</span><span class="w"> </span><span class="s">&lt;component_N&gt;</span><span class="w">  </span><span class="p">)</span>
@@ -233,14 +235,14 @@ name in <code class="docutils literal notranslate"><span class="pre">&lt;python<
 </div>
 </section>
 <section id="brainvisa-generate-commands-help-index">
-<h2>brainvisa_generate_commands_help_index<a class="headerlink" href="#brainvisa-generate-commands-help-index" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_generate_commands_help_index<a class="headerlink" href="#brainvisa-generate-commands-help-index" title="Permalink to this heading">¶</a></h2>
 <p>Add target to generate command help index</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_COMMANDS_HELP_INDEX</span><span class="p">(</span><span class="w"> </span><span class="s">COMPONENT</span><span class="w"> </span><span class="s">&lt;component&gt;</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="brainvisa-generate-docbook-doc">
-<h2>brainvisa_generate_docbook_doc<a class="headerlink" href="#brainvisa-generate-docbook-doc" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_generate_docbook_doc<a class="headerlink" href="#brainvisa-generate-docbook-doc" title="Permalink to this heading">¶</a></h2>
 <p>Add rules to generate docbook documentation with <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">doc</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">&lt;component&gt;-doc</span></code>
 or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">usrdoc</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">&lt;component&gt;-usrdoc</span></code> if it a user manual or tutorial
 or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">devdoc</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">&lt;component&gt;-devdoc</span></code> if it is developer manual.</p>
@@ -253,7 +255,7 @@ or <code class="docutils literal notranslate"><span class="pre">make</span> <spa
 </div>
 </section>
 <section id="brainvisa-generate-doxygen-doc">
-<span id="id2"></span><h2>brainvisa_generate_doxygen_doc<a class="headerlink" href="#brainvisa-generate-doxygen-doc" title="Permalink to this headline">¶</a></h2>
+<span id="id2"></span><h2>brainvisa_generate_doxygen_doc<a class="headerlink" href="#brainvisa-generate-doxygen-doc" title="Permalink to this heading">¶</a></h2>
 <p>Add rules to generate doxygen documentation with “make doc” or “make devdoc”.</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_DOXYGEN_DOC</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;input_variable&gt;</span>
 <span class="w">                                </span><span class="s">[&lt;file</span><span class="w"> </span><span class="s">to</span><span class="w"> </span><span class="s">copy&gt;</span><span class="w"> </span><span class="s">...]</span>
@@ -297,7 +299,7 @@ By default it is the <code class="docutils literal notranslate"><span class="pre
 </div>
 </section>
 <section id="brainvisa-generate-epydoc-doc">
-<h2>brainvisa_generate_epydoc_doc<a class="headerlink" href="#brainvisa-generate-epydoc-doc" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_generate_epydoc_doc<a class="headerlink" href="#brainvisa-generate-epydoc-doc" title="Permalink to this heading">¶</a></h2>
 <p>Add rules to generate epydoc documentation with <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">doc</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">&lt;component&gt;-doc</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">devdoc</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">&lt;component&gt;-devdoc</span></code>.</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_EPYDOC_DOC</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;source</span><span class="w"> </span><span class="s">directory&gt;</span>
 <span class="w">                               </span><span class="s">[</span><span class="w"> </span><span class="s">&lt;source</span><span class="w"> </span><span class="s">directory&gt;</span><span class="w"> </span><span class="s">...</span><span class="w"> </span><span class="s">]</span>
@@ -317,7 +319,7 @@ By default it is the <code class="docutils literal notranslate"><span class="pre
 </div>
 </section>
 <section id="brainvisa-generate-sphinx-doc">
-<span id="id3"></span><h2>brainvisa_generate_sphinx_doc<a class="headerlink" href="#brainvisa-generate-sphinx-doc" title="Permalink to this headline">¶</a></h2>
+<span id="id3"></span><h2>brainvisa_generate_sphinx_doc<a class="headerlink" href="#brainvisa-generate-sphinx-doc" title="Permalink to this heading">¶</a></h2>
 <p>Add rules to generate sphinx documentation with <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">doc</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">&lt;component&gt;-doc</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">devdoc</span></code> or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">&lt;component&gt;-devdoc</span></code>.</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_SPHINX_DOC</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;source</span><span class="w"> </span><span class="s">directory&gt;</span><span class="w"> </span><span class="s">&lt;output</span><span class="w"> </span><span class="s">directory&gt;</span>
 <span class="w">                               </span><span class="s">[TARGET</span><span class="w"> </span><span class="s">&lt;target_name&gt;]</span>
@@ -335,13 +337,13 @@ documentation) global target, and included in user docs packages.
 Otherwise, by default, sphinx docs are considered developer docs (devdoc)</p>
 </section>
 <section id="brainvisa-generate-target-name">
-<h2>brainvisa_generate_target_name<a class="headerlink" href="#brainvisa-generate-target-name" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_generate_target_name<a class="headerlink" href="#brainvisa-generate-target-name" title="Permalink to this heading">¶</a></h2>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span>BRAINVISA_GENERATE_TARGET_NAME _variableName
 </pre></div>
 </div>
 </section>
 <section id="brainvisa-get-file-list-from-pro">
-<h2>brainvisa_get_file_list_from_pro<a class="headerlink" href="#brainvisa-get-file-list-from-pro" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_get_file_list_from_pro<a class="headerlink" href="#brainvisa-get-file-list-from-pro" title="Permalink to this heading">¶</a></h2>
 <p>Retrieve one (or more) list of file names from a <code class="docutils literal notranslate"><span class="pre">.pro</span></code> file. This macro
 exists for backward compatibility with the older <code class="docutils literal notranslate"><span class="pre">build-config</span></code> tool (now abandoned).</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GET_FILE_LIST_FROM_PRO</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;pro</span><span class="w"> </span><span class="s">file</span><span class="w"> </span><span class="s">name&gt;</span><span class="w"> </span><span class="s">&lt;pro</span><span class="w"> </span><span class="s">variable&gt;</span>
@@ -356,7 +358,7 @@ exists for backward compatibility with the older <code class="docutils literal n
 </div>
 </section>
 <section id="brainvisa-get-spaced-quoted-list">
-<h2>brainvisa_get_spaced_quoted_list<a class="headerlink" href="#brainvisa-get-spaced-quoted-list" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_get_spaced_quoted_list<a class="headerlink" href="#brainvisa-get-spaced-quoted-list" title="Permalink to this heading">¶</a></h2>
 <p>Transform a list into a string containing space separated items. Each item
 is surounded by double quotes.</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GET_SPACED_QUOTED_LIST</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;list</span><span class="w"> </span><span class="s">variable&gt;</span><span class="w"> </span><span class="s">&lt;output</span><span class="w"> </span><span class="s">variable&gt;</span><span class="w"> </span><span class="p">)</span>
@@ -370,10 +372,10 @@ is surounded by double quotes.</p>
 </div>
 </section>
 <section id="brainvisa-install">
-<h2>brainvisa_install<a class="headerlink" href="#brainvisa-install" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_install<a class="headerlink" href="#brainvisa-install" title="Permalink to this heading">¶</a></h2>
 </section>
 <section id="brainvisa-install-directory">
-<h2>brainvisa_install_directory<a class="headerlink" href="#brainvisa-install-directory" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_install_directory<a class="headerlink" href="#brainvisa-install-directory" title="Permalink to this heading">¶</a></h2>
 <p>Install a directory without copying it into the build tree.</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_INSTALL_DIRECTORY</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;directory&gt;</span><span class="w"> </span><span class="s">&lt;destination&gt;</span><span class="w"> </span><span class="s">&lt;component&gt;</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
@@ -385,7 +387,7 @@ is surounded by double quotes.</p>
 </div>
 </section>
 <section id="brainvisa-install-runtime-libraries">
-<h2>brainvisa_install_runtime_libraries<a class="headerlink" href="#brainvisa-install-runtime-libraries" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_install_runtime_libraries<a class="headerlink" href="#brainvisa-install-runtime-libraries" title="Permalink to this heading">¶</a></h2>
 <p>Checks and creates install rules for the libraries of the given component.
 A list of library files is given in parameter, and the function gets the absolute path of these files, check existance,
 and check that it is a dynamic library. The library files are set in an install rule for the component.
@@ -400,10 +402,10 @@ The symlinks that point to the library are found and created in the install dire
 </div>
 </section>
 <section id="brainvisa-project">
-<h2>brainvisa_project<a class="headerlink" href="#brainvisa-project" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_project<a class="headerlink" href="#brainvisa-project" title="Permalink to this heading">¶</a></h2>
 </section>
 <section id="brainvisa-pyuic">
-<h2>brainvisa_pyuic<a class="headerlink" href="#brainvisa-pyuic" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_pyuic<a class="headerlink" href="#brainvisa-pyuic" title="Permalink to this heading">¶</a></h2>
 <p>Run <code class="docutils literal notranslate"><span class="pre">pyside-uic</span></code> / <code class="docutils literal notranslate"><span class="pre">pyuic4</span></code> / <code class="docutils literal notranslate"><span class="pre">pyuic</span></code> on a <code class="docutils literal notranslate"><span class="pre">.ui</span></code> file to generate the
 corresponding <code class="docutils literal notranslate"><span class="pre">.py</span></code> module</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_PYUIC</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;source_ui_file&gt;</span><span class="w"> </span><span class="s">&lt;dest_py_file&gt;</span><span class="w"> </span><span class="s">&lt;relative_path&gt;</span><span class="w"> </span><span class="p">)</span>
@@ -411,7 +413,7 @@ corresponding <code class="docutils literal notranslate"><span class="pre">.py</
 </div>
 </section>
 <section id="brainvisa-qt-wrap-ui">
-<h2>brainvisa_qt_wrap_ui<a class="headerlink" href="#brainvisa-qt-wrap-ui" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_qt_wrap_ui<a class="headerlink" href="#brainvisa-qt-wrap-ui" title="Permalink to this heading">¶</a></h2>
 <p>Works like <code class="docutils literal notranslate"><span class="pre">QT4_WRAP_UI</span></code>, but in addition, the directory of
 generated files is user-defined (<code class="docutils literal notranslate"><span class="pre">&lt;input_outdir&gt;</span></code>).</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_QT_WRAP_UI</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;outfiles&gt;</span><span class="w"> </span><span class="s">&lt;inputfile&gt;</span><span class="w"> </span><span class="s">&lt;input_outdir&gt;</span><span class="w"> </span><span class="p">)</span>
@@ -419,7 +421,7 @@ generated files is user-defined (<code class="docutils literal notranslate"><spa
 </div>
 </section>
 <section id="brainvisa-real-paths">
-<h2>brainvisa_real_paths<a class="headerlink" href="#brainvisa-real-paths" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_real_paths<a class="headerlink" href="#brainvisa-real-paths" title="Permalink to this heading">¶</a></h2>
 <p>Remove all symlinks from a list of paths by applying <code class="docutils literal notranslate"><span class="pre">get_filename_component(</span> <span class="pre">...</span> <span class="pre">REALPATH</span> <span class="pre">)</span></code>
 to each element of the list.</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_REAL_PATHS</span><span class="p">(</span><span class="w"> </span><span class="s">output_variable</span><span class="w"> </span><span class="s">[</span><span class="w"> </span><span class="s">&lt;path&gt;</span><span class="w"> </span><span class="s">...</span><span class="w"> </span><span class="s">]</span><span class="w"> </span><span class="p">)</span>
@@ -435,7 +437,7 @@ to each element of the list.</p>
 </div>
 </section>
 <section id="brainvisa-resolve-symbol-libraries">
-<h2>brainvisa_resolve_symbol_libraries<a class="headerlink" href="#brainvisa-resolve-symbol-libraries" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_resolve_symbol_libraries<a class="headerlink" href="#brainvisa-resolve-symbol-libraries" title="Permalink to this heading">¶</a></h2>
 <p>Resolve symbol library pathes. A list of library or symbol files is given in parameter, and the function gets the absolute path of these files,
 check existance, and check that it is a symbol for dynamic library. If the file is a symbol file for dynamic library, try to find the matching
 library file.</p>
@@ -450,7 +452,7 @@ library file.</p>
 </div>
 </section>
 <section id="brainvisa-version-convert">
-<h2>brainvisa_version_convert<a class="headerlink" href="#brainvisa-version-convert" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa_version_convert<a class="headerlink" href="#brainvisa-version-convert" title="Permalink to this heading">¶</a></h2>
 <p>Convert version number either to hexadecimal version either to string version.</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_VERSION_CONVERT</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;variable&gt;</span><span class="w"> </span><span class="s">version</span>
 <span class="w">                           </span><span class="s">[HEX]</span><span class="w"> </span><span class="s">[STR]</span><span class="w"> </span><span class="s">[BYTES</span><span class="w"> </span><span class="s">&lt;number_of_bytes&gt;]</span><span class="w"> </span><span class="p">)</span>
@@ -531,7 +533,7 @@ library file.</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -551,7 +553,7 @@ library file.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2022, CEA.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
     </div>
   </body>
 </html>

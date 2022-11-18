@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>How to compile BrainVISA projects &#8212; BrainVisa-Cmake 5.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -14,7 +14,9 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -44,13 +46,13 @@
           <div class="body" role="main">
             
   <section id="how-to-compile-brainvisa-projects">
-<h1>How to compile BrainVISA projects<a class="headerlink" href="#how-to-compile-brainvisa-projects" title="Permalink to this headline">¶</a></h1>
+<h1>How to compile BrainVISA projects<a class="headerlink" href="#how-to-compile-brainvisa-projects" title="Permalink to this heading">¶</a></h1>
 <p>How to setup a developement environement for BrainVISA projects</p>
 <p>There are several possibilities to compile a series of BrainVISA components. One can use a standard CMake procedure where each component have its own build directory and links between components are done via CMake cache variables. But at the time of this writing, there are 44 components in 21 BrainVISA project. Configuring and compiling all of them manualy can be a hard work. This is why bv_maker script have been developped in order to easily create a complete source synchronization and compilation pipeline for a selected set of projects or components. This document describes the use of bv_maker.</p>
 <section id="first-time-configuration">
-<h2>First time configuration<a class="headerlink" href="#first-time-configuration" title="Permalink to this headline">¶</a></h2>
+<h2>First time configuration<a class="headerlink" href="#first-time-configuration" title="Permalink to this heading">¶</a></h2>
 <section id="install-dependencies-on-your-system">
-<h3>1) Install dependencies on your system<a class="headerlink" href="#install-dependencies-on-your-system" title="Permalink to this headline">¶</a></h3>
+<h3>1) Install dependencies on your system<a class="headerlink" href="#install-dependencies-on-your-system" title="Permalink to this heading">¶</a></h3>
 <p>You must have the following software on your system:</p>
 <ul class="simple">
 <li><p>Subversion. The command svnadmin must also be installed on your system. On some Linux distributions it is not in the subversion package (for instance in Ubuntu you must install subversion-tools package).</p></li>
@@ -63,10 +65,10 @@
 <p>If you work at the I2BM (Neurospin, MirCen or SHFJ), you can call the bash function <em>bv_setup_devel</em> in your <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code> file. This will add <code class="docutils literal notranslate"><span class="pre">/i2bm/brainvisa</span></code> paths in your environment variables where some useful dependencies for the development environment are installed.</p>
 </section>
 <section id="get-an-up-to-date-working-copy-of-bv-maker">
-<h3>2) Get an up-to-date working copy of bv_maker<a class="headerlink" href="#get-an-up-to-date-working-copy-of-bv-maker" title="Permalink to this headline">¶</a></h3>
+<h3>2) Get an up-to-date working copy of bv_maker<a class="headerlink" href="#get-an-up-to-date-working-copy-of-bv-maker" title="Permalink to this heading">¶</a></h3>
 <p>bv_maker is part of the brainvisa-cmake project. Since you need bv_maker to download the sources and do the first build directory, you may have to download a temporary version with the following code:</p>
 <section id="for-linux-and-macos">
-<h4>For Linux and MacOS:<a class="headerlink" href="#for-linux-and-macos" title="Permalink to this headline">¶</a></h4>
+<h4>For Linux and MacOS:<a class="headerlink" href="#for-linux-and-macos" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/brainvisa/brainvisa-cmake.git /tmp/brainvisa-cmake
 <span class="nb">cd</span> /tmp/brainvisa-cmake
 cmake -DCMAKE_INSTALL_PREFIX<span class="o">=</span>. .
@@ -75,13 +77,13 @@ make install
 </div>
 </section>
 <section id="for-windows">
-<h4>For Windows:<a class="headerlink" href="#for-windows" title="Permalink to this headline">¶</a></h4>
+<h4>For Windows:<a class="headerlink" href="#for-windows" title="Permalink to this heading">¶</a></h4>
 <p>Creating a developpment environment is not supported under Windows. Building Windows version of BrainVISA software is done on Linux using cross-compilation.</p>
 <p>You can now use <code class="code docutils literal notranslate"><span class="pre">/tmp/brainvisa-cmake/bin/bv_env_host</span> <span class="pre">bv_maker</span></code> to setup your environement (<strong>you must edit the configuration file first</strong>). You will always have a copy of brainvisa-cmake installed in a build directory at configuration time. Therefore, you may delete this temporary brainvisa-cmake version and use the one in your build directory.</p>
 </section>
 </section>
 <section id="edit-bv-maker-configuration-file">
-<h3>3) Edit bv_maker configuration file<a class="headerlink" href="#edit-bv-maker-configuration-file" title="Permalink to this headline">¶</a></h3>
+<h3>3) Edit bv_maker configuration file<a class="headerlink" href="#edit-bv-maker-configuration-file" title="Permalink to this heading">¶</a></h3>
 <p>You must create this file in the following directory: <code class="docutils literal notranslate"><span class="pre">$HOME/.brainvisa/bv_maker.cfg</span></code>. In this file you can configure mainly two types of directory:</p>
 <ul class="simple">
 <li><p>source directory: A source directory contains the source code of a set of selected projects. This source code will be updated (to reflect the changes that occured on BioProj server) each time you use bv_maker configure. You can define as many source directory as you want. In a source directory configuration you can select any project and combine several versions of the same project.</p></li>
@@ -89,7 +91,7 @@ make install
 </ul>
 <p>See <a class="reference internal" href="configuration.html"><span class="doc">bv_maker configuration syntax</span></a> for a complete documentation with examples.</p>
 <section id="typical-configuration">
-<h4>Typical configuration:<a class="headerlink" href="#typical-configuration" title="Permalink to this headline">¶</a></h4>
+<h4>Typical configuration:<a class="headerlink" href="#typical-configuration" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># definition of the source directory: open-source projects in bug_fix version (i.e. the branch with the highest version) except web project because it takes space</span>
 <span class="o">[</span> <span class="nb">source</span> <span class="nv">$HOME</span>/brainvisa/source <span class="o">]</span>
   + opensource bug_fix
@@ -115,13 +117,13 @@ make install
 </section>
 </section>
 <section id="download-sources">
-<h3>4) Download sources<a class="headerlink" href="#download-sources" title="Permalink to this headline">¶</a></h3>
+<h3>4) Download sources<a class="headerlink" href="#download-sources" title="Permalink to this heading">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>/tmp/brainvisa-cmake/bin/bv_env_host bv_maker sources
 </pre></div>
 </div>
 </section>
 <section id="configure-build-directories-with-cmake">
-<h3>5) Configure build directories with CMake<a class="headerlink" href="#configure-build-directories-with-cmake" title="Permalink to this headline">¶</a></h3>
+<h3>5) Configure build directories with CMake<a class="headerlink" href="#configure-build-directories-with-cmake" title="Permalink to this heading">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>/tmp/brainvisa-cmake/bin/bv_env_host bv_maker configure
 </pre></div>
 </div>
@@ -129,13 +131,13 @@ make install
 <p>After this step, you have a version of <code class="docutils literal notranslate"><span class="pre">brainvisa-cmake</span></code> installed in each build directory you have defined. You can therefore find <a class="reference internal" href="bv_maker.html"><span class="doc">bv_maker</span></a> in <code class="docutils literal notranslate"><span class="pre">&lt;build_directory&gt;/bin/bv_maker</span></code>.</p>
 </section>
 <section id="compile-in-build-directories-with-make">
-<h3>6) Compile in build directories with make<a class="headerlink" href="#compile-in-build-directories-with-make" title="Permalink to this headline">¶</a></h3>
+<h3>6) Compile in build directories with make<a class="headerlink" href="#compile-in-build-directories-with-make" title="Permalink to this heading">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>/tmp/brainvisa-cmake/bin/bv_env_host bv_maker build
 </pre></div>
 </div>
 </section>
 <section id="remove-directory-created-in-step-2">
-<h3>7) Remove directory created in step 2<a class="headerlink" href="#remove-directory-created-in-step-2" title="Permalink to this headline">¶</a></h3>
+<h3>7) Remove directory created in step 2<a class="headerlink" href="#remove-directory-created-in-step-2" title="Permalink to this heading">¶</a></h3>
 <p>You should now remove the temporary bv_maker that have been downloaded in step 2 and use the one installed in your build directory: <code class="docutils literal notranslate"><span class="pre">&lt;build_directory&gt;/bin/bv_maker</span></code>.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rm -Rf /tmp/brainvisa-cmake
 </pre></div>
@@ -146,20 +148,20 @@ make install
 </div>
 </section>
 <section id="build-documentation-docbook-doxygen-epydoc">
-<h3>8) Build documentation (docbook, doxygen, epydoc)<a class="headerlink" href="#build-documentation-docbook-doxygen-epydoc" title="Permalink to this headline">¶</a></h3>
+<h3>8) Build documentation (docbook, doxygen, epydoc)<a class="headerlink" href="#build-documentation-docbook-doxygen-epydoc" title="Permalink to this heading">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_maker doc
 </pre></div>
 </div>
 </section>
 </section>
 <section id="in-case-of-problems">
-<h2>In case of problems<a class="headerlink" href="#in-case-of-problems" title="Permalink to this headline">¶</a></h2>
+<h2>In case of problems<a class="headerlink" href="#in-case-of-problems" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><strong>CMake has caches</strong>. They sometimes keep erroneous values. Do not hesitate to remove the <code class="docutils literal notranslate"><span class="pre">CMakeCache.txt</span></code> file at the root of the build trees before reconfiguring. It sometimes solves incomprehensible configure problems.</p></li>
 </ul>
 </section>
 <section id="git-repositories-and-bv-maker">
-<span id="git-repositories"></span><h2>Git repositories and bv_maker<a class="headerlink" href="#git-repositories-and-bv-maker" title="Permalink to this headline">¶</a></h2>
+<span id="git-repositories"></span><h2>Git repositories and bv_maker<a class="headerlink" href="#git-repositories-and-bv-maker" title="Permalink to this heading">¶</a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>See also the <a class="reference external" href="https://brainvisa.github.io/contributing.html">contributors doc</a> of the <a class="reference external" href="https://brainvisa.github.io">BrainVisa developers doc</a> project</p>
@@ -169,11 +171,11 @@ make install
 </pre></div>
 </div>
 <section id="remotes-and-forks">
-<h3>Remotes and forks<a class="headerlink" href="#remotes-and-forks" title="Permalink to this headline">¶</a></h3>
+<h3>Remotes and forks<a class="headerlink" href="#remotes-and-forks" title="Permalink to this heading">¶</a></h3>
 <p>see <a class="reference external" href="https://brainvisa.github.io/contributing.html#feature_branch">the BrainVISA developers doc here</a>.</p>
 </section>
 <section id="credentials">
-<h3>Credentials<a class="headerlink" href="#credentials" title="Permalink to this headline">¶</a></h3>
+<h3>Credentials<a class="headerlink" href="#credentials" title="Permalink to this heading">¶</a></h3>
 <p>see <a class="reference external" href="https://brainvisa.github.io/contributing.html#remote_credentials">the password issue in the developers doc</a>.</p>
 </section>
 </section>
@@ -245,7 +247,7 @@ make install
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -268,7 +270,7 @@ make install
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2022, CEA.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
     </div>
   </body>
 </html>

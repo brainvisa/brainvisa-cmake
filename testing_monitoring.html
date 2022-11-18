@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>Testing and monitoring infrastructure &#8212; BrainVisa-Cmake 5.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -14,7 +14,9 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -44,12 +46,12 @@
           <div class="body" role="main">
             
   <section id="testing-and-monitoring-infrastructure">
-<h1>Testing and monitoring infrastructure<a class="headerlink" href="#testing-and-monitoring-infrastructure" title="Permalink to this headline">¶</a></h1>
+<h1>Testing and monitoring infrastructure<a class="headerlink" href="#testing-and-monitoring-infrastructure" title="Permalink to this heading">¶</a></h1>
 <p>bv_maker allows to run tests, notify, and log the results of build, tests, and packaging operations.</p>
 <section id="running-tests">
-<h2>Running tests<a class="headerlink" href="#running-tests" title="Permalink to this headline">¶</a></h2>
+<h2>Running tests<a class="headerlink" href="#running-tests" title="Permalink to this heading">¶</a></h2>
 <section id="testing-build-directories">
-<h3>Testing build directories<a class="headerlink" href="#testing-build-directories" title="Permalink to this headline">¶</a></h3>
+<h3>Testing build directories<a class="headerlink" href="#testing-build-directories" title="Permalink to this heading">¶</a></h3>
 <p>Basically, tests can be run through the <a class="reference internal" href="bv_maker.html"><span class="doc">bv_maker</span></a> command:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_maker <span class="nb">test</span>
 </pre></div>
@@ -68,7 +70,7 @@ ctest -VV -R ^carto
 <p>These commands will do almost the same as the bv_maker variant, except that notification and logging will not take place.</p>
 </section>
 <section id="testing-installed-packages">
-<h3>Testing installed packages<a class="headerlink" href="#testing-installed-packages" title="Permalink to this headline">¶</a></h3>
+<h3>Testing installed packages<a class="headerlink" href="#testing-installed-packages" title="Permalink to this heading">¶</a></h3>
 <p>Similarly, bv_maker allows to test installed packages, after bv_maker steps <a class="reference internal" href="bv_maker.html#pack-step"><span class="std std-ref">pack</span></a> and <a class="reference internal" href="bv_maker.html#install-pack-step"><span class="std std-ref">install_pack</span></a> have been successfully done. This is the <a class="reference internal" href="bv_maker.html#test-pack-step"><span class="std std-ref">test_pack</span></a> step.</p>
 <p>In this situation, tests are performed as configured in the corresponding build tree, but are running programs in an installed binary package.</p>
 <p>Tests may be run in a different environment: on a different machine (through <code class="docutils literal notranslate"><span class="pre">ssh</span></code>), or via a <a class="reference external" href="http://www.docker.com">docker container</a> for instance, or both, as configured in the <code class="docutils literal notranslate"><span class="pre">bv_maker.cfg</span></code> file: see <a class="reference internal" href="#configuring-installed-packages-tests">Configuring installed packages tests</a>. This way, tests can be run in a realistic situation as if the software is installed on a different (and minimal) client machine.</p>
@@ -85,7 +87,7 @@ ctest -VV -R ^carto
 </div>
 </section>
 <section id="managing-test-data">
-<h3>Managing test data<a class="headerlink" href="#managing-test-data" title="Permalink to this headline">¶</a></h3>
+<h3>Managing test data<a class="headerlink" href="#managing-test-data" title="Permalink to this heading">¶</a></h3>
 <p>Some tests will work fine using internal tests or by generating tempory synthetic data to test its processing. But in some other cases, additional data will be needed. Typically:</p>
 <ul class="simple">
 <li><p>input data may be needed to feed processing tests which should run with “real” data. Such data may be quite large, so the test system may download data from a remote URL or get it from a given read-only directory.</p></li>
@@ -106,14 +108,14 @@ ctest -VV -R ^carto
 </section>
 </section>
 <section id="notifying-build-and-test-executions">
-<h2>Notifying build and test executions<a class="headerlink" href="#notifying-build-and-test-executions" title="Permalink to this headline">¶</a></h2>
+<h2>Notifying build and test executions<a class="headerlink" href="#notifying-build-and-test-executions" title="Permalink to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">bv_maker</span></code> may use several kinds of notification  when its different steps finish, or when they fail.</p>
 <section id="basic-bv-maker-output-and-command-retuern-code">
-<h3>Basic bv_maker output and command retuern code<a class="headerlink" href="#basic-bv-maker-output-and-command-retuern-code" title="Permalink to this headline">¶</a></h3>
+<h3>Basic bv_maker output and command retuern code<a class="headerlink" href="#basic-bv-maker-output-and-command-retuern-code" title="Permalink to this heading">¶</a></h3>
 <p>If any step fails, the <a class="reference internal" href="bv_maker.html"><span class="doc">bv_maker</span></a> commend will exit with a non-null exit code, and print a summary of steps status for each build or package directory.</p>
 </section>
 <section id="email-notification">
-<h3>Email notification<a class="headerlink" href="#email-notification" title="Permalink to this headline">¶</a></h3>
+<h3>Email notification<a class="headerlink" href="#email-notification" title="Permalink to this heading">¶</a></h3>
 <p>Emails can be sent when a bv_maker step finishes, or only in case of failure.</p>
 <p>Such notification and logging have to be setup in the <a class="reference internal" href="configuration.html"><span class="doc">bv_maker.cfg configuration file</span></a>, more precisely in the <a class="reference internal" href="configuration.html#general-section"><span class="std std-ref">general section</span></a> of it:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> general <span class="o">]</span>
@@ -129,7 +131,7 @@ ctest -VV -R ^carto
 <p>If <code class="docutils literal notranslate"><span class="pre">success_email</span></code> is not filled, notificatioon will only occur upon error.</p>
 </section>
 <section id="log-file">
-<h3>Log file<a class="headerlink" href="#log-file" title="Permalink to this headline">¶</a></h3>
+<h3>Log file<a class="headerlink" href="#log-file" title="Permalink to this heading">¶</a></h3>
 <p>Additionally it can also maintain a file of past <code class="docutils literal notranslate"><span class="pre">bv_maker</span></code> executions and the status of all steps. These tools are useful for automatic build and testing, continuous integration etc.</p>
 <p>This is setup in the <a class="reference internal" href="configuration.html"><span class="doc">The bv_maker.cfg configuration file</span></a> option <code class="docutils literal notranslate"><span class="pre">global_status_file</span></code> in the <a class="reference internal" href="configuration.html#general-section"><span class="std std-ref">general section</span></a>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> general <span class="o">]</span>
@@ -139,7 +141,7 @@ ctest -VV -R ^carto
 <p>See <a class="reference internal" href="#displaying-build-status"><span class="std std-ref">Displaying build status</span></a> below for how to use the log file.</p>
 </section>
 <section id="notification-to-a-jenkins-server">
-<h3>Notification to a Jenkins server<a class="headerlink" href="#notification-to-a-jenkins-server" title="Permalink to this headline">¶</a></h3>
+<h3>Notification to a Jenkins server<a class="headerlink" href="#notification-to-a-jenkins-server" title="Permalink to this heading">¶</a></h3>
 <p><a class="reference internal" href="bv_maker.html"><span class="doc">bv_maker</span></a> can connect to a <a class="reference external" href="https://jenkins.io/">Jenkins</a> server to log step results, so as to allow displaying them on a server. This is not the usual way to use Jenkins, which normally operates builds and tests from the server, but here bv_maker runs in its own (typically from a unix crontab), and connects to the Jenkins server to store jobs results (using “external jobs” in Jenkins dialect). This way, builds and tests running on a private network can still log results to a server visible from the internet.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> general <span class="o">]</span>
 <span class="nv">jenkins_build_name</span> <span class="o">=</span> brainvisa-<span class="nv">$HOSTNAME</span>-%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>directory_id<span class="o">)</span>s-%<span class="o">(</span>project<span class="o">)</span>s-%<span class="o">(</span>step<span class="o">)</span>s
@@ -151,9 +153,9 @@ ctest -VV -R ^carto
 </section>
 </section>
 <section id="displaying-build-status">
-<span id="id1"></span><h2>Displaying build status<a class="headerlink" href="#displaying-build-status" title="Permalink to this headline">¶</a></h2>
+<span id="id1"></span><h2>Displaying build status<a class="headerlink" href="#displaying-build-status" title="Permalink to this heading">¶</a></h2>
 <section id="id2">
-<h3>Log file<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<h3>Log file<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h3>
 <p>When <code class="docutils literal notranslate"><span class="pre">bv_maker</span></code> is running, each step execution status may be logged in a single file: a line is appended to it when a step finishes. This is enabled if the <code class="docutils literal notranslate"><span class="pre">bv_maker.cfg</span></code> file has the <a class="reference internal" href="configuration.html#general-section"><span class="std std-ref">global_status_file option</span></a> in its general section:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> general <span class="o">]</span>
 <span class="nv">global_status_file</span> <span class="o">=</span> /home/brutus/bv_builds.log
@@ -175,10 +177,10 @@ OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86
 </section>
 </section>
 <section id="setting-up-new-tests-in-a-software-project">
-<h2>Setting up new tests in a software project<a class="headerlink" href="#setting-up-new-tests-in-a-software-project" title="Permalink to this headline">¶</a></h2>
+<h2>Setting up new tests in a software project<a class="headerlink" href="#setting-up-new-tests-in-a-software-project" title="Permalink to this heading">¶</a></h2>
 <p>Tests are “just” a series of commands that are run to use the software and check if it works as expected.</p>
 <section id="in-cmake">
-<h3>In CMake<a class="headerlink" href="#in-cmake" title="Permalink to this headline">¶</a></h3>
+<h3>In CMake<a class="headerlink" href="#in-cmake" title="Permalink to this heading">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">brainvisa-cmake</span></code> relies on <a class="reference external" href="http://cmake.org">cmake</a>, and on <a class="reference external" href="https://cmake.org/cmake/help/v3.0/manual/ctest.1.html">ctest</a> for testing. Adding a new test if hence a matter of specifying it in the <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> file of the software project sources, using the <a class="reference external" href="https://cmake.org/cmake/help/v3.0/command/add_test.html">add_test</a> command.</p>
 <p>However <code class="docutils literal notranslate"><span class="pre">brainvisa-cmake</span></code> offers a light wrapper for it: <a class="reference internal" href="cmake_functions.html#brainvisa-add-test"><span class="std std-ref">brainvisa_add_test</span></a>, which handles the runtime test environment (build tree paths, or installed package testing), and also handles invoking python in a potentially cross-compilation environment.</p>
 <p>ex:</p>
@@ -188,7 +190,7 @@ OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86
 </div>
 </section>
 <section id="in-python-projects">
-<h3>In python projects<a class="headerlink" href="#in-python-projects" title="Permalink to this headline">¶</a></h3>
+<h3>In python projects<a class="headerlink" href="#in-python-projects" title="Permalink to this heading">¶</a></h3>
 <p>Some projects managed by <code class="docutils literal notranslate"><span class="pre">brainvisa-cmake</span></code> are “pure python” and do not conrtain explicit CMake instructions in a <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> file. Instead, they should provide a python <code class="docutils literal notranslate"><span class="pre">info</span></code> module in the project (loaded generally as <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">project_name.info</span></code>). This info module may provide tests, which are a list of commands to be executed and are specified in the <code class="docutils literal notranslate"><span class="pre">test_commands</span></code> variable. For instance, in the <a class="reference external" href="http://brainvisa.info/capsul/">CAPSUL</a> project, we have in the sources a file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">capsul</span><span class="o">/</span><span class="n">info</span><span class="o">.</span><span class="n">py</span>
 </pre></div>
@@ -203,9 +205,9 @@ OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86
 </section>
 </section>
 <section id="configuring-installed-packages-tests">
-<h2>Configuring installed packages tests<a class="headerlink" href="#configuring-installed-packages-tests" title="Permalink to this headline">¶</a></h2>
+<h2>Configuring installed packages tests<a class="headerlink" href="#configuring-installed-packages-tests" title="Permalink to this heading">¶</a></h2>
 <section id="config-options">
-<h3>Config options<a class="headerlink" href="#config-options" title="Permalink to this headline">¶</a></h3>
+<h3>Config options<a class="headerlink" href="#config-options" title="Permalink to this heading">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">bv_maker</span></code> can run tests of installed packages (after successful <code class="docutils literal notranslate"><span class="pre">pack</span></code> and <code class="docutils literal notranslate"><span class="pre">install_pack</span></code> steps), within the <code class="docutils literal notranslate"><span class="pre">testref_pack</span></code> and <code class="docutils literal notranslate"><span class="pre">test_pack</span></code> steps. Such tests can make use of remote or virtual machines to perform tests in a “clean”, controlled, test environment, different from the build machine. Actually, to be precise, the <code class="docutils literal notranslate"><span class="pre">install_pack</span></code> step also uses the same mechanism and can also take place on a remote or virtual machine, in the same manner as running the tests themselves.</p>
 <p>However tests are always triggered from the build machine, which will in turn, connect to remote or virtual test machines.</p>
 <p>Tests configuration is part of a <span class="xref std std-ref">package directory</span> specification of the <a class="reference internal" href="configuration.html"><span class="doc">bv_maker.cfg configuration file</span></a>. They are mainly controlled via the <code class="docutils literal notranslate"><span class="pre">remote_test_host_cmd</span></code> variable. The contents of this variable is prepended to test commands, so they can make the connection and indirection trick. For instance:</p>
@@ -220,11 +222,11 @@ OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86
 <p>Note that test data directories have to be handled manually in remote machines access: bv_maker will setup <strong>locally</strong> the environment variables <code class="docutils literal notranslate"><span class="pre">BRAINVISA_TEST_RUN_DATA_DIR</span></code> and <code class="docutils literal notranslate"><span class="pre">$BRAINVISA_TEST_REF_DATA_DIR</span></code>, but passing them through a ssh connection or to a docker machine is the responsibility of the <code class="docutils literal notranslate"><span class="pre">remote_test_host_cmd</span></code> configuration.</p>
 </section>
 <section id="testing-through-ssh">
-<h3>Testing through SSH<a class="headerlink" href="#testing-through-ssh" title="Permalink to this headline">¶</a></h3>
+<h3>Testing through SSH<a class="headerlink" href="#testing-through-ssh" title="Permalink to this heading">¶</a></h3>
 <p>Here, the <code class="docutils literal notranslate"><span class="pre">ssh</span> <span class="pre">-t</span> <span class="pre">-X</span> <span class="pre">test_machine</span></code> command will be prepended to tests, so that all tests will connect through <code class="docutils literal notranslate"><span class="pre">ssh</span></code> to the machine named <code class="docutils literal notranslate"><span class="pre">test_machine</span></code>, and use the software installed in the directory <code class="docutils literal notranslate"><span class="pre">/home/brutus/tests/test_install</span></code>.</p>
 </section>
 <section id="testing-using-docker">
-<h3>Testing using Docker<a class="headerlink" href="#testing-using-docker" title="Permalink to this headline">¶</a></h3>
+<h3>Testing using Docker<a class="headerlink" href="#testing-using-docker" title="Permalink to this heading">¶</a></h3>
 <p>Another example using <a class="reference external" href="http://docker.com">docker</a> would look the following:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">remote_test_host_cmd</span> <span class="o">=</span> docker run --rm -u <span class="s2">&quot;</span><span class="k">$(</span>id -u<span class="k">)</span><span class="s2">:</span><span class="k">$(</span>id -g<span class="k">)</span><span class="s2">&quot;</span> -e <span class="nv">USER</span><span class="o">=</span><span class="nv">$USER</span> -e <span class="nv">TMPDIR</span><span class="o">=</span>/home/brutus/tmp:/home/brutus/tmp -v <span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span> -e <span class="nv">HOME</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span> -v /tmp/.X11-unix:/tmp/.X11-unix --net<span class="o">=</span>host -e <span class="nv">DISPLAY</span><span class="o">=</span><span class="nv">$DISPLAY</span> -e <span class="nv">BRAINVISA_TEST_REF_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span> -e <span class="nv">BRAINVISA_TEST_RUN_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span> -v <span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span> -v <span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span> cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
 </pre></div>
@@ -236,7 +238,7 @@ OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86
 <p>This docker image is a minimal system, with minimal software installation: it contains only the libraries required to run the <a class="reference external" href="http://doc.qt.io/qtinstallerframework/">Qt installer</a> which binary installations are using, a X11 server and XVFB. Using this “smallest possible” system allows to find out missing thirdparty software dependencies in the tested software packages. The image and docker container will normally not be modified by the tests, so can be reused for later tests.</p>
 </section>
 <section id="mixing-ssh-and-docker">
-<h3>Mixing SSH and Docker<a class="headerlink" href="#mixing-ssh-and-docker" title="Permalink to this headline">¶</a></h3>
+<h3>Mixing SSH and Docker<a class="headerlink" href="#mixing-ssh-and-docker" title="Permalink to this heading">¶</a></h3>
 <p>The above example runs tests through Docker, and assumes that docker is installed and available on the host build system. However this will not always be true, since docker itself cannot run on every system:</p>
 <ul class="simple">
 <li><p>because it needs root permissions to be installed and available</p></li>
@@ -253,7 +255,7 @@ OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86
 </div>
 </section>
 <section id="real-life-example">
-<h3>Real life example<a class="headerlink" href="#real-life-example" title="Permalink to this headline">¶</a></h3>
+<h3>Real life example<a class="headerlink" href="#real-life-example" title="Permalink to this heading">¶</a></h3>
 <p>Here is a more complete example of a full <code class="docutils literal notranslate"><span class="pre">bv_maker.cfg</span></code> file from our build systems. Only the email addresses have been changed from our actual configuration (to avoid spams).</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> general <span class="o">]</span>
   <span class="nv">global_status_file</span> <span class="o">=</span> /neurospin/brainvisa/build/builds.log
@@ -420,7 +422,7 @@ OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -443,7 +445,7 @@ OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2022, CEA.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
     </div>
   </body>
 </html>

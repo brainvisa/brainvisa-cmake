@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>Dependencies in brainvisa-cmake &#8212; BrainVisa-Cmake 5.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -14,7 +14,9 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -44,7 +46,7 @@
           <div class="body" role="main">
             
   <section id="dependencies-in-brainvisa-cmake">
-<h1>Dependencies in brainvisa-cmake<a class="headerlink" href="#dependencies-in-brainvisa-cmake" title="Permalink to this headline">¶</a></h1>
+<h1>Dependencies in brainvisa-cmake<a class="headerlink" href="#dependencies-in-brainvisa-cmake" title="Permalink to this heading">¶</a></h1>
 <p>There are two kinds of dependencies that are defined in brainvisa-cmake: compilation dependencies and packaging dependencies. Compilation dependencies are declared by standard CMake commands such as find_package. But these commands cannot be used to identify the dependencies of the runtime, development or source packages that will be distributed. For instance, if a component uses the two following lines:</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">find_package</span><span class="p">(</span><span class="w"> </span><span class="s">libjpeg</span><span class="w"> </span><span class="p">)</span>
 <span class="nb">find_package</span><span class="p">(</span><span class="w"> </span><span class="s">doxygen</span><span class="w"> </span><span class="p">)</span>
@@ -53,7 +55,7 @@
 <p>These two compilation dependencies are identical. However, on the one hand, <code class="docutils literal notranslate"><span class="pre">find_package(</span> <span class="pre">libjpeg</span> <span class="pre">)</span></code> implies that the runtime package depends on a package containing <code class="docutils literal notranslate"><span class="pre">libjpeg.so</span></code> (assuming dynamic link) and the development package requires a package containing the headers (<code class="docutils literal notranslate"><span class="pre">*.h</span></code>) of <em>libjpeg</em>. On the other hand, <code class="docutils literal notranslate"><span class="pre">find_package(</span> <span class="pre">doxygen</span> <span class="pre">)</span></code> implies only that the development package requires Doxygen in order to build the development documentation.</p>
 <p>Therefore it is necessary to explicitly define packaging dependencies in brainvisa-cmake.</p>
 <section id="packaging-dependencies">
-<h2>Packaging dependencies<a class="headerlink" href="#packaging-dependencies" title="Permalink to this headline">¶</a></h2>
+<h2>Packaging dependencies<a class="headerlink" href="#packaging-dependencies" title="Permalink to this heading">¶</a></h2>
 <p>Each component compiled with brainvisa-cmake can lead to several packages:</p>
 <ul class="simple">
 <li><p>The <strong>runtime package</strong> which is the main package containing all necessary files to use the component (e.g. programs, dynamic libraries, configuration files, etc.).</p></li>
@@ -69,7 +71,7 @@ The documentation itself divides into:</p>
 </ul>
 <p>These packages types can lead to several dependency trees.</p>
 <section id="function-brainvisa-dependency">
-<h3>Function BRAINVISA_DEPENDENCY<a class="headerlink" href="#function-brainvisa-dependency" title="Permalink to this headline">¶</a></h3>
+<h3>Function BRAINVISA_DEPENDENCY<a class="headerlink" href="#function-brainvisa-dependency" title="Permalink to this heading">¶</a></h3>
 <p><em>Brainvisa-cmake</em> defines a function in order to define the packaging dependencies of each package type:</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span>BRAINVISA_DEPENDENCY( &lt;pack_type&gt; &lt;dependency_type&gt; &lt;component&gt; &lt;component_pack_type&gt; [ &lt;version ranges&gt; ] [BINARY_INDEPENDENT] ).
 </pre></div>
@@ -78,7 +80,7 @@ The documentation itself divides into:</p>
 <p><em>Brainvisa-cmake</em> allows to declare four different kinds of relationship between packages: <strong>Depends</strong>, <strong>Recommends</strong>, <strong>Suggests</strong> and <strong>Enhances</strong>. The meaning of these relationships is described in the <a class="reference external" href="https://www.debian.org/doc/debian-policy/ch-relationships.html">Debian Policy Manual</a>.</p>
 <p>More information about the usage of this function can be found in the section <a class="reference internal" href="compile_existing.html"><span class="doc">How to compile BrainVISA projects</span></a>.</p>
 <section id="note-about-how-to-handle-binary-incompatibilities-not-used-yet">
-<h4>Note about how to handle binary incompatibilities (not used yet)<a class="headerlink" href="#note-about-how-to-handle-binary-incompatibilities-not-used-yet" title="Permalink to this headline">¶</a></h4>
+<h4>Note about how to handle binary incompatibilities (not used yet)<a class="headerlink" href="#note-about-how-to-handle-binary-incompatibilities-not-used-yet" title="Permalink to this heading">¶</a></h4>
 <p>To handle <strong>binary incompatibilities</strong> between packages, it is necessary to provide information to brainvisa-installer. It is possible to rely on the dependency system to code this information. When a package has to be recompiled because one of its dependencies has changed, the new package may be binary incompatible with the old one; even if the source of the component have not been changed. For instance if Aims is modified in a binary incompatible way, it is necessary to recompile Anatomist but the new compiled version will not be binary compatible with the previous one. This situation would lead to two different Anatomist packages containing the same Anatomist versions but with two different binary signatures.</p>
 <p>If we can attach a unique number to each binary signature of a specific version of a component, we would be able to include this number into the package version. For instance, the previous example could lead to two packages <code class="docutils literal notranslate"><span class="pre">anatomist-3.2.0-0</span></code> and <code class="docutils literal notranslate"><span class="pre">anatomist-3.2.0-1</span></code> where <code class="docutils literal notranslate"><span class="pre">3.2.0</span></code> is Anatomist version and the fourth number identifies binary signature changes. With this version system, packages that are binary linked to another package would include a dependency with a full version, including binary signature number. But a package that requires a specific version but without binary linking (such as Python extensions) would ignore the binary signature number in their dependencies.</p>
 <p>The number representing the binary signature can be a counter that is incremented each time a new package with the same version is compiled. The good point for this solution is that it gives easily readable versions on packages. The drawback is that we must provide a way for brainvisa-cmake to store a counter for each component. It can be hard to do if compilation is not always done on the same build tree. Another possibility would be to use compilation date with the format <code class="docutils literal notranslate"><span class="pre">YYYYMMDD</span></code> (assuming that there is not two releases of a component on the same day). For instance a package <code class="docutils literal notranslate"><span class="pre">anatomist-free_3.2.0.20091011_ubuntu-9.04_i686.deb</span></code> would mean Anatomist version <code class="docutils literal notranslate"><span class="pre">3.2.0</span></code> compiled on October, 11th 2009. It is much easier to implement but leads to not very good looking version strings.</p>
@@ -86,7 +88,7 @@ The documentation itself divides into:</p>
 </section>
 </section>
 <section id="thirdparty-dependencies">
-<h3>Thirdparty dependencies<a class="headerlink" href="#thirdparty-dependencies" title="Permalink to this headline">¶</a></h3>
+<h3>Thirdparty dependencies<a class="headerlink" href="#thirdparty-dependencies" title="Permalink to this heading">¶</a></h3>
 <p>Third-party dependencies used to be packaged but this is not supported anymore starting with the container-based BrainVISA releases (BrainVISA 5.0).</p>
 </section>
 </section>
@@ -142,7 +144,7 @@ The documentation itself divides into:</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -165,7 +167,7 @@ The documentation itself divides into:</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2022, CEA.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
     </div>
   </body>
 </html>

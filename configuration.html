@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>The bv_maker.cfg configuration file &#8212; BrainVisa-Cmake 5.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -14,7 +14,9 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -44,7 +46,7 @@
           <div class="body" role="main">
             
   <section id="the-bv-maker-cfg-configuration-file">
-<h1>The bv_maker.cfg configuration file<a class="headerlink" href="#the-bv-maker-cfg-configuration-file" title="Permalink to this headline">¶</a></h1>
+<h1>The bv_maker.cfg configuration file<a class="headerlink" href="#the-bv-maker-cfg-configuration-file" title="Permalink to this heading">¶</a></h1>
 <p>You must create this file in the following directory: <code class="docutils literal notranslate"><span class="pre">$HOME/.brainvisa/bv_maker.cfg</span></code>.</p>
 <p>In this file you can configure several types of directories:</p>
 <ul class="simple">
@@ -53,7 +55,7 @@
 </ul>
 <p>A section may also contain conditional parts. See the <a class="reference internal" href="#conditional-subsections">Conditional subsections</a> section for details.</p>
 <section id="general-structure-and-syntax-of-bv-maker-configuration-file">
-<h2>General structure and syntax of bv_maker configuration file<a class="headerlink" href="#general-structure-and-syntax-of-bv-maker-configuration-file" title="Permalink to this headline">¶</a></h2>
+<h2>General structure and syntax of bv_maker configuration file<a class="headerlink" href="#general-structure-and-syntax-of-bv-maker-configuration-file" title="Permalink to this heading">¶</a></h2>
 <p>The <a class="reference internal" href="bv_maker.html"><span class="doc">bv_maker</span></a> configuration file is composed of sections delimited by a line enclosed in square brackets: <code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">...</span> <span class="pre">]</span></code>. Each section contains the definition of a directory (either a source directory, or a build directory), or a “general” section. In this file, blank lines are ignored and spaces at the begining or end of lines are also ignored. It means that you can indent and separate lines as you wish. For instance:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> <span class="nb">source</span> <span class="nv">$HOME</span>/brainvisa/source <span class="o">]</span>
   + standard trunk
@@ -84,7 +86,7 @@
 </div>
 <p>Each line in a section contains either a “variable” definition, or some section-specific declarations such as components definitions.</p>
 <section id="option-variables">
-<h3>Option Variables<a class="headerlink" href="#option-variables" title="Permalink to this headline">¶</a></h3>
+<h3>Option Variables<a class="headerlink" href="#option-variables" title="Permalink to this heading">¶</a></h3>
 <p>A variable declaration looks the following:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">variable</span> <span class="o">=</span> value
 </pre></div>
@@ -111,7 +113,7 @@
 </div>
 </section>
 <section id="variables-substitution">
-<h3>Variables substitution<a class="headerlink" href="#variables-substitution" title="Permalink to this headline">¶</a></h3>
+<h3>Variables substitution<a class="headerlink" href="#variables-substitution" title="Permalink to this heading">¶</a></h3>
 <p>Some variables (not all) with string values support environment variables substitution (<code class="docutils literal notranslate"><span class="pre">$VARIABLE</span></code>), and / or “python-like” string substitution (<code class="docutils literal notranslate"><span class="pre">%(variable)s</span></code>)for a few variables (<code class="docutils literal notranslate"><span class="pre">date</span></code>, <code class="docutils literal notranslate"><span class="pre">hostname</span></code>, <code class="docutils literal notranslate"><span class="pre">time</span></code>, <code class="docutils literal notranslate"><span class="pre">os</span></code>, a few more in some sections).
 Dictionary variables do support both:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">env</span> <span class="o">+=</span> PATH: <span class="nv">$HOME</span>/bin:<span class="nv">$PATH</span>, BRAINVISA_TEST_DIR: <span class="nv">$HOME</span>/tests-%<span class="o">(</span>hostname<span class="o">)</span>s-%<span class="o">(</span>date<span class="o">)</span>s
@@ -128,7 +130,7 @@ Dictionary variables do support both:</p>
 </section>
 </section>
 <section id="definition-of-a-general-section">
-<span id="general-section"></span><h2>Definition of a general section<a class="headerlink" href="#definition-of-a-general-section" title="Permalink to this headline">¶</a></h2>
+<span id="general-section"></span><h2>Definition of a general section<a class="headerlink" href="#definition-of-a-general-section" title="Permalink to this heading">¶</a></h2>
 <p>The general section is optional, and contains variable which are independent from each other sections (or shared accross them).</p>
 <p>The general section definition starts with a line with the following syntax:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> general <span class="o">]</span>
@@ -170,7 +172,7 @@ Dictionary variables do support both:</p>
 </ul>
 </section>
 <section id="definition-of-a-source-directory">
-<span id="source-directory"></span><h2>Definition of a source directory<a class="headerlink" href="#definition-of-a-source-directory" title="Permalink to this headline">¶</a></h2>
+<span id="source-directory"></span><h2>Definition of a source directory<a class="headerlink" href="#definition-of-a-source-directory" title="Permalink to this heading">¶</a></h2>
 <p>A source directory definition section starts with a line with the following syntax:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> <span class="nb">source</span> &lt;directory&gt; <span class="o">]</span>
 </pre></div>
@@ -193,23 +195,23 @@ Dictionary variables do support both:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">update_git_remotes</span></code>: <code class="docutils literal notranslate"><span class="pre">ON</span></code> (default) or <code class="docutils literal notranslate"><span class="pre">OFF</span></code>. If ON, all git remotes will be fetched, otherwise only the current active branch in a component will be fast-forwarded. The default value in brainvisa-cmake &lt; 3 used to be <code class="docutils literal notranslate"><span class="pre">OFF</span></code>, but this was changed in order to make things clearer/easier and to handle git-lfs projects. The former “light” mode (no fetch + detached branch mode) has been deprecated also: it still works for repositories created usinbg bv_maker 2.x but new repositories are not initialized this way any longer. See <a class="reference internal" href="compile_existing.html#git-repositories"><span class="std std-ref">Git repositories and bv_maker</span></a></p></li>
 </ul>
 <section id="add-components-to-the-list">
-<h3>Add components to the list<a class="headerlink" href="#add-components-to-the-list" title="Permalink to this headline">¶</a></h3>
+<h3>Add components to the list<a class="headerlink" href="#add-components-to-the-list" title="Permalink to this heading">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>+ component_selection version_selection
 </pre></div>
 </div>
 <p>A line starting with a plus will use Subversion to add some directories from the BrainVISA BioProj repository. The selections of the directories is done by selecting components according to their name and version. Once the components are selected, bv_maker is able to find the corresponding directories in BrainVISA repository. component_selection is used to select a list of components according to their name (see <a class="reference internal" href="#component-selection">Component selection</a>). It is not mandatory to provide a version_selection. If it is given, it is used to further filter the list of selected components according to their version (see <a class="reference internal" href="#version-selection">Version selection</a>).</p>
 </section>
 <section id="remove-components-from-the-list">
-<h3>Remove components from the list<a class="headerlink" href="#remove-components-from-the-list" title="Permalink to this headline">¶</a></h3>
+<h3>Remove components from the list<a class="headerlink" href="#remove-components-from-the-list" title="Permalink to this heading">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>- component_selection version_selection
 </pre></div>
 </div>
 <p>A line starting with a minus is has the same syntax as the previous action but removes the selected directories from the list.</p>
 </section>
 <section id="add-directories-to-the-list">
-<h3>Add directories to the list<a class="headerlink" href="#add-directories-to-the-list" title="Permalink to this headline">¶</a></h3>
+<h3>Add directories to the list<a class="headerlink" href="#add-directories-to-the-list" title="Permalink to this heading">¶</a></h3>
 <section id="subversion-components">
-<h4>subversion components<a class="headerlink" href="#subversion-components" title="Permalink to this headline">¶</a></h4>
+<h4>subversion components<a class="headerlink" href="#subversion-components" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>+ repository_directory local_directory
 </pre></div>
 </div>
@@ -230,7 +232,7 @@ Dictionary variables do support both:</p>
 </div>
 </section>
 <section id="git-components">
-<h4>git components<a class="headerlink" href="#git-components" title="Permalink to this headline">¶</a></h4>
+<h4>git components<a class="headerlink" href="#git-components" title="Permalink to this heading">¶</a></h4>
 <p>See also <a class="reference internal" href="compile_existing.html#git-repositories"><span class="std std-ref">Git repositories and bv_maker</span></a></p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git https://github.com/neurospin/highres-cortex.git master highres-cortex/master
 </pre></div>
@@ -239,7 +241,7 @@ Dictionary variables do support both:</p>
 </section>
 </section>
 <section id="definition-of-a-build-directory">
-<span id="build-directory"></span><h2>Definition of a build directory<a class="headerlink" href="#definition-of-a-build-directory" title="Permalink to this headline">¶</a></h2>
+<span id="build-directory"></span><h2>Definition of a build directory<a class="headerlink" href="#definition-of-a-build-directory" title="Permalink to this heading">¶</a></h2>
 <p>A build directory definition section starts with a line with the following syntax:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> build &lt;directory&gt; <span class="o">]</span>
 </pre></div>
@@ -281,7 +283,7 @@ Dictionary variables do support both:</p>
 </div>
 <p>In the above example, the <em>bug_fix</em> version of standard components which are located in <code class="docutils literal notranslate"><span class="pre">$HOME/brainvisa/source</span></code> directory will be compiled in the build directory <code class="docutils literal notranslate"><span class="pre">$HOME/brainvisa/build/bug_fix</span></code> in <code class="docutils literal notranslate"><span class="pre">Release</span></code> mode with the option <code class="docutils literal notranslate"><span class="pre">-j8</span></code> passed to make command (compilation distributed on 8 processors).</p>
 <section id="variants-of-build-directories">
-<h3>Variants of build directories<a class="headerlink" href="#variants-of-build-directories" title="Permalink to this headline">¶</a></h3>
+<h3>Variants of build directories<a class="headerlink" href="#variants-of-build-directories" title="Permalink to this heading">¶</a></h3>
 <p>A build directory may also be a <em>python virtualenv</em> directory. To specify it the section type may be virtualenv instead of build:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> virtualenv &lt;directory&gt; <span class="o">]</span>
 </pre></div>
@@ -290,11 +292,11 @@ Dictionary variables do support both:</p>
 </section>
 </section>
 <section id="syntax-for-components-selection">
-<h2>Syntax for components selection<a class="headerlink" href="#syntax-for-components-selection" title="Permalink to this headline">¶</a></h2>
+<h2>Syntax for components selection<a class="headerlink" href="#syntax-for-components-selection" title="Permalink to this heading">¶</a></h2>
 <p>Components can be selected according to their name and (in some context) to their version. This paragraph explain how to use component_selection and version_selection and gives some examples of their usage.</p>
 <p>Information about the components, components groups and versions are extracted from git repository and stored in the following file: <a class="reference external" href="https://github.com/brainvisa/brainvisa-cmake/blob/master/python/brainvisa/maker/components_definition.py">https://github.com/brainvisa/brainvisa-cmake/blob/master/python/brainvisa/maker/components_definition.py</a></p>
 <section id="component-selection">
-<h3>Component selection<a class="headerlink" href="#component-selection" title="Permalink to this headline">¶</a></h3>
+<h3>Component selection<a class="headerlink" href="#component-selection" title="Permalink to this heading">¶</a></h3>
 <p>A component_selection is a string that is used to select one or more component according to their name. The following rules are used to transform this string into a list of components:</p>
 <ol class="arabic simple">
 <li><p>If component_selection is a group name, all components of this group are selected. At the time of this writing, four groups are defined:</p></li>
@@ -320,7 +322,7 @@ Dictionary variables do support both:</p>
 </div></blockquote>
 </section>
 <section id="version-selection">
-<h3>Version selection<a class="headerlink" href="#version-selection" title="Permalink to this headline">¶</a></h3>
+<h3>Version selection<a class="headerlink" href="#version-selection" title="Permalink to this heading">¶</a></h3>
 <p>To select the version of a component or a group of component, it is possible</p>
 <ul class="simple">
 <li><p>to give the exact version number of a branch (4.0) or a tag (4.0.1)</p></li>
@@ -336,7 +338,7 @@ Dictionary variables do support both:</p>
 </ul>
 </section>
 <section id="examples-of-components-selection">
-<h3>Examples of components selection<a class="headerlink" href="#examples-of-components-selection" title="Permalink to this headline">¶</a></h3>
+<h3>Examples of components selection<a class="headerlink" href="#examples-of-components-selection" title="Permalink to this heading">¶</a></h3>
 <p>Select all versions of all existing components:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>all
 </pre></div>
@@ -364,10 +366,10 @@ Dictionary variables do support both:</p>
 </section>
 </section>
 <section id="conditional-subsections">
-<h2>Conditional subsections<a class="headerlink" href="#conditional-subsections" title="Permalink to this headline">¶</a></h2>
+<h2>Conditional subsections<a class="headerlink" href="#conditional-subsections" title="Permalink to this heading">¶</a></h2>
 <p>A section of the configuration file may contain conditional parts. This allows to specialize parts of the configuration according to host system, host name, or whatever.</p>
 <section id="condition-blocks">
-<h3>Condition blocks<a class="headerlink" href="#condition-blocks" title="Permalink to this headline">¶</a></h3>
+<h3>Condition blocks<a class="headerlink" href="#condition-blocks" title="Permalink to this heading">¶</a></h3>
 <p>A conditional subsection should be located inside an existing section (sources or build). It follows the syntax:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> <span class="k">if</span> &lt;expression&gt; <span class="o">]</span>
   &lt;config lines&gt;
@@ -380,7 +382,7 @@ Dictionary variables do support both:</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">else</span> <span class="pre">]</span></code> block is of course optional, and a global section end also ends the conditional section, so the <code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">endif</span> <span class="pre">]</span></code> section may be omitted if it is at the end of the section.</p>
 </section>
 <section id="condition-expressions">
-<h3>Condition expressions<a class="headerlink" href="#condition-expressions" title="Permalink to this headline">¶</a></h3>
+<h3>Condition expressions<a class="headerlink" href="#condition-expressions" title="Permalink to this heading">¶</a></h3>
 <p>The condition expression may contain substitution variables as in the shape <code class="docutils literal notranslate"><span class="pre">%(variable)s</span></code> syntax. The following variables are recognized:</p>
 <ul class="simple">
 <li><p>os</p></li>
@@ -403,7 +405,7 @@ Dictionary variables do support both:</p>
 </section>
 </section>
 <section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading">¶</a></h2>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>TO DO</p>
@@ -427,7 +429,7 @@ Dictionary variables do support both:</p>
 </pre></div>
 </div>
 <section id="compiling-using-qt-5">
-<span id="build-qt5"></span><h3>Compiling using Qt 5<a class="headerlink" href="#compiling-using-qt-5" title="Permalink to this headline">¶</a></h3>
+<span id="build-qt5"></span><h3>Compiling using Qt 5<a class="headerlink" href="#compiling-using-qt-5" title="Permalink to this heading">¶</a></h3>
 <p>Add in the <code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">build</span> <span class="pre">]</span></code> section:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> build <span class="nv">$HOME</span>/brainvisa/build/bug_fix <span class="o">]</span>
   <span class="c1"># ...</span>
@@ -437,7 +439,7 @@ Dictionary variables do support both:</p>
 </div>
 </section>
 <section id="compiling-using-python3">
-<span id="build-py3"></span><h3>Compiling using Python3<a class="headerlink" href="#compiling-using-python3" title="Permalink to this headline">¶</a></h3>
+<span id="build-py3"></span><h3>Compiling using Python3<a class="headerlink" href="#compiling-using-python3" title="Permalink to this heading">¶</a></h3>
 <p>Add in the <code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">build</span> <span class="pre">]</span></code> section:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> build <span class="nv">$HOME</span>/brainvisa/build/bug_fix <span class="o">]</span>
   <span class="c1"># ...</span>
@@ -528,7 +530,7 @@ Dictionary variables do support both:</p>
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -551,7 +553,7 @@ Dictionary variables do support both:</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2022, CEA.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
     </div>
   </body>
 </html>

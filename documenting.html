@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>Documenting projects using brainvisa-cmake &#8212; BrainVisa-Cmake 5.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -14,7 +14,9 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -44,7 +46,7 @@
           <div class="body" role="main">
             
   <section id="documenting-projects-using-brainvisa-cmake">
-<h1>Documenting projects using brainvisa-cmake<a class="headerlink" href="#documenting-projects-using-brainvisa-cmake" title="Permalink to this headline">¶</a></h1>
+<h1>Documenting projects using brainvisa-cmake<a class="headerlink" href="#documenting-projects-using-brainvisa-cmake" title="Permalink to this heading">¶</a></h1>
 <p>Documentation in software projects is supported via external tools like <a class="reference external" href="http://www.doxygen.org">Doxygen</a> or <a class="reference external" href="http://sphinx-doc.org">Sphinx</a>, and are integrated in brainvisa-cmake infrastructure.</p>
 <p>Documentation is generated within the <code class="docutils literal notranslate"><span class="pre">doc</span></code> step of <code class="docutils literal notranslate"><span class="pre">bv_maker</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_maker doc
@@ -74,7 +76,7 @@ make anatomist-free-devdoc
 </pre></div>
 </div>
 <section id="doxygen-documentation">
-<h2>Doxygen documentation<a class="headerlink" href="#doxygen-documentation" title="Permalink to this headline">¶</a></h2>
+<h2>Doxygen documentation<a class="headerlink" href="#doxygen-documentation" title="Permalink to this heading">¶</a></h2>
 <p><a class="reference external" href="http://www.doxygen.org">Doxygen</a> is used to genrate API documentation for C++ sources. It generates HTML pages, an possibly other formats, which we are not using in <code class="docutils literal notranslate"><span class="pre">brainvisa-cmake</span></code>.</p>
 <p>In <code class="docutils literal notranslate"><span class="pre">brainvisa-cmake</span></code> projects, such documentation should be setup in the <code class="docutils literal notranslate"><span class="pre">CMake</span></code> config files of the project. Typically we set it in the main <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> file at the root of the project.</p>
 <p>Doxygen docs will be part of the development documentations.</p>
@@ -117,10 +119,10 @@ make anatomist-free-devdoc
 </div>
 </section>
 <section id="sphinx-documentation">
-<h2>Sphinx documentation<a class="headerlink" href="#sphinx-documentation" title="Permalink to this headline">¶</a></h2>
+<h2>Sphinx documentation<a class="headerlink" href="#sphinx-documentation" title="Permalink to this heading">¶</a></h2>
 <p><a class="reference external" href="http://sphinx-doc.org">Sphinx</a> is used to build HTML documentation pages. It can be used to make general documentation, and can also make API documentation for Python classes and modules.</p>
 <section id="in-cmake-configuration">
-<h3>In CMake configuration<a class="headerlink" href="#in-cmake-configuration" title="Permalink to this headline">¶</a></h3>
+<h3>In CMake configuration<a class="headerlink" href="#in-cmake-configuration" title="Permalink to this heading">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">brainvisa-cmake</span></code> provides a function to build sphinx documentation for a project: <a class="reference internal" href="cmake_functions.html#brainvisa-generate-sphinx-doc"><span class="std std-ref">brainvisa_generate_sphinx_doc</span></a>.</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">find_package</span><span class="p">(</span><span class="w"> </span><span class="s">Sphinx</span><span class="w"> </span><span class="p">)</span>
 <span class="nb">BRAINVISA_GENERATE_SPHINX_DOC</span><span class="p">(</span><span class="w"> </span><span class="s2">&quot;sphinxdoc/user_doc&quot;</span>
@@ -131,18 +133,18 @@ make anatomist-free-devdoc
 </div>
 </section>
 <section id="in-pure-python-projects">
-<h3>In pure python projects<a class="headerlink" href="#in-pure-python-projects" title="Permalink to this headline">¶</a></h3>
+<h3>In pure python projects<a class="headerlink" href="#in-pure-python-projects" title="Permalink to this heading">¶</a></h3>
 <p>In pure python projects, the CMake configuration file is not present in the sources, and is generated by bv_maker. If the project sources contain a directory tree <code class="docutils literal notranslate"><span class="pre">doc/sources</span></code>, then bv_maker will consider it as a Sphinx source directory and configure it to generate sphinx development docs, as in the CMake case.</p>
 </section>
 <section id="sphinx-sources">
-<h3>Sphinx sources<a class="headerlink" href="#sphinx-sources" title="Permalink to this headline">¶</a></h3>
+<h3>Sphinx sources<a class="headerlink" href="#sphinx-sources" title="Permalink to this heading">¶</a></h3>
 <p>Sphinx sources should be located in a subdirectory of the project sources tree. The directory should contain the <code class="docutils literal notranslate"><span class="pre">conf.py</span></code> file expected by sphinx.</p>
 <p>For new developers, in a few words, Sphinx sources are text files using a markup language, <a class="reference external" href="http://docutils.sourceforge.net/rst.html">ReStructuredText</a> which is fairly simple and mostly human readable.</p>
 <p>The entry point is generally a <code class="docutils literal notranslate"><span class="pre">index.rst</span></code> file which may include other ones.</p>
 </section>
 </section>
 <section id="customization">
-<h2>Customization<a class="headerlink" href="#customization" title="Permalink to this headline">¶</a></h2>
+<h2>Customization<a class="headerlink" href="#customization" title="Permalink to this heading">¶</a></h2>
 <p>Using CMake commands, it is possible to mix Doxygen or Sphinx docs with other processings, for instance generation of commandline help, or pre-building of HTML tables etc. All kinds of scripts can be triggered by CMake when generating docs, and the Sphinx builds, especially, may use a part of sources which could be generated by other scripts.</p>
 <p>In BrainVisa, we use it for instance to build the complete web site <a class="reference external" href="http://brainvisa.info">http://brainvisa.info</a></p>
 </section>
@@ -198,7 +200,7 @@ make anatomist-free-devdoc
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -221,7 +223,7 @@ make anatomist-free-devdoc
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2022, CEA.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
     </div>
   </body>
 </html>

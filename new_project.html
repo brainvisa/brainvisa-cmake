@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>How to compile a new project with brainvisa-cmake &#8212; BrainVisa-Cmake 5.1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -14,7 +14,9 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -44,7 +46,7 @@
           <div class="body" role="main">
             
   <section id="how-to-compile-a-new-project-with-brainvisa-cmake">
-<h1>How to compile a new project with brainvisa-cmake<a class="headerlink" href="#how-to-compile-a-new-project-with-brainvisa-cmake" title="Permalink to this headline">¶</a></h1>
+<h1>How to compile a new project with brainvisa-cmake<a class="headerlink" href="#how-to-compile-a-new-project-with-brainvisa-cmake" title="Permalink to this heading">¶</a></h1>
 <p>The project must contain 2 files:</p>
 <ul>
 <li><p><strong>project_info.cmake</strong>: describes the name and version of the project.</p>
@@ -70,7 +72,7 @@
 </pre></div>
 </div>
 <section id="project-info-cmake">
-<h2>Project_info.cmake<a class="headerlink" href="#project-info-cmake" title="Permalink to this headline">¶</a></h2>
+<h2>Project_info.cmake<a class="headerlink" href="#project-info-cmake" title="Permalink to this heading">¶</a></h2>
 <p><strong>Example:</strong> project_info file for <code class="docutils literal notranslate"><span class="pre">anatomist-free</span></code> component of anatomist project.</p>
 <p>The following file is in <code class="docutils literal notranslate"><span class="pre">anatomist/anatomist-free/tags/4.5/project_info.cmake</span></code>.</p>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="p">(</span><span class="w"> </span><span class="s">BRAINVISA_PACKAGE_NAME</span><span class="w"> </span><span class="s">anatomist-free</span><span class="w"> </span><span class="p">)</span>
@@ -94,11 +96,11 @@
 </pre></div>
 </div>
 <section id="variables">
-<h3>Variables<a class="headerlink" href="#variables" title="Permalink to this headline">¶</a></h3>
+<h3>Variables<a class="headerlink" href="#variables" title="Permalink to this heading">¶</a></h3>
 <p>A few additional optional variables may be set in project_info.cmake:</p>
 </section>
 <section id="info-py-alternative">
-<h3>Info.py alternative<a class="headerlink" href="#info-py-alternative" title="Permalink to this headline">¶</a></h3>
+<h3>Info.py alternative<a class="headerlink" href="#info-py-alternative" title="Permalink to this heading">¶</a></h3>
 <p>If your project is only using the Python language, you may like to use a python file to describe this information, because it would also be usable in the project code as a python module.</p>
 <dl class="simple">
 <dt>Thus, alternatively to the <code class="docutils literal notranslate"><span class="pre">project_info.cmake</span></code> file, <em>brainvisa-cmake</em> will look for an <code class="docutils literal notranslate"><span class="pre">info.py</span></code> file, located:</dt><dd><ul class="simple">
@@ -130,7 +132,7 @@ version_micro -&gt; BRAINVISA_PACKAGE_VERSION_PATCH
 </section>
 </section>
 <section id="how-to-create-version-files-with-brainvisa-cmake">
-<h2>How to create version files with brainvisa-cmake<a class="headerlink" href="#how-to-create-version-files-with-brainvisa-cmake" title="Permalink to this headline">¶</a></h2>
+<h2>How to create version files with brainvisa-cmake<a class="headerlink" href="#how-to-create-version-files-with-brainvisa-cmake" title="Permalink to this heading">¶</a></h2>
 <p>It is possible to use <em>brainvisa-cmake</em> to generate source code containing the version stored in <code class="docutils literal notranslate"><span class="pre">project_info.cmake</span></code>. Here is an example from old_connectomist project. There are two template files, one for C++ and one for Python:</p>
 <p><strong>config/config.h.in:</strong></p>
 <div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#ifndef COMIST_VERSION_H</span>
@@ -159,7 +161,7 @@ version_micro -&gt; BRAINVISA_PACKAGE_VERSION_PATCH
 </div>
 </section>
 <section id="cmakelists-txt">
-<h2>CMakeLists.txt<a class="headerlink" href="#cmakelists-txt" title="Permalink to this headline">¶</a></h2>
+<h2>CMakeLists.txt<a class="headerlink" href="#cmakelists-txt" title="Permalink to this heading">¶</a></h2>
 <p>This file is used by <a class="reference external" href="http://www.cmake.org">CMake</a> to generate the <code class="docutils literal notranslate"><span class="pre">Makefiles</span></code> that will be used to build the project.</p>
 <p>This file is written in the CMake specific language. See <a class="reference external" href="https://cmake.org/documentation">CMake documentation</a> for more information.</p>
 <p>On top of the classic CMake functions, we defined functions in <em>brainvisa-cmake</em> that help defining <code class="docutils literal notranslate"><span class="pre">CMakeLists</span></code> files for Brainvisa projects. These functions names start with <code class="docutils literal notranslate"><span class="pre">BRAINVISA_</span></code> and are defined in the file <code class="docutils literal notranslate"><span class="pre">brainvisa-cmake-config.cmake.in</span></code> in <em>brainvisa-cmake</em> project.</p>
@@ -183,12 +185,12 @@ version_micro -&gt; BRAINVISA_PACKAGE_VERSION_PATCH
 <p>The last line is useful only if the component is a dependency of another one. If so, you need to write 2 more files in a cmake directory: <code class="docutils literal notranslate"><span class="pre">&lt;component&gt;-config.cmake.in</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;component&gt;-use.cmake.in</span></code>.</p>
 </section>
 <section id="brainvisa-cmake-functions">
-<h2>brainvisa-cmake functions<a class="headerlink" href="#brainvisa-cmake-functions" title="Permalink to this headline">¶</a></h2>
+<h2>brainvisa-cmake functions<a class="headerlink" href="#brainvisa-cmake-functions" title="Permalink to this heading">¶</a></h2>
 <p>Here is a glimpse of the <em>brainvisa-cmake</em> helper functions which can be used in the <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> files.</p>
 <section id="c">
-<h3>C++<a class="headerlink" href="#c" title="Permalink to this headline">¶</a></h3>
+<h3>C++<a class="headerlink" href="#c" title="Permalink to this heading">¶</a></h3>
 <section id="brainvisa-get-file-list-from-pro">
-<h4>BRAINVISA_GET_FILE_LIST_FROM_PRO<a class="headerlink" href="#brainvisa-get-file-list-from-pro" title="Permalink to this headline">¶</a></h4>
+<h4>BRAINVISA_GET_FILE_LIST_FROM_PRO<a class="headerlink" href="#brainvisa-get-file-list-from-pro" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GET_FILE_LIST_FROM_PRO</span><span class="p">(</span><span class="w"> </span><span class="s">proFilename</span><span class="w"> </span><span class="s">&lt;pro</span><span class="w"> </span><span class="s">variable&gt;</span><span class="w"> </span><span class="s">&lt;cmake</span><span class="w"> </span><span class="s">variable&gt;</span><span class="w"> </span><span class="s">[&lt;pro</span><span class="w"> </span><span class="s">variable&gt;</span><span class="w"> </span><span class="s">&lt;cmake</span><span class="w"> </span><span class="s">variable&gt;...]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
@@ -203,7 +205,7 @@ version_micro -&gt; BRAINVISA_PACKAGE_VERSION_PATCH
 <p><em>_proSources</em> variable contains the name of C++ source files.</p>
 </section>
 <section id="brainvisa-copy-and-install-headers">
-<h4>BRAINVISA_COPY_AND_INSTALL_HEADERS<a class="headerlink" href="#brainvisa-copy-and-install-headers" title="Permalink to this headline">¶</a></h4>
+<h4>BRAINVISA_COPY_AND_INSTALL_HEADERS<a class="headerlink" href="#brainvisa-copy-and-install-headers" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_COPY_AND_INSTALL_HEADERS</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;headers</span><span class="w"> </span><span class="s">list&gt;</span><span class="w"> </span><span class="s">&lt;include</span><span class="w"> </span><span class="s">directory&gt;</span><span class="w"> </span><span class="s">&lt;target_variable&gt;</span><span class="w"> </span><span class="s">[NO_SYMLINKS]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
@@ -219,9 +221,9 @@ version_micro -&gt; BRAINVISA_PACKAGE_VERSION_PATCH
 </section>
 </section>
 <section id="python">
-<h3>Python<a class="headerlink" href="#python" title="Permalink to this headline">¶</a></h3>
+<h3>Python<a class="headerlink" href="#python" title="Permalink to this heading">¶</a></h3>
 <section id="brainvisa-copy-python-directory">
-<h4>BRAINVISA_COPY_PYTHON_DIRECTORY<a class="headerlink" href="#brainvisa-copy-python-directory" title="Permalink to this headline">¶</a></h4>
+<h4>BRAINVISA_COPY_PYTHON_DIRECTORY<a class="headerlink" href="#brainvisa-copy-python-directory" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_COPY_PYTHON_DIRECTORY</span> <span class="p">(</span><span class="w"> </span><span class="s">&lt;python</span><span class="w"> </span><span class="s">directory&amp;gt</span><span class="w"> </span><span class="s">&lt;component&gt;</span><span class="w"> </span><span class="s">[&lt;destination</span><span class="w"> </span><span class="s">directory&gt;]</span><span class="w"> </span><span class="s">[NO_SYMLINKS]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
@@ -238,9 +240,9 @@ version_micro -&gt; BRAINVISA_PACKAGE_VERSION_PATCH
 </section>
 </section>
 <section id="sip">
-<h3>SIP<a class="headerlink" href="#sip" title="Permalink to this headline">¶</a></h3>
+<h3>SIP<a class="headerlink" href="#sip" title="Permalink to this heading">¶</a></h3>
 <section id="brainvisa-add-sip-python-module">
-<h4>BRAINVISA_ADD_SIP_PYTHON_MODULE<a class="headerlink" href="#brainvisa-add-sip-python-module" title="Permalink to this headline">¶</a></h4>
+<h4>BRAINVISA_ADD_SIP_PYTHON_MODULE<a class="headerlink" href="#brainvisa-add-sip-python-module" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_ADD_SIP_PYTHON_MODULE</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;module&gt;</span><span class="w"> </span><span class="s">&lt;directory&gt;</span><span class="w"> </span><span class="s">&lt;mainSipFile&gt;</span><span class="w"> </span><span class="s">[</span><span class="w"> </span><span class="s">SIP_SOURCES</span><span class="w"> </span><span class="s">&lt;file&gt;</span><span class="w"> </span><span class="s">...</span><span class="w"> </span><span class="s">]</span><span class="w"> </span><span class="s">[</span><span class="w"> </span><span class="s">SIP_INCLUDE</span><span class="w"> </span><span class="s">&lt;directory&gt;</span><span class="w"> </span><span class="s">...</span><span class="w"> </span><span class="s">]</span><span class="w"> </span><span class="s">[</span><span class="w"> </span><span class="s">SIP_INSTALL</span><span class="w"> </span><span class="s">&lt;directory&gt;</span><span class="w"> </span><span class="s">]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
@@ -258,9 +260,9 @@ version_micro -&gt; BRAINVISA_PACKAGE_VERSION_PATCH
 </section>
 </section>
 <section id="qt">
-<h3>Qt<a class="headerlink" href="#qt" title="Permalink to this headline">¶</a></h3>
+<h3>Qt<a class="headerlink" href="#qt" title="Permalink to this heading">¶</a></h3>
 <section id="brainvisa-add-moc-files">
-<h4>BRAINVISA_ADD_MOC_FILES<a class="headerlink" href="#brainvisa-add-moc-files" title="Permalink to this headline">¶</a></h4>
+<h4>BRAINVISA_ADD_MOC_FILES<a class="headerlink" href="#brainvisa-add-moc-files" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span>BRAINVISA_ADD_MOC_FILES &lt;result variable&gt; &lt;header files&gt;
 </pre></div>
 </div>
@@ -275,7 +277,7 @@ The files generated by moc will be added to the source files used to generate an
 </div>
 </section>
 <section id="brainvisa-add-translation">
-<h4>BRAINVISA_ADD_TRANSLATION<a class="headerlink" href="#brainvisa-add-translation" title="Permalink to this headline">¶</a></h4>
+<h4>BRAINVISA_ADD_TRANSLATION<a class="headerlink" href="#brainvisa-add-translation" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span>BRAINVISA_ADD_TRANSLATION &lt;source_share_dir&gt; &lt;dest_share_dir&gt; &lt;component&gt;
 </pre></div>
 </div>
@@ -287,9 +289,9 @@ The files generated by moc will be added to the source files used to generate an
 </section>
 </section>
 <section id="files-and-directories">
-<h3>Files and directories<a class="headerlink" href="#files-and-directories" title="Permalink to this headline">¶</a></h3>
+<h3>Files and directories<a class="headerlink" href="#files-and-directories" title="Permalink to this heading">¶</a></h3>
 <section id="brainvisa-copy-files">
-<h4>BRAINVISA_COPY_FILES<a class="headerlink" href="#brainvisa-copy-files" title="Permalink to this headline">¶</a></h4>
+<h4>BRAINVISA_COPY_FILES<a class="headerlink" href="#brainvisa-copy-files" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_COPY_FILES</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;component&gt;</span><span class="w"> </span><span class="s">&lt;source</span><span class="w"> </span><span class="s">files&gt;</span><span class="w"> </span><span class="s">[SOURCE_DIRECTORY</span><span class="w"> </span><span class="s">&lt;directory&gt;]</span><span class="w"> </span><span class="s">DESTINATION</span><span class="w"> </span><span class="s">&lt;destination</span><span class="w"> </span><span class="s">directory&gt;</span><span class="w"> </span><span class="s">[IMMEDIATE]</span><span class="w"> </span><span class="s">[GET_TARGET</span><span class="w"> </span><span class="s">&lt;target</span><span class="w"> </span><span class="s">variable&gt;][GET_OUTPUT_FILES</span><span class="w"> </span><span class="s">&lt;target</span><span class="w"> </span><span class="s">variable&gt;]</span><span class="w"> </span><span class="s">[NO_SYMLINKS]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
@@ -301,7 +303,7 @@ The files generated by moc will be added to the source files used to generate an
 </div>
 </section>
 <section id="brainvisa-copy-directory">
-<h4>BRAINVISA_COPY_DIRECTORY<a class="headerlink" href="#brainvisa-copy-directory" title="Permalink to this headline">¶</a></h4>
+<h4>BRAINVISA_COPY_DIRECTORY<a class="headerlink" href="#brainvisa-copy-directory" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_COPY_DIRECTORY</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;source</span><span class="w"> </span><span class="s">directory&gt;</span><span class="w"> </span><span class="s">&lt;destination</span><span class="w"> </span><span class="s">directory&gt;</span><span class="w"> </span><span class="s">&lt;component&gt;</span><span class="w"> </span><span class="s">[IMMEDIATE]</span><span class="w"> </span><span class="s">[GET_TARGET</span><span class="w"> </span><span class="s">&lt;target</span><span class="w"> </span><span class="s">variable&gt;]</span><span class="w"> </span><span class="s">[NO_SYMLINKS]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
@@ -324,9 +326,9 @@ The files generated by moc will be added to the source files used to generate an
 </section>
 </section>
 <section id="documentation">
-<h3>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h3>
+<h3>Documentation<a class="headerlink" href="#documentation" title="Permalink to this heading">¶</a></h3>
 <section id="brainvisa-generate-doxygen-doc">
-<h4>BRAINVISA_GENERATE_DOXYGEN_DOC<a class="headerlink" href="#brainvisa-generate-doxygen-doc" title="Permalink to this headline">¶</a></h4>
+<h4>BRAINVISA_GENERATE_DOXYGEN_DOC<a class="headerlink" href="#brainvisa-generate-doxygen-doc" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_DOXYGEN_DOC</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;input_variable&gt;</span><span class="w"> </span><span class="s">[&lt;file</span><span class="w"> </span><span class="s">to</span><span class="w"> </span><span class="s">copy&gt;</span><span class="w"> </span><span class="s">...]</span><span class="w"> </span><span class="s">[INPUT_PREFIX</span><span class="w"> </span><span class="s">&lt;path&gt;]</span><span class="w"> </span><span class="s">[COMPONENT</span><span class="w"> </span><span class="s">&lt;name&gt;]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
@@ -357,14 +359,14 @@ The files generated by moc will be added to the source files used to generate an
 </div>
 </section>
 <section id="brainvisa-generate-epydoc-doc">
-<h4>BRAINVISA_GENERATE_EPYDOC_DOC<a class="headerlink" href="#brainvisa-generate-epydoc-doc" title="Permalink to this headline">¶</a></h4>
+<h4>BRAINVISA_GENERATE_EPYDOC_DOC<a class="headerlink" href="#brainvisa-generate-epydoc-doc" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_EPYDOC_DOC</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;source</span><span class="w"> </span><span class="s">directory&gt;</span><span class="w"> </span><span class="s">[</span><span class="w"> </span><span class="s">&lt;source</span><span class="w"> </span><span class="s">directory&gt;</span><span class="w"> </span><span class="s">...</span><span class="w"> </span><span class="s">]</span><span class="w"> </span><span class="s">&lt;output</span><span class="w"> </span><span class="s">directory&gt;</span><span class="w"> </span><span class="s">[</span><span class="w"> </span><span class="s">EXCLUDE</span><span class="w"> </span><span class="s">&lt;exclude</span><span class="w"> </span><span class="s">list&gt;</span><span class="w"> </span><span class="s">]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Generates documentation for python source files with Epydoc. No longer used, we write sphinx doc now.</p>
 </section>
 <section id="brainvisa-generate-sphinx-doc">
-<h4>BRAINVISA_GENERATE_SPHINX_DOC<a class="headerlink" href="#brainvisa-generate-sphinx-doc" title="Permalink to this headline">¶</a></h4>
+<h4>BRAINVISA_GENERATE_SPHINX_DOC<a class="headerlink" href="#brainvisa-generate-sphinx-doc" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_SPHINX_DOC</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;source</span><span class="w"> </span><span class="s">directory&gt;</span><span class="w"> </span><span class="s">&lt;output</span><span class="w"> </span><span class="s">directory&gt;</span><span class="w"> </span><span class="s">[TARGET</span><span class="w"> </span><span class="s">&lt;target_name&gt;]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
@@ -376,7 +378,7 @@ The files generated by moc will be added to the source files used to generate an
 </div>
 </section>
 <section id="brainvisa-generate-docbook-doc">
-<h4>BRAINVISA_GENERATE_DOCBOOK_DOC<a class="headerlink" href="#brainvisa-generate-docbook-doc" title="Permalink to this headline">¶</a></h4>
+<h4>BRAINVISA_GENERATE_DOCBOOK_DOC<a class="headerlink" href="#brainvisa-generate-docbook-doc" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_GENERATE_DOCBOOK_DOC</span><span class="p">(</span><span class="w"> </span><span class="s">[EXCLUDE</span><span class="w"> </span><span class="s">&lt;docbook_project_name&gt;]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
@@ -384,21 +386,21 @@ The files generated by moc will be added to the source files used to generate an
 </section>
 </section>
 <section id="dependencies">
-<h3>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h3>
+<h3>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this heading">¶</a></h3>
 <section id="brainvisa-create-cmake-config-files">
-<h4>BRAINVISA_CREATE_CMAKE_CONFIG_FILES<a class="headerlink" href="#brainvisa-create-cmake-config-files" title="Permalink to this headline">¶</a></h4>
+<h4>BRAINVISA_CREATE_CMAKE_CONFIG_FILES<a class="headerlink" href="#brainvisa-create-cmake-config-files" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_CREATE_CMAKE_CONFIG_FILES</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>
 <section id="brainvisa-find-package">
-<h4>BRAINVISA_FIND_PACKAGE<a class="headerlink" href="#brainvisa-find-package" title="Permalink to this headline">¶</a></h4>
+<h4>BRAINVISA_FIND_PACKAGE<a class="headerlink" href="#brainvisa-find-package" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_FIND_PACKAGE</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;component&gt;</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="brainvisa-dependency">
-<h4>BRAINVISA_DEPENDENCY<a class="headerlink" href="#brainvisa-dependency" title="Permalink to this headline">¶</a></h4>
+<h4>BRAINVISA_DEPENDENCY<a class="headerlink" href="#brainvisa-dependency" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_DEPENDENCY</span><span class="p">(</span><span class="w"> </span><span class="s">&lt;pack_type&gt;</span><span class="w"> </span><span class="s">&lt;dependency_type&gt;</span><span class="w"> </span><span class="s">&lt;component&gt;</span><span class="w"> </span><span class="s">&lt;component_pack_type&gt;</span><span class="w"> </span><span class="s">[</span><span class="w"> </span><span class="s">&lt;version</span><span class="w"> </span><span class="s">ranges&gt;</span><span class="w"> </span><span class="s">]</span><span class="w"> </span><span class="s">[BINARY_INDEPENDENT]</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
@@ -423,26 +425,26 @@ The files generated by moc will be added to the source files used to generate an
 </section>
 </section>
 <section id="install">
-<h3>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h3>
+<h3>Install<a class="headerlink" href="#install" title="Permalink to this heading">¶</a></h3>
 <p>Be careful, if you want to use directly the <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">install</span></code> command to install files of the build directory in another location, you’ll have to specify the variable <code class="docutils literal notranslate"><span class="pre">BRAINVISA_INSTALL_PREFIX</span></code> in the make install command. The historical justification is that in order to be able to specify an install location when using <span class="xref std std-doc">bv_packaging</span> script, we had to use a variable that have to be defined at installation step instead of the <code class="docutils literal notranslate"><span class="pre">CMAKE_INSTALL_PREFIX</span></code> which is defined at configuration step.</p>
 <p><strong>Example</strong></p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make <span class="nv">BRAINVISA_INSTALL_PREFIX</span><span class="o">=</span>/tmp/test install-aims-gpl
 </pre></div>
 </div>
 <section id="brainvisa-install-directory">
-<h4>BRAINVISA_INSTALL_DIRECTORY<a class="headerlink" href="#brainvisa-install-directory" title="Permalink to this headline">¶</a></h4>
+<h4>BRAINVISA_INSTALL_DIRECTORY<a class="headerlink" href="#brainvisa-install-directory" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_INSTALL_DIRECTORY</span><span class="p">(</span><span class="w"> </span><span class="s">directory</span><span class="w"> </span><span class="s">destination</span><span class="w"> </span><span class="s">component</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="brainvisa-install">
-<h4>BRAINVISA_INSTALL<a class="headerlink" href="#brainvisa-install" title="Permalink to this headline">¶</a></h4>
+<h4>BRAINVISA_INSTALL<a class="headerlink" href="#brainvisa-install" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span>BRAINVISA_INSTALL
 </pre></div>
 </div>
 </section>
 <section id="brainvisa-install-runtime-libraries">
-<h4>BRAINVISA_INSTALL_RUNTIME_LIBRARIES<a class="headerlink" href="#brainvisa-install-runtime-libraries" title="Permalink to this headline">¶</a></h4>
+<h4>BRAINVISA_INSTALL_RUNTIME_LIBRARIES<a class="headerlink" href="#brainvisa-install-runtime-libraries" title="Permalink to this heading">¶</a></h4>
 <div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">BRAINVISA_INSTALL_RUNTIME_LIBRARIES</span><span class="p">(</span><span class="w"> </span><span class="s">component</span><span class="w"> </span><span class="p">)</span>
 </pre></div>
 </div>
@@ -545,7 +547,7 @@ The files generated by moc will be added to the source files used to generate an
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -568,7 +570,7 @@ The files generated by moc will be added to the source files used to generate an
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2022, CEA.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
     </div>
   </body>
 </html>

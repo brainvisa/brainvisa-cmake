@@ -12,8 +12,10 @@ if( CMAKE_MATCH_1 VERSION_EQUAL "22.04"
     OR CMAKE_MATCH_1 VERSION_GREATER "22.04" )
     string( FIND "${CMAKE_CXX_FLAGS}" "-std" _result )
     if( _result EQUAL -1 )
-        set( CMAKE_CXX_FLAGS "-std=c++17 ${CMAKE_CXX_FLAGS}" CACHE STRING
-            "Flags used by the compiler during all build types (flags forced by brainvisa-cmake)." FORCE )
+        set(CMAKE_CXX_STANDARD 17)
+        set(CMAKE_CXX_STANDARD_REQUIRED ON)
+#         set( CMAKE_CXX_FLAGS "-std=c++17 ${CMAKE_CXX_FLAGS}" CACHE STRING
+#             "Flags used by the compiler during all build types (flags forced by brainvisa-cmake)." FORCE )
     endif()
 else()
     if( CMAKE_MATCH_1 VERSION_EQUAL "16.04"

@@ -1,5 +1,5 @@
 # Version conversion
-cmake_minimum_required (VERSION 2.6.4)
+cmake_minimum_required (VERSION 3.10)
 
 # VERSION_CONVERT
 #   Convert version number either to hexadecimal version

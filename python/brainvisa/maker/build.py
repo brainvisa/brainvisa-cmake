@@ -503,8 +503,9 @@ if len(old_file) == 0:
 
         with open(cmakeLists, 'w') as out:
             print('''
-cmake_minimum_required( VERSION 2.6 )
+cmake_minimum_required( VERSION 3.10 )
 set( CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}" ${CMAKE_PREFIX_PATH} )
+project( "Brainvisa" )
 find_package( brainvisa-cmake NO_POLICY_SCOPE )
 include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 ''', file=out)

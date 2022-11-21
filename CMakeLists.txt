@@ -11,7 +11,7 @@ else()
     project( brainvisa-cmake CXX )
 endif()
 
-cmake_minimum_required( VERSION 2.6 )
+cmake_minimum_required( VERSION 3.10 )
 
 function( BRAINVISA_GLOB_AND_FILTER glob variable )
   file( ${glob} allFiles ${ARGN} )

@@ -147,7 +147,7 @@ On top of the classic CMake functions, we defined functions in *brainvisa-cmake*
 
 .. code-block:: cmake
 
-    cmake_minimum_required( VERSION 2.6 )
+    cmake_minimum_required( VERSION 3.10 )
     find_package( brainvisa-cmake REQUIRED )
     BRAINVISA_PROJECT()
 

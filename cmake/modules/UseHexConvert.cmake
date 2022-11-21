@@ -1,7 +1,7 @@
 # Hexadecimal conversion
 # Code was originaly copied from 
 # https://stackoverflow.com/questions/26182289/convert-from-decimal-to-hexadecimal-in-cmake
-cmake_minimum_required (VERSION 2.6.4)
+cmake_minimum_required (VERSION 3.10)
 
 macro(HEXCHAR2DEC VAR VAL)
     if (${VAL} MATCHES "[0-9]")

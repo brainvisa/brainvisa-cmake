@@ -33,8 +33,9 @@ from __future__ import absolute_import, print_function
 
 import sys
 import os
+import collections
 
-pyqt_ver = 4
+pyqt_ver = 5
 
 
 def get_default_sip_dir():
@@ -78,32 +79,44 @@ if __name__ == '__main__':
     if len(sys.argv) >= 2:
         pyqt_ver = int(sys.argv[1])
 
-    if pyqt_ver == 5:
-        from PyQt5 import QtCore
+    main_mod = 'PyQt%d' % pyqt_ver
+    import importlib
+    QtCore = importlib.import_module('%s.QtCore' % main_mod)
+    #if pyqt_ver == 5:
+        #from PyQt5 import QtCore
 
+    #else:
+        #from PyQt4 import QtCore
+
+    sip_dict = collections.OrderedDict(
+        pyqt_version='%06.x' % QtCore.PYQT_VERSION,
+        pyqt_version_str= QtCore.PYQT_VERSION_STR
+    )
+
+    if pyqt_ver == 6:
+        pass
     else:
-        from PyQt4 import QtCore
-
-    if pyqt_ver == 5:
-        sip_dir = get_default_sip_dir()
-        sip_flags = QtCore.PYQT_CONFIGURATION['sip_flags']
-
-    else:
-        try:
-            import PyQt4.pyqtconfig
-            pyqtcfg = PyQt4.pyqtconfig.Configuration()
-            sip_dir = pyqtcfg.pyqt_sip_dir
-            sip_flags = pyqtcfg.pyqt_sip_flags
-        except ImportError:
-            # PyQt4 >= 4.10.0 was built with configure-ng.py instead of
-            # configure.py, so pyqtconfig.py is not installed.
-            # same method as for Qt5
+        if pyqt_ver == 5:
             sip_dir = get_default_sip_dir()
             sip_flags = QtCore.PYQT_CONFIGURATION['sip_flags']
 
-    print('pyqt_version:%06.x' % QtCore.PYQT_VERSION)
-    print('pyqt_version_str:%s' % QtCore.PYQT_VERSION_STR)
-    print('pyqt_version_tag:%s' % get_qt_tag(sip_flags))
-    print('pyqt_sip_dir:%s' % sip_dir)
-    print('pyqt_sip_flags:%s' % sip_flags)
+        else:
+            try:
+                import PyQt4.pyqtconfig
+                pyqtcfg = PyQt4.pyqtconfig.Configuration()
+                sip_dir = pyqtcfg.pyqt_sip_dir
+                sip_flags = pyqtcfg.pyqt_sip_flags
+            except ImportError:
+                # PyQt4 >= 4.10.0 was built with configure-ng.py instead of
+                # configure.py, so pyqtconfig.py is not installed.
+                # same method as for Qt5
+                sip_dir = get_default_sip_dir()
+                sip_flags = QtCore.PYQT_CONFIGURATION['sip_flags']
+
+        sip_dict['pyqt_version_tag'] = get_qt_tag(sip_flags)
+        sip_dict['pyqt_sip_dir'] = sip_dir
+        sip_dict['pyqt_sip_flags'] = sip_flags
+
+    for k, v in sip_dict.items():
+        print('%s:%s' % (k, v))
 

@@ -16,11 +16,23 @@ if( SIP_VERSION )
   set( SIP_INCLUDE_DIRS "${PYTHON_INCLUDE_PATH}" "${SIP_INCLUDE_DIR}" )
   set(SIP_FOUND TRUE)
 else( SIP_VERSION )
-    # Try to find sip in target root path
-    find_program( SIP_EXECUTABLE
-      NAMES sip${CMAKE_EXECUTABLE_SUFFIX}
-      ONLY_CMAKE_FIND_ROOT_PATH
-      DOC "Path to sip executable" )
+    if( DESIRED_QT_VERSION EQUAL 6 )
+        # Try to find sip in target root path
+        find_program( SIP_EXECUTABLE
+          NAMES sip-build${CMAKE_EXECUTABLE_SUFFIX}
+          ONLY_CMAKE_FIND_ROOT_PATH
+          DOC "Path to sip-build executable" )
+        find_program( SIP_MODULE_EXECUTABLE
+          NAMES sip-module${CMAKE_EXECUTABLE_SUFFIX}
+          ONLY_CMAKE_FIND_ROOT_PATH
+          DOC "Path to sip-module executable" )
+    else()
+        # Try to find sip in target root path
+        find_program( SIP_EXECUTABLE
+          NAMES sip${CMAKE_EXECUTABLE_SUFFIX}
+          ONLY_CMAKE_FIND_ROOT_PATH
+          DOC "Path to sip executable" )
+    endif()
   
     if( SIP_EXECUTABLE )
       find_package( python REQUIRED )
@@ -32,10 +44,15 @@ else( SIP_VERSION )
       execute_process( COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX} ${SIP_EXECUTABLE} -V OUTPUT_VARIABLE SIP_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE )
       set( SIP_VERSION "${SIP_VERSION}" CACHE STRING "Version of sip executable" )
       mark_as_advanced( SIP_VERSION )
-      execute_process( COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX} ${PYTHON_EXECUTABLE} -c "import sipconfig, sys; sys.stdout.write(sipconfig.Configuration().sip_inc_dir + '\\n')"
-        OUTPUT_VARIABLE SIP_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE )
-      set( SIP_INCLUDE_DIR "${SIP_INCLUDE_DIR}" CACHE PATH "Path to sip include files" )
-      mark_as_advanced( SIP_INCLUDE_DIR )
+      if( SIP_VERSION VERSION_LESS 6.0.0 )
+        execute_process( COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX} ${PYTHON_EXECUTABLE} -c "import sipconfig, sys; sys.stdout.write(sipconfig.Configuration().sip_inc_dir + '\\n')"
+          OUTPUT_VARIABLE SIP_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE )
+        set( SIP_INCLUDE_DIR "${SIP_INCLUDE_DIR}" CACHE PATH "Path to sip include files" )
+        mark_as_advanced( SIP_INCLUDE_DIR )
+      else()
+        set( SIP_INCLUDE_DIR "${CMAKE_BINARY_DIR}/include" CACHE PATH "Path to sip include files" )
+        mark_as_advanced( SIP_INCLUDE_DIR )
+      endif()
       set( SIP_INCLUDE_DIRS "${PYTHON_INCLUDE_PATH}" "${SIP_INCLUDE_DIR}" )
       set( SIP_FOUND TRUE )
       if( NOT SIP_FIND_QUIETLY )
@@ -60,12 +77,20 @@ else( SIP_VERSION )
         execute_process( COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX} ${PYTHON_EXECUTABLE} -c "import PyQt${DESIRED_QT_VERSION}.sip"
             RESULT_VARIABLE _new_module )
         if( _new_module EQUAL 0 )
-          set(SIP_FLAGS "-n" "PyQt${DESIRED_QT_VERSION}.sip" CACHE STRING "options passed to SIP program" )
+          set(SIP_FLAGS "-n" "PyQt${DESIRED_QT_VERSION}.sip" CACHE STRING
+              "options passed to SIP program" )
+          set( SIP_MODULE "PyQt${DESIRED_QT_VERSION}.sip" CACHE STRING
+               "sip python module" )
         else()
           set( SIP_FLAGS "" CACHE STRING "options passed to SIP program" )
+          set( SIP_MODULE "sip" CACHE STRING "sip python module" )
+        endif()
+        if( SIP_MODULE_EXECUTABLE )  # sip 6
+          execute_process( COMMAND "${SIP_MODULE_EXECUTABLE}" "--sip-h" "--target-dir" "${CMAKE_BINARY_DIR}/include" "${SIP_MODULE}" )
         endif()
       else()
         set( SIP_FLAGS "" CACHE STRING "options passed to SIP program" )
+        set( SIP_MODULE "sip" CACHE STRING "sip python module" )
       endif()
       if( NOT SIP4MAKE_EXECUTABLE )
         # find the sip4make.py wrapper script

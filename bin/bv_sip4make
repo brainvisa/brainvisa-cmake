@@ -36,6 +36,7 @@
 from __future__ import print_function
 from __future__ import absolute_import
 import os
+import os.path as osp
 import sys
 import shutil
 import tempfile
@@ -65,6 +66,12 @@ elif sys.platform.startswith('win'):
 else:
     sipcmd = 'sip'
 
+sip6 = False
+if osp.basename(sipcmd).startswith('sip-build'):
+    sip6 = True
+
+print('bv_si4make, sip6:', sip6)
+
 try:
     copt = sys.argv.index('-c')
 except ValueError:
@@ -76,15 +83,25 @@ elif copt == len(sys.argv) - 1:
     # print('no argument to -c option. Running sip normally')
     pass
     copt = -1
+if copt >= 0:
+    outdir = sys.argv[copt + 1]
+    if sip6:
+        del sys.argv[copt]
+        del sys.argv[copt]
+
 # find -j option
 try:
-    jopt = sys.argv.index('-j')
+    ijopt = sys.argv.index('-j')
 except ValueError:
-    jopt = -1
-if jopt == len(sys.argv) - 1:
-    jopt = -1
-if jopt >= 0:
-    jopt = int(sys.argv[jopt + 1])
+    ijopt = -1
+if ijopt == len(sys.argv) - 1:
+    ijopt = -1
+if ijopt >= 0:
+    jopt = int(sys.argv[ijopt + 1])
+
+if sip6:
+    del sys.argv[ijopt]
+    del sys.argv[ijopt]
 
 # if --listingOnly, display only the generated source list
 try:
@@ -96,18 +113,33 @@ except ValueError:
 if copt < 0:
     sys.exit(subprocess.call([sipcmd] + sys.argv[1:]) >> 8)
 
-outdir = sys.argv[copt + 1]
+if sip6:
+    # sip 6 works very differently
 
-tdir = tempfile.mkdtemp()
-# print('temp dir:', tdir)
-# print('output dir:', outdir)
-sys.argv[copt + 1] = tdir
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
+    tdir = tempfile.mkdtemp()
+    old_dir = shutil.copytree(outdir, osp.join(tdir, 'sip'), symlinks=True,
+                              ignore_dangling_symlinks=True)
+    # call SIP-build
+    # print(sipcmd + ' "' + string.join( sys.argv[1:], '" "' ) + '"')
+    res = subprocess.call([sipcmd] + sys.argv[1:])
+    new_dir = outdir
 
-# call SIP
-# print(sipcmd + ' "' + string.join( sys.argv[1:], '" "' ) + '"')
-res = subprocess.call([sipcmd] + sys.argv[1:])
-if not os.path.exists(outdir):
-    os.mkdir(outdir)
+else:
+
+    tdir = tempfile.mkdtemp()
+    new_dir = tdir
+    old_dir = outdir
+    # print('temp dir:', tdir)
+    # print('output dir:', outdir)
+    sys.argv[copt + 1] = tdir
+
+    # call SIP
+    # print(sipcmd + ' "' + string.join( sys.argv[1:], '" "' ) + '"')
+    res = subprocess.call([sipcmd] + sys.argv[1:])
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
 
 
 def skipcomment(f):
@@ -118,8 +150,11 @@ def skipcomment(f):
         # if fewer than 5 lines
         pass
 
-if os.path.isdir(tdir):
-    tlist = os.listdir(tdir)
+print('new_dir:', new_dir)
+print('old_dir:', old_dir)
+
+if os.path.isdir(new_dir):
+    tlist = os.listdir(new_dir)
 else:
     tlist = []
 
@@ -130,7 +165,7 @@ if listingOnly != -1:
 if res == 0:
 
     # compare files
-    olist = os.listdir(outdir)
+    olist = os.listdir(old_dir)
     ccfiles = []
 
     # create empty files if -j option is used and not enough files were
@@ -156,7 +191,7 @@ if res == 0:
                 # write an empty file
                 fname = base + str(i) + '.' + ext
                 # print('adding empty file', fname)
-                open(os.path.join(tdir, fname), 'w')
+                open(os.path.join(new_dir, fname), 'w')
                 tlist.append(fname)
 
     line_re = re.compile('^#line ([0-9]+) ".*"$')
@@ -164,10 +199,12 @@ if res == 0:
     for x in tlist:
         if x not in olist:
             print(x, 'is a new file')
-            shutil.copyfile(os.path.join(tdir, x), os.path.join(outdir, x))
+            if new_dir != outdir:
+                shutil.copyfile(os.path.join(new_dir, x),
+                                os.path.join(outdir, x))
         else:
-            tf = open(os.path.join(tdir, x))
-            of = open(os.path.join(outdir, x))
+            tf = open(os.path.join(new_dir, x))
+            of = open(os.path.join(old_dir, x))
             # skip initial comments
             skipcomment(tf)
             skipcomment(of)
@@ -194,10 +231,15 @@ if res == 0:
             of.close()
             if diff:
                 print(x, 'differs')
-                shutil.copyfile(
-                    os.path.join(tdir, x), os.path.join(outdir, x))
-            # else:
-            #     print(x, 'is the same.')
+                if outdir != new_dir:
+                    shutil.copyfile(
+                        os.path.join(new_dir, x), os.path.join(outdir, x))
+            else:
+                print(x, 'is the same.')
+                if outdir == new_dir:
+                    # copy stats from original
+                    shutil.copystat(os.path.join(old_dir, x),
+                                    os.path.join(outdir, x))
 
     # cleanup obsolete files
     for x in olist:
@@ -208,10 +250,7 @@ if res == 0:
             os.unlink(os.path.join(outdir, x))
 
 # delete temp directory
-for x in tlist:
-    os.unlink(os.path.join(tdir, x))
-if os.path.isdir(tdir):
-    os.rmdir(tdir)
+shutil.rmtree(tdir)
 
 # print('SIP exit code:', res)
 if res & 0xff == 0:

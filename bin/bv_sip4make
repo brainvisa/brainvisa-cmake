@@ -117,7 +117,7 @@ if sip6:
     # sip 6 works very differently
 
     if not os.path.exists(outdir):
-        os.mkdir(outdir)
+        os.makedirs(outdir)
     tdir = tempfile.mkdtemp()
     old_dir = shutil.copytree(outdir, osp.join(tdir, 'sip'), symlinks=True,
                               ignore_dangling_symlinks=True)

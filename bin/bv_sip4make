@@ -70,8 +70,6 @@ sip6 = False
 if osp.basename(sipcmd).startswith('sip-build'):
     sip6 = True
 
-print('bv_si4make, sip6:', sip6)
-
 try:
     copt = sys.argv.index('-c')
 except ValueError:
@@ -149,9 +147,6 @@ def skipcomment(f):
     except IOError:
         # if fewer than 5 lines
         pass
-
-print('new_dir:', new_dir)
-print('old_dir:', old_dir)
 
 if os.path.isdir(new_dir):
     tlist = os.listdir(new_dir)
@@ -235,7 +230,7 @@ if res == 0:
                     shutil.copyfile(
                         os.path.join(new_dir, x), os.path.join(outdir, x))
             else:
-                print(x, 'is the same.')
+                # print(x, 'is the same.')
                 if outdir == new_dir:
                     # copy stats from original
                     shutil.copystat(os.path.join(old_dir, x),

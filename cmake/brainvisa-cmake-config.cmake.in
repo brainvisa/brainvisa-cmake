@@ -2495,11 +2495,10 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
     file( GLOB _sip_src "${CMAKE_BINARY_DIR}/${_SIP_INSTALL}/*.sip" )
     foreach( _i ${_sip_src} )
       get_filename_component( _bname "${_i}" NAME )
-#       message( "bname: ${_i} ${sip_build_dir}/${_bname}")
       execute_process( COMMAND cmake -E create_symlink "${_i}" "${sip_build_dir}/${_bname}" )
     endforeach()
 
-    message("CREATE PYPROJECT from: ${brainvisa-cmake_DIR}/../share/pyproject.toml.in to: ${sip_build_dir}/pyproject.toml")
+#     message("CREATE PYPROJECT from: ${brainvisa-cmake_DIR}/../share/pyproject.toml.in to: ${sip_build_dir}/pyproject.toml")
     if( EXISTS "${brainvisa-cmake_DIR}/../share/pyproject.toml.in" )
       get_property( INCLUDE_DIRECTORIES DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES )
       # pythonize list
@@ -2522,7 +2521,7 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
                       USE_SOURCE_PERMISSIONS )
     endif()
 
-    if( 1 ) # ${SIP4MAKE_EXECUTABLE} STREQUAL ${SIP_EXECUTABLE} )
+    if( ${SIP4MAKE_EXECUTABLE} STREQUAL ${SIP_EXECUTABLE} )
       # use regular sip
       add_custom_command(
         OUTPUT ${_sipOutputFiles}

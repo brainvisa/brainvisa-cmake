@@ -17,9 +17,9 @@
 # PYQT6_VERSION_STR - The version of PyQt6 as a human readable string.
 #
 # # PYQT6_VERSION_TAG - The PyQt version tag using by PyQt's sip files.
-# #
-# # PYQT6_SIP_DIR - The directory holding the PyQt6 .sip files.
-# #
+#
+# PYQT6_SIP_DIR - The directory holding the PyQt6 .sip files.
+#
 # # PYQT6_SIP_FLAGS - The SIP flags used to build PyQt.
 
 if( PYQT6_VERSION )
@@ -42,10 +42,10 @@ else()
 #     string( REGEX REPLACE ".*\npyqt_version_tag:([^\n]+).*$" "\\1" PYQT6_VERSION_TAG ${pyqt_config} )
 #     set( PYQT6_VERSION_TAG "${PYQT6_VERSION_TAG}" CACHE STRING "The PyQt version tag using by PyQt's sip files" )
 #     mark_as_advanced( PYQT6_VERSION_TAG )
-#     string( REGEX REPLACE ".*\npyqt_sip_dir:([^\n]+).*$" "\\1" PYQT6_SIP_DIR ${pyqt_config} )
-#     file( TO_CMAKE_PATH "${PYQT6_SIP_DIR}" PYQT6_SIP_DIR )
-#     set( PYQT6_SIP_DIR "${PYQT6_SIP_DIR}" CACHE STRING "The directory holding the PyQt6 .sip files" )
-#     mark_as_advanced( PYQT6_SIP_DIR )
+    string( REGEX REPLACE ".*\npyqt_sip_dir:([^\n]+).*$" "\\1" PYQT6_SIP_DIR ${pyqt_config} )
+    file( TO_CMAKE_PATH "${PYQT6_SIP_DIR}" PYQT6_SIP_DIR )
+    set( PYQT6_SIP_DIR "${PYQT6_SIP_DIR}" CACHE STRING "The directory holding the PyQt6 .sip files" )
+    mark_as_advanced( PYQT6_SIP_DIR )
 #     string( REGEX REPLACE ".*\npyqt_sip_flags:([^\n]+).*$" "\\1" PYQT6_SIP_FLAGS ${pyqt_config} )
 #     set( PYQT6_SIP_FLAGS "${PYQT6_SIP_FLAGS}" CACHE STRING "The SIP flags used to build PyQt" )
 #     mark_as_advanced( PYQT6_SIP_FLAGS )

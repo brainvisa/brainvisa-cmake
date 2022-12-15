@@ -2478,11 +2478,17 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
   # Build include options according to _SIP_INCLUDE
   set( _sipIncludeOptions )
   set( _sipDeps )
+  set( PY_SIP_INCLUDE_DIRECTORIES "[" )
+  set( _sep "" )
   foreach( _i ${_SIP_INCLUDE} )
     set( _sipIncludeOptions ${_sipIncludeOptions} -I "${_i}" )
+    set( PY_SIP_INCLUDE_DIRECTORIES
+         "${PY_SIP_INCLUDE_DIRECTORIES}${_sep}\"${_i}\"" )
+    set( _sep ", " )
     file( GLOB _j "${_i}/*.sip" )
     list( APPEND _sipDeps ${_j} )
   endforeach( _i ${_SIP_INCLUDE} )
+  set( PY_SIP_INCLUDE_DIRECTORIES "${PY_SIP_INCLUDE_DIRECTORIES}]" )
   # this will be many many dependencies,
   # but we cannot know the exact correct ones.
   list( REMOVE_DUPLICATES _sipDeps )

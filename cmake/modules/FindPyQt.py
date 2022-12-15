@@ -33,7 +33,9 @@ from __future__ import absolute_import, print_function
 
 import sys
 import os
+import os.path as osp
 import collections
+import importlib
 
 pyqt_ver = 5
 
@@ -63,6 +65,14 @@ def get_default_sip_dir():
             return p
     return c.default_sip_dir
 
+def get_pyqt6_sip_dir():
+    main_mod = 'PyQt%d' % pyqt_ver
+    PyQt = importlib.import_module(main_mod)
+    pyqt_dir = osp.dirname(PyQt.__file__)
+    if osp.exists(osp.join(pyqt_dir, 'bindings')):
+        return osp.join(pyqt_dir, 'bindings')
+    return None
+
 def get_qt_tag(sip_flags):
     in_t = False
     for item in sip_flags.split(' '):
@@ -80,7 +90,6 @@ if __name__ == '__main__':
         pyqt_ver = int(sys.argv[1])
 
     main_mod = 'PyQt%d' % pyqt_ver
-    import importlib
     QtCore = importlib.import_module('%s.QtCore' % main_mod)
     #if pyqt_ver == 5:
         #from PyQt5 import QtCore
@@ -94,7 +103,8 @@ if __name__ == '__main__':
     )
 
     if pyqt_ver == 6:
-        pass
+        sip_dir = get_pyqt6_sip_dir()
+        sip_dict['pyqt_sip_dir'] = sip_dir
     else:
         if pyqt_ver == 5:
             sip_dir = get_default_sip_dir()

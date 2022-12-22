@@ -20,7 +20,7 @@ from brainvisa.maker.release import set_version_number_and_commit
 logger = logging.getLogger(__name__)
 
 
-def iterate_release_branch_git_repositories(distro, major, minor):
+def iterate_master_branch_git_repositories(distro):
     """Iterate through repositories of the given distro on the release branch.
 
     The generator yields tuples in the form: (local_path, repo_url, branch):
@@ -31,13 +31,13 @@ def iterate_release_branch_git_repositories(distro, major, minor):
     - branch is the name of the release branch for that repository
     (typically {major}.{minor} or brainvisa-{major}.{minor}).
     """
-    release_branch = f'{major:d}.{minor:d}'
     for category_name, category_contents in components_definition:
         for component_name, component_dict in category_contents['components']:
             if distro in component_dict['groups']:
-                if release_branch in component_dict['branches']:
+                # 'bug_fix' is synonymous with 'master'
+                if 'bug_fix' in component_dict['branches']:
                     repo_string, local_path = (
-                        component_dict['branches'][release_branch]
+                        component_dict['branches']['bug_fix']
                     )
                     repo_info = repo_string.split()
                     if repo_info[0] == 'git':
@@ -52,32 +52,19 @@ def iterate_release_branch_git_repositories(distro, major, minor):
                                        repo_info[0], local_path)
 
 
-def bv_tag_release(source_root, version_to_tag, *,
-                   distro='cea', dry_run=True,
-                   fix_source_version_numbers=False):
+def bv_create_release_branches(source_root, new_branch_version, *,
+                               distro='cea', dry_run=True):
     # Parse the version_to_tag
-    major, minor, micro = version_to_tag.split('.')
+    major, minor = new_branch_version.split('.')
     major = int(major)
     minor = int(minor)
-    micro = int(micro)
-    assert version_to_tag == f'{major:d}.{minor:d}.{micro:d}'
+    assert new_branch_version == f'{major:d}.{minor:d}'
 
-    for local_path, repo_url, branch in (
-            iterate_release_branch_git_repositories(distro, major, minor)):
+    for local_path, repo_url, branch in iterate_master_branch_git_repositories(
+            distro):
         logger.debug('Now handling repository at %s (branch: %s, URL: %s)',
                      local_path, branch, repo_url)
         gr = GitRepository(source_root, local_path, repo_url, branch)
-
-        if branch == f'{major:d}.{minor:d}':
-            project_version_follows_brainvisa = True
-        elif branch == f'brainvisa-{major:d}.{minor:d}':
-            project_version_follows_brainvisa = False
-        else:
-            logger.error('skipping %s: unexpected release branch name %r '
-                         f'(expected either {major:d}.{minor:d} or '
-                         f'brainvisa-{major:d}.{minor:d})',
-                         local_path, branch)
-            continue
 
         # Verify the current branch is major.minor or brainvisa-major.minor
         if gr.local_branch != branch:
@@ -100,81 +87,74 @@ def bv_tag_release(source_root, version_to_tag, *,
             continue
         logger.debug('Found version number %s in %s',
                      source_version_tuple, local_path)
-        if (project_version_follows_brainvisa
-                and source_version_tuple != (major, minor, micro)):
-            if fix_source_version_numbers:
-                logger.warning('Will now set the version number to %d.%d.%d '
-                               'in %s', major, minor, micro,
-                               local_path)
-                set_version_number_and_commit(source_root, local_path,
-                                              (major, minor, micro),
-                                              branch, gr,
-                                              dry_run=dry_run)
-            else:
-                logger.error('skipping %s: source version number %s differs from '
-                             'the BrainVISA version about to be released',
-                             local_path,
-                             '.'.join(str(n) for n in source_version_tuple))
-        if (fix_source_version_numbers
-                and not project_version_follows_brainvisa):
-            logger.warning('project %s has source version number %s, '
-                           'please change it manually if needed.',
-                           local_path,
-                           '.'.join(str(n) for n in source_version_tuple))
-
-        if fix_source_version_numbers:
-            continue  # In this mode we do not tag
-
-        # Create the annotated tag and push it
-        if project_version_follows_brainvisa:
-            tag_name = f'v{version_to_tag}'
-            tag_message = f'Version {version_to_tag}'
+        if source_version_tuple == (major, minor, 0):
+            project_version_follows_brainvisa = True
+            new_branch_name = new_branch_version
         else:
-            tag_name = f'brainvisa-{version_to_tag}'
-            tag_message = (f'Version incorporated in '
-                           f'BrainVISA {version_to_tag}')
-        cmd = ['git', 'tag', '-a', '-m', tag_message, tag_name, 'HEAD']
+            project_version_follows_brainvisa = False
+            new_branch_name = f'brainvisa-{new_branch_version}'
+
+        # Create the new branch locally
+        cmd = ['git', 'checkout', '-b', new_branch_name]
         if dry_run:
             logger.info('Dry-run: would now call %s',
                         ' '.join(shlex.quote(arg) for arg in cmd))
         else:
             retcode = gr.call_command(cmd, echo=True)
             if retcode != 0:
-                logger.error('Git error while creating the tag named %s in %s.'
-                             'Leaving the repository in its current state.',
-                             tag_name, local_path)
+                logger.error('Git error while creating the branch named %s in '
+                             '%s. Leaving the repository in its current '
+                             'state.',
+                             new_branch_name, local_path)
                 continue
+
+        # Push the new branch
         try:
             gr.ensure_origin_remote()
         except GitUpdateError:
-            logger.error('Git error setting the origin remote. The tag has '
+            logger.error('Git error setting the origin remote. The branch has '
                          'been created locally but cannot be pushed. Leaving '
                          'the repository in its current state.')
             continue
-        cmd = ['git', 'push', 'origin',
-               f'refs/tags/{tag_name}:refs/tags/{tag_name}']
+        cmd = ['git', 'push', 'origin', '--set-upstream', new_branch_name]
         if dry_run:
             logger.info('Dry-run: would now call %s',
                         ' '.join(shlex.quote(arg) for arg in cmd))
         else:
             retcode = gr.call_command(cmd, echo=True)
             if retcode != 0:
-                logger.error('failed to push the new tag for %s. Will now '
+                logger.error('failed to push the new branch for %s. Will now '
                              'carry on to bumping the version number. Please '
-                             'push the tag yourself afterwards.',
+                             'push the branch yourself afterwards.',
                              local_path)
             else:
-                logger.info('Successfully tagged %s', local_path)
+                logger.info('Successfully pushed %s', local_path)
 
-        # Bump the micro version in project_info.cmake / info.py, commit, and
-        # push
+        # Go back to the master branch
+        cmd = ['git', 'checkout', branch, '--']
+        if dry_run:
+            logger.info('Dry-run: would now call %s',
+                        ' '.join(shlex.quote(arg) for arg in cmd))
+        else:
+            retcode = gr.call_command(cmd, echo=True)
+            if retcode != 0:
+                logger.error('Git error while switching back to the master '
+                             'branch (%s) in %s. Leaving the repository in '
+                             'its current state.',
+                             branch, local_path)
+                continue
+
+        # Bump the minor version on the master branch in project_info.cmake /
+        # info.py, commit, and push
         if project_version_follows_brainvisa:
             set_version_number_and_commit(source_root, local_path,
-                                          (major, minor, micro + 1),
+                                          (major, minor + 1, 0),
                                           branch, gr,
                                           dry_run=dry_run)
         else:
-            candidate_version = source_version_tuple[:2] + (micro + 1,)
+            candidate_version = (source_version_tuple[0],
+                                 source_version_tuple[1] + 1,
+                                 0)
             candidate_version_str = '.'.join(str(n) for n in candidate_version)
             if user_confirms(f'Bump version of {local_path} to '
                              f'{candidate_version_str}? [y/n] ',
@@ -201,13 +181,9 @@ For each Git repository in the distro:
     parser.add_argument('source_root',
                         help='Root of the BrainVISA source directory, '
                         'typically /casa/host/src.')
-    parser.add_argument('version_to_tag', type=str,
-                        help='Version that is about to be tagged '
-                        '(e.g. "5.0.3")')
-    parser.add_argument('--fix-source-version-numbers', action='store_true',
-                        help='In this mode no tags are created, but the source'
-                        'version numbers are set to version_to_tag in projects'
-                        'that follow the BrainVISA version.')
+    parser.add_argument('new_branch_version', type=str,
+                        help='Release branch that is about to be created '
+                        '(e.g. "5.1")')
     parser.add_argument('--distro', default='cea',
                         help='Distro to release. Note that you should use a '
                         'source directory that has the largest set of '
@@ -234,7 +210,7 @@ def main(argv=sys.argv):
     # Configure logging
     logging.basicConfig(
         level=min(args.logging_level, logging.INFO),
-        filename='bv_tag_release.log',
+        filename='bv_create_release_branches.log',
         filemode='a',
     )
     root_logger = logging.getLogger()
@@ -254,12 +230,11 @@ def main(argv=sys.argv):
                     'the "logutils" Python package (e.g. with '
                     'python3 -m pip install logutils)')
 
-    return bv_tag_release(
+    return bv_create_release_branches(
         args.source_root,
-        args.version_to_tag,
+        args.new_branch_version,
         distro=args.distro,
         dry_run=args.dry_run,
-        fix_source_version_numbers=args.fix_source_version_numbers,
     ) or 0
 
 

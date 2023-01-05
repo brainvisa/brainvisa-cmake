@@ -167,7 +167,7 @@ class GitRepository(object):
     def index_dirty(self):
         """Test if the repository has uncommitted changes in the index."""
         retcode = self.call_command(['git', 'diff', '--no-ext-diff',
-                                     '--quiet'])
+                                     '--cached', '--quiet'])
         return (retcode != 0)
 
     @property

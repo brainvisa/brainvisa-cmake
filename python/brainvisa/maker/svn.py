@@ -590,10 +590,7 @@ def svn_glob( *urlpatterns ):
       # Create stack to solve pattern
       url_path_pattern_stack = list()
       url_path_pattern_stack.append(
-          tuple(
-                                  string.split(
-                                      url_pattern_splitted.path,
-                                      posixpath.sep ) ) )
+          tuple(url_pattern_splitted.path.split(posixpath.sep)))
       
       while( len(url_path_pattern_stack) ):
         url_path_pattern_splitted = url_path_pattern_stack.pop()
@@ -906,7 +903,7 @@ class SvnComponent( VersionControlComponent ):
         # Find tags, branches, trunk in url to get a base url
         base_path = list()
         branch_type = None
-        for d in string.split(path, sep):
+        for d in path.split(sep):
             if d in ( SvnComponent.TRUNK_DIR,
                       SvnComponent.BUG_FIX_DIR,
                       SvnComponent.RELEASES_DIR,

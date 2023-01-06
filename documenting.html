@@ -46,25 +46,25 @@
 <h1>Documenting projects using brainvisa-cmake<a class="headerlink" href="#documenting-projects-using-brainvisa-cmake" title="Permalink to this heading">¶</a></h1>
 <p>Documentation in software projects is supported via external tools like <a class="reference external" href="http://www.doxygen.org">Doxygen</a> or <a class="reference external" href="http://sphinx-doc.org">Sphinx</a>, and are integrated in brainvisa-cmake infrastructure.</p>
 <p>Documentation is generated within the <code class="docutils literal notranslate"><span class="pre">doc</span></code> step of <code class="docutils literal notranslate"><span class="pre">bv_maker</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_maker doc
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_maker<span class="w"> </span>doc
 </pre></div>
 </div>
 <p>Alternatively, building documentation can be triggered via the <code class="docutils literal notranslate"><span class="pre">make</span></code> command from a build directory. Several targets control documentation:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make doc
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>doc
 </pre></div>
 </div>
 <p>will build all docs</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make usrdoc
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>usrdoc
 </pre></div>
 </div>
 <p>will build user documentations</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make devdoc
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>devdoc
 </pre></div>
 </div>
 <p>will build development documentations</p>
 <p>and generally project-specific targets will exist, like for instance:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make brainvisa-cmake-usrsphinx
-make anatomist-free-devdoc
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>brainvisa-cmake-usrsphinx
+make<span class="w"> </span>anatomist-free-devdoc
 </pre></div>
 </div>
 <p>etc.</p>
@@ -219,8 +219,8 @@ make anatomist-free-devdoc
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, CEA.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.0.0.
+        &#169; Copyright 2023, CEA.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.1.
     </div>
   </body>
 </html>

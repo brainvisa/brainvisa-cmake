@@ -50,18 +50,18 @@
 <section id="testing-build-directories">
 <h3>Testing build directories<a class="headerlink" href="#testing-build-directories" title="Permalink to this heading">¶</a></h3>
 <p>Basically, tests can be run through the <a class="reference internal" href="bv_maker.html"><span class="doc">bv_maker</span></a> command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_maker <span class="nb">test</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_maker<span class="w"> </span><span class="nb">test</span>
 </pre></div>
 </div>
 <p>Of course options may be added to restrict to some build directories for instance using the <code class="docutils literal notranslate"><span class="pre">-d</span></code> option (see <a class="reference internal" href="bv_maker.html"><span class="doc">bv_maker options</span></a> for details).</p>
 <p><code class="docutils literal notranslate"><span class="pre">bv_maker</span></code> also has <a class="reference internal" href="bv_maker.html#test-step"><span class="std std-ref">options specific to the test step</span></a>, namely the <code class="docutils literal notranslate"><span class="pre">-t</span></code> option which may be used to run only a part of tests. For instance:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_maker <span class="nb">test</span> -t <span class="s1">&#39;-VV -R ^carto&#39;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_maker<span class="w"> </span><span class="nb">test</span><span class="w"> </span>-t<span class="w"> </span><span class="s1">&#39;-VV -R ^carto&#39;</span>
 </pre></div>
 </div>
 <p>will run tests in verbose mode, and run only tests whth names starting with <code class="docutils literal notranslate"><span class="pre">carto</span></code>.</p>
 <p>Basically, this <code class="docutils literal notranslate"><span class="pre">bv_maker</span></code> command runs <a class="reference external" href="https://cmake.org/cmake/help/v3.0/manual/ctest.1.html">ctest</a> so it is also possible to go into a build directory, and run <code class="docutils literal notranslate"><span class="pre">ctest</span></code>, or <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">test</span></code>, by hand:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> /home/brutus/build
-ctest -VV -R ^carto
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>/home/brutus/build
+ctest<span class="w"> </span>-VV<span class="w"> </span>-R<span class="w"> </span>^carto
 </pre></div>
 </div>
 <p>These commands will do almost the same as the bv_maker variant, except that notification and logging will not take place.</p>
@@ -71,11 +71,11 @@ ctest -VV -R ^carto
 <p>Similarly, bv_maker allows to test installed packages, after bv_maker steps <a class="reference internal" href="bv_maker.html#pack-step"><span class="std std-ref">pack</span></a> and <a class="reference internal" href="bv_maker.html#install-pack-step"><span class="std std-ref">install_pack</span></a> have been successfully done. This is the <a class="reference internal" href="bv_maker.html#test-pack-step"><span class="std std-ref">test_pack</span></a> step.</p>
 <p>In this situation, tests are performed as configured in the corresponding build tree, but are running programs in an installed binary package.</p>
 <p>Tests may be run in a different environment: on a different machine (through <code class="docutils literal notranslate"><span class="pre">ssh</span></code>), or via a <a class="reference external" href="http://www.docker.com">docker container</a> for instance, or both, as configured in the <code class="docutils literal notranslate"><span class="pre">bv_maker.cfg</span></code> file: see <a class="reference internal" href="#configuring-installed-packages-tests">Configuring installed packages tests</a>. This way, tests can be run in a realistic situation as if the software is installed on a different (and minimal) client machine.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_maker test_pack
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_maker<span class="w"> </span>test_pack
 </pre></div>
 </div>
 <p>Here again, options are allowed to restrict to specific package directories, part of tests etc. Note that the <code class="docutils literal notranslate"><span class="pre">-d</span></code> option here must refer to a <span class="xref std std-ref">package directory</span>, which may admit some fancy wildcards, and must be specified the same way. As an example, for our build system for BrainVisa, we may use:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_maker -d <span class="s1">&#39;/neurospin/tmp/brainvisa/tests/repositories/public/%(version)s-%(date)s/%(os)s/packages&#39;</span> test_pack -t <span class="s1">&#39;-VV -R carto*&#39;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bv_maker<span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;/neurospin/tmp/brainvisa/tests/repositories/public/%(version)s-%(date)s/%(os)s/packages&#39;</span><span class="w"> </span>test_pack<span class="w"> </span>-t<span class="w"> </span><span class="s1">&#39;-VV -R carto*&#39;</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -115,13 +115,13 @@ ctest -VV -R ^carto
 <h3>Email notification<a class="headerlink" href="#email-notification" title="Permalink to this heading">¶</a></h3>
 <p>Emails can be sent when a bv_maker step finishes, or only in case of failure.</p>
 <p>Such notification and logging have to be setup in the <a class="reference internal" href="configuration.html"><span class="doc">bv_maker.cfg configuration file</span></a>, more precisely in the <a class="reference internal" href="configuration.html#general-section"><span class="std std-ref">general section</span></a> of it:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> general <span class="o">]</span>
-<span class="nv">email_notification_by_default</span> <span class="o">=</span> ON
-<span class="nv">failure_email</span> <span class="o">=</span> myname@myserver.com
-<span class="nv">success_email</span> <span class="o">=</span> myname@myserver.com
-<span class="nv">smtp_server</span> <span class="o">=</span> mail.myserver.com
-<span class="nv">from_email</span> <span class="o">=</span> myself@myserver.com
-<span class="nv">reply_to_email</span> <span class="o">=</span> support@myserver.com
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="w"> </span>general<span class="w"> </span><span class="o">]</span>
+<span class="nv">email_notification_by_default</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>ON
+<span class="nv">failure_email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>myname@myserver.com
+<span class="nv">success_email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>myname@myserver.com
+<span class="nv">smtp_server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>mail.myserver.com
+<span class="nv">from_email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>myself@myserver.com
+<span class="nv">reply_to_email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>support@myserver.com
 </pre></div>
 </div>
 <p>Note that if <code class="docutils literal notranslate"><span class="pre">email_notification_by_default</span></code> is not set to <code class="docutils literal notranslate"><span class="pre">ON</span></code>, bv_maker will need to be invoked with the <code class="docutils literal notranslate"><span class="pre">--email</span></code> option to actually send email notification.</p>
@@ -131,8 +131,8 @@ ctest -VV -R ^carto
 <h3>Log file<a class="headerlink" href="#log-file" title="Permalink to this heading">¶</a></h3>
 <p>Additionally it can also maintain a file of past <code class="docutils literal notranslate"><span class="pre">bv_maker</span></code> executions and the status of all steps. These tools are useful for automatic build and testing, continuous integration etc.</p>
 <p>This is setup in the <a class="reference internal" href="configuration.html"><span class="doc">The bv_maker.cfg configuration file</span></a> option <code class="docutils literal notranslate"><span class="pre">global_status_file</span></code> in the <a class="reference internal" href="configuration.html#general-section"><span class="std std-ref">general section</span></a>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> general <span class="o">]</span>
-<span class="nv">global_status_file</span> <span class="o">=</span> /home/tests/bv_maker_log.log
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="w"> </span>general<span class="w"> </span><span class="o">]</span>
+<span class="nv">global_status_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>/home/tests/bv_maker_log.log
 </pre></div>
 </div>
 <p>See <a class="reference internal" href="#displaying-build-status"><span class="std std-ref">Displaying build status</span></a> below for how to use the log file.</p>
@@ -140,11 +140,11 @@ ctest -VV -R ^carto
 <section id="notification-to-a-jenkins-server">
 <h3>Notification to a Jenkins server<a class="headerlink" href="#notification-to-a-jenkins-server" title="Permalink to this heading">¶</a></h3>
 <p><a class="reference internal" href="bv_maker.html"><span class="doc">bv_maker</span></a> can connect to a <a class="reference external" href="https://jenkins.io/">Jenkins</a> server to log step results, so as to allow displaying them on a server. This is not the usual way to use Jenkins, which normally operates builds and tests from the server, but here bv_maker runs in its own (typically from a unix crontab), and connects to the Jenkins server to store jobs results (using “external jobs” in Jenkins dialect). This way, builds and tests running on a private network can still log results to a server visible from the internet.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> general <span class="o">]</span>
-<span class="nv">jenkins_build_name</span> <span class="o">=</span> brainvisa-<span class="nv">$HOSTNAME</span>-%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>directory_id<span class="o">)</span>s-%<span class="o">(</span>project<span class="o">)</span>s-%<span class="o">(</span>step<span class="o">)</span>s
-<span class="nv">jenkins_server_url</span> <span class="o">=</span> http://myserver.org/builds
-<span class="nv">jenkins_token</span> <span class="o">=</span> something_to_get_from_jenkins_server
-<span class="nv">jenkins_username</span> <span class="o">=</span> test_login
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="w"> </span>general<span class="w"> </span><span class="o">]</span>
+<span class="nv">jenkins_build_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>brainvisa-<span class="nv">$HOSTNAME</span>-%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>directory_id<span class="o">)</span>s-%<span class="o">(</span>project<span class="o">)</span>s-%<span class="o">(</span>step<span class="o">)</span>s
+<span class="nv">jenkins_server_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>http://myserver.org/builds
+<span class="nv">jenkins_token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>something_to_get_from_jenkins_server
+<span class="nv">jenkins_username</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>test_login
 </pre></div>
 </div>
 </section>
@@ -154,8 +154,8 @@ ctest -VV -R ^carto
 <section id="id2">
 <h3>Log file<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h3>
 <p>When <code class="docutils literal notranslate"><span class="pre">bv_maker</span></code> is running, each step execution status may be logged in a single file: a line is appended to it when a step finishes. This is enabled if the <code class="docutils literal notranslate"><span class="pre">bv_maker.cfg</span></code> file has the <a class="reference internal" href="configuration.html#general-section"><span class="std std-ref">global_status_file option</span></a> in its general section:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> general <span class="o">]</span>
-<span class="nv">global_status_file</span> <span class="o">=</span> /home/brutus/bv_builds.log
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="w"> </span>general<span class="w"> </span><span class="o">]</span>
+<span class="nv">global_status_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>/home/brutus/bv_builds.log
 </pre></div>
 </div>
 <p>This file is a simple text file, containing just one line per bv_maker step execution, its status, run date, and system name. For instance:</p>
@@ -208,12 +208,12 @@ OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86
 <p><code class="docutils literal notranslate"><span class="pre">bv_maker</span></code> can run tests of installed packages (after successful <code class="docutils literal notranslate"><span class="pre">pack</span></code> and <code class="docutils literal notranslate"><span class="pre">install_pack</span></code> steps), within the <code class="docutils literal notranslate"><span class="pre">testref_pack</span></code> and <code class="docutils literal notranslate"><span class="pre">test_pack</span></code> steps. Such tests can make use of remote or virtual machines to perform tests in a “clean”, controlled, test environment, different from the build machine. Actually, to be precise, the <code class="docutils literal notranslate"><span class="pre">install_pack</span></code> step also uses the same mechanism and can also take place on a remote or virtual machine, in the same manner as running the tests themselves.</p>
 <p>However tests are always triggered from the build machine, which will in turn, connect to remote or virtual test machines.</p>
 <p>Tests configuration is part of a <span class="xref std std-ref">package directory</span> specification of the <a class="reference internal" href="configuration.html"><span class="doc">bv_maker.cfg configuration file</span></a>. They are mainly controlled via the <code class="docutils literal notranslate"><span class="pre">remote_test_host_cmd</span></code> variable. The contents of this variable is prepended to test commands, so they can make the connection and indirection trick. For instance:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> package /home/brutus/tests/packages <span class="o">]</span>
-<span class="nv">build_directory</span> <span class="o">=</span> /home/brutus/build
-<span class="nv">installer_filename</span> <span class="o">=</span> /home/brutus/tests/brainvisa_installer
-<span class="nv">data_repos_dir</span> <span class="o">=</span> /home/brutus/tests/data/packages
-<span class="nv">test_install_dir</span> <span class="o">=</span> /home/brutus/tests/test_install
-<span class="nv">remote_test_host_cmd</span> <span class="o">=</span> ssh -t -X test_machine <span class="nv">BRAINVISA_TEST_RUN_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span> <span class="nv">BRAINVISA_TEST_REF_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="w"> </span>package<span class="w"> </span>/home/brutus/tests/packages<span class="w"> </span><span class="o">]</span>
+<span class="nv">build_directory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>/home/brutus/build
+<span class="nv">installer_filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>/home/brutus/tests/brainvisa_installer
+<span class="nv">data_repos_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>/home/brutus/tests/data/packages
+<span class="nv">test_install_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>/home/brutus/tests/test_install
+<span class="nv">remote_test_host_cmd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>ssh<span class="w"> </span>-t<span class="w"> </span>-X<span class="w"> </span>test_machine<span class="w"> </span><span class="nv">BRAINVISA_TEST_RUN_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span><span class="w"> </span><span class="nv">BRAINVISA_TEST_REF_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span>
 </pre></div>
 </div>
 <p>Note that test data directories have to be handled manually in remote machines access: bv_maker will setup <strong>locally</strong> the environment variables <code class="docutils literal notranslate"><span class="pre">BRAINVISA_TEST_RUN_DATA_DIR</span></code> and <code class="docutils literal notranslate"><span class="pre">$BRAINVISA_TEST_REF_DATA_DIR</span></code>, but passing them through a ssh connection or to a docker machine is the responsibility of the <code class="docutils literal notranslate"><span class="pre">remote_test_host_cmd</span></code> configuration.</p>
@@ -225,7 +225,7 @@ OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86
 <section id="testing-using-docker">
 <h3>Testing using Docker<a class="headerlink" href="#testing-using-docker" title="Permalink to this heading">¶</a></h3>
 <p>Another example using <a class="reference external" href="http://docker.com">docker</a> would look the following:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">remote_test_host_cmd</span> <span class="o">=</span> docker run --rm -u <span class="s2">&quot;</span><span class="k">$(</span>id -u<span class="k">)</span><span class="s2">:</span><span class="k">$(</span>id -g<span class="k">)</span><span class="s2">&quot;</span> -e <span class="nv">USER</span><span class="o">=</span><span class="nv">$USER</span> -e <span class="nv">TMPDIR</span><span class="o">=</span>/home/brutus/tmp:/home/brutus/tmp -v <span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span> -e <span class="nv">HOME</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span> -v /tmp/.X11-unix:/tmp/.X11-unix --net<span class="o">=</span>host -e <span class="nv">DISPLAY</span><span class="o">=</span><span class="nv">$DISPLAY</span> -e <span class="nv">BRAINVISA_TEST_REF_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span> -e <span class="nv">BRAINVISA_TEST_RUN_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span> -v <span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span> -v <span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span> cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">remote_test_host_cmd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-u<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>id<span class="w"> </span>-u<span class="k">)</span><span class="s2">:</span><span class="k">$(</span>id<span class="w"> </span>-g<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">USER</span><span class="o">=</span><span class="nv">$USER</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">TMPDIR</span><span class="o">=</span>/home/brutus/tmp:/home/brutus/tmp<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">HOME</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span><span class="w"> </span>-v<span class="w"> </span>/tmp/.X11-unix:/tmp/.X11-unix<span class="w"> </span>--net<span class="o">=</span>host<span class="w"> </span>-e<span class="w"> </span><span class="nv">DISPLAY</span><span class="o">=</span><span class="nv">$DISPLAY</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">BRAINVISA_TEST_REF_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">BRAINVISA_TEST_RUN_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span><span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span><span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span><span class="w"> </span>cati/brainvisa-test:ubuntu-16.04<span class="w"> </span>xvfb-run<span class="w"> </span>--auto-servernum
 </pre></div>
 </div>
 <p>Thus the appropriate docker command will be prepended to all tests.</p>
@@ -242,7 +242,7 @@ OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86
 <li><p>because it does not work on very old systems: for instance we are still performing builds on a Mandriva 2008 system, which is not compatible with Docker.</p></li>
 </ul>
 <p>To fix this situation, we can mix the <code class="docutils literal notranslate"><span class="pre">ssh</span></code> and <code class="docutils literal notranslate"><span class="pre">docker</span></code> approaches, to make a remote machine run Docker and perform tests in it. Ex:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">remote_test_host_cmd</span> <span class="o">=</span> ssh -t -X test_machine docker run --rm -u <span class="s2">&quot;</span><span class="k">$(</span>id -u<span class="k">)</span><span class="s2">:</span><span class="k">$(</span>id -g<span class="k">)</span><span class="s2">&quot;</span> -e <span class="nv">USER</span><span class="o">=</span><span class="nv">$USER</span> -e <span class="nv">TMPDIR</span><span class="o">=</span>/home/brutus/tmp:/home/brutus/tmp -v <span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span> -e <span class="nv">HOME</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span> -v /tmp/.X11-unix:/tmp/.X11-unix --net<span class="o">=</span>host -e <span class="nv">DISPLAY</span><span class="o">=</span><span class="nv">$DISPLAY</span> -e <span class="nv">BRAINVISA_TEST_REF_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span> -e <span class="nv">BRAINVISA_TEST_RUN_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span> -v <span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span> -v <span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span> cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">remote_test_host_cmd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>ssh<span class="w"> </span>-t<span class="w"> </span>-X<span class="w"> </span>test_machine<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-u<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>id<span class="w"> </span>-u<span class="k">)</span><span class="s2">:</span><span class="k">$(</span>id<span class="w"> </span>-g<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">USER</span><span class="o">=</span><span class="nv">$USER</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">TMPDIR</span><span class="o">=</span>/home/brutus/tmp:/home/brutus/tmp<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">HOME</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span><span class="w"> </span>-v<span class="w"> </span>/tmp/.X11-unix:/tmp/.X11-unix<span class="w"> </span>--net<span class="o">=</span>host<span class="w"> </span>-e<span class="w"> </span><span class="nv">DISPLAY</span><span class="o">=</span><span class="nv">$DISPLAY</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">BRAINVISA_TEST_REF_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">BRAINVISA_TEST_RUN_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span><span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span><span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span><span class="w"> </span>cati/brainvisa-test:ubuntu-16.04<span class="w"> </span>xvfb-run<span class="w"> </span>--auto-servernum
 </pre></div>
 </div>
 <p>which essentially concatenates the config lines of the ssh and the docker variants.</p>
@@ -254,93 +254,93 @@ OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86
 <section id="real-life-example">
 <h3>Real life example<a class="headerlink" href="#real-life-example" title="Permalink to this heading">¶</a></h3>
 <p>Here is a more complete example of a full <code class="docutils literal notranslate"><span class="pre">bv_maker.cfg</span></code> file from our build systems. Only the email addresses have been changed from our actual configuration (to avoid spams).</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> general <span class="o">]</span>
-  <span class="nv">global_status_file</span> <span class="o">=</span> /neurospin/brainvisa/build/builds.log
-  <span class="nv">failure_email</span> <span class="o">=</span> brainvisa-build-notification@cea.fr
-  <span class="nv">smtp_server</span> <span class="o">=</span> mx.intra.cea.fr
-  <span class="nv">from_email</span> <span class="o">=</span> brainvisa-build-notification@cea.fr
-  <span class="nv">reply_to_email</span> <span class="o">=</span> brainvisa-build-notification@cea.fr
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="w"> </span>general<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span><span class="nv">global_status_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>/neurospin/brainvisa/build/builds.log
+<span class="w">  </span><span class="nv">failure_email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>brainvisa-build-notification@cea.fr
+<span class="w">  </span><span class="nv">smtp_server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>mx.intra.cea.fr
+<span class="w">  </span><span class="nv">from_email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>brainvisa-build-notification@cea.fr
+<span class="w">  </span><span class="nv">reply_to_email</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>brainvisa-build-notification@cea.fr
 
-<span class="o">[</span> <span class="nb">source</span> /neurospin/brainvisa/sources <span class="o">]</span>
-  <span class="nv">build_condition</span> <span class="o">=</span> gethostname<span class="o">()</span> <span class="o">==</span> <span class="s1">&#39;is220756&#39;</span>
-  + all trunk
-  + all bug_fix
-  + all tag
-  + catidb trunk
-  + catidb bug_fix
-  - ptk:* trunk
-  + brainvisa/development/build-config/trunk development/build-config/trunk
-  - qualicati trunk
-  + brainvisa/casa casa
+<span class="o">[</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>/neurospin/brainvisa/sources<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span><span class="nv">build_condition</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>gethostname<span class="o">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;is220756&#39;</span>
+<span class="w">  </span>+<span class="w"> </span>all<span class="w"> </span>trunk
+<span class="w">  </span>+<span class="w"> </span>all<span class="w"> </span>bug_fix
+<span class="w">  </span>+<span class="w"> </span>all<span class="w"> </span>tag
+<span class="w">  </span>+<span class="w"> </span>catidb<span class="w"> </span>trunk
+<span class="w">  </span>+<span class="w"> </span>catidb<span class="w"> </span>bug_fix
+<span class="w">  </span>-<span class="w"> </span>ptk:*<span class="w"> </span>trunk
+<span class="w">  </span>+<span class="w"> </span>brainvisa/development/build-config/trunk<span class="w"> </span>development/build-config/trunk
+<span class="w">  </span>-<span class="w"> </span>qualicati<span class="w"> </span>trunk
+<span class="w">  </span>+<span class="w"> </span>brainvisa/casa<span class="w"> </span>casa
 
-<span class="o">[</span> build /neurospin/brainvisa/build/<span class="nv">$I2BM_OSID</span>/bug_fix <span class="o">]</span>
-  <span class="nv">default_steps</span> <span class="o">=</span> configure build doc <span class="nb">test</span>
-  <span class="nv">make_options</span> <span class="o">=</span> -j4
-  <span class="nv">build_type</span> <span class="o">=</span> Release
-  <span class="nv">clean_config</span> <span class="o">=</span> ON
-  <span class="nv">clean_build</span> <span class="o">=</span> ON
-  all bug_fix /neurospin/brainvisa/sources
-  - connectomist-*
-  - nuclear_processing:*
-  - longitudinal_pipelines
-  - sandbox
-  - famis
-  - ptk:*
-  - axon_web
+<span class="o">[</span><span class="w"> </span>build<span class="w"> </span>/neurospin/brainvisa/build/<span class="nv">$I2BM_OSID</span>/bug_fix<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span><span class="nv">default_steps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>configure<span class="w"> </span>build<span class="w"> </span>doc<span class="w"> </span><span class="nb">test</span>
+<span class="w">  </span><span class="nv">make_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>-j4
+<span class="w">  </span><span class="nv">build_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>Release
+<span class="w">  </span><span class="nv">clean_config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>ON
+<span class="w">  </span><span class="nv">clean_build</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>ON
+<span class="w">  </span>all<span class="w"> </span>bug_fix<span class="w"> </span>/neurospin/brainvisa/sources
+<span class="w">  </span>-<span class="w"> </span>connectomist-*
+<span class="w">  </span>-<span class="w"> </span>nuclear_processing:*
+<span class="w">  </span>-<span class="w"> </span>longitudinal_pipelines
+<span class="w">  </span>-<span class="w"> </span>sandbox
+<span class="w">  </span>-<span class="w"> </span>famis
+<span class="w">  </span>-<span class="w"> </span>ptk:*
+<span class="w">  </span>-<span class="w"> </span>axon_web
 
 <span class="c1"># data packages and repository (no installer)</span>
-<span class="o">[</span> package /neurospin/tmp/brainvisa/tests/repositories/public/%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>date<span class="o">)</span>s/data-%<span class="o">(</span>os<span class="o">)</span>s/packages <span class="o">]</span>
-  <span class="nv">build_directory</span> <span class="o">=</span> /neurospin/brainvisa/build/<span class="nv">$I2BM_OSID</span>/bug_fix
-  <span class="nv">packaging_options</span> <span class="o">=</span> --data --repository-only
-  <span class="nv">init_components_from_build_dir</span> <span class="o">=</span> OFF
-  <span class="nv">build_condition</span> <span class="o">=</span> <span class="o">(</span>gethostname<span class="o">()</span> !<span class="o">=</span> <span class="s1">&#39;michael&#39;</span><span class="o">)</span> or os.environ.get<span class="o">(</span><span class="s1">&#39;BRAINVISA_FORCE_PACKAGING&#39;</span>, <span class="s1">&#39;OFF&#39;</span><span class="o">)</span> <span class="o">==</span> <span class="s1">&#39;ON&#39;</span>
-  <span class="nv">default_steps</span> <span class="o">=</span> pack
-  brainvisa-share bug_fix /neurospin/brainvisa/sources
-  sulci-models bug_fix /neurospin/brainvisa/sources
+<span class="o">[</span><span class="w"> </span>package<span class="w"> </span>/neurospin/tmp/brainvisa/tests/repositories/public/%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>date<span class="o">)</span>s/data-%<span class="o">(</span>os<span class="o">)</span>s/packages<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span><span class="nv">build_directory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>/neurospin/brainvisa/build/<span class="nv">$I2BM_OSID</span>/bug_fix
+<span class="w">  </span><span class="nv">packaging_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>--data<span class="w"> </span>--repository-only
+<span class="w">  </span><span class="nv">init_components_from_build_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>OFF
+<span class="w">  </span><span class="nv">build_condition</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">(</span>gethostname<span class="o">()</span><span class="w"> </span>!<span class="o">=</span><span class="w"> </span><span class="s1">&#39;michael&#39;</span><span class="o">)</span><span class="w"> </span>or<span class="w"> </span>os.environ.get<span class="o">(</span><span class="s1">&#39;BRAINVISA_FORCE_PACKAGING&#39;</span>,<span class="w"> </span><span class="s1">&#39;OFF&#39;</span><span class="o">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;ON&#39;</span>
+<span class="w">  </span><span class="nv">default_steps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>pack
+<span class="w">  </span>brainvisa-share<span class="w"> </span>bug_fix<span class="w"> </span>/neurospin/brainvisa/sources
+<span class="w">  </span>sulci-models<span class="w"> </span>bug_fix<span class="w"> </span>/neurospin/brainvisa/sources
 
 <span class="c1"># software packages and repository (with installer and testing)</span>
-<span class="o">[</span> package /neurospin/tmp/brainvisa/tests/repositories/public/%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>date<span class="o">)</span>s/%<span class="o">(</span>os<span class="o">)</span>s/packages <span class="o">]</span>
-  <span class="nv">build_directory</span> <span class="o">=</span> /neurospin/brainvisa/build/<span class="nv">$I2BM_OSID</span>/bug_fix
-  <span class="nv">packaging_options</span> <span class="o">=</span> --online-only
-  <span class="nv">installer_filename</span> <span class="o">=</span> /neurospin/tmp/brainvisa/tests/repositories/public/%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>date<span class="o">)</span>s/%<span class="o">(</span>os<span class="o">)</span>s/brainvisa-installer/brainvisa_installer-%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>os<span class="o">)</span>s-%<span class="o">(</span>online<span class="o">)</span>s
-  <span class="nv">data_repos_dir</span> <span class="o">=</span> /neurospin/tmp/brainvisa/tests/repositories/public/%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>date<span class="o">)</span>s/data-%<span class="o">(</span>os<span class="o">)</span>s/packages
-  <span class="nv">test_install_dir</span> <span class="o">=</span> /neurospin/tmp/brainvisa/tests/repositories/public/%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>date<span class="o">)</span>s/%<span class="o">(</span>os<span class="o">)</span>s/test_install
-  <span class="c1"># build every 5 days, and not on michael (Qt installer is not installed on michael)</span>
+<span class="o">[</span><span class="w"> </span>package<span class="w"> </span>/neurospin/tmp/brainvisa/tests/repositories/public/%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>date<span class="o">)</span>s/%<span class="o">(</span>os<span class="o">)</span>s/packages<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span><span class="nv">build_directory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>/neurospin/brainvisa/build/<span class="nv">$I2BM_OSID</span>/bug_fix
+<span class="w">  </span><span class="nv">packaging_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>--online-only
+<span class="w">  </span><span class="nv">installer_filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>/neurospin/tmp/brainvisa/tests/repositories/public/%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>date<span class="o">)</span>s/%<span class="o">(</span>os<span class="o">)</span>s/brainvisa-installer/brainvisa_installer-%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>os<span class="o">)</span>s-%<span class="o">(</span>online<span class="o">)</span>s
+<span class="w">  </span><span class="nv">data_repos_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>/neurospin/tmp/brainvisa/tests/repositories/public/%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>date<span class="o">)</span>s/data-%<span class="o">(</span>os<span class="o">)</span>s/packages
+<span class="w">  </span><span class="nv">test_install_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>/neurospin/tmp/brainvisa/tests/repositories/public/%<span class="o">(</span>version<span class="o">)</span>s-%<span class="o">(</span>date<span class="o">)</span>s/%<span class="o">(</span>os<span class="o">)</span>s/test_install
+<span class="w">  </span><span class="c1"># build every 5 days, and not on michael (Qt installer is not installed on michael)</span>
 <span class="c1">#  build_condition = gethostname() != &#39;michael&#39; and (time.localtime()[2] % 5 == 1 or os.environ.get(&#39;BRAINVISA_FORCE_PACKAGING&#39;, &#39;OFF&#39;) == &#39;ON&#39;)</span>
-  <span class="nv">build_condition</span> <span class="o">=</span> gethostname<span class="o">()</span> !<span class="o">=</span> <span class="s1">&#39;michael&#39;</span>
-  <span class="nv">default_steps</span> <span class="o">=</span> pack install_pack test_pack
-  <span class="o">[</span> <span class="k">if</span> gethostname<span class="o">()</span> <span class="k">in</span> <span class="o">(</span><span class="s1">&#39;is208611.intra.cea.fr&#39;</span>, <span class="s1">&#39;is220756&#39;</span><span class="o">)</span> <span class="o">]</span>
-    <span class="c1"># tests need fixing</span>
-    <span class="nv">default_steps</span> <span class="o">=</span> pack install_pack
-  <span class="o">[</span> endif <span class="o">]</span>
-  <span class="o">[</span> <span class="k">if</span> gethostname<span class="o">()</span> <span class="o">==</span> <span class="s1">&#39;i2bm-fdr4-32&#39;</span> <span class="o">]</span>
-    <span class="c1"># needs fixing</span>
-    <span class="nv">default_steps</span> <span class="o">=</span> pack install_pack
-  <span class="o">[</span> endif <span class="o">]</span>
-  <span class="o">[</span> <span class="k">if</span> gethostname<span class="o">()</span> <span class="k">in</span> <span class="o">(</span><span class="s1">&#39;is208611.intra.cea.fr&#39;</span>, <span class="s1">&#39;is220756&#39;</span><span class="o">)</span> <span class="o">]</span>
-    <span class="c1"># run in docker, on same host</span>
-    <span class="nv">remote_test_host_cmd</span> <span class="o">=</span> docker run --rm -v /neurospin/brainvisa:/neurospin/brainvisa -v /neurospin/tmp/brainvisa:/neurospin/tmp/brainvisa -u <span class="s2">&quot;</span><span class="k">$(</span>id -u<span class="k">)</span><span class="s2">:</span><span class="k">$(</span>id -g<span class="k">)</span><span class="s2">&quot;</span> -e <span class="nv">USER</span><span class="o">=</span><span class="nv">$USER</span> -v /volatile/a-sac-ns-brainvisa:/volatile/a-sac-ns-brainvisa -e <span class="nv">TMPDIR</span><span class="o">=</span>/volatile/a-sac-ns-brainvisa/tmp -v <span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span> -e <span class="nv">HOME</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span> -v /tmp/.X11-unix:/tmp/.X11-unix --net<span class="o">=</span>host -e <span class="nv">DISPLAY</span><span class="o">=</span><span class="nv">$DISPLAY</span> -e <span class="nv">BRAINVISA_TESTS_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TESTS_DIR</span><span class="s2">&quot;</span> -e <span class="nv">BRAINVISA_TEST_REF_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span> -e <span class="nv">BRAINVISA_TEST_RUN_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span> -e <span class="nv">QT_X11_NO_MITSHM</span><span class="o">=</span><span class="m">1</span> --privileged cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
-  <span class="o">[</span> endif <span class="o">]</span>
-  <span class="o">[</span> <span class="k">if</span> gethostname<span class="o">()</span> <span class="k">in</span> <span class="o">(</span><span class="s1">&#39;i2bm-mdv-64&#39;</span>, <span class="s1">&#39;michael&#39;</span>, <span class="s1">&#39;i2bm-ub1204&#39;</span><span class="o">)</span> <span class="o">]</span>
-    <span class="c1"># run in docker, through a ssh connection to is220756,</span>
-    <span class="c1"># reference for tests: ubuntu 14 (host machine)</span>
-    <span class="nv">remote_test_host_cmd</span> <span class="o">=</span> ssh -t -X is220756 docker run --rm -v /neurospin/brainvisa:/neurospin/brainvisa -v /neurospin/tmp/brainvisa:/neurospin/tmp/brainvisa -u <span class="s2">&quot;</span><span class="k">$(</span>id -u<span class="k">)</span><span class="s2">:</span><span class="k">$(</span>id -g<span class="k">)</span><span class="s2">&quot;</span> -e <span class="nv">USER</span><span class="o">=</span><span class="nv">$USER</span> -v /volatile/a-sac-ns-brainvisa:/volatile/a-sac-ns-brainvisa -e <span class="nv">TMPDIR</span><span class="o">=</span>/volatile/a-sac-ns-brainvisa/tmp -v <span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span> -e <span class="nv">HOME</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span> -v /tmp/.X11-unix:/tmp/.X11-unix -e <span class="nv">BRAINVISA_TESTS_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TESTS_DIR</span><span class="s2">&quot;</span>-test_pack -e <span class="nv">BRAINVISA_TEST_REF_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span> -e <span class="nv">BRAINVISA_TEST_RUN_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span> --net<span class="o">=</span>host -e <span class="nv">DISPLAY</span><span class="o">=</span><span class="nv">$DISPLAY</span> -e <span class="nv">QT_X11_NO_MITSHM</span><span class="o">=</span><span class="m">1</span> --privileged cati/brainvisa-test:ubuntu-16.04 xvfb-run --auto-servernum
-  <span class="o">[</span> endif <span class="o">]</span>
-  <span class="c1"># remaining hosts (i2bm-fdr4-32) insall/test on themselves</span>
-  <span class="o">[</span> <span class="k">if</span> gethostname<span class="o">()</span> <span class="o">==</span> <span class="s1">&#39;is144451&#39;</span> <span class="o">]</span>
-    <span class="c1"># run via ssh on the other Mac: wake the VM and ssh to the VM inside the mac</span>
-  <span class="c1">#  remote_test_host_cmd = ssh -t is229812 /i2bm/brainvisa/wake_vm &amp;&amp; ssh -t -X macvm BRAINVISA_TESTS_DIR=&quot;$BRAINVISA_TESTS_DIR&quot;-test_pack</span>
-  <span class="nv">remote_test_host_cmd</span> <span class="o">=</span> ssh -t -X is229812 <span class="nv">BRAINVISA_TESTS_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TESTS_DIR</span><span class="s2">&quot;</span>-test_pack <span class="nv">BRAINVISA_TEST_RUN_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span> <span class="nv">BRAINVISA_TEST_REF_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span>
-  - preclinical_imaging_iam
-  <span class="o">[</span> endif <span class="o">]</span>
-  <span class="nv">test_ref_data_dir</span> <span class="o">=</span> /neurospin/brainvisa/tests/<span class="nv">$I2BM_OSID</span>/ref/bug_fix-test-pack
-  <span class="nv">test_run_data_dir</span> <span class="o">=</span> /neurospin/brainvisa/tests/<span class="nv">$I2BM_OSID</span>/test/bug_fix-test-pack
-  - sulci-data
-  - communication
-  - brainvisa-share
-  - brain_segmentation_comparison-private
-  - brain_segmentation_comparison-gpl
-  - highres-cortex
+<span class="w">  </span><span class="nv">build_condition</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>gethostname<span class="o">()</span><span class="w"> </span>!<span class="o">=</span><span class="w"> </span><span class="s1">&#39;michael&#39;</span>
+<span class="w">  </span><span class="nv">default_steps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>pack<span class="w"> </span>install_pack<span class="w"> </span>test_pack
+<span class="w">  </span><span class="o">[</span><span class="w"> </span><span class="k">if</span><span class="w"> </span>gethostname<span class="o">()</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="o">(</span><span class="s1">&#39;is208611.intra.cea.fr&#39;</span>,<span class="w"> </span><span class="s1">&#39;is220756&#39;</span><span class="o">)</span><span class="w"> </span><span class="o">]</span>
+<span class="w">    </span><span class="c1"># tests need fixing</span>
+<span class="w">    </span><span class="nv">default_steps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>pack<span class="w"> </span>install_pack
+<span class="w">  </span><span class="o">[</span><span class="w"> </span>endif<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span><span class="o">[</span><span class="w"> </span><span class="k">if</span><span class="w"> </span>gethostname<span class="o">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;i2bm-fdr4-32&#39;</span><span class="w"> </span><span class="o">]</span>
+<span class="w">    </span><span class="c1"># needs fixing</span>
+<span class="w">    </span><span class="nv">default_steps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>pack<span class="w"> </span>install_pack
+<span class="w">  </span><span class="o">[</span><span class="w"> </span>endif<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span><span class="o">[</span><span class="w"> </span><span class="k">if</span><span class="w"> </span>gethostname<span class="o">()</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="o">(</span><span class="s1">&#39;is208611.intra.cea.fr&#39;</span>,<span class="w"> </span><span class="s1">&#39;is220756&#39;</span><span class="o">)</span><span class="w"> </span><span class="o">]</span>
+<span class="w">    </span><span class="c1"># run in docker, on same host</span>
+<span class="w">    </span><span class="nv">remote_test_host_cmd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span>/neurospin/brainvisa:/neurospin/brainvisa<span class="w"> </span>-v<span class="w"> </span>/neurospin/tmp/brainvisa:/neurospin/tmp/brainvisa<span class="w"> </span>-u<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>id<span class="w"> </span>-u<span class="k">)</span><span class="s2">:</span><span class="k">$(</span>id<span class="w"> </span>-g<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">USER</span><span class="o">=</span><span class="nv">$USER</span><span class="w"> </span>-v<span class="w"> </span>/volatile/a-sac-ns-brainvisa:/volatile/a-sac-ns-brainvisa<span class="w"> </span>-e<span class="w"> </span><span class="nv">TMPDIR</span><span class="o">=</span>/volatile/a-sac-ns-brainvisa/tmp<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">HOME</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span><span class="w"> </span>-v<span class="w"> </span>/tmp/.X11-unix:/tmp/.X11-unix<span class="w"> </span>--net<span class="o">=</span>host<span class="w"> </span>-e<span class="w"> </span><span class="nv">DISPLAY</span><span class="o">=</span><span class="nv">$DISPLAY</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">BRAINVISA_TESTS_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TESTS_DIR</span><span class="s2">&quot;</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">BRAINVISA_TEST_REF_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">BRAINVISA_TEST_RUN_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">QT_X11_NO_MITSHM</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>--privileged<span class="w"> </span>cati/brainvisa-test:ubuntu-16.04<span class="w"> </span>xvfb-run<span class="w"> </span>--auto-servernum
+<span class="w">  </span><span class="o">[</span><span class="w"> </span>endif<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span><span class="o">[</span><span class="w"> </span><span class="k">if</span><span class="w"> </span>gethostname<span class="o">()</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="o">(</span><span class="s1">&#39;i2bm-mdv-64&#39;</span>,<span class="w"> </span><span class="s1">&#39;michael&#39;</span>,<span class="w"> </span><span class="s1">&#39;i2bm-ub1204&#39;</span><span class="o">)</span><span class="w"> </span><span class="o">]</span>
+<span class="w">    </span><span class="c1"># run in docker, through a ssh connection to is220756,</span>
+<span class="w">    </span><span class="c1"># reference for tests: ubuntu 14 (host machine)</span>
+<span class="w">    </span><span class="nv">remote_test_host_cmd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>ssh<span class="w"> </span>-t<span class="w"> </span>-X<span class="w"> </span>is220756<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span>/neurospin/brainvisa:/neurospin/brainvisa<span class="w"> </span>-v<span class="w"> </span>/neurospin/tmp/brainvisa:/neurospin/tmp/brainvisa<span class="w"> </span>-u<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>id<span class="w"> </span>-u<span class="k">)</span><span class="s2">:</span><span class="k">$(</span>id<span class="w"> </span>-g<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">USER</span><span class="o">=</span><span class="nv">$USER</span><span class="w"> </span>-v<span class="w"> </span>/volatile/a-sac-ns-brainvisa:/volatile/a-sac-ns-brainvisa<span class="w"> </span>-e<span class="w"> </span><span class="nv">TMPDIR</span><span class="o">=</span>/volatile/a-sac-ns-brainvisa/tmp<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span>:<span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">HOME</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">&quot;</span><span class="w"> </span>-v<span class="w"> </span>/tmp/.X11-unix:/tmp/.X11-unix<span class="w"> </span>-e<span class="w"> </span><span class="nv">BRAINVISA_TESTS_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TESTS_DIR</span><span class="s2">&quot;</span>-test_pack<span class="w"> </span>-e<span class="w"> </span><span class="nv">BRAINVISA_TEST_REF_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">BRAINVISA_TEST_RUN_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span><span class="w"> </span>--net<span class="o">=</span>host<span class="w"> </span>-e<span class="w"> </span><span class="nv">DISPLAY</span><span class="o">=</span><span class="nv">$DISPLAY</span><span class="w"> </span>-e<span class="w"> </span><span class="nv">QT_X11_NO_MITSHM</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>--privileged<span class="w"> </span>cati/brainvisa-test:ubuntu-16.04<span class="w"> </span>xvfb-run<span class="w"> </span>--auto-servernum
+<span class="w">  </span><span class="o">[</span><span class="w"> </span>endif<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span><span class="c1"># remaining hosts (i2bm-fdr4-32) insall/test on themselves</span>
+<span class="w">  </span><span class="o">[</span><span class="w"> </span><span class="k">if</span><span class="w"> </span>gethostname<span class="o">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;is144451&#39;</span><span class="w"> </span><span class="o">]</span>
+<span class="w">    </span><span class="c1"># run via ssh on the other Mac: wake the VM and ssh to the VM inside the mac</span>
+<span class="w">  </span><span class="c1">#  remote_test_host_cmd = ssh -t is229812 /i2bm/brainvisa/wake_vm &amp;&amp; ssh -t -X macvm BRAINVISA_TESTS_DIR=&quot;$BRAINVISA_TESTS_DIR&quot;-test_pack</span>
+<span class="w">  </span><span class="nv">remote_test_host_cmd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>ssh<span class="w"> </span>-t<span class="w"> </span>-X<span class="w"> </span>is229812<span class="w"> </span><span class="nv">BRAINVISA_TESTS_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TESTS_DIR</span><span class="s2">&quot;</span>-test_pack<span class="w"> </span><span class="nv">BRAINVISA_TEST_RUN_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_RUN_DATA_DIR</span><span class="s2">&quot;</span><span class="w"> </span><span class="nv">BRAINVISA_TEST_REF_DATA_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$BRAINVISA_TEST_REF_DATA_DIR</span><span class="s2">&quot;</span>
+<span class="w">  </span>-<span class="w"> </span>preclinical_imaging_iam
+<span class="w">  </span><span class="o">[</span><span class="w"> </span>endif<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span><span class="nv">test_ref_data_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>/neurospin/brainvisa/tests/<span class="nv">$I2BM_OSID</span>/ref/bug_fix-test-pack
+<span class="w">  </span><span class="nv">test_run_data_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>/neurospin/brainvisa/tests/<span class="nv">$I2BM_OSID</span>/test/bug_fix-test-pack
+<span class="w">  </span>-<span class="w"> </span>sulci-data
+<span class="w">  </span>-<span class="w"> </span>communication
+<span class="w">  </span>-<span class="w"> </span>brainvisa-share
+<span class="w">  </span>-<span class="w"> </span>brain_segmentation_comparison-private
+<span class="w">  </span>-<span class="w"> </span>brain_segmentation_comparison-gpl
+<span class="w">  </span>-<span class="w"> </span>highres-cortex
 </pre></div>
 </div>
 </section>
@@ -441,8 +441,8 @@ OK          step test: /mnt/neurospin/sel-poivre/brainvisa/build/CentOS-5.11-x86
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, CEA.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.0.0.
+        &#169; Copyright 2023, CEA.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.1.
     </div>
   </body>
 </html>

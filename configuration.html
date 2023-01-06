@@ -54,58 +54,58 @@
 <section id="general-structure-and-syntax-of-bv-maker-configuration-file">
 <h2>General structure and syntax of bv_maker configuration file<a class="headerlink" href="#general-structure-and-syntax-of-bv-maker-configuration-file" title="Permalink to this heading">¶</a></h2>
 <p>The <a class="reference internal" href="bv_maker.html"><span class="doc">bv_maker</span></a> configuration file is composed of sections delimited by a line enclosed in square brackets: <code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">...</span> <span class="pre">]</span></code>. Each section contains the definition of a directory (either a source directory, or a build directory), or a “general” section. In this file, blank lines are ignored and spaces at the begining or end of lines are also ignored. It means that you can indent and separate lines as you wish. For instance:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> <span class="nb">source</span> <span class="nv">$HOME</span>/brainvisa/source <span class="o">]</span>
-  + standard trunk
-  + standard bug_fix
-  - communication
-  + perso/myself/myproject
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span><span class="nv">$HOME</span>/brainvisa/source<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span>+<span class="w"> </span>standard<span class="w"> </span>trunk
+<span class="w">  </span>+<span class="w"> </span>standard<span class="w"> </span>bug_fix
+<span class="w">  </span>-<span class="w"> </span>communication
+<span class="w">  </span>+<span class="w"> </span>perso/myself/myproject
 
-<span class="o">[</span> build <span class="nv">$HOME</span>/brainvisa/build/bug_fix <span class="o">]</span>
-  <span class="nv">build_type</span> <span class="o">=</span> Release
-  <span class="nv">make_options</span> <span class="o">=</span> -j8
-  standard bug_fix <span class="nv">$HOME</span>/brainvisa/source
+<span class="o">[</span><span class="w"> </span>build<span class="w"> </span><span class="nv">$HOME</span>/brainvisa/build/bug_fix<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span><span class="nv">build_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>Release
+<span class="w">  </span><span class="nv">make_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>-j8
+<span class="w">  </span>standard<span class="w"> </span>bug_fix<span class="w"> </span><span class="nv">$HOME</span>/brainvisa/source
 
-<span class="o">[</span> build <span class="nv">$HOME</span>/brainvisa/build/trunk <span class="o">]</span>
-  <span class="nv">make_options</span> <span class="o">=</span> -j8
-  standard trunk <span class="nv">$HOME</span>/brainvisa/source
-  + <span class="nv">$HOME</span>/brainvisa/source/perso/myself/myproject
+<span class="o">[</span><span class="w"> </span>build<span class="w"> </span><span class="nv">$HOME</span>/brainvisa/build/trunk<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span><span class="nv">make_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>-j8
+<span class="w">  </span>standard<span class="w"> </span>trunk<span class="w"> </span><span class="nv">$HOME</span>/brainvisa/source
+<span class="w">  </span>+<span class="w"> </span><span class="nv">$HOME</span>/brainvisa/source/perso/myself/myproject
 </pre></div>
 </div>
 <p>A line begining with <code class="docutils literal notranslate"><span class="pre">#</span></code> or <code class="docutils literal notranslate"><span class="pre">//</span></code> is considered as a comment and ignored. Comments cannot be added at the end of a line. For instance the following are valid comments:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># A comment</span>
-  <span class="c1"># Another comment</span>
-// This is also a comment !
+<span class="w">  </span><span class="c1"># Another comment</span>
+//<span class="w"> </span>This<span class="w"> </span>is<span class="w"> </span>also<span class="w"> </span>a<span class="w"> </span>comment<span class="w"> </span>!
 </pre></div>
 </div>
 <p>But the following line is not valid:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> build <span class="nv">$HOME</span>/brainvisa/build/trunk <span class="o">]</span> <span class="c1"># This is a syntax error</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="w"> </span>build<span class="w"> </span><span class="nv">$HOME</span>/brainvisa/build/trunk<span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="c1"># This is a syntax error</span>
 </pre></div>
 </div>
 <p>Each line in a section contains either a “variable” definition, or some section-specific declarations such as components definitions.</p>
 <section id="option-variables">
 <h3>Option Variables<a class="headerlink" href="#option-variables" title="Permalink to this heading">¶</a></h3>
 <p>A variable declaration looks the following:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">variable</span> <span class="o">=</span> value
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">variable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>value
 </pre></div>
 </div>
 <p>Some variables may support additive or substractive declarations, once they have been defined a first time:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">make_options</span> <span class="o">=</span> -j6
-<span class="nv">make_options</span> <span class="o">+=</span> <span class="nv">VERBOSE</span><span class="o">=</span><span class="m">1</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">make_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>-j6
+<span class="nv">make_options</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nv">VERBOSE</span><span class="o">=</span><span class="m">1</span>
 </pre></div>
 </div>
 <p>This possibility depends on the variable type (here a list), but also on the variable itself (which must be understood in bv_maker as additive)</p>
 <p>Most variables are strings, but a few are lists: elements are separated by blank spaces.</p>
 <p>Some variables are “dictionaries” which may contain several sub-variables. A typical example is the <code class="docutils literal notranslate"><span class="pre">env</span></code> variable which contains environment variables to be set during execution of the steps for the given directory section. The syntax is the following:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">env</span> <span class="o">=</span> PATH: /home/myself/bin:<span class="nv">$PATH</span>, LD_LIBRARY_PATH:/home/myself/lib:<span class="nv">$LD_LIBRARY_PATH</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">env</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>PATH:<span class="w"> </span>/home/myself/bin:<span class="nv">$PATH</span>,<span class="w"> </span>LD_LIBRARY_PATH:/home/myself/lib:<span class="nv">$LD_LIBRARY_PATH</span>
 </pre></div>
 </div>
 <p>or, in additive mode:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">env</span> <span class="o">+=</span> PATH: /home/myself/bin:<span class="nv">$PATH</span>, <span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span>/home/myself/lib:<span class="nv">$LD_LIBRARY_PATH</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">env</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span>PATH:<span class="w"> </span>/home/myself/bin:<span class="nv">$PATH</span>,<span class="w"> </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span>/home/myself/lib:<span class="nv">$LD_LIBRARY_PATH</span>
 </pre></div>
 </div>
 <p>The difference between the two above examples is that the first will override the full set of environment variables defined in bv_maker.cfg, whereas the second will only add / replace 2 entries.</p>
 <p>The above syntax is somewhat limited. If needed a “pythonic” syntax is allowed:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">env</span> <span class="o">+=</span> <span class="o">{</span><span class="s1">&#39;PATH&#39;</span>: <span class="s1">&#39;/home/myself/bin:$PATH&#39;</span>, <span class="s1">&#39;LD_LIBRARY_PATH&#39;</span>: <span class="s1">&#39;/home/myself/lib:$LD_LIBRARY_PATH&#39;</span><span class="o">}</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">env</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="o">{</span><span class="s1">&#39;PATH&#39;</span>:<span class="w"> </span><span class="s1">&#39;/home/myself/bin:$PATH&#39;</span>,<span class="w"> </span><span class="s1">&#39;LD_LIBRARY_PATH&#39;</span>:<span class="w"> </span><span class="s1">&#39;/home/myself/lib:$LD_LIBRARY_PATH&#39;</span><span class="o">}</span>
 </pre></div>
 </div>
 </section>
@@ -113,13 +113,13 @@
 <h3>Variables substitution<a class="headerlink" href="#variables-substitution" title="Permalink to this heading">¶</a></h3>
 <p>Some variables (not all) with string values support environment variables substitution (<code class="docutils literal notranslate"><span class="pre">$VARIABLE</span></code>), and / or “python-like” string substitution (<code class="docutils literal notranslate"><span class="pre">%(variable)s</span></code>)for a few variables (<code class="docutils literal notranslate"><span class="pre">date</span></code>, <code class="docutils literal notranslate"><span class="pre">hostname</span></code>, <code class="docutils literal notranslate"><span class="pre">time</span></code>, <code class="docutils literal notranslate"><span class="pre">os</span></code>, a few more in some sections).
 Dictionary variables do support both:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">env</span> <span class="o">+=</span> PATH: <span class="nv">$HOME</span>/bin:<span class="nv">$PATH</span>, BRAINVISA_TEST_DIR: <span class="nv">$HOME</span>/tests-%<span class="o">(</span>hostname<span class="o">)</span>s-%<span class="o">(</span>date<span class="o">)</span>s
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">env</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span>PATH:<span class="w"> </span><span class="nv">$HOME</span>/bin:<span class="nv">$PATH</span>,<span class="w"> </span>BRAINVISA_TEST_DIR:<span class="w"> </span><span class="nv">$HOME</span>/tests-%<span class="o">(</span>hostname<span class="o">)</span>s-%<span class="o">(</span>date<span class="o">)</span>s
 </pre></div>
 </div>
 <p>Environment variables may be set by the user, or by the system, prior to running bv_maker, or through the <code class="docutils literal notranslate"><span class="pre">env</span></code> variables in <code class="docutils literal notranslate"><span class="pre">bv_maker.cfg</span></code> sections. Additionally, bv_maker itself sets a few helpful variables:</p>
 <dl>
 <dt><code class="docutils literal notranslate"><span class="pre">NCPU</span></code>:</dt><dd><p>number of processor cores in the current machine. Useful to pass build options matching the power of the build machine:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">make_options</span> <span class="o">=</span> -j<span class="nv">$NCPU</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">make_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>-j<span class="nv">$NCPU</span>
 </pre></div>
 </div>
 </dd>
@@ -130,7 +130,7 @@ Dictionary variables do support both:</p>
 <span id="general-section"></span><h2>Definition of a general section<a class="headerlink" href="#definition-of-a-general-section" title="Permalink to this heading">¶</a></h2>
 <p>The general section is optional, and contains variable which are independent from each other sections (or shared accross them).</p>
 <p>The general section definition starts with a line with the following syntax:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> general <span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="w"> </span>general<span class="w"> </span><span class="o">]</span>
 </pre></div>
 </div>
 <p>Option variables are stored in this section using the syntax <code class="docutils literal notranslate"><span class="pre">option</span> <span class="pre">=</span> <span class="pre">value</span></code>. The following options are supported:</p>
@@ -141,7 +141,7 @@ Dictionary variables do support both:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">failure_email</span></code>: email address where bv_maker outputs are sent in case of failure. If not specified, no email will be sent and bv_maker outputs will be sent to the standard output. One email will be sent for each directory and build step that fail.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">failure_email_by_project</span></code>: dictionary of email addresses, in a project-indexed dictionary (json or python syntax). Adresses can be lists of strings. Ex:</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">failure_email_by_project</span> <span class="o">=</span> <span class="o">{</span><span class="s1">&#39;aims&#39;</span>: <span class="s1">&#39;maintainer@aims.org&#39;</span>, <span class="s1">&#39;anatomist&#39;</span>: <span class="o">[</span><span class="s1">&#39;maintainer@aims.org&#39;</span>, <span class="s1">&#39;maintainer@anatomist.org&#39;</span><span class="o">]}</span>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">failure_email_by_project</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">{</span><span class="s1">&#39;aims&#39;</span>:<span class="w"> </span><span class="s1">&#39;maintainer@aims.org&#39;</span>,<span class="w"> </span><span class="s1">&#39;anatomist&#39;</span>:<span class="w"> </span><span class="o">[</span><span class="s1">&#39;maintainer@aims.org&#39;</span>,<span class="w"> </span><span class="s1">&#39;maintainer@anatomist.org&#39;</span><span class="o">]}</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -171,7 +171,7 @@ Dictionary variables do support both:</p>
 <section id="definition-of-a-source-directory">
 <span id="source-directory"></span><h2>Definition of a source directory<a class="headerlink" href="#definition-of-a-source-directory" title="Permalink to this heading">¶</a></h2>
 <p>A source directory definition section starts with a line with the following syntax:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> <span class="nb">source</span> &lt;directory&gt; <span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>&lt;directory&gt;<span class="w"> </span><span class="o">]</span>
 </pre></div>
 </div>
 <p>where <code class="docutils literal notranslate"><span class="pre">&lt;directory&gt;</span></code> is the name of the directory that will be created and whose content will synchronized with selected source directories located in BrainVISA Subversion server. The directory name can contain environment variable substitution by using <code class="docutils literal notranslate"><span class="pre">$VARIABLE_NAME</span></code>. For instance, on Unix systems, <code class="docutils literal notranslate"><span class="pre">$HOME/brainvisa</span></code> will be replaced by the brainvisa directory located in the user home directory. If the specified directory does not exists, it will be created (as well as parent directories) when the sources will be processed by bv_maker.</p>
@@ -193,14 +193,14 @@ Dictionary variables do support both:</p>
 </ul>
 <section id="add-components-to-the-list">
 <h3>Add components to the list<a class="headerlink" href="#add-components-to-the-list" title="Permalink to this heading">¶</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>+ component_selection version_selection
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>+<span class="w"> </span>component_selection<span class="w"> </span>version_selection
 </pre></div>
 </div>
 <p>A line starting with a plus will use Subversion to add some directories from the BrainVISA BioProj repository. The selections of the directories is done by selecting components according to their name and version. Once the components are selected, bv_maker is able to find the corresponding directories in BrainVISA repository. component_selection is used to select a list of components according to their name (see <a class="reference internal" href="#component-selection">Component selection</a>). It is not mandatory to provide a version_selection. If it is given, it is used to further filter the list of selected components according to their version (see <a class="reference internal" href="#version-selection">Version selection</a>).</p>
 </section>
 <section id="remove-components-from-the-list">
 <h3>Remove components from the list<a class="headerlink" href="#remove-components-from-the-list" title="Permalink to this heading">¶</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>- component_selection version_selection
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>-<span class="w"> </span>component_selection<span class="w"> </span>version_selection
 </pre></div>
 </div>
 <p>A line starting with a minus is has the same syntax as the previous action but removes the selected directories from the list.</p>
@@ -209,29 +209,29 @@ Dictionary variables do support both:</p>
 <h3>Add directories to the list<a class="headerlink" href="#add-directories-to-the-list" title="Permalink to this heading">¶</a></h3>
 <section id="subversion-components">
 <h4>subversion components<a class="headerlink" href="#subversion-components" title="Permalink to this heading">¶</a></h4>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>+ repository_directory local_directory
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>+<span class="w"> </span>repository_directory<span class="w"> </span>local_directory
 </pre></div>
 </div>
 <p>or:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brainvisa repository_directory local_directory
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brainvisa<span class="w"> </span>repository_directory<span class="w"> </span>local_directory
 </pre></div>
 </div>
 <p>In order to include some directories that do not correspond to registered BrainVISA components, one can directly give the directory name in <code class="docutils literal notranslate"><span class="pre">repository_directory</span></code>. This directory name must be given relatively to the main BrainVISA repository URL: <a class="reference external" href="https://bioproj.extra.cea.fr/neurosvn/brainvisa">https://bioproj.extra.cea.fr/neurosvn/brainvisa</a>. By default, <code class="docutils literal notranslate"><span class="pre">repository_directory</span></code> is also used to define where this directory will be in the source directory. It is not mandatory to provide a value for local_directory. If it is given, it is used instead of repositor_directory to define the directory location relatively to the source directory.</p>
 <p>For instance, the following configuration will link the repository directory <a class="reference external" href="https://bioproj.extra.cea.fr/neurosvn/brainvisa/perso/myself/myproject">https://bioproj.extra.cea.fr/neurosvn/brainvisa/perso/myself/myproject</a> with the local directory <code class="docutils literal notranslate"><span class="pre">/home/myself/brainvisa/perso/myself/myproject</span></code>.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> <span class="nb">source</span> /home/myself/brainvisa <span class="o">]</span>
-  + perso/myself/myproject
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>/home/myself/brainvisa<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span>+<span class="w"> </span>perso/myself/myproject
 </pre></div>
 </div>
 <p>Whereas the following configuration will link the same repository directory with the local directory <code class="docutils literal notranslate"><span class="pre">/home/myself/brainvisa/myproject</span></code>.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> <span class="nb">source</span> /home/myself/brainvisa <span class="o">]</span>
-  + perso/myself/myproject myproject
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>/home/myself/brainvisa<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span>+<span class="w"> </span>perso/myself/myproject<span class="w"> </span>myproject
 </pre></div>
 </div>
 </section>
 <section id="git-components">
 <h4>git components<a class="headerlink" href="#git-components" title="Permalink to this heading">¶</a></h4>
 <p>See also <a class="reference internal" href="compile_existing.html#git-repositories"><span class="std std-ref">Git repositories and bv_maker</span></a></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git https://github.com/neurospin/highres-cortex.git master highres-cortex/master
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>https://github.com/neurospin/highres-cortex.git<span class="w"> </span>master<span class="w"> </span>highres-cortex/master
 </pre></div>
 </div>
 </section>
@@ -240,7 +240,7 @@ Dictionary variables do support both:</p>
 <section id="definition-of-a-build-directory">
 <span id="build-directory"></span><h2>Definition of a build directory<a class="headerlink" href="#definition-of-a-build-directory" title="Permalink to this heading">¶</a></h2>
 <p>A build directory definition section starts with a line with the following syntax:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> build &lt;directory&gt; <span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="w"> </span>build<span class="w"> </span>&lt;directory&gt;<span class="w"> </span><span class="o">]</span>
 </pre></div>
 </div>
 <p>where <code class="docutils literal notranslate"><span class="pre">&lt;directory&gt;</span></code> is the name of the directory where the compilation results will be written. As the source directory, the build directory name can contain environment variable substitution.</p>
@@ -272,17 +272,17 @@ Dictionary variables do support both:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">test_run_data_dir</span></code>: directory where data will be written during the <a class="reference internal" href="bv_maker.html#test-step"><span class="std std-ref">test step</span></a>.</p></li>
 </ul>
 <p><strong>Example</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> build <span class="nv">$HOME</span>/brainvisa/build/bug_fix <span class="o">]</span>
-  <span class="nv">build_type</span> <span class="o">=</span> Release
-  <span class="nv">make_options</span> <span class="o">=</span> -j8
-  standard bug_fix <span class="nv">$HOME</span>/brainvisa/source
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="w"> </span>build<span class="w"> </span><span class="nv">$HOME</span>/brainvisa/build/bug_fix<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span><span class="nv">build_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>Release
+<span class="w">  </span><span class="nv">make_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>-j8
+<span class="w">  </span>standard<span class="w"> </span>bug_fix<span class="w"> </span><span class="nv">$HOME</span>/brainvisa/source
 </pre></div>
 </div>
 <p>In the above example, the <em>bug_fix</em> version of standard components which are located in <code class="docutils literal notranslate"><span class="pre">$HOME/brainvisa/source</span></code> directory will be compiled in the build directory <code class="docutils literal notranslate"><span class="pre">$HOME/brainvisa/build/bug_fix</span></code> in <code class="docutils literal notranslate"><span class="pre">Release</span></code> mode with the option <code class="docutils literal notranslate"><span class="pre">-j8</span></code> passed to make command (compilation distributed on 8 processors).</p>
 <section id="variants-of-build-directories">
 <h3>Variants of build directories<a class="headerlink" href="#variants-of-build-directories" title="Permalink to this heading">¶</a></h3>
 <p>A build directory may also be a <em>python virtualenv</em> directory. To specify it the section type may be virtualenv instead of build:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> virtualenv &lt;directory&gt; <span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="w"> </span>virtualenv<span class="w"> </span>&lt;directory&gt;<span class="w"> </span><span class="o">]</span>
 </pre></div>
 </div>
 <p>A virtualenv directory will be initialized the first time it is used, and a python virtualenv environment will be installed there. Then it will be used as a build directory in addition. This allows to use <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code> commands within it with a local install, just for this build directory.</p>
@@ -341,23 +341,23 @@ Dictionary variables do support both:</p>
 </pre></div>
 </div>
 <p>Select latest release version of all components:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>all tag
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>all<span class="w"> </span>tag
 </pre></div>
 </div>
 <p>Select latest bug fixing branch of open source components:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>opensource branch
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>opensource<span class="w"> </span>branch
 </pre></div>
 </div>
 <p>Select all components in project aims with version 4.0.2:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>aims <span class="m">4</span>.0.2
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>aims<span class="w"> </span><span class="m">4</span>.0.2
 </pre></div>
 </div>
 <p>Select development version of soma-workflow component:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>soma-workflow trunk
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>soma-workflow<span class="w"> </span>trunk
 </pre></div>
 </div>
 <p>Select latest bug fixing branch of all components in anatomist project:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>anatomist:* bug_fix
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>anatomist:*<span class="w"> </span>bug_fix
 </pre></div>
 </div>
 </section>
@@ -368,12 +368,12 @@ Dictionary variables do support both:</p>
 <section id="condition-blocks">
 <h3>Condition blocks<a class="headerlink" href="#condition-blocks" title="Permalink to this heading">¶</a></h3>
 <p>A conditional subsection should be located inside an existing section (sources or build). It follows the syntax:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> <span class="k">if</span> &lt;expression&gt; <span class="o">]</span>
-  &lt;config lines&gt;
-  ...
-<span class="o">[</span> <span class="k">else</span> <span class="o">]</span>
-  &lt;other config lines&gt;
-<span class="o">[</span> endif <span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="w"> </span><span class="k">if</span><span class="w"> </span>&lt;expression&gt;<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span>&lt;config<span class="w"> </span>lines&gt;
+<span class="w">  </span>...
+<span class="o">[</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="o">]</span>
+<span class="w">  </span>&lt;other<span class="w"> </span>config<span class="w"> </span>lines&gt;
+<span class="o">[</span><span class="w"> </span>endif<span class="w"> </span><span class="o">]</span>
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">else</span> <span class="pre">]</span></code> block is of course optional, and a global section end also ends the conditional section, so the <code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">endif</span> <span class="pre">]</span></code> section may be omitted if it is at the end of the section.</p>
@@ -389,14 +389,14 @@ Dictionary variables do support both:</p>
 <p>Other variables depend on the configuration of the section itself, which is only done later, so they are not available yet when parsing conditions.</p>
 <p>The condition expression is then evaluated in python language (using the <code class="docutils literal notranslate"><span class="pre">eval()</span></code> function), thus allows all python language syntax and loaded libraries. The expression result is cast to a boolean value.</p>
 <p>Thus a configuration may look like the following:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> build <span class="nv">$HOME</span>/brainvisa/build/bug_fix <span class="o">]</span>
-  <span class="nv">build_type</span> <span class="o">=</span> Release
-  <span class="o">[</span> <span class="k">if</span> gethostname<span class="o">()</span> <span class="o">==</span> <span class="s1">&#39;my_machine&#39;</span> <span class="o">]</span>
-    <span class="nv">make_options</span> <span class="o">=</span> -j8
-  <span class="o">[</span> <span class="k">else</span> <span class="o">]</span>
-    <span class="nv">make_options</span> <span class="o">=</span> -j2
-  <span class="o">[</span> endif <span class="o">]</span>
-  standard bug_fix <span class="nv">$HOME</span>/brainvisa/source
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="w"> </span>build<span class="w"> </span><span class="nv">$HOME</span>/brainvisa/build/bug_fix<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span><span class="nv">build_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>Release
+<span class="w">  </span><span class="o">[</span><span class="w"> </span><span class="k">if</span><span class="w"> </span>gethostname<span class="o">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;my_machine&#39;</span><span class="w"> </span><span class="o">]</span>
+<span class="w">    </span><span class="nv">make_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>-j8
+<span class="w">  </span><span class="o">[</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="o">]</span>
+<span class="w">    </span><span class="nv">make_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>-j2
+<span class="w">  </span><span class="o">[</span><span class="w"> </span>endif<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span>standard<span class="w"> </span>bug_fix<span class="w"> </span><span class="nv">$HOME</span>/brainvisa/source
 </pre></div>
 </div>
 </section>
@@ -407,41 +407,41 @@ Dictionary variables do support both:</p>
 <p class="admonition-title">Warning</p>
 <p>TO DO</p>
 </div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> <span class="nb">source</span> <span class="nv">$HOME</span>/brainvisa/source <span class="o">]</span>
-  + standard trunk
-  + standard bug_fix
-  - communication
-  + perso/myself/myproject
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span><span class="nv">$HOME</span>/brainvisa/source<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span>+<span class="w"> </span>standard<span class="w"> </span>trunk
+<span class="w">  </span>+<span class="w"> </span>standard<span class="w"> </span>bug_fix
+<span class="w">  </span>-<span class="w"> </span>communication
+<span class="w">  </span>+<span class="w"> </span>perso/myself/myproject
 
-<span class="o">[</span> build <span class="nv">$HOME</span>/brainvisa/build/bug_fix <span class="o">]</span>
-  <span class="nv">build_type</span> <span class="o">=</span> Release
-  <span class="nv">make_options</span> <span class="o">=</span> -j8
-  standard bug_fix <span class="nv">$HOME</span>/brainvisa/source
+<span class="o">[</span><span class="w"> </span>build<span class="w"> </span><span class="nv">$HOME</span>/brainvisa/build/bug_fix<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span><span class="nv">build_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>Release
+<span class="w">  </span><span class="nv">make_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>-j8
+<span class="w">  </span>standard<span class="w"> </span>bug_fix<span class="w"> </span><span class="nv">$HOME</span>/brainvisa/source
 
-<span class="o">[</span> build <span class="nv">$HOME</span>/brainvisa/build/trunk <span class="o">]</span>
-  <span class="nv">make_options</span> <span class="o">=</span> -j8
-  standard trunk <span class="nv">$HOME</span>/brainvisa/source
-  - connectomist-*
-  + <span class="nv">$HOME</span>/brainvisa/source/perso/myself/myproject
+<span class="o">[</span><span class="w"> </span>build<span class="w"> </span><span class="nv">$HOME</span>/brainvisa/build/trunk<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span><span class="nv">make_options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>-j8
+<span class="w">  </span>standard<span class="w"> </span>trunk<span class="w"> </span><span class="nv">$HOME</span>/brainvisa/source
+<span class="w">  </span>-<span class="w"> </span>connectomist-*
+<span class="w">  </span>+<span class="w"> </span><span class="nv">$HOME</span>/brainvisa/source/perso/myself/myproject
 </pre></div>
 </div>
 <section id="compiling-using-qt-5">
 <span id="build-qt5"></span><h3>Compiling using Qt 5<a class="headerlink" href="#compiling-using-qt-5" title="Permalink to this heading">¶</a></h3>
 <p>Add in the <code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">build</span> <span class="pre">]</span></code> section:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> build <span class="nv">$HOME</span>/brainvisa/build/bug_fix <span class="o">]</span>
-  <span class="c1"># ...</span>
-  <span class="nv">cmake_options</span> <span class="o">+=</span> -DDESIRED_QT_VERSION<span class="o">=</span><span class="m">5</span>
-  <span class="c1"># ...</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="w"> </span>build<span class="w"> </span><span class="nv">$HOME</span>/brainvisa/build/bug_fix<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span><span class="c1"># ...</span>
+<span class="w">  </span><span class="nv">cmake_options</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span>-DDESIRED_QT_VERSION<span class="o">=</span><span class="m">5</span>
+<span class="w">  </span><span class="c1"># ...</span>
 </pre></div>
 </div>
 </section>
 <section id="compiling-using-python3">
 <span id="build-py3"></span><h3>Compiling using Python3<a class="headerlink" href="#compiling-using-python3" title="Permalink to this heading">¶</a></h3>
 <p>Add in the <code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">build</span> <span class="pre">]</span></code> section:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span> build <span class="nv">$HOME</span>/brainvisa/build/bug_fix <span class="o">]</span>
-  <span class="c1"># ...</span>
-  <span class="nv">cmake_options</span> <span class="o">+=</span> -DPYTHON_EXECUTABLE<span class="o">=</span>/usr/bin/python3
-  <span class="c1"># ...</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span><span class="w"> </span>build<span class="w"> </span><span class="nv">$HOME</span>/brainvisa/build/bug_fix<span class="w"> </span><span class="o">]</span>
+<span class="w">  </span><span class="c1"># ...</span>
+<span class="w">  </span><span class="nv">cmake_options</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span>-DPYTHON_EXECUTABLE<span class="o">=</span>/usr/bin/python3
+<span class="w">  </span><span class="c1"># ...</span>
 </pre></div>
 </div>
 <p>Under Unix (filesystems supporting symbolic links) , after building, a link to the matching python executable will be found in <code class="docutils literal notranslate"><span class="pre">bin/python</span></code> so that the <code class="docutils literal notranslate"><span class="pre">python</span></code> command within this build tree will point to <code class="docutils literal notranslate"><span class="pre">python3</span></code> and will be used by all python scripts.</p>
@@ -549,8 +549,8 @@ Dictionary variables do support both:</p>
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, CEA.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.0.0.
+        &#169; Copyright 2023, CEA.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.1.
     </div>
   </body>
 </html>

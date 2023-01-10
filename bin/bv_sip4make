@@ -120,7 +120,7 @@ if sip6:
     old_dir = shutil.copytree(outdir, osp.join(tdir, 'sip'), symlinks=True,
                               ignore_dangling_symlinks=True)
     # call SIP-build
-    # print(sipcmd + ' "' + string.join( sys.argv[1:], '" "' ) + '"')
+    # print(sipcmd + ' "' + '" "'.join( sys.argv[1:] ) + '"')
     res = subprocess.call([sipcmd] + sys.argv[1:])
     new_dir = outdir
 
@@ -134,7 +134,7 @@ else:
     sys.argv[copt + 1] = tdir
 
     # call SIP
-    # print(sipcmd + ' "' + string.join( sys.argv[1:], '" "' ) + '"')
+    # print(sipcmd + ' "' + '" "'.join( sys.argv[1:] ) + '"')
     res = subprocess.call([sipcmd] + sys.argv[1:])
     if not os.path.exists(outdir):
         os.mkdir(outdir)

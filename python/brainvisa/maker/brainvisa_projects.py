@@ -391,7 +391,7 @@ def parse_versioning_client_info( client_info ):
   @type client_info: string
   @param client_info: The informations concerning the client
   """
-  splitted_client_info = string.split(client_info, ' ')
+  splitted_client_info = client_info.split(' ')
   client_type, url = splitted_client_info[ 0:2 ]
   client_params = splitted_client_info[ 2: ]
   return (client_type, url, client_params)

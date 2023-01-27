@@ -216,8 +216,9 @@ For each Git repository in the distro:
                         help="List every step but don't actually perform "
                         "anything that would write to the repositories.")
     parser.add_argument('--really-do-it', dest='dry_run', action='store_false',
-                        help="List every step but don't actually perform "
-                        "anything that would write to the repositories.")
+                        help="Actually perform the actions, including "
+                        "IRREVERSIBLE actions such as pushing tags. MAKE SURE "
+                        "TO RUN THE DRY-RUN MODE FIRST!")
     parser.add_argument('--debug', dest='logging_level', action='store_const',
                         const=logging.DEBUG, default=logging.INFO,
                         help='Enable debugging messages')

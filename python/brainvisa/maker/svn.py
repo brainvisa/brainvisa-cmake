@@ -371,10 +371,7 @@ def svn_merge( source,
       else:
         revision_range = ( 0, 'HEAD' )
         
-      cmd += [ '-r', string.join(
-               [ str(r) for r in revision_range ],
-                        ':'
-                     ) ]
+      cmd += [ '-r', ':'.join( str(r) for r in revision_range ) ]
         
       if accept is not None:
         accept_values = ( 'postpone',
@@ -390,8 +387,7 @@ def svn_merge( source,
           raise RuntimeError( 'SVN error: Action for automatic conflict '
                             + 'resolution of merge command is not valid.'
                             + 'It must be one of the following:'
-                            + string.join( accept_values,
-                                           os.linesep + '- ' ) )
+                            + (os.linesep + '- ').join( accept_values ) )
         cmd += [ '--accept', accept ]
       
       if record_only:
@@ -602,8 +598,9 @@ def svn_glob( *urlpatterns ):
             # Search matching entries from server
             url = urlunsplit(
                         url_pattern_splitted[ 0:2 ]
-                        + ( string.join( url_path_pattern_splitted[ 0:i ],
-                                         posixpath.sep ), )
+                        + ( posixpath.sep.join(
+                            url_path_pattern_splitted[ 0:i ]
+                        ), )
                         + url_pattern_splitted[ 3: ]
             )
                   
@@ -648,9 +645,8 @@ def svn_glob( *urlpatterns ):
                 url_checked.add(
                     urlunsplit(
                     url_pattern_splitted[ 0:2 ]
-                    + ( string.join( url_path_pattern_splitted[ 0:i ]
-                                   + ( str(e.name), ),
-                                      posixpath.sep ), )
+                    + ( posixpath.sep.join( url_path_pattern_splitted[ 0:i ]
+                                            + ( str(e.name), ) ), )
                     + url_pattern_splitted[ 3: ] ) )
                 # print('matches')
                   
@@ -661,8 +657,7 @@ def svn_glob( *urlpatterns ):
           elif( i == (len(url_path_pattern_splitted) - 1) ):
             url = urlunsplit(
                         url_pattern_splitted[ 0:2 ]
-                        + ( string.join( url_path_pattern_splitted, 
-                                         posixpath.sep ), )
+                        + ( posixpath.sep.join( url_path_pattern_splitted ), )
                         + url_pattern_splitted[ 3: ]
             )
 
@@ -936,14 +931,13 @@ class SvnComponent( VersionControlComponent ):
             @rtype: string
             @return: The string to display for the instance of SvnComponent
         """
-        return string.join(
+        return os.linesep.join(
                     [ 'component: ' + self.project() + ':' + self.name(),
                       '- client_type: ' + self.get_client().__name__,
                       '- url: ' +  self.url(),
                       '- params: ' + str(self.params()),
                       '- url_branch_type: ' + self._url_branch_type,
-                      '- url_base: ' + self._url_base ],
-                    os.linesep )
+                      '- url_base: ' + self._url_base ] )
         
     def branch_url( self,
                     branch_type = BranchType.TRUNK,
@@ -1379,9 +1373,8 @@ class SvnComponent( VersionControlComponent ):
         """
         if (branch_type, branch_name) not in self._local_branches:
             self._local_branches[ (branch_type, branch_name) ] = \
-                tempfile.mkdtemp( prefix = string.join( ( self.project(),
-                                                          self.name() ),
-                                                          '_' ),
+                tempfile.mkdtemp( prefix = '_'.join( ( self.project(),
+                                                       self.name() ) ),
                                   dir = dir
                 )
 

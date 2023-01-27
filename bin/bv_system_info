@@ -74,7 +74,7 @@ else:
     if systemtype == 'Darwin':
         system = 'MacOS'
         systemplatform = system.lower()
-        release = string.join(platform.mac_ver()[0].split('.')[:2], '.')
+        release = '.'.join(platform.mac_ver()[0].split('.')[:2])
         if platform.architecture()[0] == '32bit':
             arch = 'i686'
         else:

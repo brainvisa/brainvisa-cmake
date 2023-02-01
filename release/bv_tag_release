@@ -64,8 +64,8 @@ def bv_tag_release(source_root, version_to_tag, *,
 
     for local_path, repo_url, branch in (
             iterate_release_branch_git_repositories(distro, major, minor)):
-        logger.debug('Now handling repository at %s (branch: %s, URL: %s)',
-                     local_path, branch, repo_url)
+        logger.info('Now handling repository at %s (branch: %s, URL: %s)',
+                    local_path, branch, repo_url)
         gr = GitRepository(source_root, local_path, repo_url, branch)
 
         if branch == f'{major:d}.{minor:d}':

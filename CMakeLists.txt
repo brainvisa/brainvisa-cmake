@@ -288,10 +288,7 @@ if( BRAINVISA_BVMAKER )
     # disable help for some shell commands not runnable on windows
     list(APPEND __excluded_commands
          bv_env_host
-         bv_env_test
-         meld_svn
-         kompare_svn
-         kdiff3_svn)
+         bv_env_test)
   endif()
   
   foreach( _command ${__excluded_commands} )

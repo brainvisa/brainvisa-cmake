@@ -400,7 +400,7 @@ if len(old_file) == 0:
             os.makedirs(self.directory)
 
         if options.clean or self.clean_config.upper == 'ON':
-            my_path = os.path.dirname(__file__)
+            my_path = os.path.dirname(sys.argv[0])
             bv_clean = os.path.join(my_path, 'bv_clean_build_tree')
             print('cleaning build tree', self.directory)
             # clean and remove empty dirs. Don't use -b option here
@@ -652,7 +652,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
                 clean_opts = ['-b']
             else:
                 clean_opts = []
-            my_path = os.path.dirname(__file__)
+            my_path = os.path.dirname(sys.argv[0])
             bv_clean = os.path.join(my_path, 'bv_clean_build_tree')
             print('cleaning build tree', self.directory)
             # don't remove empty dirs here since configure may have created

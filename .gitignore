@@ -7,7 +7,6 @@ cmake_install.cmake
 install_manifest.txt
 
 # Other brainvisa-cmake files
-/bin/bv_env_host
 /python/brainvisa/maker/installed_files.txt
 /python/brainvisa/maker/version.py
 /CPackConfig.cmake

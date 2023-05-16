@@ -288,9 +288,7 @@ class PackageDirectory(build.ComponentsConfigParser,
         if not os.path.exists(bvi):
             # otherwise use the path
             bvi = distutils.spawn.find_executable('bv_build_installer.py')
-        cmd = [os.path.join(self.build_directory, 'bin',
-                            'bv_env_host%s' % exe_suffix),
-               sys.executable, bvi, '-r', directory]
+        cmd = [sys.executable, bvi, '-r', directory]
         if installer_filename:
             cmd += ['-i', installer_filename]
             if not offline_installer_filename:

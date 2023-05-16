@@ -1389,15 +1389,6 @@ function( BRAINVISA_GENERATE_COMMANDS_HELP_INDEX )
 #     message("--BRAINVISA_ADD_COMMAND_HELP_INDEX - _depends : ${_depends}")
 #     message("--BRAINVISA_ADD_COMMAND_HELP_INDEX - _dirs : ${_dirs}")
 
-#     brainvisa_target_system_command(__target_cmd 
-#         "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
-#             "${PYTHON_EXECUTABLE}"
-#             ${CREATE_COMMANDS_DOC}
-#             -t "${_helppath}"
-#             -v 0
-#             ${_cmd_options}
-#             "${_output_directory}/${_index_file}")
-#     message("===== TARGET SYSTEM COMMAND: ${__target_cmd}")
     if(CMAKE_CROSSCOMPILING AND WINE32)
         find_package(Wine)
     endif()
@@ -1407,7 +1398,6 @@ function( BRAINVISA_GENERATE_COMMANDS_HELP_INDEX )
     else()
       add_custom_command( OUTPUT "${_output_directory}/${_index_file}"
                           COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX}
-                                  "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
                                   "${PYTHON_EXECUTABLE}"
                                   ${CREATE_COMMANDS_DOC}
                                   -t "${_helppath}"
@@ -1557,7 +1547,6 @@ function( BRAINVISA_ADD_COMMAND_HELP name)
     add_custom_command( OUTPUT "${_component_help_directory}/${name}"
                         COMMAND "${CMAKE_COMMAND}" -E make_directory "${_component_help_directory}"
                         COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX}
-                                "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}" 
                                 "${PYTHON_EXECUTABLE}" -c "import sys, subprocess; subprocess.call( ['${_command}'], stdout = sys.stdout, stderr = sys.stdout )" > ${_component_help_directory}/${name}
                         DEPENDS ${_depends}
                         COMMENT "Generating ${name} help file ..."
@@ -1816,7 +1805,6 @@ endfunction()
 #  brainvisa_add_test(testname Exename arg1 arg2 ... )
 #  If TYPE Python is given, the appropriate python interpreter is used to
 #  start the test (i.e.: target python for cross compiling case).
-#  Test command is also launched through bv_env_test command.
 #  Each test in ctest is assigned a label corresponding to the project name.
 #  If TESTREF is used, we re-use the command to run it in a special mode
 #  for the generation of reference test files (this is launched by the testref
@@ -1952,12 +1940,6 @@ function( BRAINVISA_ADD_TEST )
 #       set( _command_args_ref "cmd" "/c" "${_command_args_ref}" )
 #     endif()
 #   endif()
-
-  # Add bv_env_test encapsulation
-  set(_command_args_run "${brainvisa-cmake_DIR}/../../../bin/bv_env_test"
-                        "${_command_args_run}")
-  set(_command_args_ref "${brainvisa-cmake_DIR}/../../../bin/bv_env_test"
-                        "${_command_args_ref}")
 
   # message("====== FORM ${_form}, NAME ${_name_args} =======")
   # message("====== COMMAND ${_command_args} =======")
@@ -2180,7 +2162,6 @@ function( BRAINVISA_GENERATE_EPYDOC_DOC  )
     add_custom_command( OUTPUT "${CMAKE_BINARY_DIR}/${outputDirectory}/index.html"
                         DEPENDS ${pythonFiles}
                         COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/${outputDirectory}"
-                        COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env_host${CMAKE_HOST_EXECUTABLE_SUFFIX}"
                           "${EPYDOC_EXECUTABLE}"
                           --html
                           --name "${PROJECT_NAME} ${${PROJECT_NAME}_VERSION}"
@@ -2266,7 +2247,6 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
                       COMMAND "${CMAKE_COMMAND}" -E make_directory
                         "${output_directory}"
                       COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX}
-                        "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
                         ${SPHINXBUILD_EXECUTABLE}
                         ${source_directory}
                         ${output_directory}

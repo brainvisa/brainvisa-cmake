@@ -123,34 +123,9 @@ add_custom_command( OUTPUT "${packageName}"
 )
 add_custom_target( "deb-package" DEPENDS "${packageName}" )
 
-if( BRAINVISA_BVMAKER )
-  set( bv_env_exe "bv_env" )
-else()
-  # in "standalone" mode, we build a "bv_env_host" command, using the native
-  # host toolchain, and which will be run by the build system.
-  # In cross-compilation situation, the other bv_env command will be built
-  # using the target system toolchain so that it can be run by the target
-  # system after install.
-  set( bv_env_exe "bv_env_host" )
-endif()
 if( DESIRED_QT_VERSION )
   add_definitions( -DDESIRED_QT_VERSION=${DESIRED_QT_VERSION} )
 endif()
-add_executable( ${bv_env_exe} src/bv_env.cc )
-
-# Enable static linking if available. We cannot use CheckCXXAcceptsFlag since
-# the linking step is not checked with that function.
-include( CheckCXXSourceCompiles )
-set(CMAKE_REQUIRED_FLAGS "-static")
-CHECK_CXX_SOURCE_COMPILES( "int main() { return 0; }" static_link )
-if( static_link )
-  set_target_properties( ${bv_env_exe} PROPERTIES LINK_FLAGS -static )
-endif()
-
-set_target_properties( ${bv_env_exe} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin" )
-install( TARGETS ${bv_env_exe}
-         DESTINATION bin
-         COMPONENT brainvisa-cmake )
 
 install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/python"
          DESTINATION "."
@@ -165,15 +140,6 @@ if( "${BRAINVISA_CMAKE_INSTALL_FOR_USER}" )
   #
   # The BRAINVISA_CMAKE_INSTALL_FOR_USER variable is set in
   # brainvisa-compilation.cmake.
-  install( FILES "bin/bv_env.sh"
-                 "bin/bv_env.bat"
-                 "bin/bv_unenv.sh"
-           DESTINATION "bin"
-           COMPONENT brainvisa-cmake )
-  install( PROGRAMS "bin/bv_env_test"
-                    "bin/bv_unenv"
-           DESTINATION "bin"
-           COMPONENT brainvisa-cmake )
 else()
   # When installing into the BrainVISA build-tree, we install all tools from
   # bin/ (including developer tools).
@@ -181,7 +147,6 @@ else()
            DESTINATION "."
            USE_SOURCE_PERMISSIONS
            COMPONENT brainvisa-cmake
-           PATTERN ".svn" EXCLUDE
            PATTERN "*~" EXCLUDE )
 endif()
 
@@ -189,7 +154,6 @@ install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/etc"
          DESTINATION "."
          USE_SOURCE_PERMISSIONS
          COMPONENT brainvisa-cmake
-         PATTERN ".svn" EXCLUDE
          PATTERN "*~" EXCLUDE )
 
 # Generate a list of all brainvisa-cmake installed files
@@ -249,48 +213,17 @@ if( BRAINVISA_BVMAKER )
   find_package( Sphinx )
   find_package( python )
 
-  # Create a symbolic link named 'python' so that programs launched through
-  # bv_env use the correct version of Python that BrainVISA was configured for.
-  # This is especially useful for projects such as AIMS and Anatomist, which
-  # use compiled Python modules.
-  execute_process(COMMAND "${CMAKE_COMMAND}" -E create_symlink ${PYTHON_EXECUTABLE} ${CMAKE_BINARY_DIR}/bin/python
-    RESULT_VARIABLE python_symlink_result)
-  if(python_symlink_result)
-    message(WARNING "Failed to create the Python symlink (${CMAKE_BINARY_DIR}/bin/python -> ${PYTHON_EXECUTABLE}), see the error message above.  This means that programs launched with bv_env are not guaranteed to use the version of Python that BrainVISA was compiled for, so you may get version mismatch errors.")
-  endif()
-
   BRAINVISA_GENERATE_SPHINX_DOC( "doc/sphinx"
     "share/doc/${PROJECT_NAME}-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}" USER )
 
   file( GLOB _commands "${CMAKE_CURRENT_SOURCE_DIR}/bin/*[!%~]" )
-  set( cmds "bv_env;bv_env_host" )
-  foreach( _command ${_commands} )
-    get_filename_component( _command_name "${_command}" NAME )
-    if( NOT ${_command_name} STREQUAL ".svn" )
-      list( APPEND cmds ${_command_name} )
-    endif()
-  endforeach()
-  # Duplicates can occur if bv_env or bv_env_host are present in
-  # ${CMAKE_CURRENT_SOURCE_DIR}/bin
-  list( REMOVE_DUPLICATES cmds )
-  set( brainvisa-cmake-commands ${cmds}
-       CACHE INTERNAL "Commands list for component brainvisa-cmake" FORCE )
   # disable help for some internal or undocumented commands
   set(__excluded_commands 
       bv_clean_jenkins
-      bv_env.bat
-      bv_env.sh
       bv_sendmail
       bv_sources_copyright
       bv_unenv.sh)
-  
-  if(WIN32)
-    # disable help for some shell commands not runnable on windows
-    list(APPEND __excluded_commands
-         bv_env_host
-         bv_env_test)
-  endif()
-  
+   
   foreach( _command ${__excluded_commands} )
     set( ${_command}-help-generate FALSE CACHE INTERNAL
         "${_command} help must be generated")

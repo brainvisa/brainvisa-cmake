@@ -607,9 +607,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
             print('=== now configuring all other projects ===')
             # run with this local bv-cmake environment
             system(cwd=self.directory,
-                   *( [os.path.join(self.directory, 'bin',
-                                    'bv_env_host%s' % exe_suffix)]
-                     + command_base
+                   *(command_base
                      + command_options
                      + cross_compiling_options
                      + ["-DBRAINVISA_CMAKE_BUILD_TYPE=no-brainvisa-cmake"]

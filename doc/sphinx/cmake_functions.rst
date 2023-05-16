@@ -100,7 +100,6 @@ Add a test to the project with the specified arguments.
 brainvisa_add_test(testname Exename arg1 arg2 ... )
 If ``TYPE Python`` is given, the appropriate python interpreter is used to
 start the test (i.e.: target python for cross compiling case).
-Test command is also launched through bv_env_test command.
 
 ex:
 

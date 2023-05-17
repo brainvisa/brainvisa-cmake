@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, print_function
-
 import glob, operator, os, re, string
 from fnmatch import fnmatchcase
 import sys
@@ -9,8 +7,8 @@ import sys
 SVN_URL = 'https://bioproj.extra.cea.fr/neurosvn'
 BRAINVISA_SVN_URL = SVN_URL + '/brainvisa'
 
-from brainvisa.maker.components_definition import components_definition
-from brainvisa.maker.version_number        import VersionNumber, \
+from brainvisa_cmake.components_definition import components_definition
+from brainvisa_cmake.version_number        import VersionNumber, \
                                                   version_format_unconstrained
 try:
     # compatibility for python3

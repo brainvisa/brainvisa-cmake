@@ -7,8 +7,8 @@ cmake_install.cmake
 install_manifest.txt
 
 # Other brainvisa-cmake files
-/python/brainvisa/maker/installed_files.txt
-/python/brainvisa/maker/version.py
+/python/brainvisa_cmake/installed_files.txt
+/python/brainvisa_cmake/version.py
 /CPackConfig.cmake
 /CPackSourceConfig.cmake
 CTestTestfile.cmake

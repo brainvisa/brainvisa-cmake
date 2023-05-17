@@ -10,7 +10,7 @@ import re
 import shlex
 import sys
 
-from brainvisa.maker.components_definition import components_definition
+from brainvisa_cmake.components_definition import components_definition
 
 
 logger = logging.getLogger(__name__)

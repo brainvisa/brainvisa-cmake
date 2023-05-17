@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function
 
 import os
 import sys
@@ -10,7 +9,7 @@ import string
 import subprocess
 import shlex
 
-from brainvisa.maker.brainvisa_projects import read_project_info, find_project_info
+from brainvisa_cmake.brainvisa_projects import read_project_info, find_project_info
 
 if sys.version_info[0] >= 3:
     def execfile(filename, globals=None, locals=None):

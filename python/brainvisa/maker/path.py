@@ -43,7 +43,7 @@ from abc import abstractmethod
 
 # To keep brainvisa-cmake independent from other projects (soma-base)
 # we need to duplicate the singleton module.
-from brainvisa.maker.singleton import Singleton
+from brainvisa_cmake.singleton import Singleton
        
 #-------------------------------------------------------------------------------
 # Path conversion

@@ -6,9 +6,6 @@ Note that the installer was used for releases 4.6 and 4.7. Is is not used
 anymore since BrainVISA 5.0.
 """
 
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
-
 import distutils
 import glob
 from optparse import OptionParser
@@ -23,14 +20,14 @@ import tempfile
 import time
 import six
 
-from brainvisa.maker import build
-from brainvisa.maker.commands import IGNORED_STEP
-import brainvisa.maker.configuration
-from brainvisa.maker.environment import environmentPathVariablesSubstitution
-from brainvisa.maker.environment import normalize_path
-from brainvisa.maker.subprocess import subprocess32
-from brainvisa.maker.subprocess import system_output_on_error
-from brainvisa.maker.utils import global_installer_datetime
+from brainvisa_cmake import build
+from brainvisa_cmake.commands import IGNORED_STEP
+import brainvisa_cmake.configuration
+from brainvisa_cmake.environment import environmentPathVariablesSubstitution
+from brainvisa_cmake.environment import normalize_path
+from brainvisa_cmake.subprocess import subprocess32
+from brainvisa_cmake.subprocess import system_output_on_error
+from brainvisa_cmake.utils import global_installer_datetime
 
 
 def get_matching_dirs(directories, pattern):
@@ -45,7 +42,7 @@ def get_matching_dirs(directories, pattern):
 
 
 class PackageDirectory(build.ComponentsConfigParser,
-                       brainvisa.maker.configuration.ConfigVariableParser):
+                       brainvisa_cmake.configuration.ConfigVariableParser):
 
     _path_variables = set(('directory',
                            'build_directory',
@@ -113,7 +110,7 @@ class PackageDirectory(build.ComponentsConfigParser,
 
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ pack ... ]:
-        if brainvisa.maker.configuration.ConfigVariableParser.addConfigurationLine(self, line):
+        if brainvisa_cmake.configuration.ConfigVariableParser.addConfigurationLine(self, line):
             pass
         else:
             line = os.path.expandvars(line)
@@ -986,8 +983,8 @@ Controller.prototype.FinishedPageCallback = function()
         return ' '.join(shlex.split(new_line))
 
 
-class PublicationDirectory(brainvisa.maker.configuration.DirectorySection,
-                           brainvisa.maker.configuration.ConfigVariableParser):
+class PublicationDirectory(brainvisa_cmake.configuration.DirectorySection,
+                           brainvisa_cmake.configuration.ConfigVariableParser):
 
     _path_variables = set(('package_directory',
                            'stdout_file', 'stderr_file'))

@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 """Management of Git repositories in bv_maker."""
 
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
-
 import distutils.spawn
 import os
 import subprocess
@@ -11,9 +8,9 @@ import subprocess
 import six
 from six.moves import shlex_quote
 
-from brainvisa.maker.subprocess import decode_output
-from brainvisa.maker.subprocess import DEVNULL
-from brainvisa.maker.subprocess import system
+from brainvisa_cmake.subprocess import decode_output
+from brainvisa_cmake.subprocess import DEVNULL
+from brainvisa_cmake.subprocess import system
 
 
 # FIXME(ylep): move to a utils module

@@ -2,24 +2,21 @@
 
 """Main procedure of the bv_maker command-line tool."""
 
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
-
 import multiprocessing
 import os
 import sys
 import traceback
 
-from brainvisa.maker.build import check_ld_library_path_error
-import brainvisa.maker.commands
-import brainvisa.maker.configuration
-import brainvisa.maker.output
+from brainvisa_cmake.build import check_ld_library_path_error
+import brainvisa_cmake.commands
+import brainvisa_cmake.configuration
+import brainvisa_cmake.output
 
 
 def main():
     """Main procedure of the bv_maker command-line tool."""
 
-    brainvisa.maker.output.reconfigure_stdout()
+    brainvisa_cmake.output.reconfigure_stdout()
 
     # export cpu_count() as NCPU env variable so that it can be used in conf file
     # for env replacements
@@ -37,7 +34,7 @@ def main():
     options_by_command = {None: []}
     command = None
     for i in sys.argv[1:]:
-        if i in brainvisa.maker.commands.COMMANDS:
+        if i in brainvisa_cmake.commands.COMMANDS:
             command = i
             if command in options_by_command:
                 raise ValueError('Command %s used twice' % command)
@@ -46,7 +43,7 @@ def main():
             options_by_command[command].append(i)
 
     # Initialize global configuration
-    configuration = brainvisa.maker.configuration.GlobalConfiguration(options_by_command[None])
+    configuration = brainvisa_cmake.configuration.GlobalConfiguration(options_by_command[None])
 
     # Parse commands options and prepare them for processing in the correct order
     todo = []
@@ -61,7 +58,7 @@ def main():
                     'doc', 'test', 'testref', 'pack', 'install_pack', 'test_pack',
                     'testref_pack', 'publish_pack']:
         if command in options_by_command:
-            command_class = brainvisa.maker.commands.COMMANDS[command]
+            command_class = brainvisa_cmake.commands.COMMANDS[command]
             todo.append(
                 command_class(options_by_command[command], configuration))
             if command not in ('info', 'status') \

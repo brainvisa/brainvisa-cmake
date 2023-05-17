@@ -3,7 +3,7 @@
 
 from __future__ import absolute_import
 
-from brainvisa.maker import svn_to_git
+from brainvisa_cmake import svn_to_git
 
 svn_to_git.main()
 

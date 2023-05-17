@@ -41,10 +41,10 @@ install( FILES "${CMAKE_BINARY_DIR}/${brainvisa-cmake_INSTALL_PREFIX}/cmake/brai
          DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake"
          COMPONENT brainvisa-cmake )
 configure_file( version.py.in
-                "python/brainvisa/maker/version.py"
+                "python/brainvisa_cmake/version.py"
                 @ONLY )
-install( FILES "${CMAKE_BINARY_DIR}/python/brainvisa/maker/version.py"
-         DESTINATION "python/brainvisa/maker"
+install( FILES "${CMAKE_BINARY_DIR}/python/brainvisa_cmake/version.py"
+         DESTINATION "python/brainvisa_cmake"
          COMPONENT brainvisa-cmake )
 foreach( _dir cmake cmake/specific cmake/specific/linux_distribution 
               cmake/specific/windows cmake/specific/windows/mingw32 
@@ -182,7 +182,7 @@ if( NOT DISABLE_FILE_INSTALLATION_LIST AND NOT BRAINVISA_BVMAKER )
     file( APPEND "${CMAKE_BINARY_DIR}/installed_files.txt" "${i}\n" )
   endforeach()
   install( FILES "${CMAKE_BINARY_DIR}/installed_files.txt"
-          DESTINATION "python/brainvisa/maker" )
+          DESTINATION "python/brainvisa_cmake" )
 endif()
 
 if(NOT CPack_CMake_INCLUDED)
@@ -221,29 +221,13 @@ if( BRAINVISA_BVMAKER )
   set(__excluded_commands 
       bv_clean_jenkins
       bv_sendmail
-      bv_sources_copyright
-      bv_unenv.sh)
+      bv_sources_copyright)
    
   foreach( _command ${__excluded_commands} )
     set( ${_command}-help-generate FALSE CACHE INTERNAL
         "${_command} help must be generated")
   endforeach()
   
-  # set script commands to be run using a python interpreter (for windows)
-  foreach( _command
-           bv_clean_build_tree
-           bv_clean_jenkins
-           bv_copy_tree
-           bv_maker
-           bv_nobadlink
-           bv_sip4make
-           bv_svn_to_git
-           bv_system_info
-           bv_unenv )
-        set(${_command}-command-is-script TRUE CACHE INTERNAL 
-            "${_command} command is script")
-  endforeach()
-
   # define an install rule for the python symlink
   add_custom_target( install-brainvisa-cmake-python-symlink
                      COMMAND if [ -n "$(BRAINVISA_INSTALL_PREFIX)" ] \; then "${CMAKE_COMMAND}" "-E" "make_directory" "$(BRAINVISA_INSTALL_PREFIX)/bin" \; else "${CMAKE_COMMAND}" "-E" "make_directory" "${CMAKE_INSTALL_PREFIX}/bin" \; fi

@@ -2,9 +2,6 @@
 
 """Handling of bv_maker configuration (bv_maker.cfg)."""
 
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
-
 import glob
 from optparse import OptionParser
 import os
@@ -16,13 +13,13 @@ import traceback
 import six
 from six.moves import reload_module
 
-import brainvisa.maker.brainvisa_projects as brainvisa_projects
-import brainvisa.maker.components_definition
-from brainvisa.maker.environment import normalize_path
-from brainvisa.maker.environment import replace_vars
-from brainvisa.maker.environment import VarReplacementType
-from brainvisa.maker.utils import global_installer_variables
-from brainvisa.maker.version import version as brainvisa_cmake_version
+import brainvisa_cmake.brainvisa_projects as brainvisa_projects
+import brainvisa_cmake.components_definition
+from brainvisa_cmake.environment import normalize_path
+from brainvisa_cmake.environment import replace_vars
+from brainvisa_cmake.environment import VarReplacementType
+from brainvisa_cmake.utils import global_installer_variables
+from brainvisa_cmake.version import version as brainvisa_cmake_version
 
 
 default_subprocess_timeout = 3600 * 6  # default subprocess timeout is 6 hours
@@ -153,10 +150,10 @@ http://brainvisa.info/brainvisa-cmake/
                 else:
                     options.configuration_file = defaultConfigurationFile
             os.environ['BV_MAKER_BUILD'] = options.build_directory
-            reload_module(brainvisa.maker.components_definition)
+            reload_module(brainvisa_cmake.components_definition)
             reload_module(brainvisa_projects)
 
-            from brainvisa.maker import build
+            from brainvisa_cmake import build
             bd = build.BuildDirectory(options.build_directory, self)
 
             for sd in options.sources_directories:
@@ -184,8 +181,8 @@ http://brainvisa.info/brainvisa-cmake/
 
     def parse_config_file(self, f, options, extra_build_dir=None):
         """Read configuration from an file object (opened in binary mode)."""
-        from brainvisa.maker import build
-        from brainvisa.maker import sources
+        from brainvisa_cmake import build
+        from brainvisa_cmake import sources
         lineCount = 0
         currentDirectoryObject = None
 
@@ -275,13 +272,13 @@ http://brainvisa.info/brainvisa-cmake/
                                 self)
                             build_dirs.append(currentDirectoryObject)
                         elif l[0] == 'package':
-                            from brainvisa.maker import installer
+                            from brainvisa_cmake import installer
                             currentDirectoryObject = installer.PackageDirectory(
                                 l[1].strip(),
                                 self)
                             package_dirs.append(currentDirectoryObject)
                         elif l[0] == 'package_publication':
-                            from brainvisa.maker import installer
+                            from brainvisa_cmake import installer
                             currentDirectoryObject = installer.PublicationDirectory(
                                 l[1].strip(),
                                 self)

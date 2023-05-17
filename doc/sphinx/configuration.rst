@@ -320,7 +320,7 @@ Syntax for components selection
 
 Components can be selected according to their name and (in some context) to their version. This paragraph explain how to use component_selection and version_selection and gives some examples of their usage.
 
-Information about the components, components groups and versions are extracted from git repository and stored in the following file: https://github.com/brainvisa/brainvisa-cmake/blob/master/python/brainvisa/maker/components_definition.py
+Information about the components, components groups and versions are extracted from git repository and stored in the following file: https://github.com/brainvisa/brainvisa-cmake/blob/master/python/brainvisa_cmake/components_definition.py
 
 
 Component selection

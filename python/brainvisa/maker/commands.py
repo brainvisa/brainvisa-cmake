@@ -2,9 +2,6 @@
 
 """Support code for sub-commands of bv_maker."""
 
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
-
 import io
 from optparse import OptionParser
 import os
@@ -19,12 +16,12 @@ import traceback
 
 import six
 
-from brainvisa.maker.environment import normalize_path
-from brainvisa.maker.utils import installer_format_date
-from brainvisa.maker.utils import installer_format_time
-from brainvisa.maker.utils import installer_parse_date
-from brainvisa.maker.utils import installer_parse_time
-from brainvisa.maker.utils import global_installer_datetime
+from brainvisa_cmake.environment import normalize_path
+from brainvisa_cmake.utils import installer_format_date
+from brainvisa_cmake.utils import installer_format_time
+from brainvisa_cmake.utils import installer_parse_date
+from brainvisa_cmake.utils import installer_parse_time
+from brainvisa_cmake.utils import global_installer_datetime
 
 
 IGNORED_STEP = 'ignored'

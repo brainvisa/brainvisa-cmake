@@ -1,38 +1,5 @@
 # -*- coding: utf-8 -*-
 
-#  This software and supporting documentation are distributed by
-#      Institut Federatif de Recherche 49
-#      CEA/NeuroSpin, Batiment 145,
-#      91191 Gif-sur-Yvette cedex
-#      France
-#
-# This software is governed by the CeCILL-B license under
-# French law and abiding by the rules of distribution of free software.
-# You can  use, modify and/or redistribute the software under the
-# terms of the CeCILL-B license as circulated by CEA, CNRS
-# and INRIA at the following URL "http://www.cecill.info".
-#
-# As a counterpart to the access to the source code and  rights to copy,
-# modify and redistribute granted by the license, users are provided only
-# with a limited warranty  and the software's author,  the holder of the
-# economic rights,  and the successive licensors  have only  limited
-# liability.
-#
-# In this respect, the user's attention is drawn to the risks associated
-# with loading,  using,  modifying and/or developing or reproducing the
-# software by the user in light of its specific status of free software,
-# that may mean  that it is complicated to manipulate,  and  that  also
-# therefore means  that it is reserved for developers  and  experienced
-# professionals having in-depth computer knowledge. Users are therefore
-# encouraged to load and test the software's suitability as regards their
-# requirements in conditions enabling the security of their systems and/or
-# data to be ensured and,  more generally, to use and operate it in the
-# same conditions as regards security.
-#
-# The fact that you are presently reading this means that you have had
-# knowledge of the CeCILL-B license and that you accept its terms.
-from __future__ import absolute_import, print_function
-
 import os
 import string
 import re
@@ -45,12 +12,12 @@ import tempfile
 import six
 from six.moves.urllib.parse import urlparse, urlunparse, urlsplit, urlunsplit
 
-from brainvisa.maker.brainvisa_clients import system, normurl
-from brainvisa.maker.brainvisa_projects     import parse_project_info_cmake, \
+from brainvisa_cmake.brainvisa_clients import system, normurl
+from brainvisa_cmake.brainvisa_projects     import parse_project_info_cmake, \
     parse_project_info_python
-from brainvisa.maker.brainvisa_client_components import BranchType, \
+from brainvisa_cmake.brainvisa_client_components import BranchType, \
                                                         VersionControlComponent
-from brainvisa.maker.version_number import VersionNumber, \
+from brainvisa_cmake.version_number import VersionNumber, \
                                             version_format_release
 # Glob special char
 svn_glob_regexp = re.compile(r'[\[\]\*\?]')
@@ -698,7 +665,7 @@ def svn_update_version_info( version_file_url,
         """
         import os, posixpath
         
-        from brainvisa.maker.brainvisa_clients import find_remote_project_info
+        from brainvisa_cmake.brainvisa_clients import find_remote_project_info
         
         version = VersionNumber(
             version,
@@ -921,9 +888,9 @@ class SvnComponent( VersionControlComponent ):
             @return: The Client class associated to the current
                      VersionControlComponent class
         """
-        import brainvisa.maker.svn
+        import brainvisa_cmake.svn
         
-        return brainvisa.maker.svn
+        return brainvisa_cmake.svn
 
     def __str__( self ) :
         """ SvnComponent string conversion
@@ -1064,7 +1031,7 @@ class SvnComponent( VersionControlComponent ):
         """
         import fnmatch, lxml.objectify
         
-        from brainvisa.maker.version_number import VersionNumber
+        from brainvisa_cmake.version_number import VersionNumber
         
         if not isinstance(version_patterns, (list, tuple)):
             version_patterns = ( str( version_patterns ), )
@@ -1113,7 +1080,7 @@ class SvnComponent( VersionControlComponent ):
             @return: The version for the branch if was possible to get it,
                      None otherwise.
         """
-        from brainvisa.maker.version_number import VersionNumber
+        from brainvisa_cmake.version_number import VersionNumber
         
         branch_version_key = ( branch_type, branch_name )
         if self._branch_versions.get( branch_version_key ) is None :
@@ -1176,7 +1143,7 @@ class SvnComponent( VersionControlComponent ):
             @return: The name of the branch if it was possible to get it,
                      None otherwise.
         """
-        from brainvisa.maker.version_number import VersionNumber
+        from brainvisa_cmake.version_number import VersionNumber
         
         if ( branch_type == BranchType.TRUNK ):
             return None
@@ -1231,7 +1198,7 @@ class SvnComponent( VersionControlComponent ):
             @return: A tuple containing project name, component name and version
                      read from the project info file.
         """
-        from brainvisa.maker.brainvisa_clients import read_remote_project_info
+        from brainvisa_cmake.brainvisa_clients import read_remote_project_info
         
         info = read_remote_project_info(
                     self.client(),
@@ -1412,8 +1379,8 @@ class SvnComponent( VersionControlComponent ):
         """
         import os, posixpath
         
-        from brainvisa.maker.version_number import VersionNumber
-        from brainvisa.maker.brainvisa_clients import find_remote_project_info
+        from brainvisa_cmake.version_number import VersionNumber
+        from brainvisa_cmake.brainvisa_clients import find_remote_project_info
         
         version = VersionNumber(
             version,
@@ -1565,7 +1532,7 @@ class SvnComponent( VersionControlComponent ):
                      otherwise.
         """
         import time, os, posixpath
-        from brainvisa.maker.brainvisa_clients import find_remote_project_info
+        from brainvisa_cmake.brainvisa_clients import find_remote_project_info
         
         # Checkout the branch files to a local directory
         src_branch_local = self.branch_local_temporary( src_branch_type,

@@ -113,7 +113,7 @@ version = '2.1'
 # The full version, including alpha/beta/rc tags.
 release = '2.1.0'
 try:
-    from brainvisa.maker import version as bcversion
+    from brainvisa_cmake import version as bcversion
     version = '%s.%s' % (bcversion.version_major, bcversion.version_minor)
     release = '%s.%s.%s' % (bcversion.version_major, bcversion.version_minor,
                             bcversion.version_patch)

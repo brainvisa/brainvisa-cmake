@@ -40,12 +40,6 @@ install( FILES "${CMAKE_BINARY_DIR}/${brainvisa-cmake_INSTALL_PREFIX}/cmake/brai
                "${CMAKE_BINARY_DIR}/${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config-version.cmake"
          DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake"
          COMPONENT brainvisa-cmake )
-configure_file( version.py.in
-                "python/brainvisa_cmake/version.py"
-                @ONLY )
-install( FILES "${CMAKE_BINARY_DIR}/python/brainvisa_cmake/version.py"
-         DESTINATION "python/brainvisa_cmake"
-         COMPONENT brainvisa-cmake )
 foreach( _dir cmake cmake/specific cmake/specific/linux_distribution 
               cmake/specific/windows cmake/specific/windows/mingw32 
               cmake/specific/windows/i686-w64-mingw32 )

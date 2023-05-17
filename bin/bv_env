@@ -1,0 +1,12 @@
+#!/bin/sh
+script_dir=$( dirname $(readlink -f "$0") )
+bv_env_sh="$script_dir/bv_env.sh"
+if [ -e "$bv_env_sh" ]; then
+    if [ $# = 0 ]; then
+        sh "$bv_env_sh" -p
+        exit 0
+    else
+        . "$bv_env_sh"
+    fi
+fi
+exec "$@"

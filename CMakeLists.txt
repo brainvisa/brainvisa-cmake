@@ -27,6 +27,9 @@ endfunction()
 
 
 include( "${CMAKE_CURRENT_SOURCE_DIR}/project_info.cmake" )
+install( FILES "${CMAKE_CURRENT_SOURCE_DIR}/project_info.cmake"
+         DESTINATION "python/brainvisa_cmake"
+         COMPONENT brainvisa-cmake )
 
 set( brainvisa-cmake_INSTALL_PREFIX "share/brainvisa-cmake-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}" )
 

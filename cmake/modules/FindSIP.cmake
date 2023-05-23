@@ -16,7 +16,10 @@ if( SIP_VERSION )
   set( SIP_INCLUDE_DIRS "${PYTHON_INCLUDE_PATH}" "${SIP_INCLUDE_DIR}" )
   set(SIP_FOUND TRUE)
 else( SIP_VERSION )
-    if( DESIRED_QT_VERSION EQUAL 6 )
+    if( ( DESIRED_QT_VERSION EQUAL 6 ) AND NOT DESIRED_SIP_VERSION )
+      set( DESIRED_SIP_VERSION 6 )
+    endif()
+    if( DESIRED_SIP_VERSION EQUAL 6 )
         # Try to find sip in target root path
         find_program( SIP_EXECUTABLE
           NAMES sip-build${CMAKE_EXECUTABLE_SUFFIX}

@@ -7,10 +7,6 @@ cmake_policy( SET CMP0057 NEW )
 
 get_property( config_done GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE )
 
-if ( NOT CMAKE_LIBRARY_ARCHITECTURE )
-  set( CMAKE_LIBRARY_ARCHITECTURE x86_64-linux-gnu )
-endif()
-
 if (WIN32)
     set(BRAINVISA_CMAKE_LIBRARY_PATH_SUFFIXES lib bin)
 else()

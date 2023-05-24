@@ -107,7 +107,9 @@ if __name__ == '__main__':
         sip_dict['pyqt_sip_dir'] = sip_dir
     else:
         if pyqt_ver == 5:
-            sip_dir = get_default_sip_dir()
+            sip_dir = get_pyqt6_sip_dir()
+            if sip_dir is None:
+                sip_dir = get_default_sip_dir()
             sip_flags = QtCore.PYQT_CONFIGURATION['sip_flags']
 
         else:

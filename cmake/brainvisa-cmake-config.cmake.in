@@ -909,7 +909,7 @@ function( BRAINVISA_COPY_FILES component )
 
       set( _targetDepends ${_targetDepends} "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
     else()
-      message( "Warning: file \"${_absoluteFile}\" does not exists" )
+      message( "Warning: file \"${_absoluteFile}\" does not exist" )
     endif()
   endforeach()
 

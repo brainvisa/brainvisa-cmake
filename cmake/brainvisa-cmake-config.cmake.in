@@ -772,7 +772,9 @@ endfunction()
 # BRAINVISA_COPY_FILES
 #
 # Usage:
-#  BRAINVISA_COPY_FILES( <component> <source files> [SOURCE_DIRECTORY <directory>] DESTINATION <destination directory>  [IMMEDIATE] [GET_TARGET <target variable>] [TARGET <target name>] [GET_OUTPUT_FILES <target variable>] [NO_SYMLINKS] )
+#  BRAINVISA_COPY_FILES( <component> <source files> [SOURCE_DIRECTORY <directory>] DESTINATION <destination directory>  [IMMEDIATE] [GET_TARGET <target variable>] [TARGET <target name>] [GET_OUTPUT_FILES <target variable>] [NO_SYMLINKS] [FATAL <bool>] )
+#
+# FATAL has been added in brainvisa-cmake 5.1.2 and is true by default.
 #
 function( BRAINVISA_COPY_FILES component )
   set( _files "${ARGN}" )
@@ -846,6 +848,15 @@ function( BRAINVISA_COPY_FILES component )
     list( REMOVE_AT _files ${result} )
   endif()
 
+  # Read FATAL option
+  list( FIND _files FATAL result )
+  if( result EQUAL -1 )
+    set( fatal 1 )
+  else()
+    list( REMOVE_AT _files ${result} )
+    list( GET _files ${result} fatal )
+    list( REMOVE_AT _files ${result} )
+  endif()
 
 #     message( "=== copy: from ${_sourceDirectory} to ${_destination} : ${_files}" )
   # Create a custom target for the files installation. The install-component target depends on this custom target
@@ -909,7 +920,11 @@ function( BRAINVISA_COPY_FILES component )
 
       set( _targetDepends ${_targetDepends} "${CMAKE_BINARY_DIR}/${_destination}/${_file}" )
     else()
-      message( "Warning: file \"${_absoluteFile}\" does not exists" )
+      if( fatal )
+        message( FATAL_ERROR "Error: file \"${_absoluteFile}\" does not exist" )
+      else()
+        message( "Warning: file \"${_absoluteFile}\" does not exist" )
+      endif()
     endif()
   endforeach()
 

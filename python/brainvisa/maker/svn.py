@@ -611,7 +611,7 @@ def svn_glob( *urlpatterns ):
                 url_exists = url_checked.add( url )
                 url_exists = True
             
-            # If the url does not exists, it is not possible to find
+            # If the url does not exist, it is not possible to find
             # matching subdirectories
             if not url_exists:
                 continue

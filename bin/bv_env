@@ -2,6 +2,8 @@
 
 import os
 from pathlib import Path
+import subprocess
+import sys
 
 modified = {}
 path = os.environ.get("PATH", [])
@@ -25,6 +27,9 @@ for casa in (Path(__file__).parent, Path(__file__).parent.parent.parent.parent):
         modified["CASA_INSTALL"] = f"{casa}/install"
         modified["CASA_TEST"] = f"{casa}/test"
         modified["BRAINVISA_BVMAKER_CFG"] = f"{casa}/bv_maker.cfg"
+        modified.setdefault("PATH", path).insert(0, f"{casa}/conda/bin")
+        modified.setdefault("LD_LIBRARY_PATH", ld_library_path).insert(0, f"{casa}/conda/lib")
+        modified.setdefault("PYTHONPATH", python_path).insert(0, f"{casa}/conda/python")
         break
 else:
     casa_build = os.environ.get("CASA_BUILD")
@@ -43,11 +48,16 @@ else:
     bv_maker = False
 if not bv_maker:
     # bv_maker is not found in PATH, adds its source directories
-    bv_env_src=Path(os.readlink(__file__)).absolute().parent.parent
-    modified.setdefault("PATH", path).insert(0, f"{bv_env_src}/bin")
-    modified.setdefault("PYTHONPATH", python_path).insert(0, f"{bv_env_src}/python")
+    bv_env_src=Path(os.path.realpath(__file__)).parent.parent
+    modified.setdefault("PATH", path).append(f"{bv_env_src}/bin")
+    modified.setdefault("PYTHONPATH", python_path).append(f"{bv_env_src}/python")
 
 for n, v in modified.items():
     if not isinstance(v, str):
         v = ":".join(v)
-    print(f'export {n}="{v}"')
+    os.environ[n] = v
+    if len(sys.argv) <= 1:
+        print(f'export {n}="{v}"')
+
+if len(sys.argv) > 1:
+    sys.exit(subprocess.run(sys.argv[1:], env=os.environ).returncode)

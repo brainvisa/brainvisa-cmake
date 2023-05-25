@@ -1,12 +1,53 @@
-#!/bin/sh
-script_dir=$( dirname $(readlink -f "$0") )
-bv_env_sh="$script_dir/bv_env.sh"
-if [ -e "$bv_env_sh" ]; then
-    if [ $# = 0 ]; then
-        sh "$bv_env_sh" -p
-        exit 0
-    else
-        . "$bv_env_sh"
-    fi
-fi
-exec "$@"
+#!/bin/env python3
+
+import os
+from pathlib import Path
+
+modified = {}
+path = os.environ.get("PATH", [])
+if path:
+    path = path.split(":")
+ld_library_path = os.environ.get("LD_LIBRARY_PATH", [])
+if ld_library_path:
+    ld_library_path = ld_library_path.split(":")
+python_path = os.environ.get("PYTHONPATH", [])
+if python_path:
+    python_path = python_path.split(":")
+
+casa_build = None
+for casa in (Path(__file__).parent, Path(__file__).parent.parent.parent.parent):
+    if (casa / "bv_maker.cfg").exists():
+        modified["CASA"] = str(casa)
+        modified["CASA_CONF"] = f"{casa}/conf"
+        modified["CASA_SRC"] = f"{casa}/src"
+        casa_build = f"{casa}/build"
+        modified["CASA_BUILD"] = f"{casa}/build"
+        modified["CASA_INSTALL"] = f"{casa}/install"
+        modified["CASA_TEST"] = f"{casa}/test"
+        modified["BRAINVISA_BVMAKER_CFG"] = f"{casa}/bv_maker.cfg"
+        break
+else:
+    casa_build = os.environ.get("CASA_BUILD")
+
+if casa_build:
+    modified.setdefault("PATH", path).insert(0, f"{casa_build}/bin")
+    modified.setdefault("LD_LIBRARY_PATH", ld_library_path).insert(0, f"{casa_build}/lib")
+    modified.setdefault("PYTHONPATH", python_path).insert(0, f"{casa_build}/python")
+
+new_path = modified.get("PATH", path)
+for i in new_path:
+    if (Path(i) / 'bv_maker').exists():
+        bv_maker = True
+        break
+else:
+    bv_maker = False
+if not bv_maker:
+    # bv_maker is not found in PATH, adds its source directories
+    bv_env_src=Path(os.readlink(__file__)).absolute().parent.parent
+    modified.setdefault("PATH", path).insert(0, f"{bv_env_src}/bin")
+    modified.setdefault("PYTHONPATH", python_path).insert(0, f"{bv_env_src}/python")
+
+for n, v in modified.items():
+    if not isinstance(v, str):
+        v = ":".join(v)
+    print(f'export {n}="{v}"')

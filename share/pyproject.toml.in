@@ -22,7 +22,7 @@ tags = ["@SIP_QT_VERSION@"]
 # Configure the project itself.
 [tool.sip.project]
 ## not working.
-# abi-version = "@SIP_ABI@"
+abi-version = "@SIP_ABI@"
 sip-module = "@SIP_MODULE@"
 dunder-init = false
 target-dir = "@CMAKE_BINARY_DIR@/python"

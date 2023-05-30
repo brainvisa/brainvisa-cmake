@@ -104,8 +104,7 @@ else( SIP_VERSION )
         if( SIP_MODULE_EXECUTABLE )  # sip 5/6
           if( SIP_ABI )
             set( SIP_ABI ${SIP_ABI} CACHE STRING "SIP ABI version" )
-            ## not taken into account by sip-build, so it is useless and breaks
-            # set( _added_flags "--abi-version" "${SIP_ABI}" )
+            set( _added_flags "--abi-version" "${SIP_ABI}" )
           execute_process( COMMAND "${SIP_MODULE_EXECUTABLE}" "--sip-h" "--target-dir" "${CMAKE_BINARY_DIR}/include" ${_added_flags} "${SIP_MODULE}" )
           endif()
         endif()

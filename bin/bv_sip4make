@@ -1,52 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#  This software and supporting documentation are distributed by
-#      Institut Federatif de Recherche 49
-#      CEA/NeuroSpin, Batiment 145,
-#      91191 Gif-sur-Yvette cedex
-#      France
-#
-# This software is governed by the CeCILL-B license under
-# French law and abiding by the rules of distribution of free software.
-# You can  use, modify and/or redistribute the software under the
-# terms of the CeCILL-B license as circulated by CEA, CNRS
-# and INRIA at the following URL "http://www.cecill.info".
-#
-# As a counterpart to the access to the source code and  rights to copy,
-# modify and redistribute granted by the license, users are provided only
-# with a limited warranty  and the software's author,  the holder of the
-# economic rights,  and the successive licensors  have only  limited
-# liability.
-#
-# In this respect, the user's attention is drawn to the risks associated
-# with loading,  using,  modifying and/or developing or reproducing the
-# software by the user in light of its specific status of free software,
-# that may mean  that it is complicated to manipulate,  and  that  also
-# therefore means  that it is reserved for developers  and  experienced
-# professionals having in-depth computer knowledge. Users are therefore
-# encouraged to load and test the software's suitability as regards their
-# requirements in conditions enabling the security of their systems and/or
-# data to be ensured and,  more generally, to use and operate it in the
-# same conditions as regards security.
-#
-# The fact that you are presently reading this means that you have had
-# knowledge of the CeCILL-B license and that you accept its terms.
-
-from __future__ import print_function
-from __future__ import absolute_import
 import os
 import os.path as osp
 import sys
 import shutil
 import tempfile
-import string
 import re
-from six.moves import range
-try:
-    import subprocess32 as subprocess
-except ImportError:
-    import subprocess
+import subprocess
+import toml
+
+def most_recent_modif(directories):
+    result = None
+    for base_dir in directories:
+        for root, d_names, f_names in os.walk(base_dir):
+            for f in f_names:
+                t = os.stat(os.path.join(root, f)).st_mtime
+                if result is None:
+                    result = t
+                elif t > result:
+                    result = t
+    return result
 
 # print('SIP options:', sys.argv)
 sys.stdout.flush()
@@ -116,11 +90,21 @@ if sip6:
 
     if not os.path.exists(outdir):
         os.makedirs(outdir)
+    else:
+        # Do not do anything if no build file
+        # is older than any sip file
+        sip_project = toml.load('pyproject.toml')
+        sip_dirs = sip_project['tool']['sip']['project']['sip-include-dirs']
+        in_date = most_recent_modif(sip_dirs)
+        out_date = most_recent_modif([outdir])
+        if out_date is not None and out_date >= in_date:
+            print('All output files are more recent than input files: cancel generation')
+            sys.exit(0)
     tdir = tempfile.mkdtemp()
     old_dir = shutil.copytree(outdir, osp.join(tdir, 'sip'), symlinks=True,
                               ignore_dangling_symlinks=True)
     # call SIP-build
-    # print(sipcmd + ' "' + '" "'.join( sys.argv[1:] ) + '"')
+    print(sipcmd + ' "' + '" "'.join( sys.argv[1:] ) + '"', flush=True)
     res = subprocess.call([sipcmd] + sys.argv[1:])
     new_dir = outdir
 
@@ -134,11 +118,10 @@ else:
     sys.argv[copt + 1] = tdir
 
     # call SIP
-    # print(sipcmd + ' "' + '" "'.join( sys.argv[1:] ) + '"')
+    print(sipcmd + ' "' + '" "'.join( sys.argv[1:] ) + '"', flush=True)
     res = subprocess.call([sipcmd] + sys.argv[1:])
     if not os.path.exists(outdir):
         os.mkdir(outdir)
-
 
 def skipcomment(f):
     try:

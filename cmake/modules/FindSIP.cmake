@@ -113,10 +113,17 @@ else( SIP_VERSION )
         set( SIP_MODULE "sip" CACHE STRING "sip python module" )
       endif()
       if( NOT SIP4MAKE_EXECUTABLE )
+        find_program( SIP4MAKE_EXECUTABLE
+          NAMES bv_sip4make
+          PATHS "${brainvisa-cmake_SOURCE_DIR}/bin"
+          NO_DEFAULT_PATH
+          DOC "Path to bv_sip4make script" )
+      endif()
+      if( NOT SIP4MAKE_EXECUTABLE )
         # find the sip4make.py wrapper script
         find_program( SIP4MAKE_EXECUTABLE
-        NAMES bv_sip4make
-        DOC "Path to bv_sip4make script" )
+          NAMES bv_sip4make
+          DOC "Path to bv_sip4make script" )
         if( NOT SIP4MAKE_EXECUTABLE )
           # not found: use the regular sip executable
           set( SIP4MAKE_EXECUTABLE "$SIP_EXECUTABLE" CACHE FILEPATH "Path to bv_sip4make script (or sip itself as fallback)" )

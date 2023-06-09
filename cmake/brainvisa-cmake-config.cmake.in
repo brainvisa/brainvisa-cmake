@@ -1038,7 +1038,7 @@ endfunction()
 #                                    [INSTALL_ONLY] )
 #     <python directory>: python directory to copy
 #     <component>: name of the component passed to BRAINVISA_INSTALL.
-#     <destination directory>: directory where the wiles will be copied
+#     <destination directory>: directory where the files will be copied
 #         (relative to build directory).
 #   BRAINVISA_COPY_PYTHON_DIRECTORY( <python directory> <component> )
 #         <destination directory> is set to the right most directory
@@ -1071,6 +1071,17 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
     list( GET _args 0 _destDir )
   else()
     get_filename_component( _destDir "${_pythonDirectory}" NAME )
+  endif()
+
+  # When PYTHON_INSTALL_DIRECTORY is defined and the destination
+  # python directory is "*/python" then PYTHON_INSTALL_DIRECTORY
+  # is used for destination.
+  # This allows to substitute the python directory used in many
+  # CMake files. For example, in Conda environment, Python packages
+  # should be installed in `lib/python<version>/site-packages
+  get_filename_component( _destDirName "${_destDir}" NAME )
+  if(("${_destDirName}" STREQUAL "python") AND (DEFINED PYTHON_INSTALL_DIRECTORY) )
+    set( _destDir "${PYTHON_INSTALL_DIRECTORY}")
   endif()
 
   # Make sure Python can be executed

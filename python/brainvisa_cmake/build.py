@@ -13,7 +13,6 @@ import subprocess
 import sys
 import tempfile
 import time
-import traceback
 
 import six
 
@@ -495,6 +494,12 @@ if len(old_file) == 0:
                     file=out)
                 print('set( ' + component + '_VERSION "' + version + '" )',
                       file=out)
+            print('if( DEFINED CONDA )',
+                  file=out)
+            print('    include( "${CONDA}/../src/brainvisa-cmake/cmake/conda.cmake" )',
+                  file=out)
+            print('endif()',
+                  file=out)
 
         cmakeLists = os.path.join(self.directory, 'CMakeLists.txt')
 

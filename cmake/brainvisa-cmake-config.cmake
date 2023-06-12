@@ -268,7 +268,12 @@ endfunction()
 
 function(BRAINVISA_READ_PROJECT_INFO directory)
     if(EXISTS "${directory}/project_info.cmake")
-        include("${directory}/project_info.cmake")
+      set( _project_info_cmake "${directory}/project_info.cmake")
+    elseif(EXISTS "${directory}/project_info.cmake")
+      set( _project_info_cmake "${directory}/cmake/project_info.cmake")
+    endif()
+    if (DEFINED _project_info_cmake)
+        include("${_project_info_cmake}")
         set(BRAINVISA_PACKAGE_NAME ${BRAINVISA_PACKAGE_NAME} PARENT_SCOPE)
         set(BRAINVISA_PACKAGE_MAIN_PROJECT ${BRAINVISA_PACKAGE_MAIN_PROJECT} PARENT_SCOPE)
         set(BRAINVISA_PACKAGE_VERSION_MAJOR ${BRAINVISA_PACKAGE_VERSION_MAJOR} PARENT_SCOPE)
@@ -2649,7 +2654,7 @@ function( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
     configure_file( "${BRAINVISA_SOURCES_${PROJECT_NAME}}/cmake/${PROJECT_NAME}-config-version.cmake.in"
                     "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake"
                     @ONLY )
-  else()
+  elseif( EXISTS "${brainvisa-cmake_DIR}/brainvisa-cmake-config-version.cmake.in" )
     configure_file( "${brainvisa-cmake_DIR}/brainvisa-cmake-config-version.cmake.in"
                     "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake"
                     @ONLY )

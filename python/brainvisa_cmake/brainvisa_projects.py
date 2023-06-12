@@ -238,8 +238,9 @@ def find_project_info( directory ):
      contained in a directory.
      Files are searched using the patterns :
      1) <directory>/project_info.cmake
-     2) <directory>/python/*/info.py
-     3) <directory>/*/info.py
+     2) <directory>/cmake/project_info.cmake
+     3) <directory>/python/*/info.py
+     4) <directory>/*/info.py
      
   @type directory: string
   @param directory: The directory to search project_info.cmake or info.py
@@ -248,15 +249,15 @@ def find_project_info( directory ):
   @return: The path of the found file containing project information
            or None when no file was found
   """
-  project_info_cmake_path = os.path.join( directory,
-                                          'project_info.cmake' )
   project_info_python_patterns = (
+      os.path.join( directory,'project_info.cmake' ),
+      os.path.join( directory,'cmake', 'project_info.cmake' ),
       os.path.join( directory, 'python', '*', 'info.py' ),
       os.path.join( directory, '*', 'info.py' ),
       os.path.join( directory, 'info.py' ))
 
   # Searches for project_info.cmake and info.py file
-  for pattern in ( project_info_cmake_path, ) + project_info_python_patterns:
+  for pattern in project_info_python_patterns:
     project_info_python_path = glob.glob( pattern )
   
     if project_info_python_path:
@@ -271,8 +272,9 @@ def read_project_info( directory,
      contained in a directory and parses its content.
      Files are searched using the patterns :
      1) <directory>/project_info.cmake
-     2) <directory>/python/*/info.py
-     3) <directory>/*/info.py
+     2) <directory>/cmake/project_info.cmake
+     3) <directory>/python/*/info.py
+     4) <directory>/*/info.py
      
   @type directory: string
   @param directory: The directory to search project_info.cmake or info.py

@@ -498,7 +498,7 @@ if len(old_file) == 0:
                     file=out)
                 print('set( ' + component + '_VERSION "' + version + '" )',
                       file=out)
-
+            print('set(PYTHON_INSTALL_DIRECTORY python)', file=out)
         cmakeLists = os.path.join(self.directory, 'CMakeLists.txt')
 
         with open(cmakeLists, 'w') as out:

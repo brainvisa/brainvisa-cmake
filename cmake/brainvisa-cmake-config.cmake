@@ -128,8 +128,8 @@ if( NOT config_done )
   endif()
 
   # Initialize python module containing compilation information
-  set( BRAINVISA_COMPILATION_INFO "${CMAKE_BINARY_DIR}/python/brainvisa/compilation_info.py" )
-  execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/python/brainvisa" )
+  set( BRAINVISA_COMPILATION_INFO "${CMAKE_BINARY_DIR}/${PYTHON_INSTALL_DIRECTORY}/brainvisa/compilation_info.py" )
+  execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/${PYTHON_INSTALL_DIRECTORY}/brainvisa" )
   configure_file( "${brainvisa-cmake_DIR}/compilation_info.py.in" "${BRAINVISA_COMPILATION_INFO}" @ONLY )
 
 endif()
@@ -2629,7 +2629,7 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
   include_directories( BEFORE ${SIP_INCLUDE_DIR} )
   add_library( ${_moduleName} MODULE ${_sipOutputFiles} )
   set_target_properties( ${_moduleName} PROPERTIES
-                LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python/${_modulePath}"
+                LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${PYTHON_INSTALL_DIRECTORY}/${_modulePath}"
                 PREFIX "" )
   if( WIN32 )
     set_target_properties( ${_moduleName} PROPERTIES SUFFIX ".pyd" )
@@ -2639,7 +2639,7 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
     set_target_properties( ${_moduleName} PROPERTIES COMPILE_DEFINITIONS ${PYTHON_FLAGS} )
   endif()
   BRAINVISA_INSTALL( TARGETS ${_moduleName}
-                     DESTINATION "python/${_modulePath}"
+                     DESTINATION "${PYTHON_INSTALL_DIRECTORY}/${_modulePath}"
                      COMPONENT ${PROJECT_NAME} )
 endmacro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _installComponent _installComponentDevel _sipSplitGeneratedCode _mainSipFile )
 

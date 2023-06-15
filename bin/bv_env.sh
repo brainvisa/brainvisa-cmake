@@ -60,7 +60,13 @@ then
     bv_env=$(dirname -- "$0")/bv_env
 fi
 
-# Method 3: look for the path to bv_env.sh in the shell history.
+# Method 3: check for Conda installation
+if [ ! -x "$bv_env" -a -x "$CONDA_PREFIX/../src/brainvisa-cmake/bin/bv_env" ] ;
+then
+    bv_env="$CONDA_PREFIX/../src/brainvisa-cmake/bin/bv_env"
+fi
+
+# Method 4: look for the path to bv_env.sh in the shell history.
 if [ ! -x "$bv_env" ] && type fc > /dev/null 2>&1
 then
     # Read the currently executing command using fc. fc needs to be run in the
@@ -91,7 +97,7 @@ then
     fi
 fi
 
-# Method 4: see if bv_env can be found in $PATH, which is the case if this
+# Method 5: see if bv_env can be found in $PATH, which is the case if this
 # script was found during a PATH lookup, i.e. called as ". bv_env.sh".
 if [ ! -x "$bv_env" ] && type bv_env > /dev/null 2>&1
 then

@@ -29,7 +29,7 @@ for casa in (Path(__file__).parent, Path(__file__).parent.parent.parent.parent):
         modified["BRAINVISA_BVMAKER_CFG"] = f"{casa}/bv_maker.cfg"
         modified.setdefault("PATH", path).insert(0, f"{casa}/conda/bin")
         modified.setdefault("LD_LIBRARY_PATH", ld_library_path).insert(0, f"{casa}/conda/lib")
-        modified.setdefault("PYTHONPATH", python_path).insert(0, f"{casa}/conda/python")
+        modified.setdefault("PYTHONPATH", python_path).insert(0, f"{casa}/build/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages")
         break
 else:
     casa_build = os.environ.get("CASA_BUILD")

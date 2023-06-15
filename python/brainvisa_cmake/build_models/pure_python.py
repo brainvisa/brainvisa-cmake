@@ -165,7 +165,11 @@ class PurePythonComponentBuild(object):
         # buld tree, they are not installed in packages). This module adds the
         # content of bv_maker_pure_python.pth file to sys.path, just before
         # the path <build>/python
-        sitecustomize_dir = osp.join(self.build_directory.directory, 'python', 'sitecustomize')
+        if 'CONDA_PREFIX' in os.environ:
+            python_directory = f'lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages'
+        else:
+            python_directory = 'python'
+        sitecustomize_dir = osp.join(self.build_directory.directory, python_directory, 'sitecustomize')
         if not osp.exists(sitecustomize_dir):
             os.makedirs(sitecustomize_dir)
         module = osp.join(sitecustomize_dir,'bv_maker_pure_python.py')

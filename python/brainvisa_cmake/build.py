@@ -410,8 +410,12 @@ if len(old_file) == 0:
         # brainvisa_cmake.build_models.pure_python). This package is used only
         # in build directory, it is not installed in packages (to date there is
         # one exception to this in axon component, see Axon's CMakeLists.txt).
+        if 'CONDA_PREFIX' in os.environ:
+            python_directory = f'lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages'
+        else:
+            python_directory = 'python'
         sitecustomize_dir = os.path.join(
-            self.directory, 'python', 'sitecustomize')
+            self.directory, python_directory, 'sitecustomize')
         if not os.path.exists(sitecustomize_dir):
             os.makedirs(sitecustomize_dir)
         with open(os.path.join(sitecustomize_dir, '__init__.py'), 'w') as f:
@@ -494,6 +498,7 @@ if len(old_file) == 0:
                     file=out)
                 print('set( ' + component + '_VERSION "' + version + '" )',
                       file=out)
+            print('set(PYTHON_INSTALL_DIRECTORY python)', file=out)
             print('if( DEFINED CONDA )',
                   file=out)
             print('    include( "${CONDA}/../src/brainvisa-cmake/cmake/conda.cmake" )',

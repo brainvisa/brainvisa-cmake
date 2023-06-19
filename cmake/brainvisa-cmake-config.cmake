@@ -3108,26 +3108,26 @@ endfunction()
 #
 # Usage:
 #
-#   BRAINVISA_PYUIC( <source_ui_file> <dest_py_file> <relative_path> )
+#   BRAINVISA_PYUIC( <source_ui_file> <dest_py_file> <relative_path> <dest_path> )
 #
-function( BRAINVISA_PYUIC source_ui_file dest_py_file relative_path )
+function( BRAINVISA_PYUIC source_ui_file dest_py_file relative_path dest_path )
   if( PYUIC )
     BRAINVISA_GENERATE_TARGET_NAME( target )
     # ensure the working directory will exist
-    file( MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/${relative_path}" )
+    file( MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/${dest_path}" )
     add_custom_command(
       OUTPUT "${dest_py_file}"
       COMMAND ${PYUIC} -o "${dest_py_file}" "${CMAKE_CURRENT_SOURCE_DIR}/${relative_path}/${source_ui_file}"
-      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${relative_path}"
+      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${dest_path}"
       DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${relative_path}/${source_ui_file}"
     )
     add_custom_target( ${target} ALL
       DEPENDS "${dest_py_file}"
-      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${relative_path}"
+      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${dest_path}"
     )
     BRAINVISA_INSTALL( FILES
-        "${CMAKE_BINARY_DIR}/${relative_path}/${dest_py_file}"
-      DESTINATION ${relative_path}
+        "${CMAKE_BINARY_DIR}/${dest_path}/${dest_py_file}"
+      DESTINATION ${dest_path}
       COMPONENT ${PROJECT_NAME} )
   endif()
 endfunction()

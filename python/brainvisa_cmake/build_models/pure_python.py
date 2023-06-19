@@ -34,11 +34,11 @@ BRAINVISA_DEPENDENCY( RUN DEPENDS python RUN ">= 2.7" )
 %(brainvisa_dependencies)s
 if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/python" )
     BRAINVISA_COPY_PYTHON_DIRECTORY( "${BRAINVISA_REAL_SOURCE_DIR}/python"
-                                     ${PROJECT_NAME} python
+                                     ${PROJECT_NAME} ${PYTHON_INSTALL_DIRECTORY}
                                      INSTALL_ONLY )
 else()
     BRAINVISA_COPY_PYTHON_DIRECTORY( "${BRAINVISA_REAL_SOURCE_DIR}/%(component_name)s"
-                                     ${PROJECT_NAME} python/%(component_name)s
+                                     ${PROJECT_NAME} ${PYTHON_INSTALL_DIRECTORY}/%(component_name)s
                                      INSTALL_ONLY )
 endif()
 

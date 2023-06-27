@@ -1009,11 +1009,11 @@ def run_and_log_testref(cwd=None, env=None, options=None, timeout=None,
     try:
         output = system_output_on_error(['make'] + options + ['testref'],
                                         cwd=cwd, env=env,
-                                        timeout = timeout)
+                                        timeout=timeout)
     except Exception as e:
         if hasattr(e, 'output'):
             with open(logfile[1], 'w') as f:
-                f.write(e.output)
+                f.write(six.ensure_text(e.output))
             if print_output:
                 print(e.output)
         logitem = {}

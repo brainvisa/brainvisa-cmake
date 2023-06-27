@@ -55,9 +55,9 @@ if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/share" )
 endif()
 
 if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/brainvisa" )
-    BRAINVISA_COPY_DIRECTORY( "${BRAINVISA_REAL_SOURCE_DIR}/brainvisa"
-                              brainvisa
-                              ${PROJECT_NAME} )
+    BRAINVISA_COPY_PYTHON_DIRECTORY( "${BRAINVISA_REAL_SOURCE_DIR}/brainvisa"
+                              ${PROJECT_NAME}
+                              brainvisa )
 endif()
 
 if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/scripts" )

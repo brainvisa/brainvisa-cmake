@@ -513,7 +513,6 @@ if len(old_file) == 0:
 cmake_minimum_required( VERSION 3.10 )
 set( CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}" ${CMAKE_PREFIX_PATH} )
 project( "Brainvisa" )
-find_package( brainvisa-cmake NO_POLICY_SCOPE )
 include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
 ''', file=out)
 

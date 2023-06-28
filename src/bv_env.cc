@@ -649,16 +649,18 @@ int main( int argc, char *argv[] )
   // the build.
 #if DESIRED_QT_VERSION >= 5
   stringstream s;
-  s << "pyqt5" << DESIRED_QT_VERSION;
+  s << "pyqt" << DESIRED_QT_VERSION;
   set_variables[ "QT_API" ] = s.str().c_str();
 #else
   set_variables[ "QT_API" ] = "pyqt";
 #endif
 #else
+  /*
   // DESIRED_QT_VERSION is not specified: the env variable has priority.
   char *qtapi = getenv( "QT_API" );
   if( !qtapi )
     set_variables[ "QT_API" ] = "pyqt";
+  */
 #endif
 
   map< string, string > backup_variables;

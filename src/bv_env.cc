@@ -647,8 +647,10 @@ int main( int argc, char *argv[] )
   // may be specified by the build system configuration
   // if this is given this way, we force QT_ENV variable to force it match
   // the build.
-#if DESIRED_QT_VERSION == 5
-  set_variables[ "QT_API" ] = "pyqt5";
+#if DESIRED_QT_VERSION >= 5
+  stringstream s;
+  s << "pyqt5" << DESIRED_QT_VERSION;
+  set_variables[ "QT_API" ] = s.str().c_str();
 #else
   set_variables[ "QT_API" ] = "pyqt";
 #endif

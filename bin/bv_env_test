@@ -90,5 +90,5 @@ else
     base_cmd=(${BRAINVISA_TEST_REMOTE_COMMAND} "${test_env[@]}" "${bv_env_cmd[@]}" "$CMD")
 fi
 
-echo "${base_cmd[@]}" ${exp[@]}
+# echo "${base_cmd[@]}" ${exp[@]}
 exec "${base_cmd[@]}" ${exp[@]}

@@ -1084,6 +1084,9 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
   if(("${_destDirName}" STREQUAL "python") AND (DEFINED PYTHON_INSTALL_DIRECTORY) )
     set( _destDir "${PYTHON_INSTALL_DIRECTORY}")
   endif()
+  if(("${_destDirName}" STREQUAL "brainvisa") AND (DEFINED PYTHON_INSTALL_DIRECTORY) )
+    set( _destDir "${PYTHON_INSTALL_DIRECTORY}/brainvisa")
+  endif()
 
   # Make sure Python can be executed
   if( NOT DEFINED PYTHON_EXECUTABLE )

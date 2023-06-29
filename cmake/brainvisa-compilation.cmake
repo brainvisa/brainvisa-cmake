@@ -1,5 +1,5 @@
 if( EXISTS "${CMAKE_BINARY_DIR}/bv_maker.cmake" )
-  include( "${CMAKE_BINARY_DIR}/bv_maker.cmake" )
+  include( "${CMAKE_BINARY_DIR}/bv_maker.cmake" NO_POLICY_SCOPE )
 endif()
 
 find_package( brainvisa-cmake NO_POLICY_SCOPE )
@@ -81,47 +81,44 @@ endfunction()
 # -DBRAINVISA_CMAKE_BUILD_TYPE, it will not be stored in cache.
 
 # First pass to configure brainvisa-cmake component
-if( NOT BRAINVISA_CMAKE_BUILD_TYPE
-  OR NOT BRAINVISA_CMAKE_BUILD_TYPE STREQUAL "no-brainvisa-cmake" )
-  list( FIND BRAINVISA_COMPONENTS brainvisa-cmake where )
-  if( where GREATER -1 )
-    set( component brainvisa-cmake )
-    if( BRAINVISA_SOURCES_${component} )
-      set( ${component}_IS_BEING_COMPILED TRUE CACHE BOOL INTERNAL )
-      message( STATUS "Configuring component ${component} from source directory \"${BRAINVISA_SOURCES_${component}}\"" )
-      file( MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/${component}" )
-      unset(opts)
-      set(opts "-D" "CMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}")
-      foreach(opt ${BRAINVISA_CMAKE_OPTIONS})
-        #message("Add ${opt}")
-        #message("${opt} value: ${${opt}}")
+# if( NOT BRAINVISA_CMAKE_BUILD_TYPE
+#   OR NOT BRAINVISA_CMAKE_BUILD_TYPE STREQUAL "no-brainvisa-cmake" )
+#   list( FIND BRAINVISA_COMPONENTS brainvisa-cmake where )
+#   if( where GREATER -1 )
+#     set( component brainvisa-cmake )
+#     if( BRAINVISA_SOURCES_${component} )
+#       set( ${component}_IS_BEING_COMPILED TRUE CACHE BOOL INTERNAL )
+#       message( STATUS "Configuring component ${component} from source directory \"${BRAINVISA_SOURCES_${component}}\"" )
+#       file( MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/${component}" )
+#       unset(opts)
+#       set(opts "-D" "CMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}")
+#       foreach(opt ${BRAINVISA_CMAKE_OPTIONS})
+#         #message("Add ${opt}")
+#         #message("${opt} value: ${${opt}}")
 
-        if ("${opt}" STREQUAL "CMAKE_INIT_CACHE")
-          set(opts ${opts} "-C" "${${opt}}")
-        else()
-          set(opts ${opts} "-D" "${opt}=${${opt}}")
-        endif()        
-      endforeach()
+#         if ("${opt}" STREQUAL "CMAKE_INIT_CACHE")
+#           set(opts ${opts} "-C" "${${opt}}")
+#         else()
+#           set(opts ${opts} "-D" "${opt}=${${opt}}")
+#         endif()        
+#       endforeach()
       
-      silent_execute_process( "${CMAKE_BINARY_DIR}/${component}" "${CMAKE_COMMAND}" "-G" "${CMAKE_GENERATOR}" ${opts} "${BRAINVISA_SOURCES_${component}}" )
-      silent_execute_process( "${CMAKE_BINARY_DIR}/${component}" "${CMAKE_BUILD_TOOL}" install )
-      set_property( GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE )
-      unset( brainvisa-cmake_DIR CACHE )
-      unset( brainvisa-cmake_DIR )
-      unset( opts )
-      unset( opt )
-      find_package( brainvisa-cmake )
-    endif()
-  endif()
-endif()
+#       silent_execute_process( "${CMAKE_BINARY_DIR}/${component}" "${CMAKE_COMMAND}" "-G" "${CMAKE_GENERATOR}" ${opts} "${BRAINVISA_SOURCES_${component}}" )
+#       silent_execute_process( "${CMAKE_BINARY_DIR}/${component}" "${CMAKE_BUILD_TOOL}" install )
+#       set_property( GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE )
+#       unset( brainvisa-cmake_DIR CACHE )
+#       unset( brainvisa-cmake_DIR )
+#       unset( opts )
+#       unset( opt )
+#       find_package( brainvisa-cmake )
+#     endif()
+#   endif()
+# endif()
 
 # if BRAINVISA_CMAKE_BUILD_TYPE is set to "brainvisa-cmake-only", do only the brainvisa-cmake configuration/installation.
 # this option is used to bootstrap installing bv-cmake, then re-run cmake
 if( NOT BRAINVISA_CMAKE_BUILD_TYPE
   OR NOT BRAINVISA_CMAKE_BUILD_TYPE STREQUAL "brainvisa-cmake-only" )
-
-  # See brainvisa-cmake/CMakeLists.txt for an explanation of this variable.
-  set( BRAINVISA_CMAKE_INSTALL_FOR_USER 1 )
 
   # Second pass to configure all other components
   foreach( component ${BRAINVISA_COMPONENTS} )

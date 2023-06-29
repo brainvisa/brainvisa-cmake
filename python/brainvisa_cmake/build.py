@@ -457,8 +457,14 @@ if len(old_file) == 0:
                     cross_compiling_directories, options=options, args=args)
                 self.buildModelPerComponent[component] = build_model
 
+        brainvisa_cmake_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         cmakeFile = os.path.join(self.directory, 'bv_maker.cmake')
         with open(cmakeFile, 'w') as out:
+            print('cmake_policy( SET CMP0074 NEW )', file=out)
+            print(f'set( BRAINVISA_SOURCES_brainvisa-cmake "{brainvisa_cmake_root}" )',
+                  file=out)
+            print('set( CMAKE_PREFIX_PATH "${BRAINVISA_SOURCES_brainvisa-cmake}" ${CMAKE_PREFIX_PATH} )',
+                  file=out)
             print('set( BRAINVISA_PROJECTS', ' '.join(
                 sortedProjects), 'CACHE STRING "BrainVISA Projects list" FORCE )',
                 file=out)
@@ -499,21 +505,19 @@ if len(old_file) == 0:
                 print('set( ' + component + '_VERSION "' + version + '" )',
                       file=out)
             print('set(PYTHON_INSTALL_DIRECTORY python)', file=out)
-            print('if( DEFINED CONDA )',
-                  file=out)
+            print('if( DEFINED CONDA )',file=out)
             print('    include( "${CONDA}/../src/brainvisa-cmake/cmake/conda.cmake" )',
                   file=out)
-            print('endif()',
-                  file=out)
+            print('endif()', file=out)
 
         cmakeLists = os.path.join(self.directory, 'CMakeLists.txt')
 
         with open(cmakeLists, 'w') as out:
-            print('''
+            print(f'''
 cmake_minimum_required( VERSION 3.10 )
-set( CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}" ${CMAKE_PREFIX_PATH} )
+set( CMAKE_PREFIX_PATH "${{CMAKE_BINARY_DIR}}" ${{CMAKE_PREFIX_PATH}} )
 project( "Brainvisa" )
-include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
+include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )
 ''', file=out)
 
         exe_suffix = ''

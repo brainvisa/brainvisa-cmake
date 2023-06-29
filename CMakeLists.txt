@@ -4,12 +4,8 @@ if( BRAINVISA_BVMAKER )
   set( CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR} )
 endif()
 
-if( CMAKE_MAJOR_VERSION GREATER 2 )
-    cmake_policy( SET CMP0048 NEW )
-    project( brainvisa-cmake LANGUAGES CXX VERSION 1.0 )
-else()
-    project( brainvisa-cmake CXX )
-endif()
+cmake_policy( SET CMP0048 NEW )
+project( brainvisa-cmake LANGUAGES CXX VERSION 1.0 )
 
 cmake_minimum_required( VERSION 3.10 )
 
@@ -26,21 +22,15 @@ function( BRAINVISA_GLOB_AND_FILTER glob variable )
 endfunction()
 
 
-include( "${CMAKE_CURRENT_SOURCE_DIR}/project_info.cmake" )
-install( FILES "${CMAKE_CURRENT_SOURCE_DIR}/project_info.cmake"
+include( "${CMAKE_CURRENT_SOURCE_DIR}/cmake/project_info.cmake" )
+install( FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/project_info.cmake"
          DESTINATION "python/brainvisa_cmake"
          COMPONENT brainvisa-cmake )
 
 set( brainvisa-cmake_INSTALL_PREFIX "share/brainvisa-cmake-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}" )
 
-configure_file( cmake/brainvisa-cmake-config.cmake.in
-                "${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config.cmake"
-                @ONLY )
-configure_file( cmake/brainvisa-cmake-config-version.cmake.in
-                "${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config-version.cmake"
-                @ONLY )
-install( FILES "${CMAKE_BINARY_DIR}/${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config.cmake"
-               "${CMAKE_BINARY_DIR}/${brainvisa-cmake_INSTALL_PREFIX}/cmake/brainvisa-cmake-config-version.cmake"
+install( FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/brainvisa-cmake-config.cmake"
+               "${CMAKE_CURRENT_SOURCE_DIR}/cmake/brainvisa-cmake-config-version.cmake"
          DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/cmake"
          COMPONENT brainvisa-cmake )
 foreach( _dir cmake cmake/specific cmake/specific/linux_distribution 
@@ -131,21 +121,11 @@ install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/python"
          PATTERN ".svn" EXCLUDE
          PATTERN "*~" EXCLUDE )
 
-if( "${BRAINVISA_CMAKE_INSTALL_FOR_USER}" )
-  # Only programs that are usuful at runtime are installed, *not* scripts that
-  # are used for development.
-  #
-  # The BRAINVISA_CMAKE_INSTALL_FOR_USER variable is set in
-  # brainvisa-compilation.cmake.
-else()
-  # When installing into the BrainVISA build-tree, we install all tools from
-  # bin/ (including developer tools).
-  install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
-           DESTINATION "."
-           USE_SOURCE_PERMISSIONS
-           COMPONENT brainvisa-cmake
-           PATTERN "*~" EXCLUDE )
-endif()
+install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
+         DESTINATION "."
+         USE_SOURCE_PERMISSIONS
+         COMPONENT brainvisa-cmake
+         PATTERN "*~" EXCLUDE )
 
 install( DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/etc"
          DESTINATION "."

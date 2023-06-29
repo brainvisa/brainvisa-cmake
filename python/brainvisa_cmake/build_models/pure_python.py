@@ -25,7 +25,6 @@ cmake_minimum_required( VERSION 3.10 )
 find_package( python REQUIRED )
 find_package( Sphinx )
 find_package( brainvisa-cmake REQUIRED )
-
 file( TO_CMAKE_PATH "%(source_directory)s" BRAINVISA_REAL_SOURCE_DIR )
 BRAINVISA_PROJECT()
 

@@ -7,14 +7,13 @@ from fnmatch import fnmatchcase
 import glob
 import json
 import os
+import pathlib
 import shlex
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
-
-import six
 
 import brainvisa_cmake.brainvisa_projects as brainvisa_projects
 import brainvisa_cmake.configuration
@@ -136,8 +135,7 @@ class ComponentsConfigParser(brainvisa_cmake.configuration.DirectorySection):
                         projects_set.find_components(componentPattern))
                     for component in possible_components:
                         for version, directory_model \
-                                in six.iteritems(
-                                    components_sources.get(component, {})):
+                                in components_sources.get(component, {}).items():
                             if isinstance(directory_model, list):
                                 directory, build_model = directory_model
                             else:
@@ -427,8 +425,21 @@ if len(old_file) == 0:
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
 
+        bin = pathlib.Path(self.directory) / 'bin'
+        bin.mkdir(exist_ok=True)
+        
+        brainvisa_cmake_root = pathlib.Path(__file__).parent.parent.parent
+
+        path = bin / 'bv_env'
+        path.unlink(missing_ok=True)
+        path.symlink_to(os.path.relpath(brainvisa_cmake_root / 'bin' / 'bv_env', bin))
+
+        path = bin / 'bv_env.sh'
+        path.unlink(missing_ok=True)
+        path.symlink_to(os.path.relpath(brainvisa_cmake_root / 'bin' / 'bv_env.sh', bin))
+
         cross_compiling_directories = {}
-        for k, s in six.iteritems(self.configuration.sourcesDirectories):
+        for k, s in self.configuration.sourcesDirectories.items():
             if s.cross_compiling_dirs is not None:
                 if len(self.cross_compiling_prefix) > 0:
                     cross_compiling_dir = \
@@ -450,14 +461,13 @@ if len(old_file) == 0:
             if build_model is not None:
                 build_model_class = getattr(__import__(
                     'brainvisa_cmake.build_models',
-                    fromlist=[six.ensure_str('pure_python')], level=0),
+                    fromlist=['pure_python'], level=0),
                     build_model)
                 build_model = build_model_class(
                     component, self.components[component][0], self,
                     cross_compiling_directories, options=options, args=args)
                 self.buildModelPerComponent[component] = build_model
 
-        brainvisa_cmake_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         cmakeFile = os.path.join(self.directory, 'bv_maker.cmake')
         with open(cmakeFile, 'w') as out:
             print('cmake_policy( SET CMP0074 NEW )', file=out)
@@ -480,7 +490,7 @@ if len(old_file) == 0:
                   'CACHE STRING "BrainVISA components list" FORCE )',
                   file=out)
             print(file=out)
-            for component, directory_version_model in six.iteritems(self.components):
+            for component, directory_version_model in self.components.items():
                 directory, selected_version, version, build_model = directory_version_model
                 if component in self.buildModelPerComponent:
                     print('set( BRAINVISA_SOURCES_' + component + ' "' \
@@ -536,7 +546,7 @@ include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )
         config_dir = cmake_path(self.directory)
 
         for component, build_model \
-                in six.iteritems(self.buildModelPerComponent):
+                in self.buildModelPerComponent.items():
             build_model.configure()
 
         # set bv_maker path, so that cmake finds its modules
@@ -798,7 +808,7 @@ include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )
         self.process_configuration_lines()
         print('Build directory: "' + self.directory + '"')
         for component, directory_version_model \
-                in six.iteritems(self.components):
+                in self.components.items():
             directory, selected_version, version, build_model \
                 = directory_version_model
             print('  %s (%s) <- %s' % (component, version, directory))
@@ -1021,7 +1031,7 @@ def run_and_log_testref(cwd=None, env=None, options=None, timeout=None,
     except Exception as e:
         if hasattr(e, 'output'):
             with open(logfile[1], 'w') as f:
-                f.write(six.ensure_text(e.output))
+                f.write(str(e.output))
             if print_output:
                 print(e.output)
         logitem = {}

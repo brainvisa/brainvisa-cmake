@@ -17,19 +17,41 @@ if python_path:
     python_path = python_path.split(":")
 
 casa_build = None
-for casa in (Path(__file__).parent, Path(__file__).parent.parent.parent.parent):
+brainvisa_cmake_src = None
+log = open('/tmp/log', 'w')
+
+# Look for main casa-distro directory relatively to this file. It can be
+# either a container directory (typically /casa) or a Conda directory. 
+# Relatively to this directory, this script sources can be in the 
+# following sub-directories:
+#   - src/brainvisa-cmake/bin/bv_env
+#   - src/development/brainvisa-cmake/{branch}/bin/bv_env
+#   - bin/bv_env
+brainvisa_cmake_src = Path(os.path.realpath(__file__)).parent.parent
+for casa in (
+    Path('/casa'),
+    brainvisa_cmake_src.parent.parent,
+    brainvisa_cmake_src.parent.parent.parent.parent,
+    brainvisa_cmake_src):
+    host = ''
     if (casa / "bv_maker.cfg").exists():
-        modified["CASA"] = str(casa)
-        modified["CASA_CONF"] = f"{casa}/conf"
-        modified["CASA_SRC"] = f"{casa}/src"
-        casa_build = f"{casa}/build"
-        modified["CASA_BUILD"] = f"{casa}/build"
-        modified["CASA_INSTALL"] = f"{casa}/install"
-        modified["CASA_TEST"] = f"{casa}/test"
+        # This is a conda-based development environment
         modified["BRAINVISA_BVMAKER_CFG"] = f"{casa}/bv_maker.cfg"
-        modified.setdefault("PATH", path).insert(0, f"{casa}/conda/bin")
-        modified.setdefault("LD_LIBRARY_PATH", ld_library_path).insert(0, f"{casa}/conda/lib")
-        modified.setdefault("PYTHONPATH", python_path).insert(0, f"{casa}/build/lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages")
+    elif (casa / "conf" / "bv_maker.cfg").exists():
+        # This is a Apptainer based development environment without Conda
+        modified["BRAINVISA_BVMAKER_CFG"] = f"{casa}/conf/bv_maker.cfg"
+    elif (casa / "host" / "conf" / "bv_maker.cfg").exists():
+        # This is a Apptainer based development environment without Conda
+        modified["BRAINVISA_BVMAKER_CFG"] = f"{casa}/host/conf/bv_maker.cfg"
+        host = 'host/'
+    if "BRAINVISA_BVMAKER_CFG" in modified:
+        modified["CASA"] = str(casa)
+        modified["CASA_CONF"] = f"{casa}/{host}conf"
+        modified["CASA_SRC"] = f"{casa}/{host}src"
+        casa_build = f"{casa}/{host}build"
+        modified["CASA_BUILD"] = casa_build
+        modified["CASA_INSTALL"] = f"{casa}/{host}install"
+        modified["CASA_TEST"] = f"{casa}/{host}test"
         break
 else:
     casa_build = os.environ.get("CASA_BUILD")
@@ -39,18 +61,22 @@ if casa_build:
     modified.setdefault("LD_LIBRARY_PATH", ld_library_path).insert(0, f"{casa_build}/lib")
     modified.setdefault("PYTHONPATH", python_path).insert(0, f"{casa_build}/python")
 
-new_path = modified.get("PATH", path)
-for i in new_path:
-    if (Path(i) / 'bv_maker').exists():
-        bv_maker = True
-        break
-else:
-    bv_maker = False
-if not bv_maker:
-    # bv_maker is not found in PATH, adds its source directories
-    bv_env_src=Path(os.path.realpath(__file__)).parent.parent
-    modified.setdefault("PATH", path).append(f"{bv_env_src}/bin")
-    modified.setdefault("PYTHONPATH", python_path).append(f"{bv_env_src}/python")
+if brainvisa_cmake_src:
+    # Add brainvisa-cmake sources directory first in paths to make it useable immediately
+    # (i.e. without the need to run it once).
+    bin = f"{brainvisa_cmake_src}/bin"
+    new_path = modified.get("PATH", path)
+    if bin in new_path:
+        new_path.remove(bin)
+    new_path.insert(0, bin)
+    modified["PATH"] = new_path
+
+    python = f"{brainvisa_cmake_src}/python"
+    new_python_path = modified.get("PYTHONPATH", python_path)
+    if python in new_python_path:
+        new_python_path.remove(python)
+    new_python_path.insert(0, python)
+    modified["PYTHONPATH"] = new_python_path
 
 for n, v in modified.items():
     if not isinstance(v, str):

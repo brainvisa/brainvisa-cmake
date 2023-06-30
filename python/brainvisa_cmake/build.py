@@ -430,13 +430,10 @@ if len(old_file) == 0:
         
         brainvisa_cmake_root = pathlib.Path(__file__).parent.parent.parent
 
-        path = bin / 'bv_env'
-        path.unlink(missing_ok=True)
-        path.symlink_to(os.path.relpath(brainvisa_cmake_root / 'bin' / 'bv_env', bin))
-
-        path = bin / 'bv_env.sh'
-        path.unlink(missing_ok=True)
-        path.symlink_to(os.path.relpath(brainvisa_cmake_root / 'bin' / 'bv_env.sh', bin))
+        for f in ('bv_env', 'bv_env.sh', 'bv_unenv', 'bv_unenv.sh'):
+            path = bin / f
+            path.unlink(missing_ok=True)
+            path.symlink_to(os.path.relpath(brainvisa_cmake_root / 'bin' / f, bin))
 
         cross_compiling_directories = {}
         for k, s in self.configuration.sourcesDirectories.items():

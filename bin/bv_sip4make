@@ -33,20 +33,28 @@
 # The fact that you are presently reading this means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 
-from __future__ import print_function
-from __future__ import absolute_import
 import os
 import os.path as osp
 import sys
 import shutil
 import tempfile
-import string
 import re
-from six.moves import range
-try:
-    import subprocess32 as subprocess
-except ImportError:
-    import subprocess
+import subprocess
+import toml
+
+
+def most_recent_modif(directories):
+    result = None
+    for base_dir in directories:
+        for root, d_names, f_names in os.walk(base_dir):
+            for f in f_names:
+                t = os.stat(os.path.join(root, f)).st_mtime
+                if result is None:
+                    result = t
+                elif t > result:
+                    result = t
+    return result
+
 
 # print('SIP options:', sys.argv)
 sys.stdout.flush()
@@ -111,11 +119,27 @@ except ValueError:
 if copt < 0:
     sys.exit(subprocess.call([sipcmd] + sys.argv[1:]) >> 8)
 
+update_date = None
 if sip6:
     # sip 6 works very differently
 
     if not os.path.exists(outdir):
         os.makedirs(outdir)
+    else:
+        # Do not do anything if no build file
+        # is older than any sip file
+        sip_project = toml.load('pyproject.toml')
+        sip_dirs = sip_project['tool']['sip']['project']['sip-include-dirs']
+        in_date = most_recent_modif(sip_dirs)
+        out_date = most_recent_modif([outdir])
+        # print('in_date:', in_date)
+        # print('out_date:', out_date)
+        if out_date is not None and out_date >= in_date:
+            print('All output files are more recent than input files: '
+                  'cancel generation')
+            sys.exit(0)
+        update_date = in_date
+
     tdir = tempfile.mkdtemp()
     old_dir = shutil.copytree(outdir, osp.join(tdir, 'sip'), symlinks=True,
                               ignore_dangling_symlinks=True)
@@ -235,6 +259,16 @@ if res == 0:
                     # copy stats from original
                     shutil.copystat(os.path.join(old_dir, x),
                                     os.path.join(outdir, x))
+                if update_date is not None \
+                        and os.stat(os.path.join(outdir, x)).st_mtime \
+                            < update_date:
+                    # one input is more recent than the output .sip file, even
+                    # if it does not involve changes in the latter.
+                    # Update its date in order to avoid re-running sip next
+                    # time.
+                    # print('update date for', os.path.join(outdir, x))
+                    os.utime(os.path.join(outdir, x),
+                             (update_date, update_date))
 
     # cleanup obsolete files
     for x in olist:

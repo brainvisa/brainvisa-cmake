@@ -1,5 +1,6 @@
 #!/bin/env python3
 
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -17,8 +18,6 @@ if python_path:
     python_path = python_path.split(":")
 
 casa_build = None
-brainvisa_cmake_src = None
-log = open('/tmp/log', 'w')
 
 # Look for main casa-distro directory relatively to this file. It can be
 # either a container directory (typically /casa) or a Conda directory. 
@@ -28,23 +27,25 @@ log = open('/tmp/log', 'w')
 #   - src/development/brainvisa-cmake/{branch}/bin/bv_env
 #   - bin/bv_env
 brainvisa_cmake_src = Path(os.path.realpath(__file__)).parent.parent
+environment_json = None
 for casa in (
     Path('/casa'),
     brainvisa_cmake_src.parent.parent,
     brainvisa_cmake_src.parent.parent.parent.parent,
     brainvisa_cmake_src):
     host = ''
-    if (casa / "bv_maker.cfg").exists():
-        # This is a conda-based development environment
-        modified["BRAINVISA_BVMAKER_CFG"] = f"{casa}/bv_maker.cfg"
-        modified["CMAKE_LIBRARY_PATH"] = f"{os.environ['CONDA_PREFIX']}/lib:{os.environ['CONDA_PREFIX']}/x86_64-conda-linux-gnu/sysroot/usr/lib64"
-    elif (casa / "conf" / "bv_maker.cfg").exists():
+    if (casa / "conf" / "bv_maker.cfg").exists():
         # This is a Apptainer based development environment without Conda
         modified["BRAINVISA_BVMAKER_CFG"] = f"{casa}/conf/bv_maker.cfg"
+        if 'CONDA_PREFIX' in os.environ:
+            # This is a conda-based development environment
+            modified["CMAKE_LIBRARY_PATH"] = f"{os.environ['CONDA_PREFIX']}/lib:{os.environ['CONDA_PREFIX']}/x86_64-conda-linux-gnu/sysroot/usr/lib64"
+        environment_json = casa / "conf" / "environment.json"
     elif (casa / "host" / "conf" / "bv_maker.cfg").exists():
         # This is a Apptainer based development environment without Conda
         modified["BRAINVISA_BVMAKER_CFG"] = f"{casa}/host/conf/bv_maker.cfg"
         host = 'host/'
+        environment_json = casa / "host" / "conf" / "environment.json"
     if "BRAINVISA_BVMAKER_CFG" in modified:
         modified["CASA"] = str(casa)
         modified["CASA_CONF"] = f"{casa}/{host}conf"
@@ -57,6 +58,11 @@ for casa in (
         break
 else:
     casa_build = os.environ.get("CASA_BUILD")
+
+if environment_json and environment_json.exists():
+    with open(environment_json) as f:
+        env = json.load(f)
+    modified.update(env)
 
 if casa_build:
     modified.setdefault("PATH", path).insert(0, f"{casa_build}/bin")

@@ -400,9 +400,9 @@ class SourcesCommand(StepCommand):
         parser.add_option('--no-cleanup', dest='cleanup', action='store_false',
                           default=True,
                           help='don\'t cleanup svn sources')
-        parser.add_option('--no-svn', dest='svn', action='store_false',
-                          default=True,
-                          help='don\'t update svn sources')
+        parser.add_option('--svn', dest='svn', action='store_true',
+                          default=False,
+                          help='allow update of svn sources')
         parser.add_option('--no-git', dest='git', action='store_false',
                           default=True,
                           help='don\'t update git sources')

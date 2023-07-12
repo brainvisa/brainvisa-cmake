@@ -10,21 +10,11 @@ BRAINVISA_SVN_URL = SVN_URL + '/brainvisa'
 from brainvisa_cmake.components_definition import components_definition
 from brainvisa_cmake.version_number        import VersionNumber, \
                                                   version_format_unconstrained
-try:
-    # compatibility for python3
-    import six
-except ImportError:
-    # six module not here, assume python2
-    class six(object):
-       @staticmethod
-       def iteritems(obj, *args, **kwargs):
-          return obj.iteritems(*args, **kwargs)
 
-if sys.version_info[0] >= 3:
-    def execfile(filename, globals=None, locals=None):
-        with open(filename, 'rb') as f:
-            file_contents = f.read()
-        exec(compile(file_contents, filename, 'exec'), globals, locals)
+def execfile(filename, globals=None, locals=None):
+    with open(filename, 'rb') as f:
+        file_contents = f.read()
+    exec(compile(file_contents, filename, 'exec'), globals, locals)
 
 
 class ProjectsSet(object):
@@ -63,7 +53,7 @@ class ProjectsSet(object):
 
 
     def add_sources_list(self, components_sources):
-        for component, versions in six.iteritems(components_sources):
+        for component, versions in components_sources.items():
             project = self.project_per_component.get(component)
             if not project:
                 project = component
@@ -76,7 +66,7 @@ class ProjectsSet(object):
                 # the new component doesn't belong to any group.
             component_info = self.info_per_component.setdefault(component, {})
             component_url = self.url_per_component.setdefault(component, {})
-            for version, version_info in six.iteritems(versions):
+            for version, version_info in versions.items():
                 component_url[version] = (None, version_info[0])
             component_info['branches'] = component_url
             component_info.setdefault('groups', list())
@@ -120,7 +110,7 @@ class ProjectsSet(object):
                       projectPattern, componentPattern = l
                   components = []
                   for project, projectComponents \
-                          in six.iteritems(self.components_per_project):
+                          in self.components_per_project.items():
                       if fnmatchcase(project, projectPattern):
                           for component in projectComponents:
                               if fnmatchcase(component, componentPattern):

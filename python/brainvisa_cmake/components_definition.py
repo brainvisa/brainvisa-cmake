@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
-
 import os
-import sys
 
 # groups:
 # core: non-applicatice open access sources (aims, anatomist, axon, capsul,
@@ -585,6 +582,206 @@ components_definition = [
         ],
     }),
 ]
+
+packages = {
+    'brainvisa-base': {
+        'alias': 'base',
+        'components': {
+            'brainvisa-cmake',
+            'capsul',
+            'casa-distro',
+            'populse_db',
+            'soma-base',
+            'soma-io',
+            'soma-workflow'}
+    },
+
+    'brainvisa-data-processing': {
+        'alias': ['data-processing', 'core'],
+        'packages': {
+            'brainvisa-base'},
+        'components': {
+            'aims-free',
+            'aims-gpl',
+            'axon',
+            'brainvisa-share',
+        },
+    },
+
+    'anatomist': {
+        'packages': {
+            'brainvisa-data-processing',
+        },
+        'components': {
+            'anatomist-free',
+            'anatomist-gpl'
+        }
+    },
+
+    'brainvisa-spm': {
+        'alias': 'spm',
+        'packages': {
+            'anatomist',
+        },
+        'components': {
+            'brainvisa-spm',
+        }
+    },
+
+    'brainvisa-disco': {
+        'packages': {
+            'anatomist',
+            'brainvisa-spm',
+        },
+        'components': {
+            'disco',
+        }
+    },
+
+    'brainvisa-freesurfer': {
+        'alias': 'freesurfer',
+        'packages': {
+            'anatomist',
+        },
+        'components': {
+            'brainvisa_freesurfer',
+        }
+    },
+
+    'brainvisa-highres-cortex': {
+        'alias': 'highres-cortex',
+        'packages': {
+            'anatomist',
+        },
+        'components': {
+            'highres-cortex',
+        }
+    },
+
+    'morphologist': {
+        'packages': {
+            'anatomist',
+        },
+        'components': {
+            'morpho-deepsulci',
+            'morphologist-ui',
+            'morphologist-gpl',
+            'morphologist-nonfree',
+            'sulci-nonfree',
+            'sulci-models-data',
+        }
+    },
+
+    'brainvisa-cortical-surface': {
+        'alias': 'cortical-surface',
+        'packages': {
+            'morphologist',
+        },
+        'components': {
+            'cortical_surface-gpl',
+            'cortical_surface-nonfree',
+        }
+    },
+
+    'brainvisa-brainrat': {
+        'alias': 'brainrat',
+        'packages': {
+            'anatomist',
+        },
+        'components': {
+            'brainrat-gpl',
+            'brainrat-private',
+        }
+    },
+
+    'brainvisa-primatologist': {
+        'alias': 'primatologist',
+        'packages': {
+            'anatomist',
+        },
+        'components': {
+            'primatologist-gpl',
+        }
+    },
+
+    'brainvisa-dev': {
+        'alias': ['bvdev', 'dev'],
+        'packages': {
+            'anatomist',
+            'brainvisa-cortical-surface',
+            'brainvisa-base',
+            'brainvisa-data-processing',
+            'brainvisa-freesurfer',
+            'brainvisa-highres-cortex',
+            'brainvisa-spm',
+            'morphologist',
+        },
+    },
+
+    'brainvisa': {
+        'packages': {
+            'brainvisa-dev',
+            'brainvisa-brainrat',
+            'brainvisa-disco',
+            'brainvisa-primatologist',
+        },
+    },
+    
+    'brainvisa-constellation': {
+        'alias': 'constellation',
+        'packages': {
+            'morphologist'
+        },
+        'components': {
+            'constellation-gpl',
+            'constellation-nonfree',
+        }
+    },
+
+    'brainvisa-standard': {
+        'alias': 'standard',
+        'packages': {'brainvisa-dev'},
+        'components': {'morphologist-baby'},
+    },
+
+    'brainvisa-cea': {
+        'alias': 'cea',
+        'packages': {
+            'brainvisa-standard',
+            'brainvisa-constellation'
+            'brainvisa-cortical-surface'
+        },
+        'components': {
+            'bioprocessing',
+        }
+    },
+
+    'brainvisa-cati': {
+        'alias': ['cati', 'cati_platform'],
+        'packages': {
+            'brainvisa-standard',
+        },
+        'components': {
+           'deidentification',
+            'longitudinal_pipelines',
+            'nuclear_imaging-gpl',
+            'nuclear_imaging-nonfree',
+            'qualicati',
+            'rsfmri',
+            'sacha-gpl',
+            'sacha-nonfree',
+            'snapbase',
+            'whasa-gpl',
+            'whasa-nonfree'
+        },
+    },
+
+    'brainvisa-3dns': {
+        'alias': '3dns',
+        'packages': {'3dns-private'},
+    },
+}
+
 
 customize_components_definition = [os.path.expanduser('~/.brainvisa/components_definition.py')]
 if 'BV_MAKER_BUILD' in os.environ:

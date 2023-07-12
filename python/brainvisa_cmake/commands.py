@@ -438,9 +438,9 @@ class SourceStatusCommand(StepCommand):
 
     Display a summary of the status of all source repositories.'''
         parser = OptionParser(usage=usage)
-        parser.add_option('--no-svn', dest='svn', action='store_false',
-                          default=True,
-                          help="don't display the status of svn sources")
+        parser.add_option('--svn', dest='svn', action='store_true',
+                          default=False,
+                          help="display the status of svn sources")
         parser.add_option('--no-git', dest='git', action='store_false',
                           default=True,
                           help="don't display the status of git sources")

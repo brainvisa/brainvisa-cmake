@@ -586,6 +586,10 @@ components_definition = [
 packages = {
     'brainvisa-base': {
         'alias': 'base',
+        'about': {
+            'summary': 'Software base infrastructure for BrainVISA tools.',
+            'license': 'GPL',
+        },
         'components': {
             'brainvisa-cmake',
             'capsul',
@@ -598,6 +602,10 @@ packages = {
 
     'brainvisa-data-processing': {
         'alias': ['data-processing', 'core'],
+        'about': {
+            'summary': 'Data readers/writers and processing tools in C++ and Python.',
+            'license': 'GPL',
+        },
         'packages': {
             'brainvisa-base'},
         'components': {
@@ -609,6 +617,10 @@ packages = {
     },
 
     'anatomist': {
+        'about': {
+            'summary': 'Neuroimaging visualization tool for the BrainVISA project.',
+            'license': 'CeCILL',
+        },
         'packages': {
             'brainvisa-data-processing',
         },
@@ -620,6 +632,10 @@ packages = {
 
     'brainvisa-spm': {
         'alias': 'spm',
+        'about': {
+            'summary': 'Links between SPM and BrainVISA.',
+            'license': 'GPL',
+        },
         'packages': {
             'anatomist',
         },
@@ -629,6 +645,11 @@ packages = {
     },
 
     'brainvisa-disco': {
+        'alias': 'disco',
+        'about': {
+            'summary': 'Neuroimaging method for cross-subject brain alignment.',
+            'license': 'GPL',
+        },
         'packages': {
             'anatomist',
             'brainvisa-spm',
@@ -640,6 +661,10 @@ packages = {
 
     'brainvisa-freesurfer': {
         'alias': 'freesurfer',
+        'about': {
+            'summary': 'Links between Freesurfer and BrainVISA.',
+            'license': 'GPL',
+        },
         'packages': {
             'anatomist',
         },
@@ -650,6 +675,10 @@ packages = {
 
     'brainvisa-highres-cortex': {
         'alias': 'highres-cortex',
+        'about': {
+            'summary': 'Analysis of the laminar structure of the cortex in high resolution MRI.',
+            'license': 'GPL',
+        },
         'packages': {
             'anatomist',
         },
@@ -659,6 +688,10 @@ packages = {
     },
 
     'morphologist': {
+        'about': {
+            'summary': 'Brain segmentation and sulcal analysis.',
+            'license': 'GPL',
+        },
         'packages': {
             'anatomist',
         },

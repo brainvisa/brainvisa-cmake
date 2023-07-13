@@ -678,7 +678,7 @@ packages_definition = {
     'brainvisa-cea': {
         'alias': 'cea',
         'packages': {
-            'brainvisa-standard',
+            'brainvisa',
             'brainvisa-constellation',
             'brainvisa-cortical-surface'
         },

@@ -7,7 +7,7 @@ import sys
 SVN_URL = 'https://bioproj.extra.cea.fr/neurosvn'
 BRAINVISA_SVN_URL = SVN_URL + '/brainvisa'
 
-from brainvisa_cmake.components_definition import components_definition
+from brainvisa_cmake.components_definition import components_definition, packages_definition
 from brainvisa_cmake.version_number        import VersionNumber, \
                                                   version_format_unconstrained
 
@@ -19,6 +19,7 @@ def execfile(filename, globals=None, locals=None):
 
 class ProjectsSet(object):
     def __init__(self, components_definition=components_definition,
+                 packages_definition=packages_definition,
                  ordered_projects=[],
                  components_per_group={},
                  components_per_project={},
@@ -27,6 +28,7 @@ class ProjectsSet(object):
                  info_per_component={},
                  attributes_per_component={}):
         self.components_definition = components_definition
+        self.packages_definition = packages_definition
         self.ordered_projects = ordered_projects
         self.components_per_group = components_per_group
         self.components_per_project = components_per_project
@@ -38,12 +40,11 @@ class ProjectsSet(object):
 
 
     def build_lists(self):
+        all_components = set()
         for project, components in self.components_definition:
             self.ordered_projects.append(project)
             for component, component_info in components['components']:
-                for group in component_info['groups']:
-                    self.components_per_group.setdefault(group, set()).add(
-                        component)
+                all_components.add(component)
                 self.url_per_component[component] \
                     = component_info['branches']
                 self.info_per_component[component] = component_info
@@ -51,6 +52,43 @@ class ProjectsSet(object):
                     project, []).append(component)
                 self.project_per_component[component] = project
 
+        # Recursively resolve packages dependencies and adds 'all_packages'
+        # item to packages defined in self.packages_definition that contains 
+        # all packages that are included by a package.
+        # Also adds a 'dependent_packages' item containing all packages
+        # that include the package.
+        for package, package_dict in self.packages_definition.items():
+            all_packages = set()
+            stack = list(package_dict.get('packages', []))
+            while stack:
+               p = stack.pop()
+               if p == package:
+                  raise ValueError(f'Circular dependency detected in packages definition for {package}')
+               if p not in all_packages:
+                   all_packages.add(p)
+                   stack.extend(i for i in self.packages_definition[p].get('packages', []) if i not in all_packages)
+            package_dict['all_packages'] = all_packages
+            for p in all_packages:
+                self.packages_definition[p].setdefault('dependent_packages', set()).add(package)
+
+        # Set an 'all_components' item in each package definition that contain
+        # components included in the package and all dependent packages.
+        for package, package_dict in self.packages_definition.items():
+            for p in {package} | package_dict.get('dependent_packages', set()):
+               for c in package_dict.get('components', []):
+                  self.packages_definition[p].setdefault('all_components', set()).update(package_dict.get('components', []))
+        
+        # Define self.components_per_group for all packages and alias using
+        # 'all_components' item.
+        self.components_per_group['all'] = all_components
+        for package, package_dict in self.packages_definition.items():
+            aliases = package_dict.get('alias', [])
+            if isinstance(aliases, str):
+                aliases = [aliases]
+            for p in [package] + aliases:
+                self.components_per_group[p] = package_dict['all_components']
+           
+    
 
     def add_sources_list(self, components_sources):
         for component, versions in components_sources.items():
@@ -132,7 +170,7 @@ info_per_component = {}
 attributes_per_component = {}
 
 projects_set = ProjectsSet(
-    components_definition, ordered_projects, components_per_group,
+    components_definition, packages_definition, ordered_projects, components_per_group,
     components_per_project, project_per_component, url_per_component,
     info_per_component, attributes_per_component)
 

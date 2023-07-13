@@ -18,6 +18,7 @@ if python_path:
     python_path = python_path.split(":")
 
 casa_build = None
+python_dir = 'python'
 
 # Look for main casa-distro directory relatively to this file. It can be
 # either a container directory (typically /casa) or a Conda directory. 
@@ -35,14 +36,13 @@ for casa in (
     brainvisa_cmake_src):
     host = ''
     if (casa / "conf" / "bv_maker.cfg").exists():
-        # This is a Apptainer based development environment without Conda
         modified["BRAINVISA_BVMAKER_CFG"] = f"{casa}/conf/bv_maker.cfg"
         if 'CONDA_PREFIX' in os.environ:
             # This is a conda-based development environment
             modified["CMAKE_LIBRARY_PATH"] = f"{os.environ['CONDA_PREFIX']}/lib:{os.environ['CONDA_PREFIX']}/x86_64-conda-linux-gnu/sysroot/usr/lib64"
+            python_dir = f'lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages'
         environment_json = casa / "conf" / "environment.json"
     elif (casa / "host" / "conf" / "bv_maker.cfg").exists():
-        # This is a Apptainer based development environment without Conda
         modified["BRAINVISA_BVMAKER_CFG"] = f"{casa}/host/conf/bv_maker.cfg"
         host = 'host/'
         environment_json = casa / "host" / "conf" / "environment.json"
@@ -67,7 +67,7 @@ if environment_json and environment_json.exists():
 if casa_build:
     modified.setdefault("PATH", path).insert(0, f"{casa_build}/bin")
     modified.setdefault("LD_LIBRARY_PATH", ld_library_path).insert(0, f"{casa_build}/lib")
-    modified.setdefault("PYTHONPATH", python_path).insert(0, f"{casa_build}/python")
+    modified.setdefault("PYTHONPATH", python_path).insert(0, f"{casa_build}/{python_dir}")
 
 if brainvisa_cmake_src:
     # Add brainvisa-cmake sources directory first in paths to make it useable immediately

@@ -599,7 +599,7 @@ packages_definition = {
             'morphologist-gpl',
             'morphologist-nonfree',
             'sulci-nonfree',
-            'sulci-models-data',
+            'sulci-data',
         }
     },
 

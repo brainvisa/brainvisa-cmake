@@ -671,7 +671,7 @@ packages_definition = {
     'brainvisa-constellation': {
         'alias': 'constellation',
         'packages': {
-            'morphologist'
+            'morphologist',
             'constellation-gpl',
             'constellation-nonfree',
         }

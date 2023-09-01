@@ -52,6 +52,16 @@ class ProjectsSet(object):
                     project, []).append(component)
                 self.project_per_component[component] = project
 
+                # Add a package for each component
+                component_package = {
+                   'components': [component],
+                }
+                for k in ('about', 'packages', 'requirements'):
+                   v = component_info.get(k)
+                   if v is not None:
+                      component_package[k] = v
+                self.packages_definition[component] = component_package
+
         # Recursively resolve packages dependencies and adds 'all_packages'
         # item to packages defined in self.packages_definition that contains 
         # all packages that are included by a package.

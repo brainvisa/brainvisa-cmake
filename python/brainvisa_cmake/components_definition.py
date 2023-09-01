@@ -48,7 +48,6 @@ components_definition = [
         ],
     }),
     ('soma', {
-        'description': 'Set of lower-level libraries for neuroimaging processing infrastructure',
         'components': [
             ['soma-base', {
                 'branches': {
@@ -99,7 +98,6 @@ components_definition = [
         ],
     }),
     ('aims', {
-        'description': '3D/4D neuroimaging data manipulation and processing library and commands. Includes C++ libraries, command lines, and a Python API.',
         'components': [
             ['aims-free', {
                 'branches': {
@@ -125,7 +123,6 @@ components_definition = [
         ],
     }),
     ('anatomist', {
-        'description': '3D/4D neuroimaging data viewer. Modular and versatile, Anatomist can display any kind of neuroimaging data (3D/4D images, meshes and textures, fiber tracts, and structured sets of objects such as cortical sulci), in an arbitrary number of views. Allows C++ and Python programming, both for plugins add-ons, as well as complete custom graphical applications design.',
         'components': [
             ['anatomist-free', {
                 'branches': {
@@ -146,9 +143,11 @@ components_definition = [
         ],
     }),
     ('axon', {
-        'description': 'Axon organizes processing, pipelining, and data management for neuroimaging. It works both as a graphical user interface or batch and programming interfaces, and allows transparent processing distribution on a computing resource.',
         'components': [
             ['axon', {
+                'about': {
+                    'summary': 'Axon organizes processing, pipelining, and data management for neuroimaging. It works both as a graphical user interface or batch and programming interfaces, and allows transparent processing distribution on a computing resource.',
+                },
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/axon.git branch:master','axon/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/axon.git branch:master','axon/master'),
@@ -159,9 +158,12 @@ components_definition = [
         ],
     }),
     ('brainvisa-spm', {
-        'description': 'Python module and Axon toolbox for SPM.',
+        'packages': ['anatomist'],
         'components': [
             ['brainvisa-spm', {
+                'about': {
+                    'summary': 'Python module and Axon toolbox for SPM.',
+                },
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/brainvisa-spm.git branch:integration','brainvisa-spm/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/brainvisa-spm.git branch:master','brainvisa-spm/master'),
@@ -172,9 +174,11 @@ components_definition = [
         ],
     }),
     ('datamind', {
-        'description': 'Statistics, data mining, machine learning [OBSOLETE].',
         'components': [
             ['datamind', {
+                'about': {
+                    'summary': 'Statistics, data mining, machine learning [OBSOLETE].',
+                },
                 'branches': {
                     '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/datamind/branches/5.0','datamind/5.0'),
                 },
@@ -183,9 +187,11 @@ components_definition = [
     }),
 
     ('highres-cortex', {
-        'description': 'Process 3D images of the cerebral cortex at a sub-millimetre scale',
         'components': [
             ['highres-cortex', {
+                'about': {
+                    'summary': 'Process 3D images of the cerebral cortex at a sub-millimetre scale',
+                },
                 'branches': {
                     'trunk': ('git https://github.com/neurospin/highres-cortex.git branch:master','highres-cortex/integration'),
                     'bug_fix': ('git https://github.com/neurospin/highres-cortex.git default:master','highres-cortex/master'),
@@ -197,9 +203,11 @@ components_definition = [
     }),
 
     ('morphologist', {
-        'description': 'Anatomical MRI (T1) analysis toolbox, featuring cortex and sulci segmentation, and sulci analysis tools, by the <a href="http://lnao.fr">LNAO team</a>.',
         'components': [
             ['morphologist-nonfree', {
+                'about': {
+                    'summary': 'Non open source component of brainvisa-morphologist package',
+                },
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/morphologist-nonfree.git branch:integration','morphologist/morphologist-nonfree/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/morphologist-nonfree.git branch:master','morphologist/morphologist-nonfree/master'),
@@ -208,6 +216,9 @@ components_definition = [
                 },
             }],
             ['morphologist-gpl', {
+                'about': {
+                    'summary': 'GPL licensed component of brainvisa-morphologist package',
+                },
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/morphologist-gpl.git branch:integration','morphologist/morphologist-gpl/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/morphologist-gpl.git branch:master','morphologist/morphologist-gpl/master'),
@@ -216,6 +227,9 @@ components_definition = [
                 },
             }],
             ['morphologist-baby', {
+                'about': {
+                    'summary': 'Human baby brain analysis component of brainvisa-morphologist package',
+                },
                 'branches': {
                     'trunk': ('git https://bioproj.extra.cea.fr/git/brainvisa-t1mri/morphologist-baby.git branch:integration','morphologist/morphologist-baby/integration'),
                     'bug_fix': ('git https://bioproj.extra.cea.fr/git/brainvisa-t1mri/morphologist-baby.git branch:master','morphologist/morphologist-baby/master'),
@@ -228,12 +242,18 @@ components_definition = [
                 },
             }],
             ['sulci-data', {
+                'about': {
+                    'summary': 'data component of brainvisa-morphologist package',
+                },
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-data/trunk','morphologist/sulci-data/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-data/trunk','morphologist/sulci-data/bug_fix'),
                 },
             }],
             ['sulci-nonfree', {
+                'about': {
+                    'summary': 'Initial sulci analysis component of brainvisa-morphologist package',
+                },
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/sulci-nonfree.git branch:integration','morphologist/sulci-nonfree/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/sulci-nonfree.git branch:master','morphologist/sulci-nonfree/master'),
@@ -242,6 +262,9 @@ components_definition = [
                 },
             }],
             ['morphologist-ui', {
+                'about': {
+                    'summary': 'Alternative graphical interface for brainvisa-morphologist package',
+                },
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/morphologist.git branch:master', 'morphologist/morphologist-ui/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/morphologist.git default:master', 'morphologist/morphologist-ui/master'),
@@ -250,6 +273,9 @@ components_definition = [
                 },
             }],
             ['morpho-deepsulci', {
+                'about': {
+                    'summary': 'Deep learnig based sulci analysis component of brainvisa-morphologist package',
+                },
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/morpho-deepsulci.git branch:master', 'morphologist/morpho-deepsulci/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/morpho-deepsulci.git default:master', 'morphologist/morpho-deepsulci/master'),
@@ -260,7 +286,6 @@ components_definition = [
         ],
     }),
     ('brainrat', {
-        'description': 'Ex vivo 3D reconstruction and analysis toolbox, from the <a href="http://www-dsv.cea.fr/dsv/instituts/institut-d-imagerie-biomedicale-i2bm/services/mircen-mircen/unite-cnrs-ura2210-lmn/fiches-thematiques/traitement-et-analyse-d-images-biomedicales-multimodales-du-cerveau-normal-ou-de-modeles-precliniques-de-maladies-cerebrales">BioPICSEL CEA team</a>. Homepage: <a href="http://brainvisa.info/doc/brainrat-gpl/brainrat_man/en/html/index.html">http://brainvisa.info/doc/brainrat-gpl/brainrat_man/en/html/index.html</a>',
         'components': [
             ['brainrat-gpl', {
                 'branches': {
@@ -331,7 +356,6 @@ components_definition = [
         ],
     }),
     ('cortical_surface', {
-        'description': 'Cortex-based surfacic parameterization and analysis toolbox from the <a href="http://www.lsis.org">LSIS team</a>. Homepage: <a href="http://olivier.coulon.perso.esil.univmed.fr/brainvisa.html">http://olivier.coulon.perso.esil.univmed.fr/brainvisa.html</a>.<br/>Also contains the FreeSurfer toolbox for BrainVisa, by the LNAO team.',
         'components': [
             ['cortical_surface-nonfree', {
                 'branches': {
@@ -469,7 +493,9 @@ components_definition = [
         ],
     }),
     ('fmri', {
-        'description': 'Functional MRI processing toolboxes.',
+        'about': {
+            'summary': 'Functional MRI processing toolboxes.',
+        },
         'components': [
             ['rsfmri', {
                 'branches': {
@@ -488,7 +514,7 @@ packages_definition = {
             'summary': 'Software base infrastructure for BrainVISA tools.',
             'license': 'GPL',
         },
-        'components': {
+        'packages': {
             'brainvisa-cmake',
             'capsul',
             'casa-distro',
@@ -505,8 +531,7 @@ packages_definition = {
             'license': 'GPL',
         },
         'packages': {
-            'brainvisa-base'},
-        'components': {
+            'brainvisa-base',
             'aims-free',
             'aims-gpl',
             'axon',
@@ -516,29 +541,13 @@ packages_definition = {
 
     'anatomist': {
         'about': {
-            'summary': 'Neuroimaging visualization tool for the BrainVISA project.',
+            'summary': '3D/4D neuroimaging data viewer of the BrainVISA project. Modular and versatile, Anatomist can display any kind of neuroimaging data (3D/4D images, meshes and textures, fiber tracts, and structured sets of objects such as cortical sulci), in an arbitrary number of views. Allows C++ and Python programming, both for plugins add-ons, as well as complete custom graphical applications design.',
             'license': 'CeCILL',
         },
         'packages': {
             'brainvisa-data-processing',
-        },
-        'components': {
             'anatomist-free',
             'anatomist-gpl'
-        }
-    },
-
-    'brainvisa-spm': {
-        'alias': 'spm',
-        'about': {
-            'summary': 'Links between SPM and BrainVISA.',
-            'license': 'GPL',
-        },
-        'packages': {
-            'anatomist',
-        },
-        'components': {
-            'brainvisa-spm',
         }
     },
 
@@ -551,8 +560,6 @@ packages_definition = {
         'packages': {
             'anatomist',
             'brainvisa-spm',
-        },
-        'components': {
             'disco',
         }
     },
@@ -565,8 +572,6 @@ packages_definition = {
         },
         'packages': {
             'anatomist',
-        },
-        'components': {
             'brainvisa_freesurfer',
         }
     },
@@ -579,21 +584,17 @@ packages_definition = {
         },
         'packages': {
             'anatomist',
-        },
-        'components': {
             'highres-cortex',
         }
     },
 
     'morphologist': {
         'about': {
-            'summary': 'Brain segmentation and sulcal analysis.',
+            'summary': 'Anatomical MRI (T1) analysis toolbox, featuring cortex and sulci segmentation as well as sulci analysis tools.',
             'license': 'GPL',
         },
         'packages': {
             'anatomist',
-        },
-        'components': {
             'morpho-deepsulci',
             'morphologist-ui',
             'morphologist-gpl',
@@ -605,21 +606,25 @@ packages_definition = {
 
     'brainvisa-cortical-surface': {
         'alias': 'cortical-surface',
+        'about': {
+            'summary': 'BrainVISA toolbox fo cortex-based surfacic parameterization and analysis. Also contains the FreeSurfer toolbox for BrainVisa.',
+            'license': 'GPL'
+        },
         'packages': {
             'morphologist',
-        },
-        'components': {
             'cortical_surface-gpl',
             'cortical_surface-nonfree',
+            'brainvisa-freesurfer'
         }
     },
 
     'brainvisa-brainrat': {
+        'about': {
+            'summary': 'Ex vivo 3D reconstruction and analysis toolbox, from the <a href="http://www-dsv.cea.fr/dsv/instituts/institut-d-imagerie-biomedicale-i2bm/services/mircen-mircen/unite-cnrs-ura2210-lmn/fiches-thematiques/traitement-et-analyse-d-images-biomedicales-multimodales-du-cerveau-normal-ou-de-modeles-precliniques-de-maladies-cerebrales">BioPICSEL CEA team</a>. Homepage: <a href="http://brainvisa.info/doc/brainrat-gpl/brainrat_man/en/html/index.html">http://brainvisa.info/doc/brainrat-gpl/brainrat_man/en/html/index.html</a>',
+        },
         'alias': 'brainrat',
         'packages': {
             'anatomist',
-        },
-        'components': {
             'brainrat-gpl',
             'brainrat-private',
         }
@@ -629,20 +634,17 @@ packages_definition = {
         'alias': 'primatologist',
         'packages': {
             'anatomist',
-        },
-        'components': {
             'primatologist-gpl',
         }
     },
 
-    'brainvisa-dev': {
-        'alias': ['bvdev', 'dev'],
+    'brainvisa-opensource': {
+        'alias': ['opensource'],
         'packages': {
             'anatomist',
             'brainvisa-cortical-surface',
             'brainvisa-base',
             'brainvisa-data-processing',
-            'brainvisa-freesurfer',
             'brainvisa-highres-cortex',
             'brainvisa-spm',
             'morphologist',
@@ -650,8 +652,16 @@ packages_definition = {
     },
 
     'brainvisa': {
+        'about': {
+            'home': 'https://brainvisa.info',
+            'license': 'GPL',
+            'summary': 'Neuroimaging software platform for mass data analysis',
+            'about': {
+                'summary': 'BrainVISA provides a complete, modular, infrastructure for neuroimaging software. It helps organizing heterogeneous software and data and provides a common general graphical interface for users. BrainVISA is thus a set of tools rather than a single software.'
+            },
+        },
         'packages': {
-            'brainvisa-dev',
+            'brainvisa-opensource',
             'brainvisa-brainrat',
             'brainvisa-disco',
             'brainvisa-primatologist',
@@ -662,8 +672,6 @@ packages_definition = {
         'alias': 'constellation',
         'packages': {
             'morphologist'
-        },
-        'components': {
             'constellation-gpl',
             'constellation-nonfree',
         }
@@ -671,8 +679,10 @@ packages_definition = {
 
     'brainvisa-standard': {
         'alias': 'standard',
-        'packages': {'brainvisa-dev'},
-        'components': {'morphologist-baby'},
+        'packages': {
+            'brainvisa-opensource',
+            'morphologist-baby'
+        },
     },
 
     'brainvisa-cea': {
@@ -680,9 +690,7 @@ packages_definition = {
         'packages': {
             'brainvisa',
             'brainvisa-constellation',
-            'brainvisa-cortical-surface'
-        },
-        'components': {
+            'brainvisa-cortical-surface',
             'bioprocessing',
         }
     },
@@ -691,9 +699,7 @@ packages_definition = {
         'alias': ['cati', 'cati_platform'],
         'packages': {
             'brainvisa-standard',
-        },
-        'components': {
-           'deidentification',
+            'deidentification',
             'longitudinal_pipelines',
             'nuclear_imaging-gpl',
             'nuclear_imaging-nonfree',
@@ -709,7 +715,7 @@ packages_definition = {
 
     'brainvisa-3dns': {
         'alias': '3dns',
-        'components': {'3dns-private'},
+        'packages': {'3dns-private'},
     },
 }
 

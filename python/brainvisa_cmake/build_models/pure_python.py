@@ -226,7 +226,7 @@ class PurePythonComponentBuild(object):
                     }
                     if dcomponent in self.build_directory.components:
                         version = self.build_directory.components[dcomponent][2]
-                        next_version = [int(i) for i in version.split('.')]
+                        next_version = [int(i) for i in version.split('.')][:2]
                         next_version[1] +=1
                         next_version = '%d.%d' % tuple(next_version)
                         d['version'] = version

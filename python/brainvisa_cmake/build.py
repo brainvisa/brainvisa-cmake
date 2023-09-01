@@ -79,16 +79,15 @@ class ComponentsConfigParser(brainvisa_cmake.configuration.DirectorySection):
                             rest.strip(), env=self.get_environ())
                     pinfo = brainvisa_projects.read_project_info(
                         directory,
-                        version_format=version_format_short
+                        # version_format=version_format_short
                     )
                     if pinfo:
                         project, component, version, build_model = pinfo
-                        version = str(version)
                         if self.configuration.verbose:
                             print('    adding component %s version %s from %s'
                                   % (component, version, directory))
                         self.components[component] = (
-                            directory, version, version, build_model)
+                            directory, version, '.'.join(str(i) for i in version._version_numbers[:2]), build_model)
                     else:
                         print('WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % directory)
                 elif first in ('brainvisa_exclude', '-'):
@@ -146,17 +145,16 @@ class ComponentsConfigParser(brainvisa_cmake.configuration.DirectorySection):
                             if fnmatchcase(version, versionPattern):
                                 pinfo = brainvisa_projects.read_project_info(
                                     directory,
-                                    version_format=version_format_short
+                                    # version_format=version_format_short
                                 )
                                 if pinfo:
                                     project, component, component_version, \
                                         build_model = pinfo
-                                    component_version = str(component_version)
                                     if self.configuration.verbose:
                                         print('    adding component %s version %s from %s' \
-                                            % (component, version, directory))
+                                            % (component, component_version, directory))
                                     self.components[component] = (
-                                        directory, version, component_version, build_model)
+                                        directory, component_version, '.'.join(str(i) for i in component_version._version_numbers[:2]), build_model)
                                 else:
                                     print('WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found'
                                           % directory)
@@ -518,7 +516,6 @@ if len(old_file) == 0:
             print('endif()', file=out)
 
         cmakeLists = os.path.join(self.directory, 'CMakeLists.txt')
-
         with open(cmakeLists, 'w') as out:
             print(f'''
 cmake_minimum_required( VERSION 3.10 )
@@ -526,6 +523,17 @@ set( CMAKE_PREFIX_PATH "${{CMAKE_BINARY_DIR}}" ${{CMAKE_PREFIX_PATH}} )
 project( "Brainvisa" )
 include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )
 ''', file=out)
+
+        components_info = {}
+        for component, directory_version_model in self.components.items():
+                directory, version, version_str, build_model = directory_version_model
+                components_info[component] = dict(
+                    version=str(version),
+                    directory=directory,
+                    build_model=build_model or 'cmake',
+                )
+        with open(os.path.join(self.directory, 'components_info.json'), 'w') as out:
+            json.dump(components_info, out, indent=4)
 
         exe_suffix = ''
         if sys.platform == 'win32':

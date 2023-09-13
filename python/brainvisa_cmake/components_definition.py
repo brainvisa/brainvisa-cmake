@@ -86,7 +86,7 @@ components_definition = [
                 },
                 'build_model': 'pure_python',
             }],
-            ['populse_db', {
+            ['populse-db', {
                 'branches': {
                     'trunk': ('git https://github.com/populse/populse_db.git default:master','populse/populse_db/integration'),
                     'bug_fix': ('git https://github.com/populse/populse_db.git default:master','populse/populse_db/master'),
@@ -518,7 +518,7 @@ packages_definition = {
             'brainvisa-cmake',
             'capsul',
             'casa-distro',
-            'populse_db',
+            'populse-db',
             'soma-base',
             'soma-io',
             'soma-workflow'}

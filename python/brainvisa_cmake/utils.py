@@ -10,6 +10,8 @@ from socket import gethostname
 import sys
 import time
 
+from brainvisa_cmake.brainvisa_projects import find_project_info
+
 
 _installer_datetime = None
 _installer_variables = None
@@ -124,5 +126,18 @@ def get_components_info():
         path = os.path.join(casa_build, 'components_info.json')
         if os.path.exists(path):
             with open(path) as i:
-                return json.load(i)
+                components_info = json.load(i)
+            for component_info in components_info.values():
+                path = find_project_info(component_info['directory'])
+                if path and path.endswith('.py'):
+                    d = {}
+                    with open(path) as f:
+                        exec(compile(f.read(), path, 'exec'), d, d)
+                    depends = d.get('REQUIRES')
+                    if depends:
+                        component_info['depends'] = depends
+                    alternative_depends = d.get('EXTRA_REQUIRES')
+                    if alternative_depends:
+                        component_info['alternative_depends'] = alternative_depends
+            return components_info
     return None

@@ -1835,6 +1835,7 @@ endfunction()
 #  brainvisa_add_test(testname Exename arg1 arg2 ... )
 #  If TYPE Python is given, the appropriate python interpreter is used to
 #  start the test (i.e.: target python for cross compiling case).
+#  Test command is also launched through bv_env_test command.
 #  Each test in ctest is assigned a label corresponding to the project name.
 #  If TESTREF is used, we re-use the command to run it in a special mode
 #  for the generation of reference test files (this is launched by the testref
@@ -1970,6 +1971,12 @@ function( BRAINVISA_ADD_TEST )
 #       set( _command_args_ref "cmd" "/c" "${_command_args_ref}" )
 #     endif()
 #   endif()
+
+  # Add bv_env_test encapsulation
+  set(_command_args_run "${brainvisa-cmake_DIR}/../../../bin/bv_env_test"
+                        "${_command_args_run}")
+  set(_command_args_ref "${brainvisa-cmake_DIR}/../../../bin/bv_env_test"
+                        "${_command_args_ref}")
 
   # message("====== FORM ${_form}, NAME ${_name_args} =======")
   # message("====== COMMAND ${_command_args} =======")

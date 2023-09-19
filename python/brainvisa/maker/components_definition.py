@@ -6,7 +6,7 @@ import sys
 
 # groups:
 # core: non-applicatice open access sources (aims, anatomist, axon, capsul,
-#       soma-base, soma-workflow, populse_db, brainvisa-cmake, casa-distro...)
+#       soma-base, soma-workflow, populse-db, brainvisa-cmake, casa-distro...)
 # opensource: obsolete
 # anatomist: projects needed for anatomist (aims, soma-io and dependencies)
 # brainvisa: public brainvisa distro (includes some closed-source projects!)
@@ -126,7 +126,7 @@ components_definition = [
                 },
                 'build_model': 'pure_python',
             }],
-            ['populse_db', {
+            ['populse-db', {
                 'groups': ['all', 'core', 'opensource', 'brainvisa', 'bvdev',
                            'standard', 'cea', 'cati_platform'],
                 'branches': {

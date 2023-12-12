@@ -85,6 +85,7 @@ except ValueError:
 if copt < 0:
     sys.exit(subprocess.call([sipcmd] + sys.argv[1:]) >> 8)
 
+update_date = None
 if sip6:
     # sip 6 works very differently
 
@@ -217,6 +218,16 @@ if res == 0:
                     # copy stats from original
                     shutil.copystat(os.path.join(old_dir, x),
                                     os.path.join(outdir, x))
+                if update_date is not None \
+                        and os.stat(os.path.join(outdir, x)).st_mtime \
+                            < update_date:
+                    # one input is more recent than the output .sip file, even
+                    # if it does not involve changes in the latter.
+                    # Update its date in order to avoid re-running sip next
+                    # time.
+                    # print('update date for', os.path.join(outdir, x))
+                    os.utime(os.path.join(outdir, x),
+                             (update_date, update_date))
 
     # cleanup obsolete files
     for x in olist:

@@ -1789,7 +1789,7 @@ function( BRAINVISA_ADD_EXECUTABLE name )
       BRAINVISA_COPY_FILES( ${_component} ${_source}
                             SOURCE_DIRECTORY "${_sourcedir}"
                             DESTINATION "bin"
-                            TARGET ${_sourcename}.files )
+                            TARGET ${name} )
     endforeach()
     unset(_source)
     unset(_sourcename)

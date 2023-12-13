@@ -266,6 +266,14 @@ endfunction()
 
 
 function(BRAINVISA_READ_PROJECT_INFO directory)
+    # Check pyproject.toml in priority
+    foreach(glob "${directory}/pyproject.toml" "${directory}/*/pyproject.toml" "${directory}/python/*/pyproject.toml")
+      file(GLOB pyproject "${glob}")
+      if(pyproject)
+        message(FATAL_ERROR "pyproject.toml support not implemented: \"${pyproject}\"")
+      endif()
+    endforeach()
+
     if(EXISTS "${directory}/project_info.cmake")
       set( _project_info_cmake "${directory}/project_info.cmake")
     elseif(EXISTS "${directory}/cmake/project_info.cmake")

@@ -89,6 +89,8 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
                 l + [None, None])[:5]
             git_tag_type, git_tag = (['branch'] \
                 + git_tag.split(':',1))[-2:]
+            if dest_directory is None:
+                dest_directory = url.rsplit('/', 1)[-1]
             # git_tag is the git branch (master, integration...)
             # bv_version is the bv branch name (bug_fix, trunk)
             if self.configuration.verbose:

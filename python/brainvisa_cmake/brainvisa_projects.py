@@ -2,6 +2,7 @@
 
 import glob, operator, os, re, string
 from fnmatch import fnmatchcase
+import toml
 import sys
 
 SVN_URL = 'https://bioproj.extra.cea.fr/neurosvn'
@@ -271,14 +272,63 @@ def parse_project_info_python(
   return ( project, component, version, build_model )
 
 
+def parse_project_info_toml(
+    path,
+    version_format = version_format_unconstrained
+):
+  """Parses a pyproject.toml file
+  
+  @type path: string
+  @param path: The path of the pyproject.toml file
+  
+  @rtype: tuple
+  @return: A tuple that contains project name, component name and version
+  """
+  project = None
+  component = None
+  version = VersionNumber(
+                '1.0.0',
+                format = version_format
+            )
+  build_model = None
+  with open(path) as f:
+      pyproject = toml.load(f)
+  project = component = pyproject['project']['name']
+  v = pyproject['project']['version'].split('.', 3)
+  if len(version) > 0:
+    version[0] = v[0]
+    
+    if len(version) > 1:
+      version[1] = v[1]
+    
+      if len(version) > 2:
+        version[2] = v[2]
+        
+  build_model = 'pure_python'
+
+  return ( project, component, version, build_model )
+
+def project_info_to_cmake(path):
+   project, component, version, build_model = read_project_info(path)
+   return f"""
+BRAINVISA_PACKAGE_NAME = "{component}"
+BRAINVISA_PACKAGE_MAIN_PROJECT = "{project}"
+BRAINVISA_PACKAGE_VERSION_MAJOR = {version[0]}
+BRAINVISA_PACKAGE_VERSION_MINOR = {version[1]}
+BRAINVISA_PACKAGE_VERSION_PATCH = {version[2]}
+BRAINVISA_BUILD_MODEL = "{build_model}"
+"""
+
 def find_project_info( directory ):
   """Find the project_info.cmake or the info.py file
      contained in a directory.
      Files are searched using the patterns :
-     1) <directory>/project_info.cmake
-     2) <directory>/cmake/project_info.cmake
-     3) <directory>/python/*/info.py
-     4) <directory>/*/info.py
+     1) <directory>/pyproject.toml
+     2) <directory>/project_info.cmake
+     3) <directory>/cmake/project_info.cmake
+     4) <directory>/python/*/info.py
+     5) <directory>/*/info.py
+     6) <directory>/info.py
      
   @type directory: string
   @param directory: The directory to search project_info.cmake or info.py
@@ -288,6 +338,7 @@ def find_project_info( directory ):
            or None when no file was found
   """
   project_info_python_patterns = (
+      os.path.join( directory, 'pyproject.toml' ),
       os.path.join( directory,'project_info.cmake' ),
       os.path.join( directory,'cmake', 'project_info.cmake' ),
       os.path.join( directory, 'python', '*', 'info.py' ),
@@ -309,10 +360,12 @@ def read_project_info( directory,
   """Find the project_info.cmake or the info.py file
      contained in a directory and parses its content.
      Files are searched using the patterns :
-     1) <directory>/project_info.cmake
-     2) <directory>/cmake/project_info.cmake
-     3) <directory>/python/*/info.py
-     4) <directory>/*/info.py
+     1) <directory>/pyproject.toml
+     2) <directory>/project_info.cmake
+     3) <directory>/cmake/project_info.cmake
+     4) <directory>/python/*/info.py
+     5) <directory>/*/info.py
+     6) <directory>/info.py
      
   @type directory: string
   @param directory: The directory to search project_info.cmake or info.py
@@ -328,7 +381,13 @@ def read_project_info( directory,
   
   if project_info_path is not None:
     
-    if project_info_path.endswith( '.cmake' ):
+    if project_info_path.endswith( '.toml' ):
+      project_info = parse_project_info_toml(
+                         project_info_path,
+                         version_format = version_format
+                     )
+
+    elif project_info_path.endswith( '.cmake' ):
       project_info = parse_project_info_cmake(
                          project_info_path,
                          version_format = version_format
@@ -459,30 +518,3 @@ def find_components(componentsPattern):
         the list of components that match the pattern
     """
     return projects_set.find_components(componentsPattern)
-
-
-#if __name__ == '__main__':
-    
-    #print('components_definition = [')
-    #for project in sorted(components_definition):
-        #project_dict = components_definition[project]
-        #print("    ('%s', {" % project)
-        #description = project_dict.get('description')
-        #if description:
-            #print("        'description': %s," % repr(description))
-        #print("        'components': [")
-        #for component, component_dict in project_dict['components']:
-            #print("            ['%s', {" % component)
-            #groups = component_dict.pop('groups')
-            #print("                'groups': %s," % repr(groups))
-            #print("                'branches': {")
-            #for branch in ('trunk', 'bug_fix', 'latest_release'):
-                #url = component_dict['branches'].get(branch)
-                #if url:
-                  #url, dest_directory = url
-                  #print("                    '%s': (%s,%s)," % (branch,repr(url),repr(dest_directory)))
-            #print('                },')
-            #print('            }],')
-        #print("        ],")
-        #print('    }),')
-    #print(']')

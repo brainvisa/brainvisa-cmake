@@ -31,6 +31,10 @@ if(NOT CMAKE_C_PREPROCESSOR)
     set(CMAKE_C_PREPROCESSOR "${_toolchain_prefix}cpp -C" CACHE STRING "C preprocessor command to use" )
 endif()
 
+# Set minimum C++ version
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set( BRAINVISA_BVMAKER TRUE )
 
 add_custom_target( post-install )

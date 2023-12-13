@@ -309,15 +309,18 @@ def parse_project_info_toml(
   return ( project, component, version, build_model )
 
 def project_info_to_cmake(path):
-   project, component, version, build_model = read_project_info(path)
-   return f"""
-BRAINVISA_PACKAGE_NAME = "{component}"
-BRAINVISA_PACKAGE_MAIN_PROJECT = "{project}"
-BRAINVISA_PACKAGE_VERSION_MAJOR = {version[0]}
-BRAINVISA_PACKAGE_VERSION_MINOR = {version[1]}
-BRAINVISA_PACKAGE_VERSION_PATCH = {version[2]}
-BRAINVISA_BUILD_MODEL = "{build_model}"
-"""
+   """Return a string containing a CMake compatible list of pairs of variable name
+      and value."""
+   info = read_project_info(path)
+   if not info:
+      raise Exception(f'cannot find project info in {path}')
+   project, component, version, build_model = info
+   return (f"BRAINVISA_PACKAGE_NAME;{component};"
+           f"BRAINVISA_PACKAGE_MAIN_PROJECT;{project};"
+           f"BRAINVISA_PACKAGE_VERSION_MAJOR;{version[0]};"
+           f"BRAINVISA_PACKAGE_VERSION_MINOR;{version[1]};"
+           f"BRAINVISA_PACKAGE_VERSION_PATCH;{version[2]};"
+           f"BRAINVISA_BUILD_MODEL;{build_model}")
 
 def find_project_info( directory ):
   """Find the project_info.cmake or the info.py file

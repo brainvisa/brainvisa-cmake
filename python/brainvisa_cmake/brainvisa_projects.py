@@ -18,7 +18,7 @@ def execfile(filename, globals=None, locals=None):
     exec(compile(file_contents, filename, 'exec'), globals, locals)
 
 
-class ProjectsSet(object):
+class ProjectsSet:
     def __init__(self, components_definition=components_definition,
                  packages_definition=packages_definition,
                  ordered_projects=[],

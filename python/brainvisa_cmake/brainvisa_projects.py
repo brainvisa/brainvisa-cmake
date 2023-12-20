@@ -1,36 +1,26 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, print_function
-
 import glob, operator, os, re, string
 from fnmatch import fnmatchcase
+import toml
 import sys
 
 SVN_URL = 'https://bioproj.extra.cea.fr/neurosvn'
 BRAINVISA_SVN_URL = SVN_URL + '/brainvisa'
 
-from brainvisa.maker.components_definition import components_definition
-from brainvisa.maker.version_number        import VersionNumber, \
+from brainvisa_cmake.components_definition import components_definition, packages_definition
+from brainvisa_cmake.version_number        import VersionNumber, \
                                                   version_format_unconstrained
-try:
-    # compatibility for python3
-    import six
-except ImportError:
-    # six module not here, assume python2
-    class six(object):
-       @staticmethod
-       def iteritems(obj, *args, **kwargs):
-          return obj.iteritems(*args, **kwargs)
 
-if sys.version_info[0] >= 3:
-    def execfile(filename, globals=None, locals=None):
-        with open(filename, 'rb') as f:
-            file_contents = f.read()
-        exec(compile(file_contents, filename, 'exec'), globals, locals)
+def execfile(filename, globals=None, locals=None):
+    with open(filename, 'rb') as f:
+        file_contents = f.read()
+    exec(compile(file_contents, filename, 'exec'), globals, locals)
 
 
 class ProjectsSet(object):
     def __init__(self, components_definition=components_definition,
+                 packages_definition=packages_definition,
                  ordered_projects=[],
                  components_per_group={},
                  components_per_project={},
@@ -39,6 +29,7 @@ class ProjectsSet(object):
                  info_per_component={},
                  attributes_per_component={}):
         self.components_definition = components_definition
+        self.packages_definition = packages_definition
         self.ordered_projects = ordered_projects
         self.components_per_group = components_per_group
         self.components_per_project = components_per_project
@@ -50,12 +41,11 @@ class ProjectsSet(object):
 
 
     def build_lists(self):
+        all_components = set()
         for project, components in self.components_definition:
             self.ordered_projects.append(project)
             for component, component_info in components['components']:
-                for group in component_info['groups']:
-                    self.components_per_group.setdefault(group, set()).add(
-                        component)
+                all_components.add(component)
                 self.url_per_component[component] \
                     = component_info['branches']
                 self.info_per_component[component] = component_info
@@ -63,9 +53,56 @@ class ProjectsSet(object):
                     project, []).append(component)
                 self.project_per_component[component] = project
 
+                # Add a package for each component
+                component_package = {
+                   'components': [component],
+                }
+                for k in ('about', 'packages', 'requirements'):
+                   v = component_info.get(k)
+                   if v is not None:
+                      component_package[k] = v
+                self.packages_definition[component] = component_package
+
+        # Recursively resolve packages dependencies and adds 'all_packages'
+        # item to packages defined in self.packages_definition that contains 
+        # all packages that are included by a package.
+        # Also adds a 'dependent_packages' item containing all packages
+        # that include the package.
+        for package, package_dict in self.packages_definition.items():
+            all_packages = set()
+            stack = list(package_dict.get('packages', []))
+            while stack:
+               p = stack.pop()
+               if p == package:
+                  raise ValueError(f'Circular dependency detected in packages definition for {package}')
+               if p not in all_packages:
+                   all_packages.add(p)
+                   stack.extend(i for i in self.packages_definition[p].get('packages', []) if i not in all_packages)
+            package_dict['all_packages'] = all_packages
+            for p in all_packages:
+                self.packages_definition[p].setdefault('dependent_packages', set()).add(package)
+
+        # Set an 'all_components' item in each package definition that contain
+        # components included in the package and all dependent packages.
+        for package, package_dict in self.packages_definition.items():
+            for p in {package} | package_dict.get('dependent_packages', set()):
+               for c in package_dict.get('components', []):
+                  self.packages_definition[p].setdefault('all_components', set()).update(package_dict.get('components', []))
+        
+        # Define self.components_per_group for all packages and alias using
+        # 'all_components' item.
+        self.components_per_group['all'] = all_components
+        for package, package_dict in self.packages_definition.items():
+            aliases = package_dict.get('alias', [])
+            if isinstance(aliases, str):
+                aliases = [aliases]
+            for p in [package] + aliases:
+                self.components_per_group[p] = package_dict['all_components']
+           
+    
 
     def add_sources_list(self, components_sources):
-        for component, versions in six.iteritems(components_sources):
+        for component, versions in components_sources.items():
             project = self.project_per_component.get(component)
             if not project:
                 project = component
@@ -78,7 +115,7 @@ class ProjectsSet(object):
                 # the new component doesn't belong to any group.
             component_info = self.info_per_component.setdefault(component, {})
             component_url = self.url_per_component.setdefault(component, {})
-            for version, version_info in six.iteritems(versions):
+            for version, version_info in versions.items():
                 component_url[version] = (None, version_info[0])
             component_info['branches'] = component_url
             component_info.setdefault('groups', list())
@@ -122,7 +159,7 @@ class ProjectsSet(object):
                       projectPattern, componentPattern = l
                   components = []
                   for project, projectComponents \
-                          in six.iteritems(self.components_per_project):
+                          in self.components_per_project.items():
                       if fnmatchcase(project, projectPattern):
                           for component in projectComponents:
                               if fnmatchcase(component, componentPattern):
@@ -144,7 +181,7 @@ info_per_component = {}
 attributes_per_component = {}
 
 projects_set = ProjectsSet(
-    components_definition, ordered_projects, components_per_group,
+    components_definition, packages_definition, ordered_projects, components_per_group,
     components_per_project, project_per_component, url_per_component,
     info_per_component, attributes_per_component)
 
@@ -235,13 +272,66 @@ def parse_project_info_python(
   return ( project, component, version, build_model )
 
 
+def parse_project_info_toml(
+    path,
+    version_format = version_format_unconstrained
+):
+  """Parses a pyproject.toml file
+  
+  @type path: string
+  @param path: The path of the pyproject.toml file
+  
+  @rtype: tuple
+  @return: A tuple that contains project name, component name and version
+  """
+  project = None
+  component = None
+  version = VersionNumber(
+                '1.0.0',
+                format = version_format
+            )
+  build_model = None
+  with open(path) as f:
+      pyproject = toml.load(f)
+  project = component = pyproject['project']['name']
+  v = pyproject['project']['version'].split('.', 3)
+  if len(version) > 0:
+    version[0] = v[0]
+    
+    if len(version) > 1:
+      version[1] = v[1]
+    
+      if len(version) > 2:
+        version[2] = v[2]
+        
+  build_model = 'pure_python'
+
+  return ( project, component, version, build_model )
+
+def project_info_to_cmake(path):
+   """Return a string containing a CMake compatible list of pairs of variable name
+      and value."""
+   info = read_project_info(path)
+   if not info:
+      raise Exception(f'cannot find project info in {path}')
+   project, component, version, build_model = info
+   return (f"BRAINVISA_PACKAGE_NAME;{component};"
+           f"BRAINVISA_PACKAGE_MAIN_PROJECT;{project};"
+           f"BRAINVISA_PACKAGE_VERSION_MAJOR;{version[0]};"
+           f"BRAINVISA_PACKAGE_VERSION_MINOR;{version[1]};"
+           f"BRAINVISA_PACKAGE_VERSION_PATCH;{version[2]};"
+           f"BRAINVISA_BUILD_MODEL;{build_model}")
+
 def find_project_info( directory ):
   """Find the project_info.cmake or the info.py file
      contained in a directory.
      Files are searched using the patterns :
-     1) <directory>/project_info.cmake
-     2) <directory>/python/*/info.py
-     3) <directory>/*/info.py
+     1) <directory>/pyproject.toml
+     2) <directory>/project_info.cmake
+     3) <directory>/cmake/project_info.cmake
+     4) <directory>/python/*/info.py
+     5) <directory>/*/info.py
+     6) <directory>/info.py
      
   @type directory: string
   @param directory: The directory to search project_info.cmake or info.py
@@ -250,15 +340,16 @@ def find_project_info( directory ):
   @return: The path of the found file containing project information
            or None when no file was found
   """
-  project_info_cmake_path = os.path.join( directory,
-                                          'project_info.cmake' )
   project_info_python_patterns = (
+      os.path.join( directory, 'pyproject.toml' ),
+      os.path.join( directory,'project_info.cmake' ),
+      os.path.join( directory,'cmake', 'project_info.cmake' ),
       os.path.join( directory, 'python', '*', 'info.py' ),
       os.path.join( directory, '*', 'info.py' ),
       os.path.join( directory, 'info.py' ))
 
   # Searches for project_info.cmake and info.py file
-  for pattern in ( project_info_cmake_path, ) + project_info_python_patterns:
+  for pattern in project_info_python_patterns:
     project_info_python_path = glob.glob( pattern )
   
     if project_info_python_path:
@@ -272,9 +363,12 @@ def read_project_info( directory,
   """Find the project_info.cmake or the info.py file
      contained in a directory and parses its content.
      Files are searched using the patterns :
-     1) <directory>/project_info.cmake
-     2) <directory>/python/*/info.py
-     3) <directory>/*/info.py
+     1) <directory>/pyproject.toml
+     2) <directory>/project_info.cmake
+     3) <directory>/cmake/project_info.cmake
+     4) <directory>/python/*/info.py
+     5) <directory>/*/info.py
+     6) <directory>/info.py
      
   @type directory: string
   @param directory: The directory to search project_info.cmake or info.py
@@ -290,7 +384,13 @@ def read_project_info( directory,
   
   if project_info_path is not None:
     
-    if project_info_path.endswith( '.cmake' ):
+    if project_info_path.endswith( '.toml' ):
+      project_info = parse_project_info_toml(
+                         project_info_path,
+                         version_format = version_format
+                     )
+
+    elif project_info_path.endswith( '.cmake' ):
       project_info = parse_project_info_cmake(
                          project_info_path,
                          version_format = version_format
@@ -421,30 +521,3 @@ def find_components(componentsPattern):
         the list of components that match the pattern
     """
     return projects_set.find_components(componentsPattern)
-
-
-#if __name__ == '__main__':
-    
-    #print('components_definition = [')
-    #for project in sorted(components_definition):
-        #project_dict = components_definition[project]
-        #print("    ('%s', {" % project)
-        #description = project_dict.get('description')
-        #if description:
-            #print("        'description': %s," % repr(description))
-        #print("        'components': [")
-        #for component, component_dict in project_dict['components']:
-            #print("            ['%s', {" % component)
-            #groups = component_dict.pop('groups')
-            #print("                'groups': %s," % repr(groups))
-            #print("                'branches': {")
-            #for branch in ('trunk', 'bug_fix', 'latest_release'):
-                #url = component_dict['branches'].get(branch)
-                #if url:
-                  #url, dest_directory = url
-                  #print("                    '%s': (%s,%s)," % (branch,repr(url),repr(dest_directory)))
-            #print('                },')
-            #print('            }],')
-        #print("        ],")
-        #print('    }),')
-    #print(']')

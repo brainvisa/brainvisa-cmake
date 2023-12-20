@@ -1,9 +1,8 @@
 cmake_policy( SET CMP0011 NEW )
 cmake_policy( SET CMP0009 NEW )
-if( CMAKE_MAJOR_VERSION GREATER 2 )
-  cmake_policy( SET CMP0054 NEW )
-endif()
+cmake_policy( SET CMP0054 NEW )
 cmake_policy( SET CMP0057 NEW )
+cmake_policy( SET CMP0072 NEW )
 
 get_property( config_done GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE )
 
@@ -13,34 +12,9 @@ else()
     set(BRAINVISA_CMAKE_LIBRARY_PATH_SUFFIXES lib)
 endif()
 
-if ( COMPILER_PREFIX AND CMAKE_CROSSCOMPILING)
-  if(WIN32)
-
-    # Fix for Windows-GNU.cmake to disable the use of .rsp files
-    # which is not allowed with distcc
-    foreach(_lang C CXX FORTRAN)
-      set( CMAKE_${_lang}_USE_RESPONSE_FILE_FOR_INCLUDES 0 )
-      set( CMAKE_${_lang}_USE_RESPONSE_FILE_FOR_OBJECTS 0 )
-    endforeach()
-
-    # Add toolchain specific module search path
-    set( CMAKE_MODULE_PATH
-        "${brainvisa-cmake_DIR}/specific/windows/${COMPILER_PREFIX}"
-        ${CMAKE_MODULE_PATH} )
-  endif()
-endif()
-
 # OS identifier
 if( ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" )
-  if( EXISTS /etc/mandriva-release )
-      set( LSB_DISTRIB "mandriva"
-           CACHE STRING "Linux distribution identifier" )
-      file( READ /etc/mandriva-release _x )
-      string( REGEX MATCH "Mandriva Linux release ([0-9.]+)" _x "${_x}" )
-      if( _x )
-        set( LSB_DISTRIB_RELEASE ${CMAKE_MATCH_1} CACHE STRING "Linux distribution version" )
-      endif()
-  elseif( EXISTS /etc/lsb-release )
+  if( EXISTS /etc/lsb-release )
     file( READ /etc/lsb-release _x )
     string( REGEX MATCH "DISTRIB_ID=([^\n]+)" _y "${_x}" )
     if( _y )
@@ -69,6 +43,21 @@ if( NOT config_done )
   option( CMAKE_OVERRIDE_COMPILER_MISMATCH "Avoid CMake to completely erase the cache if a compiler mismatch is detected (for instance with find_package( VTK ))" ON )
 
   # Include code specific to a platform or site
+  if( EXISTS /etc/mandriva-release )
+    include( "${brainvisa-cmake_DIR}/specific/linux_distribution/mandriva.cmake" )
+  elseif( EXISTS /etc/lsb-release )
+    file( READ /etc/lsb-release _x )
+    string( REGEX MATCH Ubuntu _x "${_x}" )
+    if( _x )
+      include( "${brainvisa-cmake_DIR}/specific/linux_distribution/ubuntu.cmake" )
+    endif()
+  elseif( EXISTS /etc/redhat-release )
+    file( READ /etc/redhat-release _x )
+    string( REGEX MATCH CentOS _x "${_x}" )
+    if( _x )
+      include( "${brainvisa-cmake_DIR}/specific/linux_distribution/centos.cmake" )
+    endif()
+  endif()
   file( GLOB _files "${brainvisa-cmake_DIR}/specific/*.cmake" )
   foreach( _file ${_files} )
     include( "${_file}" )
@@ -113,8 +102,8 @@ if( NOT config_done )
   endif()
 
   # Initialize python module containing compilation information
-  set( BRAINVISA_COMPILATION_INFO "${CMAKE_BINARY_DIR}/python/brainvisa/compilation_info.py" )
-  execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/python/brainvisa" )
+  set( BRAINVISA_COMPILATION_INFO "${CMAKE_BINARY_DIR}/${PYTHON_INSTALL_DIRECTORY}/brainvisa/compilation_info.py" )
+  execute_process( COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/${PYTHON_INSTALL_DIRECTORY}/brainvisa" )
   configure_file( "${brainvisa-cmake_DIR}/compilation_info.py.in" "${BRAINVISA_COMPILATION_INFO}" @ONLY )
 
 endif()
@@ -252,26 +241,52 @@ endfunction()
 
 
 function(BRAINVISA_READ_PROJECT_INFO directory)
-    if(EXISTS "${directory}/project_info.cmake")
-        include("${directory}/project_info.cmake")
-        set(BRAINVISA_PACKAGE_NAME ${BRAINVISA_PACKAGE_NAME} PARENT_SCOPE)
-        set(BRAINVISA_PACKAGE_MAIN_PROJECT ${BRAINVISA_PACKAGE_MAIN_PROJECT} PARENT_SCOPE)
-        set(BRAINVISA_PACKAGE_VERSION_MAJOR ${BRAINVISA_PACKAGE_VERSION_MAJOR} PARENT_SCOPE)
-        set(BRAINVISA_PACKAGE_VERSION_MINOR ${BRAINVISA_PACKAGE_VERSION_MINOR} PARENT_SCOPE)
-        set(BRAINVISA_PACKAGE_VERSION_PATCH ${BRAINVISA_PACKAGE_VERSION_PATCH} PARENT_SCOPE)
-        set(BRAINVISA_PACKAGE_MAINTAINER ${BRAINVISA_PACKAGE_MAINTAINER} PARENT_SCOPE)
-        set(BRAINVISA_PACKAGE_LICENCES ${BRAINVISA_PACKAGE_LICENCES} PARENT_SCOPE)
+    # Check pyproject.toml in priority
+    foreach(glob "${directory}/pyproject.toml" "${directory}/*/pyproject.toml" "${directory}/python/*/pyproject.toml")
+      file(GLOB pyproject "${glob}")
+      break()
+    endforeach()
+
+    if(pyproject)
+      if( PYTHON_EXECUTABLE )
+          set( py_exe "${PYTHON_EXECUTABLE}" )
+      else()
+          set( py_exe "python" )
+      endif()
+      execute_process( COMMAND "${py_exe}" "-c" "from brainvisa_cmake.brainvisa_projects import project_info_to_cmake; print(project_info_to_cmake('${directory}'))" OUTPUT_VARIABLE variables_to_set ERROR_VARIABLE error )
+      if(error)
+          message(FATAL_ERROR "${error}")
+      endif()
+      while(variables_to_set)
+        list(POP_FRONT variables_to_set name value)
+        set(${name} "${value}" PARENT_SCOPE)
+      endwhile()
     else()
-        file(GLOB infos1 "${directory}/info.py")
-        file(GLOB infos2 "${directory}/*/info.py")
-        file(GLOB infos3 "${directory}/python/*/info.py")
-        set(infos ${infos1} ${infos2} ${infos3})
-        list(GET infos 0 info)
-        file(TO_CMAKE_PATH "${info}" info)
-        BRAINVISA_TEMPORARY_FILE_NAME(script)
-        set(script "${script}.py")
-        file(WRITE  "${script}"
-    "from __future__ import print_function
+      if(EXISTS "${directory}/project_info.cmake")
+        set( _project_info_cmake "${directory}/project_info.cmake")
+      elseif(EXISTS "${directory}/cmake/project_info.cmake")
+        set( _project_info_cmake "${directory}/cmake/project_info.cmake")
+      endif()
+      if (DEFINED _project_info_cmake)
+          include("${_project_info_cmake}")
+          set(BRAINVISA_PACKAGE_NAME ${BRAINVISA_PACKAGE_NAME} PARENT_SCOPE)
+          set(BRAINVISA_PACKAGE_MAIN_PROJECT ${BRAINVISA_PACKAGE_MAIN_PROJECT} PARENT_SCOPE)
+          set(BRAINVISA_PACKAGE_VERSION_MAJOR ${BRAINVISA_PACKAGE_VERSION_MAJOR} PARENT_SCOPE)
+          set(BRAINVISA_PACKAGE_VERSION_MINOR ${BRAINVISA_PACKAGE_VERSION_MINOR} PARENT_SCOPE)
+          set(BRAINVISA_PACKAGE_VERSION_PATCH ${BRAINVISA_PACKAGE_VERSION_PATCH} PARENT_SCOPE)
+          set(BRAINVISA_PACKAGE_MAINTAINER ${BRAINVISA_PACKAGE_MAINTAINER} PARENT_SCOPE)
+          set(BRAINVISA_PACKAGE_LICENCES ${BRAINVISA_PACKAGE_LICENCES} PARENT_SCOPE)
+      else()
+          file(GLOB infos1 "${directory}/info.py")
+          file(GLOB infos2 "${directory}/*/info.py")
+          file(GLOB infos3 "${directory}/python/*/info.py")
+          set(infos ${infos1} ${infos2} ${infos3})
+          list(GET infos 0 info)
+          file(TO_CMAKE_PATH "${info}" info)
+          BRAINVISA_TEMPORARY_FILE_NAME(script)
+          set(script "${script}.py")
+          file(WRITE  "${script}"
+      "from __future__ import print_function
 import sys, os
 if sys.version_info[0] >= 3:
     def execfile(filename, globals=globals(), locals=locals()):
@@ -305,24 +320,25 @@ if not os.path.exists(cmake) or os.stat(cmake).st_mtime < os.stat(info).st_mtime
         f.close()
 sys.stdout.write(cmake)
 ")
-        if( PYTHON_HOST_EXECUTABLE )
-            set( py_exe "${PYTHON_HOST_EXECUTABLE}" )
-        else()
-            # PYTHON_HOST_EXECUTABLE may not be defined yet.
-            if( PYTHON_EXECUTABLE )
-                set( py_exe "${PYTHON_EXECUTABLE}" )
-            else()
-                set( py_exe "python" )
-            endif()
-        endif()
-        execute_process( COMMAND "${py_exe}" "${script}" OUTPUT_VARIABLE cmake ERROR_VARIABLE error )
-        if(error)
-            message(FATAL_ERROR "${error}")
-        endif()
-        if(EXISTS "${cmake}")
-            include("${cmake}")
-        endif()
-        file(REMOVE "${script}")
+          if( PYTHON_HOST_EXECUTABLE )
+              set( py_exe "${PYTHON_HOST_EXECUTABLE}" )
+          else()
+              # PYTHON_HOST_EXECUTABLE may not be defined yet.
+              if( PYTHON_EXECUTABLE )
+                  set( py_exe "${PYTHON_EXECUTABLE}" )
+              else()
+                  set( py_exe "python" )
+              endif()
+          endif()
+          execute_process( COMMAND "${py_exe}" "${script}" OUTPUT_VARIABLE cmake ERROR_VARIABLE error )
+          if(error)
+              message(FATAL_ERROR "${error}")
+          endif()
+          if(EXISTS "${cmake}")
+              include("${cmake}")
+          endif()
+          file(REMOVE "${script}")
+      endif()
     endif()
 endfunction()
 
@@ -356,9 +372,6 @@ macro( BRAINVISA_PROJECT )
     set( BRAINVISA_PACKAGE_VERSION "${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}.${BRAINVISA_PACKAGE_VERSION_PATCH}" )
   endif()
 
-  if( CMAKE_MAJOR_VERSION GREATER 2 )
-    cmake_policy(SET CMP0048 NEW)
-  endif()
   project( ${BRAINVISA_PACKAGE_NAME} ${ARGN} )
 
   set( ${PROJECT_NAME}_VERSION_MAJOR ${BRAINVISA_PACKAGE_VERSION_MAJOR} )
@@ -1023,7 +1036,7 @@ endfunction()
 #                                    [INSTALL_ONLY] )
 #     <python directory>: python directory to copy
 #     <component>: name of the component passed to BRAINVISA_INSTALL.
-#     <destination directory>: directory where the wiles will be copied
+#     <destination directory>: directory where the files will be copied
 #         (relative to build directory).
 #   BRAINVISA_COPY_PYTHON_DIRECTORY( <python directory> <component> )
 #         <destination directory> is set to the right most directory
@@ -1056,6 +1069,20 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
     list( GET _args 0 _destDir )
   else()
     get_filename_component( _destDir "${_pythonDirectory}" NAME )
+  endif()
+
+  # When PYTHON_INSTALL_DIRECTORY is defined and the destination
+  # python directory is "*/python" then PYTHON_INSTALL_DIRECTORY
+  # is used for destination.
+  # This allows to substitute the python directory used in many
+  # CMake files. For example, in Conda environment, Python packages
+  # should be installed in `lib/python<version>/site-packages
+  get_filename_component( _destDirName "${_destDir}" NAME )
+  if(("${_destDirName}" STREQUAL "python") AND (DEFINED PYTHON_INSTALL_DIRECTORY) )
+    set( _destDir "${PYTHON_INSTALL_DIRECTORY}")
+  endif()
+  if(("${_destDirName}" STREQUAL "brainvisa") AND (DEFINED PYTHON_INSTALL_DIRECTORY) )
+    set( _destDir "${PYTHON_INSTALL_DIRECTORY}/brainvisa")
   endif()
 
   # Make sure Python can be executed
@@ -1389,15 +1416,6 @@ function( BRAINVISA_GENERATE_COMMANDS_HELP_INDEX )
 #     message("--BRAINVISA_ADD_COMMAND_HELP_INDEX - _depends : ${_depends}")
 #     message("--BRAINVISA_ADD_COMMAND_HELP_INDEX - _dirs : ${_dirs}")
 
-#     brainvisa_target_system_command(__target_cmd 
-#         "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
-#             "${PYTHON_EXECUTABLE}"
-#             ${CREATE_COMMANDS_DOC}
-#             -t "${_helppath}"
-#             -v 0
-#             ${_cmd_options}
-#             "${_output_directory}/${_index_file}")
-#     message("===== TARGET SYSTEM COMMAND: ${__target_cmd}")
     if(CMAKE_CROSSCOMPILING AND WINE32)
         find_package(Wine)
     endif()
@@ -1407,7 +1425,6 @@ function( BRAINVISA_GENERATE_COMMANDS_HELP_INDEX )
     else()
       add_custom_command( OUTPUT "${_output_directory}/${_index_file}"
                           COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX}
-                                  "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
                                   "${PYTHON_EXECUTABLE}"
                                   ${CREATE_COMMANDS_DOC}
                                   -t "${_helppath}"
@@ -1557,7 +1574,6 @@ function( BRAINVISA_ADD_COMMAND_HELP name)
     add_custom_command( OUTPUT "${_component_help_directory}/${name}"
                         COMMAND "${CMAKE_COMMAND}" -E make_directory "${_component_help_directory}"
                         COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX}
-                                "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}" 
                                 "${PYTHON_EXECUTABLE}" -c "import sys, subprocess; subprocess.call( ['${_command}'], stdout = sys.stdout, stderr = sys.stdout )" > ${_component_help_directory}/${name}
                         DEPENDS ${_depends}
                         COMMENT "Generating ${name} help file ..."
@@ -2180,7 +2196,6 @@ function( BRAINVISA_GENERATE_EPYDOC_DOC  )
     add_custom_command( OUTPUT "${CMAKE_BINARY_DIR}/${outputDirectory}/index.html"
                         DEPENDS ${pythonFiles}
                         COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/${outputDirectory}"
-                        COMMAND "${CMAKE_BINARY_DIR}/bin/bv_env_host${CMAKE_HOST_EXECUTABLE_SUFFIX}"
                           "${EPYDOC_EXECUTABLE}"
                           --html
                           --name "${PROJECT_NAME} ${${PROJECT_NAME}_VERSION}"
@@ -2266,7 +2281,6 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
                       COMMAND "${CMAKE_COMMAND}" -E make_directory
                         "${output_directory}"
                       COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX}
-                        "${CMAKE_BINARY_DIR}/bin/bv_env${CMAKE_EXECUTABLE_SUFFIX}"
                         ${SPHINXBUILD_EXECUTABLE}
                         ${source_directory}
                         ${output_directory}
@@ -2618,7 +2632,7 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
   include_directories( BEFORE ${SIP_INCLUDE_DIR} )
   add_library( ${_moduleName} MODULE ${_sipOutputFiles} )
   set_target_properties( ${_moduleName} PROPERTIES
-                LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python/${_modulePath}"
+                LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${PYTHON_INSTALL_DIRECTORY}/${_modulePath}"
                 PREFIX "" )
   if( WIN32 )
     set_target_properties( ${_moduleName} PROPERTIES SUFFIX ".pyd" )
@@ -2628,7 +2642,7 @@ macro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _mainSipFile )
     set_target_properties( ${_moduleName} PROPERTIES COMPILE_DEFINITIONS ${PYTHON_FLAGS} )
   endif()
   BRAINVISA_INSTALL( TARGETS ${_moduleName}
-                     DESTINATION "python/${_modulePath}"
+                     DESTINATION "${PYTHON_INSTALL_DIRECTORY}/${_modulePath}"
                      COMPONENT ${PROJECT_NAME} )
 endmacro( BRAINVISA_ADD_SIP_PYTHON_MODULE _moduleName _modulePath _installComponent _installComponentDevel _sipSplitGeneratedCode _mainSipFile )
 
@@ -2643,7 +2657,7 @@ function( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
     configure_file( "${BRAINVISA_SOURCES_${PROJECT_NAME}}/cmake/${PROJECT_NAME}-config-version.cmake.in"
                     "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake"
                     @ONLY )
-  else()
+  elseif( EXISTS "${brainvisa-cmake_DIR}/brainvisa-cmake-config-version.cmake.in" )
     configure_file( "${brainvisa-cmake_DIR}/brainvisa-cmake-config-version.cmake.in"
                     "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake"
                     @ONLY )
@@ -3097,26 +3111,26 @@ endfunction()
 #
 # Usage:
 #
-#   BRAINVISA_PYUIC( <source_ui_file> <dest_py_file> <relative_path> )
+#   BRAINVISA_PYUIC( <source_ui_file> <dest_py_file> <relative_path> <dest_path> )
 #
-function( BRAINVISA_PYUIC source_ui_file dest_py_file relative_path )
+function( BRAINVISA_PYUIC source_ui_file dest_py_file relative_path dest_path )
   if( PYUIC )
     BRAINVISA_GENERATE_TARGET_NAME( target )
     # ensure the working directory will exist
-    file( MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/${relative_path}" )
+    file( MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/${dest_path}" )
     add_custom_command(
       OUTPUT "${dest_py_file}"
       COMMAND ${PYUIC} -o "${dest_py_file}" "${CMAKE_CURRENT_SOURCE_DIR}/${relative_path}/${source_ui_file}"
-      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${relative_path}"
+      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${dest_path}"
       DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${relative_path}/${source_ui_file}"
     )
     add_custom_target( ${target} ALL
       DEPENDS "${dest_py_file}"
-      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${relative_path}"
+      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/${dest_path}"
     )
     BRAINVISA_INSTALL( FILES
-        "${CMAKE_BINARY_DIR}/${relative_path}/${dest_py_file}"
-      DESTINATION ${relative_path}
+        "${CMAKE_BINARY_DIR}/${dest_path}/${dest_py_file}"
+      DESTINATION ${dest_path}
       COMPONENT ${PROJECT_NAME} )
   endif()
 endfunction()

@@ -1,4 +1,4 @@
-# bv_unenv.sh: unset the environment which was set up by bv_env in a shell.
+# bv_unenv.sh: unset the environment which was set up by bv_env.sh in a shell.
 #
 # Usage:
 #   . bv_unenv.sh

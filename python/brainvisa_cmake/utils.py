@@ -2,14 +2,15 @@
 
 """Miscellaneous utilities with no dependencies on other bv_maker modules."""
 
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
-
 import datetime
+import json
+import os
 import platform
 from socket import gethostname
 import sys
 import time
+
+from brainvisa_cmake.brainvisa_projects import find_project_info
 
 
 _installer_datetime = None
@@ -108,3 +109,35 @@ def global_installer_variables():
     _installer_variables = {'os': pack_host_system,
                             'hostname': gethostname().split('.')[0]}
     return _installer_variables
+
+def get_components_info():
+    '''
+    Return a dictionary with one item for each component defined during
+    the last configuration. The values are dictionaries containing the 
+    following information:
+        'version' : the complete version string of the component
+        'src' : the path of the directory containing component sources
+        'build_model' : the build model of the component ('cmake' or 'pure_python')
+    
+    None is returned if no information had been found.
+    '''
+    casa_build = os.environ.get('CASA_BUILD')
+    if casa_build:
+        path = os.path.join(casa_build, 'components_info.json')
+        if os.path.exists(path):
+            with open(path) as i:
+                components_info = json.load(i)
+            for component_info in components_info.values():
+                path = find_project_info(component_info['directory'])
+                if path and path.endswith('.py'):
+                    d = {}
+                    with open(path) as f:
+                        exec(compile(f.read(), path, 'exec'), d, d)
+                    depends = d.get('REQUIRES')
+                    if depends:
+                        component_info['depends'] = depends
+                    alternative_depends = d.get('EXTRA_REQUIRES')
+                    if alternative_depends:
+                        component_info['alternative_depends'] = alternative_depends
+            return components_info
+    return None

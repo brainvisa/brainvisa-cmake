@@ -29,5 +29,5 @@ if this_script:
         sys.path.insert(0, python_modules)
 # -----------------------------------------------------------------------------
 
-from brainvisa.maker.main import main
+from brainvisa_cmake.main import main
 sys.exit(main())

@@ -2,26 +2,23 @@
 
 """Handling of source-directory configuration."""
 
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
-
 from fnmatch import fnmatchcase
 import json
 import os
 
 import six
 
-import brainvisa.maker.brainvisa_projects as brainvisa_projects
-import brainvisa.maker.configuration
-from brainvisa.maker.git import GitRepository
-from brainvisa.maker.git import GitUpdateError
-from brainvisa.maker.git import print_git_status_summary
-from brainvisa.maker.subprocess import system
-from brainvisa.maker.version_number import version_format_short
+import brainvisa_cmake.brainvisa_projects as brainvisa_projects
+import brainvisa_cmake.configuration
+from brainvisa_cmake.git import GitRepository
+from brainvisa_cmake.git import GitUpdateError
+from brainvisa_cmake.git import print_git_status_summary
+from brainvisa_cmake.subprocess import system
+from brainvisa_cmake.version_number import version_format_short
 
 
-class SourceDirectory(brainvisa.maker.configuration.DirectorySection,
-                      brainvisa.maker.configuration.ConfigVariableParser):
+class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
+                      brainvisa_cmake.configuration.ConfigVariableParser):
 
     _variables_with_replacements = set(('directory_id',  'cross_compiling_dirs'))
     _path_variables = set(('directory',))
@@ -71,7 +68,7 @@ class SourceDirectory(brainvisa.maker.configuration.DirectorySection,
         #    + https://svn.url [<dest_directory>] [<bv_version>]]
         #    + <component_pattern> <version_pattern>
         #    - <component_pattern> [<version_pattern>]
-        if brainvisa.maker.configuration.ConfigVariableParser.addConfigurationLine(self, line):
+        if brainvisa_cmake.configuration.ConfigVariableParser.addConfigurationLine(self, line):
             pass
         else:
             self.sourceConfigurationLines.append(line)

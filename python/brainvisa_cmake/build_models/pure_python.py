@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, print_function
 
 import os
 import sys
 import os.path as osp
 import distutils.spawn
-import six
 import string
 import subprocess
 import shlex
+import toml
 
-from brainvisa.maker.brainvisa_projects import read_project_info, find_project_info
+from brainvisa_cmake.brainvisa_projects import read_project_info, find_project_info
 
 if sys.version_info[0] >= 3:
     def execfile(filename, globals=None, locals=None):
@@ -26,20 +25,18 @@ cmake_minimum_required( VERSION 3.10 )
 find_package( python REQUIRED )
 find_package( Sphinx )
 find_package( brainvisa-cmake REQUIRED )
-
 file( TO_CMAKE_PATH "%(source_directory)s" BRAINVISA_REAL_SOURCE_DIR )
 BRAINVISA_PROJECT()
 
 BRAINVISA_DEPENDENCY(DEV DEPENDS %(component_name)s RUN "= ${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}.${BRAINVISA_PACKAGE_VERSION_PATCH}")
 BRAINVISA_DEPENDENCY( RUN DEPENDS python RUN ">= 2.7" )
-%(brainvisa_dependencies)s
 if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/python" )
     BRAINVISA_COPY_PYTHON_DIRECTORY( "${BRAINVISA_REAL_SOURCE_DIR}/python"
-                                     ${PROJECT_NAME} python
+                                     ${PROJECT_NAME} ${PYTHON_INSTALL_DIRECTORY}
                                      INSTALL_ONLY )
 else()
     BRAINVISA_COPY_PYTHON_DIRECTORY( "${BRAINVISA_REAL_SOURCE_DIR}/%(component_name)s"
-                                     ${PROJECT_NAME} python/%(component_name)s
+                                     ${PROJECT_NAME} ${PYTHON_INSTALL_DIRECTORY}/%(component_name)s
                                      INSTALL_ONLY )
 endif()
 
@@ -56,9 +53,9 @@ if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/share" )
 endif()
 
 if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/brainvisa" )
-    BRAINVISA_COPY_DIRECTORY( "${BRAINVISA_REAL_SOURCE_DIR}/brainvisa"
-                              brainvisa
-                              ${PROJECT_NAME} )
+    BRAINVISA_COPY_PYTHON_DIRECTORY( "${BRAINVISA_REAL_SOURCE_DIR}/brainvisa"
+                              ${PROJECT_NAME}
+                              brainvisa )
 endif()
 
 if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/scripts" )
@@ -151,7 +148,7 @@ class PurePythonComponentBuild(object):
         if cross_compiling_directories is not None:
             match = None
             match_length = 0
-            for s, c in six.iteritems(cross_compiling_directories):
+            for s, c in cross_compiling_directories.items():
                 if self.source_directory.startswith(s) \
                     and len(s) > match_length:
                     self.cross_compiling_directory_match = (s, c)
@@ -166,7 +163,11 @@ class PurePythonComponentBuild(object):
         # buld tree, they are not installed in packages). This module adds the
         # content of bv_maker_pure_python.pth file to sys.path, just before
         # the path <build>/python
-        sitecustomize_dir = osp.join(self.build_directory.directory, 'python', 'sitecustomize')
+        if 'CONDA_PREFIX' in os.environ:
+            python_directory = f'lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages'
+        else:
+            python_directory = 'python'
+        sitecustomize_dir = osp.join(self.build_directory.directory, python_directory, 'sitecustomize')
         if not osp.exists(sitecustomize_dir):
             os.makedirs(sitecustomize_dir)
         module = osp.join(sitecustomize_dir,'bv_maker_pure_python.py')
@@ -211,37 +212,16 @@ class PurePythonComponentBuild(object):
 
         # Check for dependencies in info.py
         info = find_project_info(self.source_directory)
-        brainvisa_dependencies = []
-        tests = []
         if info:
-            dinfo = {}
-            execfile(info, dinfo, dinfo)
-            dependencies = dinfo.get('brainvisa_dependencies', [])
-            for dcomponent in dependencies:
-                if isinstance(dcomponent, six.string_types):
-                    d = {
-                        'component': dcomponent,
-                    }
-                    if dcomponent in self.build_directory.components:
-                        version = self.build_directory.components[dcomponent][2]
-                        next_version = [int(i) for i in version.split('.')]
-                        next_version[1] +=1
-                        next_version = '%d.%d' % tuple(next_version)
-                        d['version'] = version
-                        d['next_version'] = next_version
-                    else:
-                        print('WARNING: component %s declares a dependency on %s in its info.py but build directory does not contain %s' % (self.component_name, dcomponent, dcomponent),
-                              file=sys.stderr)
-                        d['version'] = 'unknown'
-                        d['next_version'] = 'unknown'
-                    brainvisa_dependencies.append('BRAINVISA_DEPENDENCY(RUN DEPENDS %(component)s RUN ">= %(version)s; << %(next_version)s")' % d)
-                    brainvisa_dependencies.append('BRAINVISA_DEPENDENCY(DEV DEPENDS %(component)s DEV ">= %(version)s; << %(next_version)s")' % d)
-                else:
-                    brainvisa_dependencies.append(
-                        self.dependency_string(dcomponent))
-            tests = dinfo.get('test_commands', [])
-            test_timeouts = dinfo.get('test_timeouts', [])
-        brainvisa_dependencies = '\n'.join(brainvisa_dependencies)
+            if info.endswith('.toml'):
+                pyproject = toml.load(info)
+                tests = []
+                test_timeouts = []
+            else:
+                dinfo = {}
+                execfile(info, dinfo, dinfo)
+                tests = dinfo.get('test_commands', [])
+                test_timeouts = dinfo.get('test_timeouts', [])
 
         # Create <build directory>/build_files/<component>_src/CMakeLists.txt
         src_directory = osp.join(self.build_directory.directory, 'build_files',
@@ -258,7 +238,6 @@ class PurePythonComponentBuild(object):
             source_directory= os.path.normpath(
                                   self.source_directory
                               ).replace('\\', '\\\\'),
-            brainvisa_dependencies=brainvisa_dependencies,
             test_commands=tests_str
         )
         cmakelists_path = osp.join(src_directory, 'CMakeLists.txt')

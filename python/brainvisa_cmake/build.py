@@ -2,37 +2,32 @@
 
 """Handling of build-directory configuration."""
 
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
-
 import distutils
 from fnmatch import fnmatchcase
 import glob
 import json
 import os
+import pathlib
 import shlex
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
-import traceback
 
-import six
-
-import brainvisa.maker.brainvisa_projects as brainvisa_projects
-import brainvisa.maker.configuration
-from brainvisa.maker.environment import environmentPathVariablesSubstitution
-from brainvisa.maker.path import DefaultPathConverterRegistry
-from brainvisa.maker.path import get_host_path_system
-from brainvisa.maker.path import Path
-from brainvisa.maker.path import SystemPathConverter
-import brainvisa.maker.sources
-from brainvisa.maker.subprocess import system
-from brainvisa.maker.subprocess import system_output_on_error
-from brainvisa.maker.version import version as brainvisa_cmake_version
-from brainvisa.maker.version_number import VersionNumber
-from brainvisa.maker.version_number import version_format_short
+import brainvisa_cmake.brainvisa_projects as brainvisa_projects
+import brainvisa_cmake.configuration
+from brainvisa_cmake.environment import environmentPathVariablesSubstitution
+from brainvisa_cmake.path import DefaultPathConverterRegistry
+from brainvisa_cmake.path import get_host_path_system
+from brainvisa_cmake.path import Path
+from brainvisa_cmake.path import SystemPathConverter
+import brainvisa_cmake.sources
+from brainvisa_cmake.subprocess import system
+from brainvisa_cmake.subprocess import system_output_on_error
+from brainvisa_cmake.version import version as brainvisa_cmake_version
+from brainvisa_cmake.version_number import VersionNumber
+from brainvisa_cmake.version_number import version_format_short
 
 
 if os.path.exists(sys.argv[0]):
@@ -60,7 +55,7 @@ if this_script:
                               'cmake')
 
 
-class ComponentsConfigParser(brainvisa.maker.configuration.DirectorySection):
+class ComponentsConfigParser(brainvisa_cmake.configuration.DirectorySection):
 
     def __init__(self, directory, configuration):
         super(ComponentsConfigParser, self).__init__()
@@ -84,16 +79,15 @@ class ComponentsConfigParser(brainvisa.maker.configuration.DirectorySection):
                             rest.strip(), env=self.get_environ())
                     pinfo = brainvisa_projects.read_project_info(
                         directory,
-                        version_format=version_format_short
+                        # version_format=version_format_short
                     )
                     if pinfo:
                         project, component, version, build_model = pinfo
-                        version = str(version)
                         if self.configuration.verbose:
                             print('    adding component %s version %s from %s'
                                   % (component, version, directory))
                         self.components[component] = (
-                            directory, version, version, build_model)
+                            directory, version, '.'.join(str(i) for i in version._version_numbers[:2]), build_model)
                     else:
                         print('WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found' % directory)
                 elif first in ('brainvisa_exclude', '-'):
@@ -140,8 +134,7 @@ class ComponentsConfigParser(brainvisa.maker.configuration.DirectorySection):
                         projects_set.find_components(componentPattern))
                     for component in possible_components:
                         for version, directory_model \
-                                in six.iteritems(
-                                    components_sources.get(component, {})):
+                                in components_sources.get(component, {}).items():
                             if isinstance(directory_model, list):
                                 directory, build_model = directory_model
                             else:
@@ -152,17 +145,16 @@ class ComponentsConfigParser(brainvisa.maker.configuration.DirectorySection):
                             if fnmatchcase(version, versionPattern):
                                 pinfo = brainvisa_projects.read_project_info(
                                     directory,
-                                    version_format=version_format_short
+                                    # version_format=version_format_short
                                 )
                                 if pinfo:
                                     project, component, component_version, \
                                         build_model = pinfo
-                                    component_version = str(component_version)
                                     if self.configuration.verbose:
                                         print('    adding component %s version %s from %s' \
-                                            % (component, version, directory))
+                                            % (component, component_version, directory))
                                     self.components[component] = (
-                                        directory, version, component_version, build_model)
+                                        directory, component_version, '.'.join(str(i) for i in component_version._version_numbers[:2]), build_model)
                                 else:
                                     print('WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found'
                                           % directory)
@@ -203,7 +195,7 @@ class ComponentsConfigParser(brainvisa.maker.configuration.DirectorySection):
 
 
 class BuildDirectory(ComponentsConfigParser,
-                     brainvisa.maker.configuration.ConfigVariableParser):
+                     brainvisa_cmake.configuration.ConfigVariableParser):
 
     _path_variables = set(('directory',
                            'stdout_file', 'stderr_file',
@@ -293,7 +285,7 @@ if len(old_file) == 0:
         #    + <directory>
         #    - <component_pattern> [<version_pattern>]
         #    <component_pattern> <version_pattern> <source_directory>
-        if brainvisa.maker.configuration.ConfigVariableParser.addConfigurationLine(self, line):
+        if brainvisa_cmake.configuration.ConfigVariableParser.addConfigurationLine(self, line):
             pass
         else:
             line = os.path.expandvars(line)
@@ -304,7 +296,7 @@ if len(old_file) == 0:
 
     def set_dependencies(self):
         self.depend_on_sections = {
-            'configure': [(d, 'sources', brainvisa.maker.sources.SourceDirectory.dep_condition)
+            'configure': [(d, 'sources', brainvisa_cmake.sources.SourceDirectory.dep_condition)
                           for d in
                           self.configuration.sourcesDirectories.values()],
             'build': [(self, 'configure')],
@@ -411,11 +403,15 @@ if len(old_file) == 0:
         # Create a sitecustomize Python package that imports all modules it
         # contains during Python startup. This is mainly used to modify
         # sys.path to include pure Python components source (see module
-        # brainvisa.maker.build_models.pure_python). This package is used only
+        # brainvisa_cmake.build_models.pure_python). This package is used only
         # in build directory, it is not installed in packages (to date there is
         # one exception to this in axon component, see Axon's CMakeLists.txt).
+        if 'CONDA_PREFIX' in os.environ:
+            python_directory = f'lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages'
+        else:
+            python_directory = 'python'
         sitecustomize_dir = os.path.join(
-            self.directory, 'python', 'sitecustomize')
+            self.directory, python_directory, 'sitecustomize')
         if not os.path.exists(sitecustomize_dir):
             os.makedirs(sitecustomize_dir)
         with open(os.path.join(sitecustomize_dir, '__init__.py'), 'w') as f:
@@ -427,8 +423,18 @@ if len(old_file) == 0:
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
 
+        bin = pathlib.Path(self.directory) / 'bin'
+        bin.mkdir(exist_ok=True)
+        
+        brainvisa_cmake_root = pathlib.Path(__file__).parent.parent.parent
+
+        for f in ('bv_env', 'bv_env.sh', 'bv_unenv', 'bv_unenv.sh'):
+            path = bin / f
+            path.unlink(missing_ok=True)
+            path.symlink_to(os.path.relpath(brainvisa_cmake_root / 'bin' / f, bin))
+
         cross_compiling_directories = {}
-        for k, s in six.iteritems(self.configuration.sourcesDirectories):
+        for k, s in self.configuration.sourcesDirectories.items():
             if s.cross_compiling_dirs is not None:
                 if len(self.cross_compiling_prefix) > 0:
                     cross_compiling_dir = \
@@ -449,8 +455,8 @@ if len(old_file) == 0:
                     component, {}).get('build_model')
             if build_model is not None:
                 build_model_class = getattr(__import__(
-                    'brainvisa.maker.build_models',
-                    fromlist=[six.ensure_str('pure_python')], level=0),
+                    'brainvisa_cmake.build_models',
+                    fromlist=['pure_python'], level=0),
                     build_model)
                 build_model = build_model_class(
                     component, self.components[component][0], self,
@@ -459,6 +465,11 @@ if len(old_file) == 0:
 
         cmakeFile = os.path.join(self.directory, 'bv_maker.cmake')
         with open(cmakeFile, 'w') as out:
+            print('cmake_policy( SET CMP0074 NEW )', file=out)
+            print(f'set( BRAINVISA_SOURCES_brainvisa-cmake "{brainvisa_cmake_root}" )',
+                  file=out)
+            print('set( CMAKE_PREFIX_PATH "${BRAINVISA_SOURCES_brainvisa-cmake}" ${CMAKE_PREFIX_PATH} )',
+                  file=out)
             print('set( BRAINVISA_PROJECTS', ' '.join(
                 sortedProjects), 'CACHE STRING "BrainVISA Projects list" FORCE )',
                 file=out)
@@ -474,7 +485,7 @@ if len(old_file) == 0:
                   'CACHE STRING "BrainVISA components list" FORCE )',
                   file=out)
             print(file=out)
-            for component, directory_version_model in six.iteritems(self.components):
+            for component, directory_version_model in self.components.items():
                 directory, selected_version, version, build_model = directory_version_model
                 if component in self.buildModelPerComponent:
                     print('set( BRAINVISA_SOURCES_' + component + ' "' \
@@ -499,16 +510,30 @@ if len(old_file) == 0:
                 print('set( ' + component + '_VERSION "' + version + '" )',
                       file=out)
             print('set(PYTHON_INSTALL_DIRECTORY python)', file=out)
-        cmakeLists = os.path.join(self.directory, 'CMakeLists.txt')
+            print('if( DEFINED CONDA )',file=out)
+            print('    include( "${CONDA}/../src/brainvisa-cmake/cmake/conda.cmake" )',
+                  file=out)
+            print('endif()', file=out)
 
+        cmakeLists = os.path.join(self.directory, 'CMakeLists.txt')
         with open(cmakeLists, 'w') as out:
-            print('''
+            print(f'''
 cmake_minimum_required( VERSION 3.10 )
-set( CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}" ${CMAKE_PREFIX_PATH} )
+set( CMAKE_PREFIX_PATH "${{CMAKE_BINARY_DIR}}" ${{CMAKE_PREFIX_PATH}} )
 project( "Brainvisa" )
-find_package( brainvisa-cmake NO_POLICY_SCOPE )
-include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
+include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )
 ''', file=out)
+
+        components_info = {}
+        for component, directory_version_model in self.components.items():
+                directory, version, version_str, build_model = directory_version_model
+                components_info[component] = dict(
+                    version=str(version),
+                    directory=directory,
+                    build_model=build_model or 'cmake',
+                )
+        with open(os.path.join(self.directory, 'components_info.json'), 'w') as out:
+            json.dump(components_info, out, indent=4)
 
         exe_suffix = ''
         if sys.platform == 'win32':
@@ -526,7 +551,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         config_dir = cmake_path(self.directory)
 
         for component, build_model \
-                in six.iteritems(self.buildModelPerComponent):
+                in self.buildModelPerComponent.items():
             build_model.configure()
 
         # set bv_maker path, so that cmake finds its modules
@@ -607,9 +632,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
             print('=== now configuring all other projects ===')
             # run with this local bv-cmake environment
             system(cwd=self.directory,
-                   *( [os.path.join(self.directory, 'bin',
-                                    'bv_env_host%s' % exe_suffix)]
-                     + command_base
+                   *(command_base
                      + command_options
                      + cross_compiling_options
                      + ["-DBRAINVISA_CMAKE_BUILD_TYPE=no-brainvisa-cmake"]
@@ -790,7 +813,7 @@ include( "${brainvisa-cmake_DIR}/brainvisa-compilation.cmake" )
         self.process_configuration_lines()
         print('Build directory: "' + self.directory + '"')
         for component, directory_version_model \
-                in six.iteritems(self.components):
+                in self.components.items():
             directory, selected_version, version, build_model \
                 = directory_version_model
             print('  %s (%s) <- %s' % (component, version, directory))
@@ -894,8 +917,8 @@ def copy_brainvisa_cmake(installDir):
         samefile = sourceDir == installDir
     if samefile:
         return
-    import brainvisa.maker
-    with open(os.path.join(os.path.dirname(brainvisa.maker.__file__),
+    import brainvisa_cmake
+    with open(os.path.join(os.path.dirname(brainvisa_cmake.__file__),
                            'installed_files.txt')) as installed_f:
         for f in installed_f:
             p, f = os.path.split(f.strip())
@@ -957,7 +980,7 @@ def run_and_log_tests(cwd=None, env=None, options=None, projects=None, timeout=N
     logs = {}
 
     if timeout is None:
-        timeout = brainvisa.maker.configuration.default_subprocess_timeout
+        timeout = brainvisa_cmake.configuration.default_subprocess_timeout
 
     for label in labels:
         if projects is not None and label not in projects:
@@ -1001,7 +1024,7 @@ def run_and_log_testref(cwd=None, env=None, options=None, timeout=None,
     logs = {}
 
     if timeout is None:
-        timeout = brainvisa.maker.configuration.default_subprocess_timeout
+        timeout = brainvisa_cmake.configuration.default_subprocess_timeout
 
     logfile = tempfile.mkstemp(prefix='bv_testref', suffix='.log')
     os.close(logfile[0])
@@ -1013,7 +1036,7 @@ def run_and_log_testref(cwd=None, env=None, options=None, timeout=None,
     except Exception as e:
         if hasattr(e, 'output'):
             with open(logfile[1], 'w') as f:
-                f.write(six.ensure_text(e.output))
+                f.write(str(e.output))
             if print_output:
                 print(e.output)
         logitem = {}

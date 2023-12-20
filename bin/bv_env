@@ -1,0 +1,98 @@
+#!/bin/env python3
+
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+modified = {}
+path = os.environ.get("PATH", [])
+if path:
+    path = path.split(":")
+ld_library_path = os.environ.get("LD_LIBRARY_PATH", [])
+if ld_library_path:
+    ld_library_path = ld_library_path.split(":")
+python_path = os.environ.get("PYTHONPATH", [])
+if python_path:
+    python_path = python_path.split(":")
+
+casa_build = None
+python_dir = 'python'
+
+# Look for main casa-distro directory relatively to this file. It can be
+# either a container directory (typically /casa) or a Conda directory. 
+# Relatively to this directory, this script sources can be in the 
+# following sub-directories:
+#   - src/brainvisa-cmake/bin/bv_env
+#   - src/development/brainvisa-cmake/{branch}/bin/bv_env
+#   - bin/bv_env
+brainvisa_cmake_src = Path(os.path.realpath(__file__)).parent.parent
+environment_json = None
+for casa in (
+    Path('/casa'),
+    brainvisa_cmake_src.parent.parent,
+    brainvisa_cmake_src.parent.parent.parent.parent,
+    brainvisa_cmake_src):
+    host = ''
+    if (casa / "conf" / "bv_maker.cfg").exists():
+        modified["BRAINVISA_BVMAKER_CFG"] = f"{casa}/conf/bv_maker.cfg"
+        if 'CONDA_PREFIX' in os.environ:
+            # This is a conda-based development environment
+            modified["CMAKE_LIBRARY_PATH"] = f"{os.environ['CONDA_PREFIX']}/lib:{os.environ['CONDA_PREFIX']}/x86_64-conda-linux-gnu/sysroot/usr/lib64"
+            python_dir = f'lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages'
+        environment_json = casa / "conf" / "environment.json"
+    elif (casa / "host" / "conf" / "bv_maker.cfg").exists():
+        modified["BRAINVISA_BVMAKER_CFG"] = f"{casa}/host/conf/bv_maker.cfg"
+        host = 'host/'
+        environment_json = casa / "host" / "conf" / "environment.json"
+    if "BRAINVISA_BVMAKER_CFG" in modified:
+        modified["CASA"] = str(casa)
+        modified["CASA_CONF"] = f"{casa}/{host}conf"
+        modified["CASA_SRC"] = f"{casa}/{host}src"
+        casa_build = f"{casa}/{host}build"
+        modified["CASA_BUILD"] = casa_build
+        modified["CASA_INSTALL"] = f"{casa}/{host}install"
+        modified["CASA_TEST"] = f"{casa}/{host}test"
+        modified["BRAINVISA_INSTALL_PREFIX"] = f"{modified['CASA_INSTALL']}"
+        break
+else:
+    casa_build = os.environ.get("CASA_BUILD")
+
+if environment_json and environment_json.exists():
+    with open(environment_json) as f:
+        env = json.load(f)
+    modified.update(env)
+
+if casa_build:
+    modified.setdefault("PATH", path).insert(0, f"{casa_build}/bin")
+    modified.setdefault("LD_LIBRARY_PATH", ld_library_path).insert(0, f"{casa_build}/lib")
+    modified.setdefault("PYTHONPATH", python_path).insert(0, f"{casa_build}/{python_dir}")
+
+if brainvisa_cmake_src:
+    # Add brainvisa-cmake sources directory first in paths to make it useable immediately
+    # (i.e. without the need to run it once).
+    bin = f"{brainvisa_cmake_src}/bin"
+    new_path = modified.get("PATH", path)
+    if bin in new_path:
+        new_path.remove(bin)
+    new_path.insert(0, bin)
+    modified["PATH"] = new_path
+
+    python = f"{brainvisa_cmake_src}/python"
+    new_python_path = modified.get("PYTHONPATH", python_path)
+    if python in new_python_path:
+        new_python_path.remove(python)
+    new_python_path.insert(0, python)
+    modified["PYTHONPATH"] = new_python_path
+
+for n, v in modified.items():
+    if not isinstance(v, str):
+        v = ":".join(v)
+    if len(sys.argv) <= 1:
+        print(f'export BRAINVISA_UNENV_{n}="{os.environ.get(n, "")}"')
+        print(f'export {n}="{v}"')
+    os.environ[n] = v
+
+if len(sys.argv) > 1:
+    sys.exit(subprocess.run(sys.argv[1:], env=os.environ).returncode)

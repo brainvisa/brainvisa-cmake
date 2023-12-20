@@ -1,32 +1,10 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
-
 import os
-import sys
-
-# groups:
-# core: non-applicatice open access sources (aims, anatomist, axon, capsul,
-#       soma-base, soma-workflow, populse-db, brainvisa-cmake, casa-distro...)
-# opensource: obsolete
-# anatomist: projects needed for anatomist (aims, soma-io and dependencies)
-# brainvisa: public brainvisa distro (includes some closed-source projects!)
-# bvdev: same as brainvisa but excludes restricted access projects
-#        (such as brainrat-private)
-# standard: most useful projects. Includes internal, non-open projects,
-#           but not restricted ones (such as brainrat-private)
-#           actually bvdev + morphologist-baby.
-# cea: CEA (Neurospin/MirCen/SHFJ) distro including internal projects
-# cati_platform: standard + CATI projects
-# all: all projects except those really not useful
-
 
 components_definition = [
     ('development', {
         'components': [
             ['brainvisa-cmake', {
-                'groups': ['all', 'core', 'anatomist', 'opensource',
-                           'brainvisa', 'bvdev', 'standard', 'cea',
-                           'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:master','development/brainvisa-cmake/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:master','development/brainvisa-cmake/master'),
@@ -35,9 +13,6 @@ components_definition = [
                 },
             }],
             ['casa-distro', {
-                'groups': ['all', 'core', 'anatomist', 'opensource',
-                           'brainvisa', 'bvdev', 'standard', 'cea',
-                           'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/casa-distro.git branch:master','development/casa-distro/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/casa-distro.git branch:master','development/casa-distro/master'),
@@ -51,7 +26,6 @@ components_definition = [
     ('communication', {
         'components': [
             ['web', {
-                'groups': ['all'],
                 'branches': {
                     'trunk': ('git https://bioproj.extra.cea.fr/git/brainvisa-commu/web.git branch:integration','communication/web/trunk'),
                     'bug_fix': ('git https://bioproj.extra.cea.fr/git/brainvisa-commu/web.git branch:master','communication/web/master'),
@@ -64,9 +38,6 @@ components_definition = [
     ('brainvisa-share', {
         'components': [
             ['brainvisa-share', {
-                'groups': ['all', 'core', 'anatomist', 'opensource',
-                           'brainvisa', 'bvdev', 'standard', 'cea',
-                           'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/brainvisa-share.git branch:master','brainvisa-share/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/brainvisa-share.git branch:master','brainvisa-share/master'),
@@ -77,12 +48,8 @@ components_definition = [
         ],
     }),
     ('soma', {
-        'description': 'Set of lower-level libraries for neuroimaging processing infrastructure',
         'components': [
             ['soma-base', {
-                'groups': ['all', 'core', 'anatomist', 'opensource',
-                           'brainvisa', 'bvdev', 'standard', 'cea',
-                           'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/populse/soma-base.git branch:master','soma/soma-base/integration'),
                     'bug_fix': ('git https://github.com/populse/soma-base.git branch:master','soma/soma-base/master'),
@@ -91,9 +58,6 @@ components_definition = [
                 },
             }],
             ['soma-io', {
-                'groups': ['all', 'core', 'anatomist', 'opensource',
-                           'brainvisa', 'bvdev', 'standard', 'cea',
-                           'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/soma-io.git branch:master','soma/soma-io/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/soma-io.git branch:master','soma/soma-io/master'),
@@ -102,8 +66,6 @@ components_definition = [
                 },
             }],
             ['soma-workflow', {
-                'groups': ['all', 'core', 'opensource', 'brainvisa', 'bvdev',
-                           'standard', 'cea', 'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/populse/soma-workflow.git branch:master','soma/soma-workflow/integration'),
                     'bug_fix': ('git https://github.com/populse/soma-workflow.git default:master','soma/soma-workflow/master'),
@@ -116,8 +78,6 @@ components_definition = [
     ('populse', {
         'components': [
             ['capsul', {
-                'groups': ['all', 'core', 'opensource', 'brainvisa', 'bvdev',
-                           'standard', 'cea', 'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/populse/capsul.git branch:master','capsul/integration'),
                     'bug_fix': ('git https://github.com/populse/capsul.git default:master','capsul/master'),
@@ -127,8 +87,6 @@ components_definition = [
                 'build_model': 'pure_python',
             }],
             ['populse-db', {
-                'groups': ['all', 'core', 'opensource', 'brainvisa', 'bvdev',
-                           'standard', 'cea', 'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/populse/populse_db.git default:master','populse/populse_db/integration'),
                     'bug_fix': ('git https://github.com/populse/populse_db.git default:master','populse/populse_db/master'),
@@ -140,12 +98,8 @@ components_definition = [
         ],
     }),
     ('aims', {
-        'description': '3D/4D neuroimaging data manipulation and processing library and commands. Includes C++ libraries, command lines, and a Python API.',
         'components': [
             ['aims-free', {
-                'groups': ['all', 'core', 'anatomist', 'opensource',
-                           'brainvisa', 'bvdev', 'standard', 'cea',
-                           'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/aims-free.git branch:master','aims/aims-free/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/aims-free.git branch:master','aims/aims-free/master'),
@@ -154,9 +108,6 @@ components_definition = [
                 },
             }],
             ['aims-gpl', {
-                'groups': ['all', 'core', 'anatomist', 'opensource',
-                           'brainvisa', 'bvdev', 'standard', 'cea',
-                           'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/aims-gpl.git branch:master','aims/aims-gpl/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/aims-gpl.git branch:master','aims/aims-gpl/master'),
@@ -165,9 +116,6 @@ components_definition = [
                 },
             }],
             ['aims-til', {
-                'groups': ['all', 'core', 'anatomist', 'opensource',
-                           'brainvisa', 'bvdev', 'standard', 'cea',
-                           'cati_platform'],
                 'branches': {
                     '5.0': ('git https://github.com/brainvisa/aims-til.git branch:5.0','aims/aims-til/5.0'),
                 },
@@ -175,12 +123,8 @@ components_definition = [
         ],
     }),
     ('anatomist', {
-        'description': '3D/4D neuroimaging data viewer. Modular and versatile, Anatomist can display any kind of neuroimaging data (3D/4D images, meshes and textures, fiber tracts, and structured sets of objects such as cortical sulci), in an arbitrary number of views. Allows C++ and Python programming, both for plugins add-ons, as well as complete custom graphical applications design.',
         'components': [
             ['anatomist-free', {
-                'groups': ['all', 'core', 'anatomist', 'opensource',
-                           'brainvisa', 'bvdev', 'standard', 'cea',
-                           'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/anatomist-free.git branch:master','anatomist/anatomist-free/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/anatomist-free.git branch:master','anatomist/anatomist-free/master'),
@@ -189,9 +133,6 @@ components_definition = [
                 },
             }],
             ['anatomist-gpl', {
-                'groups': ['all', 'core', 'anatomist', 'opensource',
-                           'brainvisa', 'bvdev', 'standard', 'cea',
-                           'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/anatomist-gpl.git branch:master','anatomist/anatomist-gpl/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/anatomist-gpl.git branch:master','anatomist/anatomist-gpl/master'),
@@ -202,11 +143,11 @@ components_definition = [
         ],
     }),
     ('axon', {
-        'description': 'Axon organizes processing, pipelining, and data management for neuroimaging. It works both as a graphical user interface or batch and programming interfaces, and allows transparent processing distribution on a computing resource.',
         'components': [
             ['axon', {
-                'groups': ['all', 'core', 'opensource', 'brainvisa', 'bvdev',
-                           'standard', 'cea', 'cati_platform'],
+                'about': {
+                    'summary': 'Axon organizes processing, pipelining, and data management for neuroimaging. It works both as a graphical user interface or batch and programming interfaces, and allows transparent processing distribution on a computing resource.',
+                },
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/axon.git branch:master','axon/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/axon.git branch:master','axon/master'),
@@ -217,11 +158,12 @@ components_definition = [
         ],
     }),
     ('brainvisa-spm', {
-        'description': 'Python module and Axon toolbox for SPM.',
+        'packages': ['anatomist'],
         'components': [
             ['brainvisa-spm', {
-                'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
-                           'standard', 'cea', 'cati_platform'],
+                'about': {
+                    'summary': 'Python module and Axon toolbox for SPM.',
+                },
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/brainvisa-spm.git branch:integration','brainvisa-spm/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/brainvisa-spm.git branch:master','brainvisa-spm/master'),
@@ -232,11 +174,11 @@ components_definition = [
         ],
     }),
     ('datamind', {
-        'description': 'Statistics, data mining, machine learning [OBSOLETE].',
         'components': [
             ['datamind', {
-                'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
-                           'standard', 'cea', 'cati_platform'],
+                'about': {
+                    'summary': 'Statistics, data mining, machine learning [OBSOLETE].',
+                },
                 'branches': {
                     '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/datamind/branches/5.0','datamind/5.0'),
                 },
@@ -245,11 +187,11 @@ components_definition = [
     }),
 
     ('highres-cortex', {
-        'description': 'Process 3D images of the cerebral cortex at a sub-millimetre scale',
         'components': [
             ['highres-cortex', {
-                'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
-                           'standard', 'cea', 'cati_platform'],
+                'about': {
+                    'summary': 'Process 3D images of the cerebral cortex at a sub-millimetre scale',
+                },
                 'branches': {
                     'trunk': ('git https://github.com/neurospin/highres-cortex.git branch:master','highres-cortex/integration'),
                     'bug_fix': ('git https://github.com/neurospin/highres-cortex.git default:master','highres-cortex/master'),
@@ -261,11 +203,11 @@ components_definition = [
     }),
 
     ('morphologist', {
-        'description': 'Anatomical MRI (T1) analysis toolbox, featuring cortex and sulci segmentation, and sulci analysis tools, by the <a href="http://lnao.fr">LNAO team</a>.',
         'components': [
             ['morphologist-nonfree', {
-                'groups': ['all', 'brainvisa', 'bvdev', 'standard', 'cea',
-                           'cati_platform'],
+                'about': {
+                    'summary': 'Non open source component of brainvisa-morphologist package',
+                },
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/morphologist-nonfree.git branch:integration','morphologist/morphologist-nonfree/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/morphologist-nonfree.git branch:master','morphologist/morphologist-nonfree/master'),
@@ -274,8 +216,9 @@ components_definition = [
                 },
             }],
             ['morphologist-gpl', {
-                'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
-                           'standard', 'cea', 'cati_platform'],
+                'about': {
+                    'summary': 'GPL licensed component of brainvisa-morphologist package',
+                },
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/morphologist-gpl.git branch:integration','morphologist/morphologist-gpl/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/morphologist-gpl.git branch:master','morphologist/morphologist-gpl/master'),
@@ -284,7 +227,9 @@ components_definition = [
                 },
             }],
             ['morphologist-baby', {
-                'groups': ['all', 'standard', 'cea'],
+                'about': {
+                    'summary': 'Human baby brain analysis component of brainvisa-morphologist package',
+                },
                 'branches': {
                     'trunk': ('git https://bioproj.extra.cea.fr/git/brainvisa-t1mri/morphologist-baby.git branch:integration','morphologist/morphologist-baby/integration'),
                     'bug_fix': ('git https://bioproj.extra.cea.fr/git/brainvisa-t1mri/morphologist-baby.git branch:master','morphologist/morphologist-baby/master'),
@@ -293,20 +238,22 @@ components_definition = [
                 },
             }],
             ['tms', {
-                'groups': ['all'],
                 'branches': {
                 },
             }],
             ['sulci-data', {
-                'groups': [],
+                'about': {
+                    'summary': 'data component of brainvisa-morphologist package',
+                },
                 'branches': {
                     'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-data/trunk','morphologist/sulci-data/trunk'),
                     'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-data/trunk','morphologist/sulci-data/bug_fix'),
                 },
             }],
             ['sulci-nonfree', {
-                'groups': ['all', 'brainvisa', 'bvdev', 'standard', 'cea',
-                           'cati_platform'],
+                'about': {
+                    'summary': 'Initial sulci analysis component of brainvisa-morphologist package',
+                },
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/sulci-nonfree.git branch:integration','morphologist/sulci-nonfree/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/sulci-nonfree.git branch:master','morphologist/sulci-nonfree/master'),
@@ -315,8 +262,9 @@ components_definition = [
                 },
             }],
             ['morphologist-ui', {
-                'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
-                           'standard', 'cea', 'cati_platform'],
+                'about': {
+                    'summary': 'Alternative graphical interface for brainvisa-morphologist package',
+                },
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/morphologist.git branch:master', 'morphologist/morphologist-ui/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/morphologist.git default:master', 'morphologist/morphologist-ui/master'),
@@ -325,8 +273,9 @@ components_definition = [
                 },
             }],
             ['morpho-deepsulci', {
-                'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
-                           'standard', 'cea', 'cati_platform'],
+                'about': {
+                    'summary': 'Deep learnig based sulci analysis component of brainvisa-morphologist package',
+                },
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/morpho-deepsulci.git branch:master', 'morphologist/morpho-deepsulci/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/morpho-deepsulci.git default:master', 'morphologist/morpho-deepsulci/master'),
@@ -337,10 +286,8 @@ components_definition = [
         ],
     }),
     ('brainrat', {
-        'description': 'Ex vivo 3D reconstruction and analysis toolbox, from the <a href="http://www-dsv.cea.fr/dsv/instituts/institut-d-imagerie-biomedicale-i2bm/services/mircen-mircen/unite-cnrs-ura2210-lmn/fiches-thematiques/traitement-et-analyse-d-images-biomedicales-multimodales-du-cerveau-normal-ou-de-modeles-precliniques-de-maladies-cerebrales">BioPICSEL CEA team</a>. Homepage: <a href="http://brainvisa.info/doc/brainrat-gpl/brainrat_man/en/html/index.html">http://brainvisa.info/doc/brainrat-gpl/brainrat_man/en/html/index.html</a>',
         'components': [
             ['brainrat-gpl', {
-                'groups': ['all', 'brainvisa', 'cea'],
                 'branches': {
                     'trunk': ('git https://bioproj.extra.cea.fr/git/brainrat-gpl branch:master', 'brainrat/brainrat-gpl/integration'),
                     'bug_fix': ('git https://bioproj.extra.cea.fr/git/brainrat-gpl branch:master', 'brainrat/brainrat-gpl/master'),
@@ -349,7 +296,6 @@ components_definition = [
                 },
             }],
             ['brainrat-private', {
-                'groups': ['all', 'brainvisa', 'cea'],
                 'branches': {
                     'trunk': ('git https://bioproj.extra.cea.fr/git/brainrat-private branch:master', 'brainrat/brainrat-private/integration'),
                     'bug_fix': ('git https://bioproj.extra.cea.fr/git/brainrat-private branch:master', 'brainrat/brainrat-private/master'),
@@ -358,7 +304,6 @@ components_definition = [
                 },
             }],
             ['bioprocessing', {
-                'groups': ['all', 'cea'],
                 'branches': {
                     'trunk': ('git https://bioproj.extra.cea.fr/git/bioprocessing branch:master', 'brainrat/bioprocessing/integration'),
                     'bug_fix': ('git https://bioproj.extra.cea.fr/git/bioprocessing branch:master', 'brainrat/bioprocessing/master'),
@@ -367,14 +312,12 @@ components_definition = [
                 },
             }],
             ['preclinical-imaging-iam', {
-                'groups': ['all'],
                 'branches': {
                     'trunk': ('git https://bioproj.extra.cea.fr/git/preclinical-imaging-iam branch:master', 'brainrat/preclinical-imaging-iam/integration'),
                     'bug_fix': ('git https://bioproj.extra.cea.fr/git/preclinical-imaging-iam branch:master', 'brainrat/preclinical-imaging-iam/master'),
                 },
             }],
             ['primatologist-gpl', {
-                'groups': ['all', 'brainvisa', 'cea'],
                 'branches': {
                     'trunk': ('git https://bioproj.extra.cea.fr/git/primatologist-gpl branch:master', 'brainrat/primatologist-gpl/integration'),
                     'bug_fix': ('git https://bioproj.extra.cea.fr/git/primatologist-gpl branch:master', 'brainrat/primatologist-gpl/master'),
@@ -383,7 +326,6 @@ components_definition = [
                 },
             }],
             ['3dns-private', {
-                'groups': ['3dns'],
                 'branches': {
                     'trunk': ('git https://bioproj.extra.cea.fr/git/3dns-private branch:master', 'brainrat/3dns-private/integration'),
                     'bug_fix': ('git https://bioproj.extra.cea.fr/git/3dns-private branch:master', 'brainrat/3dns-private/master'),
@@ -396,7 +338,6 @@ components_definition = [
     ('constellation', {
         'components': [
             ['constellation-gpl', {
-                'groups': ['all', 'cea'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/constellation-gpl.git branch:integration','constellation/constellation-gpl/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/constellation-gpl.git branch:master','constellation/constellation-gpl/master'),
@@ -405,7 +346,6 @@ components_definition = [
                 },
             }],
             ['constellation-nonfree', {
-                'groups': ['all', 'cea'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/constellation-nonfree.git branch:integration','constellation/constellation-nonfree/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/constellation-nonfree.git branch:master','constellation/constellation-nonfree/master'),
@@ -416,11 +356,8 @@ components_definition = [
         ],
     }),
     ('cortical_surface', {
-        'description': 'Cortex-based surfacic parameterization and analysis toolbox from the <a href="http://www.lsis.org">LSIS team</a>. Homepage: <a href="http://olivier.coulon.perso.esil.univmed.fr/brainvisa.html">http://olivier.coulon.perso.esil.univmed.fr/brainvisa.html</a>.<br/>Also contains the FreeSurfer toolbox for BrainVisa, by the LNAO team.',
         'components': [
             ['cortical_surface-nonfree', {
-                'groups': ['all', 'brainvisa', 'bvdev', 'standard', 'cea',
-                           'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/cortical_surface-nonfree.git branch:integration','cortical_surface/cortical_surface-nonfree/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/cortical_surface-nonfree.git branch:master','cortical_surface/cortical_surface-nonfree/master'),
@@ -429,8 +366,6 @@ components_definition = [
                 },
             }],
             ['cortical_surface-gpl', {
-                'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
-                           'standard', 'cea', 'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/cortical_surface-gpl.git branch:integration','cortical_surface/cortical_surface-gpl/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/cortical_surface-gpl.git branch:master','cortical_surface/cortical_surface-gpl/master'),
@@ -439,8 +374,6 @@ components_definition = [
                 },
             }],
             ['brainvisa_freesurfer', {
-                'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
-                           'standard', 'cea', 'cati_platform'],
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/brainvisa_freesurfer.git branch:integration','cortical_surface/brainvisa_freesurfer/integration'),
                     'bug_fix': ('git https://github.com/brainvisa/brainvisa_freesurfer.git branch:master','cortical_surface/brainvisa_freesurfer/master'),
@@ -453,7 +386,6 @@ components_definition = [
     ('nuclear_imaging', {
         'components': [
             ['nuclear_imaging-gpl', {
-                'groups': ['all', 'cati_platform'],
                 'branches': {
                     'bug_fix': ('git https://github.com/cati-neuroimaging/nuclear_imaging-gpl.git branch:master','nuclear_imaging/nuclear_imaging-gpl/master'),
                     '5.0': ('git https://github.com/cati-neuroimaging/nuclear_imaging-gpl.git branch:5.0','nuclear_imaging/nuclear_imaging-gpl/5.0'),
@@ -461,7 +393,6 @@ components_definition = [
                 },
             }],
             ['nuclear_imaging-nonfree', {
-                'groups': ['all', 'cati_platform'],
                 'branches': {
                     'bug_fix': ('git https://github.com/cati-neuroimaging/nuclear_imaging-nonfree.git branch:master','nuclear_imaging/nuclear_imaging-nonfree/master'),
                     '5.0': ('git https://github.com/cati-neuroimaging/nuclear_imaging-nonfree.git branch:5.0','nuclear_imaging/nuclear_imaging-nonfree/5.0'),
@@ -473,8 +404,6 @@ components_definition = [
     ('snapbase', {
         'components': [
             ['snapbase', {
-                'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
-                           'standard', 'cea', 'cati_platform'],
                 'branches': {
                     '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/snapbase/branches/5.0','snapbase/5.0'),
                 },
@@ -484,7 +413,6 @@ components_definition = [
     ('catidb', {
         'components': [
             ['catidb-client', {
-                'groups': ['cati_platform'],
                 'branches': {
                     'bug_fix': ('git https://github.com/cati-neuroimaging/catidb-client.git default:main', 'catidb-client'),
                 },
@@ -494,13 +422,11 @@ components_definition = [
     ('sacha', {
         'components': [
             ['sacha-nonfree', {
-                'groups': ['all', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'bug_fix': ('git https://github.com/cati-neuroimaging/sacha-nonfree.git branch:master', 'sacha-nonfree/master'),
                 },
             }],
             ['sacha-gpl', {
-                'groups': ['all', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'bug_fix': ('git https://github.com/cati-neuroimaging/sacha-gpl.git branch:master', 'sacha-gpl/master'),
                 },
@@ -510,13 +436,11 @@ components_definition = [
     ('whasa', {
         'components': [
             ['whasa-nonfree', {
-                'groups': ['all', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'bug_fix': ('git https://github.com/cati-neuroimaging/whasa-nonfree.git branch:master', 'whasa-nonfree/master'),
                 },
             }],
             ['whasa-gpl', { # Experimental branch to propose a new organization
-                'groups': ['all', 'catidb3_all', 'cati_platform'],
                 'branches': {
                     'bug_fix': ('git https://github.com/cati-neuroimaging/whasa-gpl.git branch:master', 'whasa-gpl/master'),
                     },
@@ -526,7 +450,6 @@ components_definition = [
     ('longitudinal_pipelines', {
         'components': [
             ['longitudinal_pipelines', {
-                'groups': ['all', 'cati_platform'],
                 'branches': {
                     'bug_fix': ('git https://github.com/cati-neuroimaging/longitudinal_pipelines.git branch:master',
                               'longitudinal_pipelines/master'),
@@ -541,7 +464,6 @@ components_definition = [
     ('disco', {
         'components': [
             ['disco', {
-                'groups': ['all', 'cea'],
                 'branches': {
                     'trunk': ('git https://bioproj.extra.cea.fr/git/brainvisa-disco branch:master', 'disco/integration'),
                     'bug_fix': ('git https://bioproj.extra.cea.fr/git/brainvisa-disco branch:master', 'disco/master'),
@@ -554,7 +476,6 @@ components_definition = [
     ('qualicati', {
         'components': [
             ['qualicati', {
-                'groups': ['cati_platform'],
                 'branches': {
                     'bug_fix': ('git https://github.com/cati-neuroimaging/qualicati.git default:main', 'qualicati'),
                 },
@@ -565,7 +486,6 @@ components_definition = [
     ('deidentification', {
         'components': [
             ['deidentification', {
-                'groups': ['cati_platform'],
                 'branches': {
                     'bug_fix': ('git https://github.com/cati-neuroimaging/deidentification.git default:master', 'deidentification'),
                 },
@@ -573,10 +493,11 @@ components_definition = [
         ],
     }),
     ('fmri', {
-        'description': 'Functional MRI processing toolboxes.',
+        'about': {
+            'summary': 'Functional MRI processing toolboxes.',
+        },
         'components': [
             ['rsfmri', {
-                'groups': ['all', 'cati_platform'],
                 'branches': {
                     'bug_fix': ('git https://github.com/cati-neuroimaging/rsfmri.git branch:master','rsfmri/master'),
                 },
@@ -585,6 +506,218 @@ components_definition = [
         ],
     }),
 ]
+
+packages_definition = {
+    'brainvisa-base': {
+        'alias': 'base',
+        'about': {
+            'summary': 'Software base infrastructure for BrainVISA tools.',
+            'license': 'GPL',
+        },
+        'packages': {
+            'brainvisa-cmake',
+            'capsul',
+            'casa-distro',
+            'populse-db',
+            'soma-base',
+            'soma-io',
+            'soma-workflow'}
+    },
+
+    'brainvisa-data-processing': {
+        'alias': ['data-processing', 'core'],
+        'about': {
+            'summary': 'Data readers/writers and processing tools in C++ and Python.',
+            'license': 'GPL',
+        },
+        'packages': {
+            'brainvisa-base',
+            'aims-free',
+            'aims-gpl',
+            'axon',
+            'brainvisa-share',
+        },
+    },
+
+    'anatomist': {
+        'about': {
+            'summary': '3D/4D neuroimaging data viewer of the BrainVISA project. Modular and versatile, Anatomist can display any kind of neuroimaging data (3D/4D images, meshes and textures, fiber tracts, and structured sets of objects such as cortical sulci), in an arbitrary number of views. Allows C++ and Python programming, both for plugins add-ons, as well as complete custom graphical applications design.',
+            'license': 'CeCILL',
+        },
+        'packages': {
+            'brainvisa-data-processing',
+            'anatomist-free',
+            'anatomist-gpl'
+        }
+    },
+
+    'brainvisa-disco': {
+        'alias': 'disco',
+        'about': {
+            'summary': 'Neuroimaging method for cross-subject brain alignment.',
+            'license': 'GPL',
+        },
+        'packages': {
+            'anatomist',
+            'brainvisa-spm',
+            'disco',
+        }
+    },
+
+    'brainvisa-freesurfer': {
+        'alias': 'freesurfer',
+        'about': {
+            'summary': 'Links between Freesurfer and BrainVISA.',
+            'license': 'GPL',
+        },
+        'packages': {
+            'anatomist',
+            'brainvisa_freesurfer',
+        }
+    },
+
+    'brainvisa-highres-cortex': {
+        'alias': 'highres-cortex',
+        'about': {
+            'summary': 'Analysis of the laminar structure of the cortex in high resolution MRI.',
+            'license': 'GPL',
+        },
+        'packages': {
+            'anatomist',
+            'highres-cortex',
+        }
+    },
+
+    'morphologist': {
+        'about': {
+            'summary': 'Anatomical MRI (T1) analysis toolbox, featuring cortex and sulci segmentation as well as sulci analysis tools.',
+            'license': 'GPL',
+        },
+        'packages': {
+            'anatomist',
+            'morpho-deepsulci',
+            'morphologist-ui',
+            'morphologist-gpl',
+            'morphologist-nonfree',
+            'sulci-nonfree',
+        }
+    },
+
+    'brainvisa-cortical-surface': {
+        'alias': 'cortical-surface',
+        'about': {
+            'summary': 'BrainVISA toolbox fo cortex-based surfacic parameterization and analysis. Also contains the FreeSurfer toolbox for BrainVisa.',
+            'license': 'GPL'
+        },
+        'packages': {
+            'morphologist',
+            'cortical_surface-gpl',
+            'cortical_surface-nonfree',
+            'brainvisa-freesurfer'
+        }
+    },
+
+    'brainvisa-brainrat': {
+        'about': {
+            'summary': 'Ex vivo 3D reconstruction and analysis toolbox, from the <a href="http://www-dsv.cea.fr/dsv/instituts/institut-d-imagerie-biomedicale-i2bm/services/mircen-mircen/unite-cnrs-ura2210-lmn/fiches-thematiques/traitement-et-analyse-d-images-biomedicales-multimodales-du-cerveau-normal-ou-de-modeles-precliniques-de-maladies-cerebrales">BioPICSEL CEA team</a>. Homepage: <a href="http://brainvisa.info/doc/brainrat-gpl/brainrat_man/en/html/index.html">http://brainvisa.info/doc/brainrat-gpl/brainrat_man/en/html/index.html</a>',
+        },
+        'alias': 'brainrat',
+        'packages': {
+            'anatomist',
+            'brainrat-gpl',
+            'brainrat-private',
+        }
+    },
+
+    'brainvisa-primatologist': {
+        'alias': 'primatologist',
+        'packages': {
+            'anatomist',
+            'primatologist-gpl',
+        }
+    },
+
+    'brainvisa-opensource': {
+        'alias': ['opensource'],
+        'packages': {
+            'anatomist',
+            'brainvisa-cortical-surface',
+            'brainvisa-base',
+            'brainvisa-data-processing',
+            'brainvisa-highres-cortex',
+            'brainvisa-spm',
+            'morphologist',
+        },
+    },
+
+    'brainvisa': {
+        'about': {
+            'home': 'https://brainvisa.info',
+            'license': 'GPL',
+            'summary': 'Neuroimaging software platform for mass data analysis',
+            'about': {
+                'summary': 'BrainVISA provides a complete, modular, infrastructure for neuroimaging software. It helps organizing heterogeneous software and data and provides a common general graphical interface for users. BrainVISA is thus a set of tools rather than a single software.'
+            },
+        },
+        'packages': {
+            'brainvisa-opensource',
+            'brainvisa-brainrat',
+            'brainvisa-disco',
+            'brainvisa-primatologist',
+        },
+    },
+    
+    'brainvisa-constellation': {
+        'alias': 'constellation',
+        'packages': {
+            'morphologist',
+            'constellation-gpl',
+            'constellation-nonfree',
+        }
+    },
+
+    'brainvisa-standard': {
+        'alias': 'standard',
+        'packages': {
+            'brainvisa-opensource',
+            'morphologist-baby'
+        },
+    },
+
+    'brainvisa-cea': {
+        'alias': 'cea',
+        'packages': {
+            'brainvisa',
+            'brainvisa-constellation',
+            'brainvisa-cortical-surface',
+            'bioprocessing',
+        }
+    },
+
+    'brainvisa-cati': {
+        'alias': ['cati', 'cati_platform'],
+        'packages': {
+            'brainvisa-standard',
+            'deidentification',
+            'longitudinal_pipelines',
+            'nuclear_imaging-gpl',
+            'nuclear_imaging-nonfree',
+            'qualicati',
+            'rsfmri',
+            'sacha-gpl',
+            'sacha-nonfree',
+            'snapbase',
+            'whasa-gpl',
+            'whasa-nonfree'
+        },
+    },
+
+    'brainvisa-3dns': {
+        'alias': '3dns',
+        'packages': {'3dns-private'},
+    },
+}
+
 
 customize_components_definition = [os.path.expanduser('~/.brainvisa/components_definition.py')]
 if 'BV_MAKER_BUILD' in os.environ:

@@ -341,7 +341,7 @@ def find_project_info( directory ):
            or None when no file was found
   """
   project_info_python_patterns = (
-      os.path.join( directory, 'pyproject.toml' ),
+    #   os.path.join( directory, 'pyproject.toml' ),
       os.path.join( directory,'project_info.cmake' ),
       os.path.join( directory,'cmake', 'project_info.cmake' ),
       os.path.join( directory, 'python', '*', 'info.py' ),

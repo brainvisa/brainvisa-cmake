@@ -221,10 +221,10 @@ endfunction()
 
 function(BRAINVISA_READ_PROJECT_INFO directory)
     # Check pyproject.toml in priority
-    foreach(glob "${directory}/pyproject.toml" "${directory}/*/pyproject.toml" "${directory}/python/*/pyproject.toml")
-      file(GLOB pyproject "${glob}")
-      break()
-    endforeach()
+    # foreach(glob "${directory}/pyproject.toml" "${directory}/*/pyproject.toml" "${directory}/python/*/pyproject.toml")
+    #   file(GLOB pyproject "${glob}")
+    #   break()
+    # endforeach()
 
     if(pyproject)
       if( PYTHON_EXECUTABLE )

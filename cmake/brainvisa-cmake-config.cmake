@@ -221,10 +221,10 @@ endfunction()
 
 function(BRAINVISA_READ_PROJECT_INFO directory)
     # Check pyproject.toml in priority
-    # foreach(glob "${directory}/pyproject.toml" "${directory}/*/pyproject.toml" "${directory}/python/*/pyproject.toml")
-    #   file(GLOB pyproject "${glob}")
-    #   break()
-    # endforeach()
+    foreach(glob "${directory}/pyproject.toml" "${directory}/*/pyproject.toml" "${directory}/python/*/pyproject.toml")
+      file(GLOB pyproject "${glob}")
+      break()
+    endforeach()
 
     if(pyproject)
       if( PYTHON_EXECUTABLE )
@@ -1106,18 +1106,6 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
         # Copy the source file in build directory
         set( _fileBuild "${CMAKE_BINARY_DIR}/${_destDir}/${_file}" )
         get_filename_component( _path "${_fileBuild}" PATH )
-        # Byte compiled python code (*.pyc and *.pyo)
-        if( _py3_suffix )
-            # python3 produced byte-compiled code in a different location
-            get_filename_component( _base "${_fileBuild}" NAME_WE )
-            set( _pyc
-                  "${_path}/__pycache__/${_base}.${_py3_suffix}.pyc" )
-            set( _pyo
-                  "${_path}/__pycache__/${_base}.${_py3_suffix}.opt-1.pyc" )
-        else()
-            set( _pyc "${_fileBuild}c" )
-            set( _pyo "${_fileBuild}o" )
-        endif()
 
         if( UNIX OR APPLE OR CMAKE_CROSSCOMPILING)
             # Make a symlink instead of copying Python source allows to
@@ -1137,75 +1125,10 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
                                 DEPENDS "${_pythonDirectory}/${_file}"
                                 VERBATIM )
         endif()
-
-        # Byte compile python code (creating *.pyc and *.pyo)
-        add_custom_command( OUTPUT "${_pyc}"
-                            COMMAND "sh" "-c" "\"${PYTHON_HOST_EXECUTABLE}\" -c \"import py_compile;py_compile.main()\" \"${_fileBuild}\" || echo .pyc generation failed"
-                            DEPENDS "${_fileBuild}"
-                            VERBATIM )
-        add_custom_command( OUTPUT "${_pyo}"
-                            COMMAND "sh" "-c" "\"${PYTHON_HOST_EXECUTABLE}\" -O -c \"import py_compile;py_compile.main()\" \"${_fileBuild}\" || echo .pyc generation failed"
-                            DEPENDS "${_fileBuild}"
-                            VERBATIM )
-
-        # Install source file and byte compiled files
-        get_filename_component( _path "${_file}" PATH )
-        if( _py3_suffix )
-          BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}"
-                            DESTINATION "${_destDir}/${_path}"
-                            COMPONENT ${_component} )
-          BRAINVISA_INSTALL( FILES "${_pyc}" "${_pyo}"
-                            DESTINATION "${_destDir}/${_path}/__pycache__"
-                            OPTIONAL
-                            COMPONENT ${_component} )
-        else()
-          BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}" "${_pyc}" "${_pyo}"
-                            DESTINATION "${_destDir}/${_path}"
-                            COMPONENT ${_component} )
-        endif()
-        set( _targetDepends ${_targetDepends} "${_fileBuild}" "${_pyc}" "${_pyo}" )
-
     else()
-        # install_only
-        get_filename_component( _path "${_file}" PATH )
-        if( _py3_suffix )
-            # python3 produced byte-compiled code in a different location
-            get_filename_component( _base "${_file}" NAME_WE )
-            set( _pyc
-                  "${_pythonDirectory}/${_path}/__pycache__/${_base}.${_py3_suffix}.pyc" )
-            set( _pyo
-                  "${_pythonDirectory}/${_path}/__pycache__/${_base}.${_py3_suffix}.opt-1.pyc" )
-        else()
-            set( _pyc "${_pythonDirectory}/${_file}c" )
-            set( _pyo "${_pythonDirectory}/${_file}o" )
-        endif()
-
-        # Byte compile python code (creating *.pyc and *.pyo) in the install
-        # dir
-        add_custom_command( OUTPUT "${_pyc}"
-                            COMMAND "sh" "-c" "\"${PYTHON_HOST_EXECUTABLE}\" \"-c\" \"import py_compile; py_compile.main()\" \"${_pythonDirectory}/${_file}\" || echo .pyc generation failed"
-                            DEPENDS "${_pythonDirectory}/${_file}"
-                            VERBATIM )
-        add_custom_command( OUTPUT "${_pyo}"
-                            COMMAND "sh" "-c" "\"${PYTHON_HOST_EXECUTABLE}\" -O -c \"import py_compile;py_compile.main()\" \"${_pythonDirectory}/${_file}\" || echo .pyo generation failed"
-                            DEPENDS "${_pythonDirectory}/${_file}"
-                            VERBATIM )
-
-        # Install source file and byte compiled files
-        if( _py3_suffix )
-            BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}"
-                               DESTINATION ${_destDir}/${_path}
-                               COMPONENT ${_component} )
-            BRAINVISA_INSTALL( FILES "${_pyc}" "${_pyo}"
-                              DESTINATION "${_destDir}/${_path}/__pycache__"
-                              OPTIONAL
-                              COMPONENT ${_component} )
-        else()
-            BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}" "${_pyc}" "${_pyo}"
-                              DESTINATION "${_destDir}/${_path}"
-                              COMPONENT ${_component} )
-        endif()
-        set( _targetDepends ${_targetDepends} "${_pyc}" "${_pyo}" )
+      BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}"
+                          DESTINATION ${_destDir}/${_path}
+                          COMPONENT ${_component} )
 
     endif()
   endforeach(_file ${_pythonSources})

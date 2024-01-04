@@ -206,10 +206,12 @@ if( BRAINVISA_BVMAKER )
   endforeach()
   
   # define an install rule for the python symlink
-  add_custom_target( install-brainvisa-cmake-python-symlink
-                     COMMAND if [ -n "$(BRAINVISA_INSTALL_PREFIX)" ] \; then "${CMAKE_COMMAND}" "-E" "make_directory" "$(BRAINVISA_INSTALL_PREFIX)/bin" \; else "${CMAKE_COMMAND}" "-E" "make_directory" "${CMAKE_INSTALL_PREFIX}/bin" \; fi
-                     COMMAND if [ -n "$(BRAINVISA_INSTALL_PREFIX)" ] \; then if [ \! -e "$(BRAINVISA_INSTALL_PREFIX)/bin/python" ]; then "${CMAKE_COMMAND}" "-E" "create_symlink" "${PYTHON_EXECUTABLE}" "$(BRAINVISA_INSTALL_PREFIX)/bin/python" \; fi else if [ \! -e "$(CMAKE_INSTALL_PREFIX)/bin/python" ]; then "${CMAKE_COMMAND}" "-E" "create_symlink" "${PYTHON_EXECUTABLE}" "${CMAKE_INSTALL_PREFIX}/bin/python" \; fi fi )
-  add_dependencies( install-brainvisa-cmake install-brainvisa-cmake-python-symlink )
+  if( NOT DEFINED CONDA )
+    add_custom_target( install-brainvisa-cmake-python-symlink
+                       COMMAND if [ -n "$(BRAINVISA_INSTALL_PREFIX)" ] \; then "${CMAKE_COMMAND}" "-E" "make_directory" "$(BRAINVISA_INSTALL_PREFIX)/bin" \; else "${CMAKE_COMMAND}" "-E" "make_directory" "${CMAKE_INSTALL_PREFIX}/bin" \; fi
+                       COMMAND if [ -n "$(BRAINVISA_INSTALL_PREFIX)" ] \; then if [ \! -e "$(BRAINVISA_INSTALL_PREFIX)/bin/python" ]; then "${CMAKE_COMMAND}" "-E" "create_symlink" "${PYTHON_EXECUTABLE}" "$(BRAINVISA_INSTALL_PREFIX)/bin/python" \; fi else if [ \! -e "$(CMAKE_INSTALL_PREFIX)/bin/python" ]; then "${CMAKE_COMMAND}" "-E" "create_symlink" "${PYTHON_EXECUTABLE}" "${CMAKE_INSTALL_PREFIX}/bin/python" \; fi fi )
+    add_dependencies( install-brainvisa-cmake install-brainvisa-cmake-python-symlink )
+  endif()
 
 endif()
 

@@ -323,6 +323,7 @@ def project_info_to_cmake(path):
            f"BRAINVISA_PACKAGE_VERSION_PATCH;{version[2]};"
            f"BRAINVISA_BUILD_MODEL;{build_model}")
 
+
 def find_project_info( directory ):
   """Find the project_info.cmake or the info.py file
      contained in a directory.

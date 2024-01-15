@@ -43,9 +43,8 @@ For Linux and MacOS:
 For Windows:
 ############
 
-Creating a developpment environment is not supported under Windows. Building Windows version of BrainVISA software is done on Linux using cross-compilation.
-
-You can now use :code:`/tmp/brainvisa-cmake/bin/bv_env_host bv_maker` to setup your environement (**you must edit the configuration file first**). You will always have a copy of brainvisa-cmake installed in a build directory at configuration time. Therefore, you may delete this temporary brainvisa-cmake version and use the one in your build directory.
+Compiling on Windows or cross-compiling is not supported any longer. We had to drop support for if, not for pure technical reasons but because our team is too small to support it and the additional complexity was too heavy to maintain.
+To use or build BrainVisa on Windows now, please use WSL2 and a Linux build, or a virtual machine running Linux.
 
 
 3) Edit bv_maker configuration file
@@ -88,7 +87,7 @@ Typical configuration:
 
 .. code-block:: bash
 
-    /tmp/brainvisa-cmake/bin/bv_env_host bv_maker sources
+    /tmp/brainvisa-cmake/bin/bv_env bv_maker sources
 
 
 5) Configure build directories with CMake
@@ -96,7 +95,7 @@ Typical configuration:
 
 .. code-block:: bash
 
-    /tmp/brainvisa-cmake/bin/bv_env_host bv_maker configure
+    /tmp/brainvisa-cmake/bin/bv_env bv_maker configure
 
 (look at the section `In case of problems`_ for troubleshooting)
 
@@ -108,7 +107,7 @@ After this step, you have a version of ``brainvisa-cmake`` installed in each bui
 
 .. code-block:: bash
 
-    /tmp/brainvisa-cmake/bin/bv_env_host bv_maker build
+    /tmp/brainvisa-cmake/bin/bv_env bv_maker build
 
 
 7) Remove directory created in step 2

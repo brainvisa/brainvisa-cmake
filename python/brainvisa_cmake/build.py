@@ -426,7 +426,16 @@ if len(old_file) == 0:
         bin = pathlib.Path(self.directory) / 'bin'
         bin.mkdir(exist_ok=True)
         
-        brainvisa_cmake_root = pathlib.Path(__file__).parent.parent.parent
+        brainvisa_cmake_root = None
+        src = os.environ.get('CASA_SRC')
+        if src:
+            src = pathlib.Path(src)
+            for i in [src / 'brainvisa-cmake'] + [p for p in (src / 'development' / 'brainvisa-cmake').glob('*')]:
+                if i.exists() and i.is_dir():
+                    brainvisa_cmake_root = i
+                    break
+        if not brainvisa_cmake_root:
+            brainvisa_cmake_root = pathlib.Path(__file__).parent.parent.parent
 
         for f in ('bv_env', 'bv_env.sh', 'bv_unenv', 'bv_unenv.sh'):
             path = bin / f

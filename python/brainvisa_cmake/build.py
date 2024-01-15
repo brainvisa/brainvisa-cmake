@@ -429,11 +429,14 @@ if len(old_file) == 0:
         brainvisa_cmake_root = None
         src = os.environ.get('CASA_SRC')
         if src:
-            src = pathlib.Path(src)
-            for i in [src / 'brainvisa-cmake'] + [p for p in (src / 'development' / 'brainvisa-cmake').glob('*')]:
-                if i.exists() and i.is_dir():
-                    brainvisa_cmake_root = i
-                    break
+            brainvisa_cmake_root = pathlib.Path(__file__).parent.parent.parent
+            if not brainvisa_cmake_root.exists() \
+                    or not str(brainvisa_cmake_root).startswith(str(src)):
+                src = pathlib.Path(src)
+                for i in [src / 'brainvisa-cmake'] + [p for p in (src / 'development' / 'brainvisa-cmake').glob('*')]:
+                    if i.exists() and i.is_dir():
+                        brainvisa_cmake_root = i
+                        break
         if not brainvisa_cmake_root:
             brainvisa_cmake_root = pathlib.Path(__file__).parent.parent.parent
 

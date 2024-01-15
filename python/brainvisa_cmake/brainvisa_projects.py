@@ -308,6 +308,7 @@ def parse_project_info_toml(
 
   return ( project, component, version, build_model )
 
+
 def project_info_to_cmake(path):
    """Return a string containing a CMake compatible list of pairs of variable name
       and value."""

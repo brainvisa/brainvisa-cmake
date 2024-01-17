@@ -698,6 +698,7 @@ packages_definition = {
         'alias': ['cati', 'cati_platform'],
         'packages': {
             'brainvisa-standard',
+            'catidb-client',
             'deidentification',
             'longitudinal_pipelines',
             'nuclear_imaging-gpl',

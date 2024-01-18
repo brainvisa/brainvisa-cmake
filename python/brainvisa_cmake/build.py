@@ -104,7 +104,8 @@ class ComponentsConfigParser(brainvisa_cmake.configuration.DirectorySection):
                         if dir_version:
                             dir, selected_version, component_version, \
                                build_model = dir_version
-                            if fnmatchcase(selected_version, versionPattern):
+                            if fnmatchcase(str(selected_version),
+                                           versionPattern):
                                 if self.configuration.verbose:
                                     print('    removing component %s from %s'
                                           % (component, dir))

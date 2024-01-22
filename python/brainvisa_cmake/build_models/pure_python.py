@@ -64,10 +64,10 @@ if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/scripts" )
                               ${PROJECT_NAME} )
 endif()
 
-if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/doc/source" )
+if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/doc/source/conf.py" )
     BRAINVISA_GENERATE_SPHINX_DOC( "${BRAINVISA_REAL_SOURCE_DIR}/doc/source"
         "share/doc/%(component_name)s-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}" )
-elseif( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/docs/source" )
+elseif( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/docs/source/conf.py" )
     BRAINVISA_GENERATE_SPHINX_DOC( "${BRAINVISA_REAL_SOURCE_DIR}/docs/source"
         "share/doc/%(component_name)s-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}" )
 endif()

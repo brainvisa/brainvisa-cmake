@@ -21,11 +21,9 @@ set(OPENGL_gl_LIBRARY "/usr/lib/x86_64-linux-gnu/libGL.so" CACHE PATH "")
 set(OPENGL_glu_LIBRARY "/usr/lib/x86_64-linux-gnu/libGLU.so" CACHE PATH "")
 set(OPENGL_glx_LIBRARY "/usr/lib/x86_64-linux-gnu/libGLX.so" CACHE PATH "")
 set(OPENGL_opengl_LIBRARY "/usr/lib/x86_64-linux-gnu/libOpenGL.so" CACHE PATH "")
-# set(OPENGL_FIX_LIBRARY_DIRECTORIES "${CONDA}/lib" CACHE INTERNAL "")
-# set(OPENGL_FIX_LIBRARIES 
-#     "X11" "GL" "GLdispatch" "GLX" 
-#     "/usr/lib/x86_64-linux-gnu/librt.so.1"
-#     "/usr/lib/x86_64-linux-gnu/libresolv.so.2"  CACHE INTERNAL "")
+set(OPENGL_FIX_LIBRARY_DIRECTORIES "/usr/lib/x86_64-linux-gnu" CACHE INTERNAL "")
+set(OPENGL_FIX_LIBRARIES 
+    "X11" "GL" "GLdispatch" "GLX" "xcb" "Xau" "Xdmcp" "bsd" "rt"  CACHE INTERNAL "")
 execute_process(COMMAND python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"
     OUTPUT_STRIP_TRAILING_WHITESPACE
     OUTPUT_VARIABLE python_version

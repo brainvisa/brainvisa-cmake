@@ -224,37 +224,17 @@ class BuildDirectory(ComponentsConfigParser,
     _validOptions.update(_path_variables)
 
     sitecustomize_content = '''import os, sys
-
+    
+# Execute Python modules and *.pth files located in this directory
 for i in os.listdir(os.path.dirname(__file__)):
     if i.endswith('.py') and i != '__init__.py':
         module = i[:-3]
         __import__('sitecustomize.%s' % module)
-
-# seek for other sitecustomize modules in path
-try:
-    i = sys.path.index(os.path.dirname(os.path.dirname(__file__)))
-except ValueError:
-    i = -1
-if 'old_file' not in globals():
-  old_file = []
-old_file.append(__file__)
-for p in sys.path[i+1:]:
-    if os.path.isdir(p):
-        filename = os.path.join(p, 'sitecustomize.py')
-        if not os.path.exists(filename):
-            filename = os.path.join(p, 'sitecustomize', '__init__.py')
-        if os.path.exists(filename):
-            __file__ = filename
-            with open(filename) as f:
-                file_contents = f.read()
-            exec(compile(file_contents, filename, 'exec'))
-__file__ = old_file.pop()
-for v in ('filename', 'p', 'i'):
-    if v in globals():
-        del globals()[v]
-del v
-if len(old_file) == 0:
-    del old_file
+    if i.endswith('.pth') and i != 'bv_maker_pure_python.pth':
+        n = os.path.join(os.path.dirname(__file__), i)
+        with open(n) as f:
+            file_contents = f.read()
+        exec(compile(file_contents, n, 'exec'))
 '''
 
     def __init__(self, directory, configuration):

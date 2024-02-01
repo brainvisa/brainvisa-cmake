@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
-
+import glob
 import os
 import sys
 import os.path as osp
 import distutils.spawn
-import string
+import shutil
 import subprocess
 import shlex
+import tempfile
 import toml
 
 from brainvisa_cmake.brainvisa_projects import read_project_info, find_project_info
@@ -148,19 +149,52 @@ class PurePythonComponentBuild(object):
         self.args = args
 
     def configure(self):
+        if "CONDA_PREFIX" in os.environ:
+            python_directory = f"lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages"
+        else:
+            python_directory = "python"
+        sitecustomize_dir = osp.join(
+            self.build_directory.directory, python_directory, "sitecustomize"
+        )
+        if not osp.exists(sitecustomize_dir):
+            os.makedirs(sitecustomize_dir)
         if osp.exists(osp.join(self.source_directory, "pyproject.toml")):
-            subprocess.call(
-                [
-                    sys.executable,
-                    "-m",
-                    "pip",
-                    "--disable-pip-version-check",
-                    "install",
-                    "--no-deps",
-                    "-e",
-                    self.source_directory,
-                ]
-            )
+            tmp = tempfile.mkdtemp()
+            try:
+                # The following command makes it possible to load a module
+                # from its source code without changing Python path. It 
+                # generate a *.pth file and some Python modules. The *.pth
+                # file must be executed and it used the Python module to
+                # make the import possible.
+                # After calling the command with output a temporary directory,
+                # the *.pth file is copied in the sitecustomize directory and
+                # other files are copied in the python directory.
+                subprocess.call(
+                    [
+                        sys.executable,
+                        "-m",
+                        "pip",
+                        "--disable-pip-version-check",
+                        "install",
+                        "--no-deps",
+                        "--prefix", tmp,
+                        "-e",
+                        self.source_directory,
+                    ]
+                )
+                dist_packages = glob.glob(osp.join(tmp, 'local', 'lib', 'python*', 'dist-packages'))[0]
+                for i in os.listdir(dist_packages):
+                    s = osp.join(dist_packages, i)
+                    if i.endswith('.pth'):
+                        d = osp.join(sitecustomize_dir, i)
+                    else:
+                        d = osp.join(self.build_directory.directory, python_directory, i)
+                    if osp.isdir(s):
+                        shutil.copytree(s, d, dirs_exist_ok=True)
+                    else:
+                        shutil.copy2(s, d)
+            finally:
+                shutil.rmtree(tmp)
         else:
             # Create a bv_maker_pure_python.py module in
             # <build>/python/sitecustomize (which is created by bv_maker). Modules
@@ -168,15 +202,6 @@ class PurePythonComponentBuild(object):
             # buld tree, they are not installed in packages). This module adds the
             # content of bv_maker_pure_python.pth file to sys.path, just before
             # the path <build>/python
-            if "CONDA_PREFIX" in os.environ:
-                python_directory = f"lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages"
-            else:
-                python_directory = "python"
-            sitecustomize_dir = osp.join(
-                self.build_directory.directory, python_directory, "sitecustomize"
-            )
-            if not osp.exists(sitecustomize_dir):
-                os.makedirs(sitecustomize_dir)
             module = osp.join(sitecustomize_dir, "bv_maker_pure_python.py")
             if osp.exists(module):
                 with open(module, "r") as f:

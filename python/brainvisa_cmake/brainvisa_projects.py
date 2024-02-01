@@ -294,6 +294,11 @@ def parse_project_info_toml(
   with open(path) as f:
       pyproject = toml.load(f)
   project = component = pyproject['project']['name']
+  # populse-db changed its name from populse_db. This trick
+  # is the only way found to make brainvisa-cmake compatible
+  # with both old and new name.
+  if component == 'populse_db':
+     project = component = 'populse-db'
   v = pyproject['project']['version'].split('.', 3)
   if len(version) > 0:
     version[0] = v[0]

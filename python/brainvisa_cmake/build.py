@@ -223,18 +223,8 @@ class BuildDirectory(ComponentsConfigParser,
     _validOptions.update(_variables_with_env_only_replacements)
     _validOptions.update(_path_variables)
 
-    sitecustomize_content = '''import os, sys
-    
-# Execute Python modules and *.pth files located in this directory
-for i in os.listdir(os.path.dirname(__file__)):
-    if i.endswith('.py') and i != '__init__.py':
-        module = i[:-3]
-        __import__('sitecustomize.%s' % module)
-    if i.endswith('.pth') and i != 'bv_maker_pure_python.pth':
-        n = os.path.join(os.path.dirname(__file__), i)
-        with open(n) as f:
-            file_contents = f.read()
-        exec(compile(file_contents, n, 'exec'))
+    sitecustomize_content = '''import os, site
+site.addsitedir(os.path.dirname(__file__))
 '''
 
     def __init__(self, directory, configuration):

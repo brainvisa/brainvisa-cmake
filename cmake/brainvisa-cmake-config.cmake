@@ -1125,6 +1125,7 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
                                 DEPENDS "${_pythonDirectory}/${_file}"
                                 VERBATIM )
         endif()
+        set( _targetDepends ${_targetDepends} "${_fileBuild}" )
     else()
       BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}"
                           DESTINATION ${_destDir}/${_path}

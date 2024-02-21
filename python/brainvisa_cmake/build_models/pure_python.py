@@ -153,13 +153,18 @@ class PurePythonComponentBuild(object):
                         "pip",
                         "--disable-pip-version-check",
                         "install",
+                        "--force-reinstall",
+                        "--ignore-installed",
                         "--no-deps",
                         "--prefix", tmp,
                         "-e",
                         self.source_directory,
                     ]
                 )
-                dist_packages = glob.glob(osp.join(tmp, 'local', 'lib', 'python*', 'dist-packages'))[0]
+                dist_packages = glob.glob(osp.join(tmp, 'lib', 'python*', 'site-packages'))
+                if not dist_packages:
+                    dist_packages = glob.glob(osp.join(tmp, 'local', 'lib', 'python*', 'dist-packages'))
+                dist_packages = dist_packages[0]
                 for i in os.listdir(dist_packages):
                     s = osp.join(dist_packages, i)
                     if i.endswith('.pth'):

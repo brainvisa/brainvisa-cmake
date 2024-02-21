@@ -19,7 +19,6 @@ set(OPENGL_gl_LIBRARY "$ENV{CONDA_PREFIX}/x86_64-conda-linux-gnu/sysroot/usr/lib
 set(OPENGL_glu_LIBRARY "$ENV{CONDA_PREFIX}/lib/libGLU.so" CACHE PATH "")
 set(OPENGL_glx_LIBRARY "$ENV{CONDA_PREFIX}/x86_64-conda-linux-gnu/sysroot/usr/lib64/libGLX.so" CACHE PATH "")
 set(OPENGL_opengl_LIBRARY "$ENV{CONDA_PREFIX}/x86_64-conda-linux-gnu/sysroot/usr/lib64/libOpenGL.so" CACHE PATH "")
-set(OPENGL_FIX_LIBRARY_DIRECTORIES "/usr/lib/x86_64-linux-gnu" CACHE INTERNAL "")
 set(OPENGL_FIX_LIBRARIES 
     "X11" "GL" "GLdispatch" "GLX" "xcb" "Xau" "Xdmcp" "bsd" "rt" "GLU" "Xext" CACHE INTERNAL "")
 execute_process(COMMAND python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"
@@ -28,7 +27,7 @@ execute_process(COMMAND python -c "import sys; print(f'{sys.version_info.major}.
 )
 set(PYTHON_INSTALL_DIRECTORY lib/python${python_version}/site-packages)
 set(BUILD_VIDAIO NO)
-# set(CMAKE_BUILD_RPATH "${CMAKE_BINARY_DIR}/lib:${CMAKE_BINARY_DIR}/../conda/lib:${CMAKE_BINARY_DIR}/../conda/x86_64-conda-linux-gnu/sysroot/lib64:/usr/lib/x86_64-linux-gnu")
-# set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib:$ORIGIN/../x86_64-conda-linux-gnu/sysroot/lib64")
+set(CMAKE_BUILD_RPATH "${CMAKE_BINARY_DIR}/lib:${CMAKE_BINARY_DIR}/../conda/lib:${CMAKE_BINARY_DIR}/../conda/x86_64-conda-linux-gnu/sysroot/lib64")
+set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib:$ORIGIN/../x86_64-conda-linux-gnu/sysroot/lib64")
 set(CMAKE_BUILD_RPATH "${CMAKE_BINARY_DIR}/lib:${CMAKE_BINARY_DIR}/../conda/lib")
 set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")

@@ -1105,7 +1105,7 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
     if( NOT install_only )
         # Copy the source file in build directory
         set( _fileBuild "${CMAKE_BINARY_DIR}/${_destDir}/${_file}" )
-        get_filename_component( _path "${_fileBuild}" PATH )
+        get_filename_component( _path "${_fileBuild}" DIRECTORY )
 
         if( UNIX OR APPLE OR CMAKE_CROSSCOMPILING)
             # Make a symlink instead of copying Python source allows to
@@ -1126,13 +1126,13 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
                                 VERBATIM )
         endif()
         set( _targetDepends ${_targetDepends} "${_fileBuild}" )
-    else()
-      BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}"
-                          DESTINATION ${_destDir}/${_path}
-                          COMPONENT ${_component} )
-
     endif()
-  endforeach(_file ${_pythonSources})
+    get_filename_component( _dest "${_destDir}/${_file}" DIRECTORY )
+    BRAINVISA_INSTALL(
+      FILES "${_pythonDirectory}/${_file}"
+      DESTINATION "${_dest}"
+      COMPONENT ${_component} )
+endforeach(_file ${_pythonSources})
 
   # Copy other files
   foreach(_file ${_nonPythonSources})
@@ -1159,9 +1159,9 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
     endif()
 
     # Install source file and byte compiled files
-    get_filename_component( _path "${_file}" PATH )
+    get_filename_component( _dest "${_destDir}/${_file}" DIRECTORY )
     BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}"
-                       DESTINATION ${_destDir}/${_path}
+                       DESTINATION "${_dest}"
                        COMPONENT ${_component} )
     set( _targetDepends ${_targetDepends} "${_fileBuild}" )
   endforeach(_file ${_nonPythonSources})

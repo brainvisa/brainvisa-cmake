@@ -652,12 +652,10 @@ packages_definition = {
 
     'brainvisa': {
         'about': {
-            'home': 'https://brainvisa.info',
+            'homepage': 'https://brainvisa.info',
             'license': 'GPL',
             'summary': 'Neuroimaging software platform for mass data analysis',
-            'about': {
-                'summary': 'BrainVISA provides a complete, modular, infrastructure for neuroimaging software. It helps organizing heterogeneous software and data and provides a common general graphical interface for users. BrainVISA is thus a set of tools rather than a single software.'
-            },
+            'description': 'BrainVISA provides a complete, modular, infrastructure for neuroimaging software. It helps organizing heterogeneous software and data and provides a common general graphical interface for users. BrainVISA is thus a set of tools rather than a single software.'
         },
         'packages': {
             'brainvisa-opensource',

@@ -41,6 +41,7 @@ for casa in (
             # This is a conda-based development environment
             modified["CMAKE_LIBRARY_PATH"] = f"{os.environ['CONDA_PREFIX']}/lib:{os.environ['CONDA_PREFIX']}/x86_64-conda-linux-gnu/sysroot/usr/lib64"
             python_dir = f'lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages'
+            modified.setdefault("PATH", path).insert(0, f"{os.environ['CONDA_PREFIX']}/x86_64-conda-linux-gnu/sysroot/usr/bin")
         environment_json = casa / "conf" / "environment.json"
     elif (casa / "host" / "conf" / "bv_maker.cfg").exists():
         modified["BRAINVISA_BVMAKER_CFG"] = f"{casa}/host/conf/bv_maker.cfg"

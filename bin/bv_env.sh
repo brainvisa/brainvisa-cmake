@@ -61,7 +61,7 @@ then
 fi
 
 # Method 3: check for Conda installation
-if [ ! -x "$bv_env" -a -x "$CONDA_PREFIX/../src/brainvisa-cmake/bin/bv_env" ] ;
+if [ ! -x "$bv_env" -a -x "$CONDA_PREFIX/src/brainvisa-cmake/bin/bv_env" ] ;
 then
     bv_env="$CONDA_PREFIX/../src/brainvisa-cmake/bin/bv_env"
 fi

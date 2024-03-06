@@ -37,16 +37,16 @@ function(__GET_PYTHON_INFO __python_executable __output_prefix __translate_path 
         CACHE FILEPATH "Python install prefix")
   execute_process( COMMAND ${__target_system_prefix}
                            "${__python_executable}" 
-                           "-c" "import sys; sys.stdout.write(\".\".join( (str(i) for i in sys.version_info[ :2 ]) ))"
+                           "-c" "import sys; sys.stdout.write('.'.join( (str(i) for i in sys.version_info[ :2 ]) ))"
     OUTPUT_VARIABLE _version )
   execute_process( COMMAND ${__target_system_prefix}
                            "${__python_executable}" 
-                           "-c" "import sys; sys.stdout.write(\".\".join( (str(i) for i in sys.version_info[ :3 ]) ))"
+                           "-c" "import sys; sys.stdout.write('.'.join( (str(i) for i in sys.version_info[ :3 ]) ))"
     OUTPUT_VARIABLE _fullVersion )
   message( STATUS "Using python ${_fullVersion}: ${__python_executable}" )
   execute_process( COMMAND ${__target_system_prefix}
                            "${__python_executable}"
-                           "-c" "from __future__ import print_function; import sys, os; print(\";\".join([s for s in sys.path if os.path.exists(s)]))"
+                           "-c" "import sys, os; print(';'.join([s for s in sys.path if os.path.exists(s)]))"
     OUTPUT_VARIABLE _pythonpath OUTPUT_STRIP_TRAILING_WHITESPACE )
   if(__translate_path AND COMMAND TARGET_TO_HOST_PATH)
     TARGET_TO_HOST_PATH( "${_pythonpath}" _pythonpath ) 

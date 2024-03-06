@@ -1069,12 +1069,6 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
     find_package( PythonInterp REQUIRED )
   endif( NOT DEFINED PYTHON_EXECUTABLE )
 
-  # detect python version
-  string( REGEX MATCH "^([0-9]+).([0-9]+)$" _py_ver "${PYTHON_SHORT_VERSION}" )
-  if( ${CMAKE_MATCH_1} GREATER 2 )
-    set( _py3_suffix "cpython-${CMAKE_MATCH_1}${CMAKE_MATCH_2}" )
-  endif()
-
   # Read source directory and separate Python sources (*.py) from other files
   set( _pythonSources )
   set( _nonPythonSources )

@@ -2,7 +2,6 @@
 
 """Handling of build-directory configuration."""
 
-import distutils
 from fnmatch import fnmatchcase
 import glob
 import json
@@ -676,9 +675,9 @@ include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )
         if os.environ.get('CASA_SYSTEM'):
             try:
                 casa_distro = 'casa_distro'
-                casa_distro = distutils.spawn.find_executable(casa_distro)
+                casa_distro = shutil.which(casa_distro)
                 if not casa_distro:
-                    casa_distro = distutils.spawn.find_executable(
+                    casa_distro = shutil.which(
                         'casa_container')
                 if casa_distro:
                     casa_distro = os.path.dirname(os.path.dirname(

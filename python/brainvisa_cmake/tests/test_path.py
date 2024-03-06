@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from distutils.spawn import find_executable
 import unittest
+import shutil
 import sys
 
 
@@ -188,11 +188,11 @@ class PathTestCases(unittest.TestCase):
         self.assertEqual(Path(('file:///c:/dir1/dir2/file', 'uri'),'uri'), 
                          Path('file:///c:/dir1/dir2/file', 'uri'))
 
-    @unittest.skipUnless(find_executable('winepath') is not None,
+    @unittest.skipUnless(shutil.which('winepath') is not None,
                          'winepath command not found')
     def test_wine_path_conversion(self):
         # Try to find winepath command
-        w = find_executable('winepath')
+        w = shutil.which('winepath')
 
         # Add windows path converter to linux using wine
         SystemPathConverter('windows', 'linux', [w, '-u'])

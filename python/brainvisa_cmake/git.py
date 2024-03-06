@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Management of Git repositories in bv_maker."""
 
-import distutils.spawn
+import shutil
 import os
 import subprocess
 
@@ -458,7 +458,7 @@ uncommitted local changes (see above).""")
         """Test if pre-commit is available."""
         if not hasattr(cls, '_have_pre_commit'):
             cls._have_pre_commit = bool(
-                distutils.spawn.find_executable('pre-commit')
+                shutil.which('pre-commit')
             )
         return cls._have_pre_commit
 

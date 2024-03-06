@@ -6,18 +6,15 @@ Note that the installer was used for releases 4.6 and 4.7. Is is not used
 anymore since BrainVISA 5.0.
 """
 
-import distutils
 import glob
 from optparse import OptionParser
 import os
-import platform
 import re
 import shlex
 import shutil
 import subprocess
 import sys
 import tempfile
-import time
 import six
 
 from brainvisa_cmake import build
@@ -284,7 +281,7 @@ class PackageDirectory(build.ComponentsConfigParser,
                            'bv_build_installer.py')
         if not os.path.exists(bvi):
             # otherwise use the path
-            bvi = distutils.spawn.find_executable('bv_build_installer.py')
+            bvi = shutil.which('bv_build_installer.py')
         cmd = [sys.executable, bvi, '-r', directory]
         if installer_filename:
             cmd += ['-i', installer_filename]

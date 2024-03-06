@@ -3,7 +3,6 @@ import glob
 import os
 import sys
 import os.path as osp
-import distutils.spawn
 import shutil
 import subprocess
 import shlex
@@ -283,7 +282,7 @@ class PurePythonComponentBuild(object):
             )
             bv_clean = os.path.join(my_path, "bin", "bv_clean_build_tree")
             if not os.path.exists(bv_clean):
-                bv_clean = distutils.spawn.find_executable("bv_clean_build_tree")
+                bv_clean = shutil.which("bv_clean_build_tree")
             print("cleaning build tree", self.source_directory)
             subprocess.call([sys.executable, bv_clean, "-d", self.source_directory])
 

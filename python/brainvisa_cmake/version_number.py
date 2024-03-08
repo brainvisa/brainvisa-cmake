@@ -97,6 +97,7 @@ def version_to_list(version, separator=version_separator):
     """ Converts a version string to a list of integers
     """
     version = version.replace('"', '')
+    version = ''.join([x for x in version if x in '0123456789.'])
     return [int(v) for v in version.split(separator)]
     
 def list_to_version( version_list, separator = version_separator ):

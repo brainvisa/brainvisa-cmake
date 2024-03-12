@@ -500,7 +500,7 @@ site.addsitedir(os.path.dirname(__file__))
         cmakeLists = os.path.join(self.directory, 'CMakeLists.txt')
         with open(cmakeLists, 'w') as out:
             print(f'''
-cmake_minimum_required( VERSION 3.10 )
+cmake_minimum_required( VERSION 3.20 )
 set( CMAKE_PREFIX_PATH "${{CMAKE_BINARY_DIR}}" ${{CMAKE_PREFIX_PATH}} )
 project( "Brainvisa" )
 include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )

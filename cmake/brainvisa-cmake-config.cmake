@@ -1867,10 +1867,16 @@ function( BRAINVISA_ADD_TEST )
 #   endif()
 
   # Add bv_env_test encapsulation
-  set(_command_args_run "${brainvisa-cmake_DIR}/../../../bin/bv_env_test"
-                        "${_command_args_run}")
-  set(_command_args_ref "${brainvisa-cmake_DIR}/../../../bin/bv_env_test"
-                        "${_command_args_ref}")
+  find_program(BV_ENV_TEST bv_env_test)
+  if (BV_ENV_TEST)
+    set(_command_args_run "${BV_ENV_TEST}" "${_command_args_run}")
+    set(_command_args_ref "${BV_ENV_TEST}" "${_command_args_ref}")
+  else()
+    set(_command_args_run "${brainvisa-cmake_DIR}/../../../bin/bv_env_test"
+                          "${_command_args_run}")
+    set(_command_args_ref "${brainvisa-cmake_DIR}/../../../bin/bv_env_test"
+                          "${_command_args_ref}")
+  endif()
 
   # message("====== FORM ${_form}, NAME ${_name_args} =======")
   # message("====== COMMAND ${_command_args} =======")

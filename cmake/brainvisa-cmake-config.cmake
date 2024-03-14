@@ -2556,14 +2556,19 @@ function( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
   configure_file( cmake/${PROJECT_NAME}-config.cmake.in
                   "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config.cmake"
                   @ONLY )
+  set( _to_install 
+        "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config.cmake"
+        "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-use.cmake" )
   if( EXISTS "${BRAINVISA_SOURCES_${PROJECT_NAME}}/cmake/${PROJECT_NAME}-config-version.cmake.in" )
     configure_file( "${BRAINVISA_SOURCES_${PROJECT_NAME}}/cmake/${PROJECT_NAME}-config-version.cmake.in"
                     "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake"
                     @ONLY )
+    set( _to_install ${_to_install} "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake")
   elseif( EXISTS "${brainvisa-cmake_DIR}/brainvisa-cmake-config-version.cmake.in" )
     configure_file( "${brainvisa-cmake_DIR}/brainvisa-cmake-config-version.cmake.in"
                     "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake"
                     @ONLY )
+    set( _to_install ${_to_install} "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake")
   endif()
   if( EXISTS "${BRAINVISA_SOURCES_${PROJECT_NAME}}/cmake/${PROJECT_NAME}-use.cmake.in" )
     configure_file( "${BRAINVISA_SOURCES_${PROJECT_NAME}}/cmake/${PROJECT_NAME}-use.cmake.in"
@@ -2575,9 +2580,7 @@ function( BRAINVISA_CREATE_CMAKE_CONFIG_FILES )
                     @ONLY )
   endif()
   BRAINVISA_INSTALL( FILES
-          "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config.cmake"
-          "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-config-version.cmake"
-          "${CMAKE_BINARY_DIR}/${_prefixForCmakeFiles}/${PROJECT_NAME}-use.cmake"
+          ${_to_install}
           DESTINATION "${_prefixForCmakeFiles}"
           COMPONENT ${PROJECT_NAME}-dev )
 

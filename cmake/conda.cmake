@@ -1,14 +1,14 @@
-# This file is included when CONDA variable is set. It must point to the directory of a
-# Conda installation properly configured to be used by brainvisa-cmake.
+# This file is included when PIXI variable is set. It must point to the directory of a
+# pixi project properly configured to be used by brainvisa-cmake.
 # It defines variables that are tricks to allow compilation in this environment.
 
-message("Using Conda environment located in ${CONDA}")
+message("Using Pixi environment located in ${PIXI}")
 set(DESIRED_QT_VERSION 5)
 set(DESIRED_SIP_VERSION 6)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated")
 # The following line makes the linker use RUNPATH instead of RPATH.
 # The latter does not takes precedence over LD_LIBRARY_PATH
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--enable-new-dtags -L${CMAKE_BINARY_DIR}/lib -L${CMAKE_BINARY_DIR}/../conda/lib" CACHE INTERNAL "")
+set(CMAKE_EXE_LINKER_FLAGS "-Wl,--enable-new-dtags -L${CMAKE_BINARY_DIR}/lib -L$ENV{CONDA_PREFIX}/lib" CACHE INTERNAL "")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}" CACHE INTERNAL "")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}" CACHE INTERNAL "")
 include_directories(BEFORE "$CASA/include" "$ENV{CONDA_PREFIX}/include")
@@ -27,7 +27,7 @@ execute_process(COMMAND python -c "import sys; print(f'{sys.version_info.major}.
 )
 set(PYTHON_INSTALL_DIRECTORY lib/python${python_version}/site-packages)
 set(BUILD_VIDAIO NO)
-set(CMAKE_BUILD_RPATH "${CMAKE_BINARY_DIR}/lib:${CMAKE_BINARY_DIR}/../conda/lib:${CMAKE_BINARY_DIR}/../conda/x86_64-conda-linux-gnu/sysroot/lib64")
+set(CMAKE_BUILD_RPATH "${CMAKE_BINARY_DIR}/lib:$ENV{CONDA_PREFIX}/lib:$ENV{CONDA_PREFIX}/x86_64-conda-linux-gnu/sysroot/lib64")
 set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib:$ORIGIN/../x86_64-conda-linux-gnu/sysroot/lib64")
-set(CMAKE_BUILD_RPATH "${CMAKE_BINARY_DIR}/lib:${CMAKE_BINARY_DIR}/../conda/lib")
+set(CMAKE_BUILD_RPATH "${CMAKE_BINARY_DIR}/lib:$ENV{CONDA_PREFIX}/lib")
 set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")

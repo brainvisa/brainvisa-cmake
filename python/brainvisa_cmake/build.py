@@ -492,8 +492,8 @@ site.addsitedir(os.path.dirname(__file__))
                 print('set( ' + component + '_VERSION "' + version + '" )',
                       file=out)
             print('set(PYTHON_INSTALL_DIRECTORY python)', file=out)
-            print('if( DEFINED CONDA )',file=out)
-            print('    include( "${CONDA}/../src/brainvisa-cmake/cmake/conda.cmake" )',
+            print('if( DEFINED PIXI )',file=out)
+            print('    include( "${PIXI}/src/brainvisa-cmake/cmake/conda.cmake" )',
                   file=out)
             print('endif()', file=out)
 

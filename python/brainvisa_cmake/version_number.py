@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-
-import six
-from six.moves import zip
-
 version_separator = '.'
 
 class VersionFormat( object ):
@@ -138,7 +134,7 @@ class VersionNumber( object ):
             else:
                 self._format = format
             
-            if isinstance( version, six.string_types ):
+            if isinstance( version, str ):
                 self._version_numbers = version_to_list(
                                             version,
                                             separator = self._format.separator()

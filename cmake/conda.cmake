@@ -16,7 +16,7 @@ set(OpenGL_GL_PREFERENCE "GLVND" CACHE STRING "")
 set(OPENGL_FIX_INCLUDE_DIRECTORIES "$ENV{CONDA_PREFIX}/mesalib/include")
 set(OPENGL_egl_LIBRARY "$ENV{CONDA_PREFIX}/x86_64-conda-linux-gnu/sysroot/usr/lib64/libEGL.so" CACHE PATH "")
 set(OPENGL_gl_LIBRARY "$ENV{CONDA_PREFIX}/x86_64-conda-linux-gnu/sysroot/usr/lib64/libGL.so" CACHE PATH "")
-set(OPENGL_glu_LIBRARY "$ENV{CONDA_PREFIX}/x86_64-conda-linux-gnu/sysroot/usr/lib64/libGLU.so" CACHE PATH "")
+set(OPENGL_glu_LIBRARY "$ENV{CONDA_PREFIX}/lib/libGLU.so" CACHE PATH "")
 set(OPENGL_glx_LIBRARY "$ENV{CONDA_PREFIX}/x86_64-conda-linux-gnu/sysroot/usr/lib64/libGLX.so" CACHE PATH "")
 set(OPENGL_opengl_LIBRARY "$ENV{CONDA_PREFIX}/x86_64-conda-linux-gnu/sysroot/usr/lib64/libOpenGL.so" CACHE PATH "")
 set(OPENGL_FIX_LIBRARIES 

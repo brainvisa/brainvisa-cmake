@@ -76,7 +76,7 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
     def parseSourceConfiguration(self):
         for l in self.sourceConfigurationLines:
             self.parseSourceConfigurationLine(l)
-        
+
     def parseSourceConfigurationLine(self, line, virtual=False, 
                                      component_version = None):
         line = os.path.expandvars(line)
@@ -222,10 +222,14 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
                   'w') as clientFile:
             print('\n'.join(self.configurationLines), file=clientFile)
 
+        if len(self.svnComponents) == 0 or not options.svn:
+            svn = False
+        else:
+            svn  = True
         repositoryDirectory = os.path.join(self.directory, '.repository')
         checkout = False
         use_rcs = self.revision_control.upper() in ('', 'ON')
-        if use_rcs and options.svn and not os.path.exists(repositoryDirectory):
+        if use_rcs and svn and not os.path.exists(repositoryDirectory):
             os.makedirs(repositoryDirectory)
             # Because of a bug in svnadmin on MacOS, I cannot use an absolute name for the directory to create.
             # When I try "svnadmin create /neurospin/brainvisa/cmake_mac/", I have the following error:
@@ -255,7 +259,7 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
                 print(dest_directory, url, file=externalsFile)
                 source_directories.append((dest_directory, bv_version))
 
-        if use_rcs and options.svn:
+        if use_rcs and svn:
             if options.cleanup:
                 self.svncommand('cleanup', self.directory, cwd=self.directory)
             self.svncommand('propset', 'svn:externals',
@@ -319,7 +323,7 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
         # Display status of SVN repositories
 
         # Go to the sources directory
-        if use_rcs and options.svn:
+        if use_rcs and options.svn and len(self.svnComponents) != 0:
             self.svncommand('status', self.directory, cwd=self.directory)
 
         # Display status of Git Repositories

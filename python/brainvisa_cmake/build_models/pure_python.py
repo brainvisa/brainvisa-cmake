@@ -30,9 +30,9 @@ find_package( brainvisa-cmake REQUIRED )
 file( TO_CMAKE_PATH "%(source_directory)s" BRAINVISA_REAL_SOURCE_DIR )
 BRAINVISA_PROJECT()
 
-install(CODE "MESSAGE(\\\"${PYTHON_EXECUTABLE} -m pip --disable-pip-version-check install --no-deps --prefix \$ENV{BRAINVISA_INSTALL_PREFIX} ${BRAINVISA_REAL_SOURCE_DIR}\\\")"
+install(CODE "MESSAGE(\\\"${PYTHON_EXECUTABLE} -m pip --disable-pip-version-check install --ignore-installed --no-deps --prefix \$ENV{BRAINVISA_INSTALL_PREFIX} ${BRAINVISA_REAL_SOURCE_DIR}\\\")"
         COMPONENT ${PROJECT_NAME})
-install(CODE "execute_process(COMMAND \\\"${PYTHON_EXECUTABLE}\\\" -m pip --disable-pip-version-check install --no-deps --prefix \\\"\$ENV{BRAINVISA_INSTALL_PREFIX}\\\" \\\"${BRAINVISA_REAL_SOURCE_DIR}\\\")"
+install(CODE "execute_process(COMMAND \\\"${PYTHON_EXECUTABLE}\\\" -m pip --disable-pip-version-check install --ignore-installed --no-deps --prefix \\\"\$ENV{BRAINVISA_INSTALL_PREFIX}\\\" \\\"${BRAINVISA_REAL_SOURCE_DIR}\\\")"
         COMPONENT ${PROJECT_NAME})
 
 if( EXISTS "${BRAINVISA_REAL_SOURCE_DIR}/bin" )

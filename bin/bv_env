@@ -45,7 +45,7 @@ if (base_dir / 'share' / 'pyproject.toml.in').exists():
 modified["CASA_BUILD"] = str(base_dir)
 if base_dir.name in ('build', 'install'):
     casa = base_dir.parent
-    modified["CASA_BUILD"] = str(casa / 'build')
+    modified["CASA_BUILD"] = str(base_dir)
 else:
     casa = base_dir
 if (casa / 'install').is_dir():

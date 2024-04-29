@@ -27,6 +27,15 @@ if this_script:
         os.path.dirname(os.path.dirname(this_script)), 'python')
     if os.path.isdir(python_modules):
         sys.path.insert(0, python_modules)
+        # set also the python path in the PYTHONPATH env variable
+        # so that commands run as subprocesses will get the right path.
+        # This happens in brainvisa-cmake from the cmake part.
+        ppath = os.environ.get('PYTHONPATH')
+        if ppath is None:
+            ppath = python_modules
+        else:
+            ppath = os.pathsep.join([python_modules, ppath])
+        os.environ['PYTHONPATH'] = ppath
 # -----------------------------------------------------------------------------
 
 from brainvisa_cmake.main import main

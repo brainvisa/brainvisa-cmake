@@ -377,7 +377,12 @@ site.addsitedir(os.path.dirname(__file__))
         # in build directory, it is not installed in packages (to date there is
         # one exception to this in axon component, see Axon's CMakeLists.txt).
         if 'CONDA_PREFIX' in os.environ:
-            python_directory = f'lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages'
+            python_version = f'{sys.version_info.major}.{sys.version_info.minor}'
+            python_directory = f'lib/python{python_version}/site-packages'
+            version_dict = dict(zip(sys.version_info.__match_args__, sys.version_info))
+            version_dict['version'] = python_version
+            with open(os.path.join(self.directory, 'python_version.json'), 'w') as f:
+                json.dump(version_dict, f)
         else:
             python_directory = 'python'
         sitecustomize_dir = os.path.join(

@@ -2,6 +2,8 @@
 
 """Support code for sub-commands of bv_maker."""
 
+import datetime
+import json
 import io
 from optparse import OptionParser
 import os
@@ -64,6 +66,28 @@ class StepCommand(object):
                     if o.has_satisfied_dependencies(step):
                         self.redirect_stdout(d, o, step)
                         logs = None
+
+                        build_info_file = build_info = None
+                        if 'CONDA_PREFIX' in os.environ:
+                            build_info_file = os.path.join(os.path.dirname(o.directory), 'conf', 'build_info.json')
+                            if os.path.exists(build_info_file):
+                                with open(build_info_file) as f:
+                                    build_info = json.load(f)
+                                    write = False
+                                    if step == 'configure':
+                                        build_info['brainvisa-cmake'] = {
+                                            'configure': {'start': datetime.datetime.now().isoformat()},
+                                            'build': {},
+                                            'doc': {},
+                                        }
+                                        write = True
+                                    elif step in ('build', 'doc'):
+                                        build_info['brainvisa-cmake'][step] = {'start': datetime.datetime.now().isoformat()}
+                                        write = True
+                                    if write:
+                                        with open(build_info_file, 'w') as f:
+                                            json.dump(build_info, f, indent=4)
+
                         try:
                             logs = getattr(o, method)(*meth_args,
                                                       **meth_kwargs)
@@ -106,6 +130,12 @@ class StepCommand(object):
                                                         exc)
                         else:
                             self.release_notify_stdout(d, o, step)
+
+                        if build_info and step in ('configure', 'build', 'doc'):
+                            build_info['brainvisa-cmake'][step]['stop'] = datetime.datetime.now().isoformat()
+                            build_info['brainvisa-cmake'][step]['status'] = o.status[step]
+                            with open(build_info_file, 'w') as f:
+                                json.dump(build_info, f, indent=4)
                     else:
                         print('Skipping', step, 'of', d,
                               'because it depends on a step that failed.')

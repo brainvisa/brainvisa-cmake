@@ -2,6 +2,7 @@
 
 """Handling of build-directory configuration."""
 
+import datetime
 from fnmatch import fnmatchcase
 import glob
 import json
@@ -379,10 +380,6 @@ site.addsitedir(os.path.dirname(__file__))
         if 'CONDA_PREFIX' in os.environ:
             python_version = f'{sys.version_info.major}.{sys.version_info.minor}'
             python_directory = f'lib/python{python_version}/site-packages'
-            version_dict = dict(zip(sys.version_info.__match_args__, sys.version_info))
-            version_dict['version'] = python_version
-            with open(os.path.join(self.directory, 'python_version.json'), 'w') as f:
-                json.dump(version_dict, f)
         else:
             python_directory = 'python'
         sitecustomize_dir = os.path.join(
@@ -431,8 +428,6 @@ site.addsitedir(os.path.dirname(__file__))
                     if cross_compiling_dir is not None:
                         cross_compiling_directories[s.directory] = cross_compiling_dir
 
-        #print('==== Toolchain:', self.cross_compiling_prefix,
-        #      'directories:', cross_compiling_directories)
         self.buildModelPerComponent = {}
         for component in sortedComponents:
             # find build model
@@ -708,6 +703,7 @@ include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )
 
     def doc(self):
         self.process_configuration_lines()
+
         print('Building docs in directory:', self.directory)
         timeout = self.configuration.general_section.subprocess_timeout
         system(cwd=self.directory, *

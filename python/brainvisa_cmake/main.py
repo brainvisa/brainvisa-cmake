@@ -98,14 +98,7 @@ def display_failure_summary(configuration):
     sys.stderr.flush()
     messages = ['\nbv_maker summary:']
     print(messages[0])
-    #log_file = None
-    #if configuration.general_section \
-            #and configuration.general_section.global_status_file:
-        #log_file = configuration.general_section.global_status_file
-        #machine = gethostname()
-        #osname = global_installer_variables()['os']
     first_start = None
-    last_stop = None
     for section_name, steps in sections:
         for section in getattr(configuration, section_name).values():
             for step in steps:

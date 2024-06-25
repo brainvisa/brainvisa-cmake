@@ -154,6 +154,19 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
                                 '%s %s %s' % (repo, dir, version), 
                                 virtual=True, 
                                 component_version=(component, version))
+                            break
+                    else:
+                        repo, dir = brainvisa_projects.url_per_component[component]['trunk']
+                        url = repo.split()[1]
+                        default_source_dir = getattr(self, 'default_source_dir', None)
+                        if default_source_dir:
+                            dir = default_source_dir.format(project=project,
+                                                            component=component,
+                                                            branch=versionPattern)
+                        self.parseSourceConfigurationLine(
+                            f'git {url} {versionPattern} {dir}',
+                            virtual=True, 
+                            component_version=(component, versionPattern))
             elif sign in ('-', 'brainvisa_exclude'):
                 if '/' in componentPattern:
                     raise SyntaxError()

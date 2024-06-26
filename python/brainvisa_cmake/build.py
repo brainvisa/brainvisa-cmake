@@ -202,7 +202,8 @@ class BuildDirectory(ComponentsConfigParser,
                            'stdout_file', 'stderr_file',
                            'test_ref_data_dir', 'test_run_data_dir'))
     _variables_with_replacements = set(('make_options', 'cmake_options',
-                                        'ctest_options', 'directory_id', ))
+                                        'ctest_options', 'directory_id',
+                                        'doc_timeout'))
     _variables_with_env_only_replacements = set(('cross_compiling_prefix',
                                           'cross_compiling_target_system',
                                           'cross_compiling_to_target_path_cmd',
@@ -246,6 +247,7 @@ site.addsitedir(os.path.dirname(__file__))
         self.env = {}
         self.test_ref_data_dir = ''
         self.test_run_data_dir = tempfile.gettempdir()
+        self.doc_timeout = None
 
     def addConfigurationLine(self, line):
         # Supported lines in bv_maker.cfg for [ build ... ]:
@@ -345,6 +347,8 @@ site.addsitedir(os.path.dirname(__file__))
 
         timeout = self.configuration.general_section.subprocess_timeout
         timeout = getattr(options, 'subprocess_timeout', timeout)
+        if timeout is not None:
+            timeout = float(timeout)
 
         # Order of projects and components is important for dependencies
         sortedProjects = [p for p in brainvisa_projects.ordered_projects
@@ -651,6 +655,8 @@ include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )
 
         timeout = self.configuration.general_section.subprocess_timeout
         timeout = getattr(options, 'subprocess_timeout', timeout)
+        if timeout is not None:
+            timeout = float(timeout)
 
         if options.clean or self.clean_build.upper() == 'ON':
             if self.clean_commands:
@@ -705,7 +711,11 @@ include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )
         self.process_configuration_lines()
 
         print('Building docs in directory:', self.directory)
-        timeout = self.configuration.general_section.subprocess_timeout
+        timeout = self.doc_timeout
+        if timeout is None:
+            timeout = self.configuration.general_section.subprocess_timeout
+        if timeout is not None:
+            timeout = float(timeout)
         system(cwd=self.directory, *
                (['make'] + self.make_options + ['doc']),
                env=self.get_environ(),
@@ -749,6 +759,8 @@ include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )
 
         timeout = self.configuration.general_section.subprocess_timeout
         timeout = getattr(options, 'subprocess_timeout', timeout)
+        if timeout is not None:
+            timeout = float(timeout)
 
         if options.ctest_options is not None:
             ctoptions = shlex.split(options.ctest_options)
@@ -774,6 +786,8 @@ include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )
 
         timeout = self.configuration.general_section.subprocess_timeout
         timeout = getattr(options, 'subprocess_timeout', timeout)
+        if timeout is not None:
+            timeout = float(timeout)
 
         if options.make_options is not None:
             ctoptions = shlex.split(options.make_options)
@@ -857,6 +871,8 @@ class VirtualenvDirectory(BuildDirectory):
     def virtualenv_command(self, env_path):
 
         timeout = self.configuration.general_section.subprocess_timeout
+        if timeout is not None:
+            timeout = float(timeout)
 
         if not self.which("virtualenv"):
             raise ValueError("Cannot find virtual. Please install virtualenv.")
@@ -964,6 +980,8 @@ def run_and_log_tests(cwd=None, env=None, options=None, projects=None, timeout=N
 
     if timeout is None:
         timeout = brainvisa_cmake.configuration.default_subprocess_timeout
+    if timeout is not None:
+        timeout = float(timeout)
 
     for label in labels:
         if projects is not None and label not in projects:
@@ -1008,6 +1026,8 @@ def run_and_log_testref(cwd=None, env=None, options=None, timeout=None,
 
     if timeout is None:
         timeout = brainvisa_cmake.configuration.default_subprocess_timeout
+    if timeout is not None:
+        timeout = float(timeout)
 
     logfile = tempfile.mkstemp(prefix='bv_testref', suffix='.log')
     os.close(logfile[0])

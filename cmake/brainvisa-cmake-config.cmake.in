@@ -484,8 +484,8 @@ function( BRAINVISA_CREATE_MAIN_COMPONENTS )
     add_custom_target( devdoc )
     add_dependencies( doc usrdoc devdoc )
     add_dependencies( install-doc install-usrdoc install-devdoc )
-    add_dependencies( install-usrdoc usrdoc )
-    add_dependencies( install-devdoc devdoc )
+    # add_dependencies( install-usrdoc usrdoc )
+    # add_dependencies( install-devdoc devdoc )
 
     # targets to install the tests
     if( NOT TARGET install-test )

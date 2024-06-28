@@ -115,6 +115,7 @@ def bv_tag_release(source_root, version_to_tag, *,
                              'the BrainVISA version about to be released',
                              local_path,
                              '.'.join(str(n) for n in source_version_tuple))
+                continue
         if (fix_source_version_numbers
                 and not project_version_follows_brainvisa):
             logger.warning('project %s has source version number %s, '
@@ -133,6 +134,7 @@ def bv_tag_release(source_root, version_to_tag, *,
             tag_name = f'brainvisa-{version_to_tag}'
             tag_message = (f'Version incorporated in '
                            f'BrainVISA {version_to_tag}')
+
         cmd = ['git', 'tag', '-a', '-m', tag_message, tag_name, 'HEAD']
         if dry_run:
             logger.info('Dry-run: would now call %s',
@@ -144,6 +146,7 @@ def bv_tag_release(source_root, version_to_tag, *,
                              'Leaving the repository in its current state.',
                              tag_name, local_path)
                 continue
+
         try:
             gr.ensure_origin_remote()
         except GitUpdateError:

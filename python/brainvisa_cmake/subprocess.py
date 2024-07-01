@@ -43,7 +43,10 @@ def system(*args, **kwargs):
             #os.killpg(os.getpgid(popen.pid), signal.SIGTERM)
             error = (type(e), e, sys.exc_info()[2])
     finally:
-        os.killpg(os.getpgid(popen.pid), signal.SIGTERM)
+        try:
+            os.killpg(os.getpgid(popen.pid), signal.SIGTERM)
+        except ProcessLookupError:
+            pass  # no children, it's OK
         if error:
             txt = 'Command failed: %s' % ' '.join((repr(i) for i in args))
             if 'cwd' in kwargs:

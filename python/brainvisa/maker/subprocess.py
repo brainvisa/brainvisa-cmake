@@ -35,11 +35,15 @@ def system(*args, **kwargs):
             print(f'Timeout for {args[0]} ({timeout}s) expired',
                   file=sys.stderr)
             print('Terminating the whole process group...', file=sys.stderr)
-            os.killpg(os.getpgid(popen.pid), signal.SIGTERM)
+            #os.killpg(os.getpgid(popen.pid), signal.SIGTERM)
             error = (type(e), e, sys.exc_info()[2])
         except Exception as e:
+            print('Command failed. Terminating the whole process group...',
+                  file=sys.stderr)
+            #os.killpg(os.getpgid(popen.pid), signal.SIGTERM)
             error = (type(e), e, sys.exc_info()[2])
     finally:
+        os.killpg(os.getpgid(popen.pid), signal.SIGTERM)
         if error:
             txt = 'Command failed: %s' % ' '.join((repr(i) for i in args))
             if 'cwd' in kwargs:

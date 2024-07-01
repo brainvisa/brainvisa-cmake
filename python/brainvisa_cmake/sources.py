@@ -157,7 +157,7 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
                             break
                     else:
                         repo_dir = brainvisa_projects.url_per_component[component].get('trunk')
-                        if repo_dir:
+                        if 'CONDA_PREFIX' in os.environ and repo_dir:
                             repo, dir = repo_dir
                             url = repo.split()[1]
                             default_source_dir = getattr(self, 'default_source_dir', None)

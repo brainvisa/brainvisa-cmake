@@ -2124,6 +2124,7 @@ endfunction()
 # Usage:
 #
 #   BRAINVISA_GENERATE_SPHINX_DOC( <source directory> <output directory>
+#                                  [IGNORE_ERROR]
 #                                  [TARGET <target_name>]
 #                                  [USER] )
 #
@@ -2133,6 +2134,8 @@ endfunction()
 #     "share/doc/soma-workflow-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}" )
 #
 # if TARGET argument is not specified, the target name defaults to ${PROJECT_NAME}-sphinx
+#
+# if IGNORE_ERROR is used, any error occuring during the sphinx doc generation will be ignored.
 #
 # if USER is specified, the generated doc will be part of the usrdoc (user
 # documentation) global target, and included in user docs packages.
@@ -2153,6 +2156,12 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
       list( REMOVE_AT args ${result} )
       list( GET args ${result} target )
       list( REMOVE_AT args ${result} )
+    endif()
+    list( FIND args IGNORE_ERROR result )
+    if( result EQUAL -1 )
+      set( ignore_error_command )
+    else()
+      set( ignore_error_command || (exit 0) )
     endif()
     list( FIND args USER result )
     if( NOT result EQUAL -1 )
@@ -2186,7 +2195,7 @@ function( BRAINVISA_GENERATE_SPHINX_DOC  )
                       COMMAND ${CMAKE_TARGET_SYSTEM_PREFIX}
                         ${SPHINXBUILD_EXECUTABLE}
                         ${source_directory}
-                        ${output_directory}
+                        ${output_directory} ${ignore_error_command}
     )
 
     add_dependencies( ${PROJECT_NAME}-${doctype} ${target} )

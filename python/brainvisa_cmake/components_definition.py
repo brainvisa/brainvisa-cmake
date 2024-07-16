@@ -686,7 +686,6 @@ packages_definition = {
         'packages': {
             'brainvisa',
             'brainvisa-constellation',
-            'brainvisa-cortical-surface',
             'brainvisa-disco',
             'bioprocessing',
         }

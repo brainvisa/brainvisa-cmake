@@ -660,7 +660,6 @@ packages_definition = {
         'packages': {
             'brainvisa-opensource',
             'brainvisa-brainrat',
-            'brainvisa-disco',
             'brainvisa-primatologist',
         },
     },
@@ -688,6 +687,7 @@ packages_definition = {
             'brainvisa',
             'brainvisa-constellation',
             'brainvisa-cortical-surface',
+            'brainvisa-disco',
             'bioprocessing',
         }
     },

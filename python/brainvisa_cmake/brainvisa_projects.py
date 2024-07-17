@@ -544,3 +544,25 @@ def find_components(componentsPattern):
         the list of components that match the pattern
     """
     return projects_set.find_components(componentsPattern)
+
+if __name__ == "__main__":
+    # Create a Grphviz graph for brainvisa-cmake components
+    from brainvisa_cmake.utils import get_components_info
+
+    components_info = get_components_info()
+    distro = sys.argv[1]
+    distro_info = packages_definition[distro]
+    packages = {distro} | distro_info["all_packages"]
+    print(f'digraph "{distro}" {{')
+    print(f'  node [shape=box]  ')
+    for package in packages:
+        node_attributes = {}
+        component_info = components_info.get(package)
+        if component_info:
+            node_attributes["style"] = "filled"
+            node_attributes["color"] = "green"
+        attrs = " ".join(f'{k}="{v}"' for k, v in node_attributes.items())
+        print(f'  "{package}" [{attrs}]')
+        for dependency in packages_definition.get(package, {}).get("packages", []):
+           print(f"  \"{package}\" -> \"{dependency}\"")
+    print("}")

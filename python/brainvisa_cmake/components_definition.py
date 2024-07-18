@@ -4,6 +4,13 @@ import os
 components_definition = [
     ('development', {
         'components': [
+            ['neuro-forge', {
+                'branches': {
+                    'trunk': ('git https://github.com/neurospin/neuro-forge.git branch:main','development/neuro-forge/integration'),
+                    'bug_fix': ('git https://github.com/neurospin/neuro-forge.git branch:main','development/neuro-forge/master'),
+                    '5.1': ('git https://github.com/neurospin/neuro-forge.git branch:main','development/neuro-forge/5.1'),
+                },
+            }],
             ['brainvisa-cmake', {
                 'branches': {
                     'trunk': ('git https://github.com/brainvisa/brainvisa-cmake.git branch:master','development/brainvisa-cmake/integration'),
@@ -516,6 +523,7 @@ packages_definition = {
         },
         'packages': {
             'brainvisa-cmake',
+            'neuro-forge',
             'capsul',
             'casa-distro',
             'populse-db',

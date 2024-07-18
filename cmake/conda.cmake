@@ -6,12 +6,16 @@ message("Using Pixi environment located in ${PIXI}")
 set(DESIRED_QT_VERSION 5)
 set(DESIRED_SIP_VERSION 6)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated")
+set(CMAKE_SYSTEM_PREFIX_PATH "$ENV{CONDA_PREFIX}" "${CMAKE_SYSTEM_PREFIX_PATH}")
+
 # The following line makes the linker use RUNPATH instead of RPATH.
 # The latter does not takes precedence over LD_LIBRARY_PATH
 set(CMAKE_EXE_LINKER_FLAGS "-Wl,--enable-new-dtags -L${CMAKE_BINARY_DIR}/lib -L$ENV{CONDA_PREFIX}/lib" CACHE INTERNAL "")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}" CACHE INTERNAL "")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}" CACHE INTERNAL "")
 include_directories(BEFORE "$CASA/include" "$ENV{CONDA_PREFIX}/include")
+
+#set(DCMTK_DIR "$ENV{CONDA_PREFIX}" CACHE STRING "")
 set(OpenGL_GL_PREFERENCE "GLVND" CACHE STRING "")
 set(OPENGL_FIX_INCLUDE_DIRECTORIES "$ENV{CONDA_PREFIX}/mesalib/include")
 set(OPENGL_egl_LIBRARY "$ENV{CONDA_PREFIX}/x86_64-conda-linux-gnu/sysroot/usr/lib64/libEGL.so" CACHE PATH "")

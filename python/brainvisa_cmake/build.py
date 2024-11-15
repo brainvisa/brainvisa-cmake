@@ -126,9 +126,15 @@ class ComponentsConfigParser(brainvisa_cmake.configuration.DirectorySection):
                         versionPattern, sourceDirectory = l
                     sourceDirectory = environmentPathVariablesSubstitution(
                             sourceDirectory, env=self.get_environ())
-                    with open(os.path.join(sourceDirectory,
-                                           'components_sources.json')) as f:
-                        components_sources = json.load(f)
+                    components_sources_json = os.path.join(sourceDirectory,
+                            'components_sources.json')
+                    if 'PIXI_PROJECT_ROOT' in os.environ and not os.path.exists(components_sources_json):
+                        components_sources = {}
+                        for component in os.listdir(sourceDirectory):
+                            components_sources[component] = {"current": [component, None]}
+                    else:
+                        with open(components_sources_json) as f:
+                            components_sources = json.load(f)
                     projects_set = brainvisa_projects.ProjectsSet()
                     projects_set.add_sources_list(components_sources)
                     possible_components = set(

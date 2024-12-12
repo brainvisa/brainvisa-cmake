@@ -3,10 +3,9 @@
 """Handling of source-directory configuration."""
 
 from fnmatch import fnmatchcase
+import glob
 import json
 import os
-
-import six
 
 import brainvisa_cmake.brainvisa_projects as brainvisa_projects
 import brainvisa_cmake.configuration
@@ -103,6 +102,27 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
             self.gitComponents.append(
                 (component_version, url, git_tag, dest_directory,
                     bv_version))
+        elif l == ['soma-dev']:
+            import git
+            import yaml
+            from soma_dev import packages
+
+            src = os.path.join(os.environ['SOMA_ROOT'], 'src')
+            for package, git_url_branch in packages.items():
+                git_url, branch = git_url_branch
+                component = git_url.rsplit('/', 1)[-1].split('.', 1)[0]
+                component_src = os.path.join(src, component)
+                if not os.path.exists(component_src):
+                    if self.configuration.verbose:
+                        print(f'    cloning git repository for package {package}: {git_url}')
+                    git.Repo.clone_from(git_url, component_src)
+                self.gitComponents.append((None, git_url, branch, component, 'current'))
+                with open(os.path.join(component_src, 'soma-dev', 'soma-recipe.yaml')) as f:
+                    recipe = yaml.safe_load(f)
+                other_components = recipe["soma-dev"].get("components", {})
+                for other_component, other_git_url_branch in other_components.items():
+                    other_git_url, other_branch = other_git_url_branch
+                    self.gitComponents.append((None, other_git_url, other_branch, other_component, 'current'))
         else:
             if len(l) < 2 or len(l) > 4:
                 raise SyntaxError()
@@ -141,8 +161,7 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
                     componentPattern):
                     project = brainvisa_projects.project_per_component[
                         component]
-                    for version, repo_dir in six.iteritems(
-                        brainvisa_projects.url_per_component[component]):
+                    for version, repo_dir in brainvisa_projects.url_per_component[component].items():
                         repo, dir = repo_dir
                         if fnmatchcase(version, versionPattern):
                             default_source_dir = getattr(self, 'default_source_dir', None)
@@ -177,9 +196,8 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
                         versionPattern = '*'
                     for component in brainvisa_projects.find_components(
                         componentPattern):
-                        for version, repo_dir in six.iteritems(
-                            brainvisa_projects.url_per_component[
-                                component]):
+                        for version, repo_dir in brainvisa_projects.url_per_component[
+                                component].items():
                             if fnmatchcase(version, versionPattern):
                                 # Remove unwanted svn components
                                 count = 0
@@ -300,7 +318,7 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
                 try:
                     gr.update_or_clone(source_dir=self)
                 except GitUpdateError as exc:
-                    update_message = u'✗ ' + six.ensure_text(str(exc))
+                    update_message = '✗ ' + str(exc)
                     git_update_failure = True
                 else:
                     update_message = u'✓'

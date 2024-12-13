@@ -2,7 +2,6 @@
 
 """Handling of build-directory configuration."""
 
-import datetime
 from fnmatch import fnmatchcase
 import glob
 import json
@@ -73,7 +72,12 @@ class ComponentsConfigParser(brainvisa_cmake.configuration.DirectorySection):
             for line in self.configurationLines:
                 if '=' in line:
                     continue
-                first, rest = line.split(None, 1)
+                l = line.split(None, 1)
+                if len(l) == 1:
+                    first = l[0]
+                    rest = ''
+                else:
+                    first, rest = l
                 if first in ('directory', '+'):
                     directory = environmentPathVariablesSubstitution(
                             rest.strip(), env=self.get_environ())
@@ -189,6 +193,68 @@ class ComponentsConfigParser(brainvisa_cmake.configuration.DirectorySection):
                         pip_installed[module] = version
                         with open(installed_json, 'w') as f:
                             json.dump(installed, f)
+                elif first == 'soma-dev':
+                    import toml
+                    import yaml
+                    
+                    # Parse all recipes declared in source trees to update
+                    # pixi dependencies with "build" and "run" dependencies
+                    soma_root = pathlib.Path(os.environ['SOMA_ROOT'])
+                    with open(soma_root / "pyproject.toml") as f:
+                        pixi = toml.load(f)
+                    pixi_dependencies = pixi.get("tool", {}).get("pixi", {}).get("dependencies", {})
+                    dependencies = {}
+                    for component_src in (soma_root / "src").iterdir():
+                        recipe_file = component_src / "soma-dev" / "soma-recipe.yaml"
+                        if recipe_file.exists():
+                            with open(recipe_file) as f:
+                                recipe = yaml.safe_load(f)
+                            requirements = recipe.get("requirements", {}).get(
+                                "run", []
+                            ) + recipe.get("requirements", {}).get("build", [])
+                            for requirement in requirements:
+                                if (
+                                    not isinstance(requirement, str)
+                                    or requirement.startswith("$")
+                                    or requirement.split()[0] == "mesalib"
+                                ):
+                                    # mesalib makes Anatomist crash
+                                    continue
+                                package, constraint = (requirement.split(None, 1) + [None])[:2]
+                                if not constraint and package in pixi_dependencies:
+                                    continue
+                                dependencies.setdefault(package, set())
+                                if constraint:
+                                    existing_constraint = dependencies[package]
+                                    if constraint not in existing_constraint:
+                                        existing_constraint.add(constraint)
+                    if dependencies:
+                        command = ["pixi", "add"] + [
+                            f"{package}{(','.join(constraint for constraint in constraints) if constraints else '=*')}"
+                            for package, constraints in dependencies.items()
+                        ]
+                        print("'{i}'" for i in command)
+                        subprocess.check_call(command)
+
+                    src = os.path.join(soma_root, 'src')
+                    for component in os.listdir(src):
+                        component_src = os.path.join(src, component)
+                        if not os.path.isdir(component_src):
+                            continue
+                        version = 'current'
+                        build_model = None
+                        pinfo = brainvisa_projects.read_project_info(
+                            component_src
+                        )
+                        if pinfo:
+                            project, component, component_version, \
+                                build_model = pinfo
+                            if self.configuration.verbose:
+                                print(f'    adding component {component} version {component_version} from {component_src}')
+                            self.components[component] = (
+                                component_src, component_version, '.'.join(str(i) for i in component_version._version_numbers[:2]), build_model)
+                        else:
+                            print(f'WARNING: directory {component_src} will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found')
                 else:
                     SyntaxError()
             projects = set(brainvisa_projects.project_per_component.get(i, i)

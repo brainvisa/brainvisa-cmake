@@ -54,12 +54,6 @@ if (casa / 'install').is_dir():
 if (casa / 'test').is_dir():
     modified["CASA_TEST"] = str(casa / 'test')
 
-if 'CONDA_PREFIX' in os.environ:
-    casa = Path(os.environ['CONDA_PREFIX'])
-    modified["CMAKE_LIBRARY_PATH"] = f"{casa}/lib:{casa}/x86_64-conda-linux-gnu/sysroot/usr/lib64"
-    python_dir = f'lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages'
-    modified.setdefault("PATH", path).insert(0, f"{casa}/x86_64-conda-linux-gnu/sysroot/usr/bin")
-
 if casa and brainvisa_cmake_src is not None:
     modified["BRAINVISA_BVMAKER_CFG"] = f"{casa}/conf/bv_maker.cfg"
     environment_json = casa / "conf" / "environment.json"

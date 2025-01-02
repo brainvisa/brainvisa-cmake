@@ -108,11 +108,8 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
             from soma_dev import packages
 
             src = os.path.join(os.environ['SOMA_ROOT'], 'src')
-            for package, git_url_branch in packages.items():
-                git_url, branch = git_url_branch
-                component = git_url.rsplit('/', 1)[-1].split('.', 1)[0]
-                if component == 'populse_db':
-                    component = 'populse-db'
+            for package, component_git_url_branch in packages.items():
+                component, git_url, branch = component_git_url_branch
                 component_src = os.path.join(src, component)
                 if not os.path.exists(component_src):
                     if self.configuration.verbose:

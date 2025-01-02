@@ -65,7 +65,7 @@ class ComponentsConfigParser(brainvisa_cmake.configuration.DirectorySection):
         self.components = {}
         self._configuration_lines_processed = False
 
-    def process_configuration_lines(self):
+    def process_configuration_lines(self, configure):
         if not self._configuration_lines_processed:
             if self.configuration.verbose:
                 print('Processing build directory %s' % self.directory)
@@ -193,7 +193,7 @@ class ComponentsConfigParser(brainvisa_cmake.configuration.DirectorySection):
                         pip_installed[module] = version
                         with open(installed_json, 'w') as f:
                             json.dump(installed, f)
-                elif first == 'soma-dev':
+                elif first == 'soma-dev' and configure:
                     import toml
                     import yaml
                     
@@ -202,8 +202,8 @@ class ComponentsConfigParser(brainvisa_cmake.configuration.DirectorySection):
                     soma_root = pathlib.Path(os.environ['SOMA_ROOT'])
                     with open(soma_root / "pyproject.toml") as f:
                         pixi = toml.load(f)
-                    pixi_dependencies = pixi.get("tool", {}).get("pixi", {}).get("dependencies", {})
-                    dependencies = {}
+                    dependencies = pixi.get("tool", {}).get("pixi", {}).get("dependencies", {})
+                    dependencies = {k: set(i for i in v.split(",") if i != "*") for k, v in dependencies.items()}
                     for component_src in (soma_root / "src").iterdir():
                         recipe_file = component_src / "soma-dev" / "soma-recipe.yaml"
                         if recipe_file.exists():
@@ -221,8 +221,6 @@ class ComponentsConfigParser(brainvisa_cmake.configuration.DirectorySection):
                                     # mesalib makes Anatomist crash
                                     continue
                                 package, constraint = (requirement.split(None, 1) + [None])[:2]
-                                if not constraint and package in pixi_dependencies:
-                                    continue
                                 dependencies.setdefault(package, set())
                                 if constraint:
                                     existing_constraint = dependencies[package]
@@ -415,7 +413,7 @@ site.addsitedir(os.path.dirname(__file__))
             return path
 
     def configure(self, options, args):
-        self.process_configuration_lines()
+        self.process_configuration_lines(configure=True)
 
         timeout = self.configuration.general_section.subprocess_timeout
         timeout = getattr(options, 'subprocess_timeout', timeout)
@@ -718,7 +716,7 @@ include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )
                     p.update_python_vars({'version': version})
 
     def build(self, options, args):
-        self.process_configuration_lines()
+        self.process_configuration_lines(configure=False)
 
         # It is crucial that we do not run 'make' with spurious
         # libraries in LD_LIBRARY_PATH, because 'make' has no safeguard
@@ -780,7 +778,7 @@ include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )
                 pass
 
     def doc(self):
-        self.process_configuration_lines()
+        self.process_configuration_lines(configure=False)
 
         print('Building docs in directory:', self.directory)
         timeout = self.doc_timeout
@@ -827,7 +825,7 @@ include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )
         self.__init_environ()
 
     def test(self, options, args):
-        self.process_configuration_lines()
+        self.process_configuration_lines(configure=False)
 
         timeout = self.configuration.general_section.subprocess_timeout
         timeout = getattr(options, 'subprocess_timeout', timeout)
@@ -854,7 +852,7 @@ include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )
                                  timeout=timeout)
 
     def testref(self, options, args):
-        self.process_configuration_lines()
+        self.process_configuration_lines(configure=False)
 
         timeout = self.configuration.general_section.subprocess_timeout
         timeout = getattr(options, 'subprocess_timeout', timeout)
@@ -879,7 +877,7 @@ include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )
                                    timeout=timeout)
 
     def info(self):
-        self.process_configuration_lines()
+        self.process_configuration_lines(configure=False)
         print('Build directory: "' + self.directory + '"')
         for component, directory_version_model \
                 in self.components.items():

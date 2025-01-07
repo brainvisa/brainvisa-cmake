@@ -116,7 +116,7 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
                         print(f'    cloning git repository for package {package}: {git_url}')
                     git.Repo.clone_from(git_url, component_src)
                 self.gitComponents.append((None, git_url, branch, component, 'current'))
-                with open(os.path.join(component_src, 'soma-env', 'soma-recipe.yaml')) as f:
+                with open(os.path.join(component_src, 'soma-env', 'soma-env-recipe.yaml')) as f:
                     recipe = yaml.safe_load(f)
                 other_components = recipe["soma-env"].get("components", {})
                 for other_component, other_git_url_branch in other_components.items():

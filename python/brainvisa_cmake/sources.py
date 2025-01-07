@@ -108,6 +108,7 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
             from soma_env import packages
 
             src = os.path.join(os.environ['SOMA_ROOT'], 'src')
+            self.gitComponents.append((None, 'https://github.com/brainvisa/brainvisa-cmake', 'master', 'brainvisa-cmake', 'current'))
             for package, component_git_url_branch in packages.items():
                 component, git_url, branch = component_git_url_branch
                 component_src = os.path.join(src, component)

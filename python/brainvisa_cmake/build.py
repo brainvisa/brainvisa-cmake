@@ -193,7 +193,7 @@ class ComponentsConfigParser(brainvisa_cmake.configuration.DirectorySection):
                         pip_installed[module] = version
                         with open(installed_json, 'w') as f:
                             json.dump(installed, f)
-                elif first == 'soma-dev' and configure:
+                elif first == 'soma-env' and configure:
                     import toml
                     import yaml
                     
@@ -205,7 +205,7 @@ class ComponentsConfigParser(brainvisa_cmake.configuration.DirectorySection):
                     dependencies = pixi.get("tool", {}).get("pixi", {}).get("dependencies", {})
                     dependencies = {k: set(i for i in v.split(",") if i != "*") for k, v in dependencies.items()}
                     for component_src in (soma_root / "src").iterdir():
-                        recipe_file = component_src / "soma-dev" / "soma-recipe.yaml"
+                        recipe_file = component_src / "soma-env" / "soma-env-recipe.yaml"
                         if recipe_file.exists():
                             with open(recipe_file) as f:
                                 recipe = yaml.safe_load(f)

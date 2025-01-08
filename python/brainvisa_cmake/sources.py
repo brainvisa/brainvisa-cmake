@@ -103,9 +103,13 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
                 (component_version, url, git_tag, dest_directory,
                     bv_version))
         elif l == ['soma-env']:
+            import json
             import git
             import yaml
-            from soma_env import packages
+
+            with open(os.path.join(os.environ['SOMA_ROOT'], 'conf', 'soma-env.json')) as f:
+                soma_env = json.load(f)
+            packages = soma_env["packages"]
 
             src = os.path.join(os.environ['SOMA_ROOT'], 'src')
             self.gitComponents.append((None, 'https://github.com/brainvisa/brainvisa-cmake', 'master', 'brainvisa-cmake', 'current'))

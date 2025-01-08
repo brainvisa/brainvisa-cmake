@@ -46,6 +46,10 @@ class Commands:
         return subprocess.call(["bv_maker"])
 
     def update(self):
+        src = self.soma_root / "src"
+        if list(i.name for i in src.iterdir()) == ['brainvisa-cmake']:
+            self.sources()
+        
         # Parse all recipes declared in source trees to update
         # pixi dependencies with "build" and "run" dependencies
         with open(self.soma_root / "pyproject.toml") as f:

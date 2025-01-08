@@ -301,6 +301,36 @@ class Commands:
                 f,
             )
 
+    def check_merge(self, src: str = None, branch: str = None):
+        if src:
+            src = pathlib.Path(src)
+        else:
+            src = self.soma_root / "src"
+        stack = [src]
+        while stack:
+            src = stack.pop()
+            if (src / ".git").exists():
+                repo = git.Repo(str(src))
+                branches = {i.name.rsplit("/", 1)[-1] for i in repo.remote().refs}
+                if branch is None:
+                    if "master" in branches:
+                        real_branch = "master"
+                    else:
+                        real_branch = "main"
+                else:
+                    real_branch = branch
+                repo.git.fetch()
+                non_merged = {
+                    i.split(None, 1)[0]
+                    for i in repo.git.branch("-r", "--no-merge").split("\n")
+                    if i
+                }
+                if f"origin/{real_branch}" in non_merged:
+                    print(f"git -C '{src}' merge --no-edit origin/{real_branch}")
+                    print(f"git -C '{src}' push")
+            else:
+                stack.extend(i for i in src.iterdir() if i.is_dir())
+
     def packaging_plan(
         self,
         publication_directory: str = default_publication_directory,

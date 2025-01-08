@@ -12,6 +12,7 @@ import types
 
 import fire
 import git
+import toml
 import yaml
 
 from .defaults import default_publication_directory
@@ -43,6 +44,43 @@ class Commands:
 
     def all(self):
         return subprocess.call(["bv_maker"])
+
+    def update(self):
+        # Parse all recipes declared in source trees to update
+        # pixi dependencies with "build" and "run" dependencies
+        with open(self.soma_root / "pyproject.toml") as f:
+            pixi = toml.load(f)
+        dependencies = pixi.get("tool", {}).get("pixi", {}).get("dependencies", {})
+        dependencies = {k: set((i if i[0] in '<>=' else f'=={i}') for i in v.split(",") if i != "*") for k, v in dependencies.items()}
+        for component_src in (self.soma_root / "src").iterdir():
+            recipe_file = component_src / "soma-env" / "soma-env-recipe.yaml"
+            if recipe_file.exists():
+                with open(recipe_file) as f:
+                    recipe = yaml.safe_load(f)
+                requirements = recipe.get("requirements", {}).get(
+                    "run", []
+                ) + recipe.get("requirements", {}).get("build", [])
+                for requirement in requirements:
+                    if (
+                        not isinstance(requirement, str)
+                        or requirement.startswith("$")
+                        or requirement.split()[0] == "mesalib"
+                    ):
+                        # mesalib makes Anatomist crash
+                        continue
+                    package, constraint = (requirement.split(None, 1) + [None])[:2]
+                    dependencies.setdefault(package, set())
+                    if constraint:
+                        existing_constraint = dependencies[package]
+                        if constraint not in existing_constraint:
+                            existing_constraint.add(constraint)
+        if dependencies:
+            command = ["pixi", "add"] + [
+                f"{package}{(','.join(constraint for constraint in constraints) if constraints else '=*')}"
+                for package, constraints in dependencies.items()
+            ]
+            print("'{i}'" for i in command)
+            subprocess.check_call(command)
 
     def version_plan(
         self,

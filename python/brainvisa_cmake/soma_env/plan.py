@@ -93,7 +93,7 @@ def create_package(context, package, test):
         command.append("--no-test")
     with open(context.soma_root / "pixi.toml") as f:
         pixi_toml = toml.load(f)
-    channels = pixi_toml["tool"]["pixi"]["project"]["channels"]
+    channels = pixi_toml["project"]["channels"]
     for i in channels + [f"file://{output}"]:
         command.extend(["-c", i])
     try:

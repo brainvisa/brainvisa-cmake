@@ -52,7 +52,7 @@ class Commands:
         
         # Parse all recipes declared in source trees to update
         # pixi dependencies with "build" and "run" dependencies
-        with open(self.soma_root / "pyproject.toml") as f:
+        with open(self.soma_root / "pixi.toml") as f:
             pixi = toml.load(f)
         dependencies = pixi.get("tool", {}).get("pixi", {}).get("dependencies", {})
         dependencies = {k: set((i if i[0] in '<>=' else f'=={i}') for i in v.split(",") if i != "*") for k, v in dependencies.items()}
@@ -491,7 +491,7 @@ class Commands:
                 recipe["build"]["script"] = "\n".join(
                     (
                         f"cd '{self.soma_root}'",
-                        f"pixi run --manifest-path='{self.soma_root}/pyproject.toml' bash << END",
+                        f"pixi run --manifest-path='{self.soma_root}/pixi.toml' bash << END",
                         "set -x",
                         'cd "\\$SOMA_ROOT/build"',
                         'export BRAINVISA_INSTALL_PREFIX="$PREFIX"',

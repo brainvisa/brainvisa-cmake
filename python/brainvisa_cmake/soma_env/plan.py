@@ -61,7 +61,7 @@ def rebuild(context):
             "pixi",
             "run",
             "--manifest-path",
-            str(context.soma_root / "pyproject.toml"),
+            str(context.soma_root / "pixi.toml"),
             "bv_maker",
             "configure",
             "build",
@@ -89,7 +89,7 @@ def create_package(context, package, test):
     ]
     if not test:
         command.append("--no-test")
-    with open(context.soma_root / "pyproject.toml") as f:
+    with open(context.soma_root / "pixi.toml") as f:
         pixi_toml = toml.load(f)
     channels = pixi_toml["tool"]["pixi"]["project"]["channels"]
     for i in channels + [f"file://{output}"]:

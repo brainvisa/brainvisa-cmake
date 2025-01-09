@@ -54,7 +54,7 @@ class Commands:
         # pixi dependencies with "build" and "run" dependencies
         with open(self.soma_root / "pixi.toml") as f:
             pixi = toml.load(f)
-        dependencies = pixi.get("tool", {}).get("pixi", {}).get("dependencies", {})
+        dependencies = pixi.get("dependencies", {})
         dependencies = {k: set((i if i[0] in '<>=' else f'=={i}') for i in v.split(",") if i != "*") for k, v in dependencies.items()}
         for component_src in (self.soma_root / "src").iterdir():
             recipe_file = component_src / "soma-env" / "soma-env-recipe.yaml"

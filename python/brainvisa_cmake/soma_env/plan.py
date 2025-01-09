@@ -44,11 +44,13 @@ def check_build_status(context):
 
 
 def modify_file(context, file, file_contents):
+    print(f"Modify file {file}")
     with open(file, "w") as f:
         f.write(file_contents)
 
 
 def git_commit(context, repo, modified, message):
+    print(f"Commit in {repo}: {message}")
     repo = git.Repo(repo)
     repo.git.add(*modified)
     repo.git.commit("-m", message, "-n")

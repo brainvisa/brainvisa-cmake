@@ -252,11 +252,11 @@ class Commands:
                                         src.glob("python/*/info.py"),
                                     )
                                 )
-                            if not files:
-                                raise RuntimeError(
-                                    f"Cannot find component version file (info.py or project_info.cmake) in {src}"
-                                )
-                            file = files[0]
+                                if not files:
+                                    raise RuntimeError(
+                                        f"Cannot find component version file (info.py or project_info.cmake) in {src}"
+                                    )
+                                file = files[0]
                         with open(file) as f:
                             file_contents = f.read()
                         for regex, version_component in zip(

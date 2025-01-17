@@ -20,6 +20,18 @@ from .recipes import sorted_recipies, find_soma_env_packages, read_recipes
 from . import plan as plan_module
 
 
+def update_merge(updated, other):
+    for key, value in other.items():
+        if (
+            key in updated
+            and isinstance(updated[key], dict)
+            and isinstance(other, dict)
+        ):
+            update_merge(updated[key], value)
+        else:
+            updated[key] = value
+
+
 class Commands:
     def __init__(self):
         self.soma_root = pathlib.Path(os.environ["SOMA_ROOT"]).absolute()
@@ -47,15 +59,18 @@ class Commands:
 
     def update(self):
         src = self.soma_root / "src"
-        if list(i.name for i in src.iterdir()) == ['brainvisa-cmake']:
+        if list(i.name for i in src.iterdir()) == ["brainvisa-cmake"]:
             self.sources()
-        
+
         # Parse all recipes declared in source trees to update
         # pixi dependencies with "build" and "run" dependencies
         with open(self.soma_root / "pixi.toml") as f:
             pixi = toml.load(f)
         dependencies = pixi.get("dependencies", {})
-        dependencies = {k: set((i if i[0] in '<>=' else f'=={i}') for i in v.split(",") if i != "*") for k, v in dependencies.items()}
+        dependencies = {
+            k: set((i if i[0] in "<>=" else f"=={i}") for i in v.split(",") if i != "*")
+            for k, v in dependencies.items()
+        }
         for component_src in (self.soma_root / "src").iterdir():
             recipe_file = component_src / "soma-env" / "soma-env-recipe.yaml"
             if recipe_file.exists():
@@ -333,19 +348,19 @@ class Commands:
 
     def packaging_plan(
         self,
-        publication_directory: str = default_publication_directory,
         packages: str = "*",
         force: bool = False,
         test: bool = False,
     ):
-        if not publication_directory or publication_directory.lower() == "none":
-            publication_directory = None
-        else:
-            publication_directory = pathlib.Path(publication_directory).absolute()
-        if publication_directory is not None and not publication_directory.exists():
-            raise RuntimeError(
-                f"Publication directory {publication_directory} does not exist"
-            )
+        # Read environment version
+        with open(self.soma_root / "conf" / "soma-env.json") as f:
+            soma_env_conf = json.load(f)
+        environment_version = soma_env_conf["version"]
+        development_environment = environment_version.startswith("0.")
+        publication_conf = soma_env_conf["publication"]
+
+        for d in publication_conf.values():
+            publication_directory = d["directory"] = pathlib.Path(d["directory"])
 
         selector = re.compile("|".join(f"(?:{fnmatch.translate(i)})" for i in packages))
 
@@ -369,35 +384,38 @@ class Commands:
             shutil.rmtree(plan_dir)
         plan_dir.mkdir()
 
-        # Read environment version
-        with open(self.soma_root / "conf" / "soma-env.json") as f:
-            environment_version = json.load(f)["version"]
-        development_environment = environment_version.startswith("0.")
-
-        # Get the release history for selected environment (e.g.
-        # environment="6.0") from the publication directory.
+        # Fusion the release history for selected environment (e.g.
+        # environment="6.0") from the publication directories.
         # The release history is located in the
-        # f"soma-env-{environment_version}.yaml" file and contains a dict
-        # with the following structure:
+        # f"soma-env-{environment_version}.yaml" file of each publication directory.
+        # This file and contains a dict with the following structure:
         #    "soma-env": for each version of soma-env package, contain a dict
         #        associating packages with their version at the time of soma-env
         #        release.
         #    "packages": for each package, contains a dict with all published
         #        versions and, for each version, the brainvisa-cmake components
         #        associated to their git changeset.
-        release_history = {"soma-env": {}, "packages": {}}
+        release_histories = {}
+        merged_release_history = {"soma-env": {}, "packages": {}}
         last_published_soma_env_version = None
-        if publication_directory is not None:
+        for channel, channel_info in publication_conf.items():
+            publication_directory = channel_info["directory"]
             release_history_file = (
                 publication_directory / f"soma-env-{environment_version}.json"
             )
             if release_history_file.exists():
+                print(f"Read release history file: {release_history_file}")
                 with open(release_history_file) as f:
-                    release_history = json.load(f)
-                last_published_soma_env_version = list(
-                    release_history["soma-env"].keys()
-                )[-1]
-                print(f"Release history file: {release_history_file}")
+                    release_history = release_histories[channel] = json.load(f)
+                # Find highest version of soma-env
+                for version_string in release_history["soma-env"].keys():
+                    version = tuple(int(i) for i in version_string.split("."))
+                    if (
+                        last_published_soma_env_version is None
+                        or version > last_published_soma_env_version
+                    ):
+                        last_published_soma_env_version = version
+                update_merge(merged_release_history, release_history)
             else:
                 print(f"WARNING: {release_history_file} does not exist")
 
@@ -405,17 +423,23 @@ class Commands:
         # number or setting it to 0
         if last_published_soma_env_version:
             # Increment patch number
-            version, patch = last_published_soma_env_version.rsplit(".", 1)
-            patch = int(patch) + 1
-            future_published_soma_env_version = f"{version}.{patch}"
-            release_history["soma-env"][future_published_soma_env_version] = (
-                copy.deepcopy(
-                    release_history["soma-env"][last_published_soma_env_version]
-                )
+            major, minor, patch = last_published_soma_env_version
+            future_published_soma_env_version = f"{major}.{minor}.{patch+1}"
+            last_published_soma_env_version = f"{major}.{minor}.{patch}"
+            release_histories.setdefault(channel, {})["soma-env"][
+                future_published_soma_env_version
+            ] = copy.deepcopy(
+                release_histories.setdefault(channel, {})["soma-env"][
+                    last_published_soma_env_version
+                ]
             )
+            print(f"Last published soma-env version: {last_published_soma_env_version}")
         else:
             future_published_soma_env_version = f"{environment_version}.0"
-            release_history["soma-env"][future_published_soma_env_version] = {}
+            release_histories.setdefault(channel, {}).setdefault("soma-env", {})[
+                future_published_soma_env_version
+            ] = {}
+            print("soma-env has never been published")
 
         # Next environment version is used to build dependencies strings
         # for components:
@@ -432,6 +456,7 @@ class Commands:
 
         recipes = {}
         selected_packages = set()
+        packages_per_channel = {}
         # Get ordered selection of recipes. Order is based on package
         # dependencies. Recipes are selected according to user selection and
         # modification since last packaging
@@ -463,10 +488,10 @@ class Commands:
                 if last_published_soma_env_version is not None:
 
                     latest_changesets = (
-                        release_history["packages"]
+                        merged_release_history["packages"]
                         .get(package)
                         .get(
-                            release_history["soma-env"][
+                            merged_release_history["soma-env"][
                                 last_published_soma_env_version
                             ].get(package)
                         )
@@ -476,12 +501,22 @@ class Commands:
                         f"Select {package} because no source changesets was found in release history"
                     )
                     selected_packages.add(package)
+                    packages_per_channel.setdefault(
+                        recipe["soma-env"]["publication"], []
+                    ).append(package)
                 elif changesets != latest_changesets:
-                    changes = sorted(i for i in changesets if changesets[i] != latest_changesets.get(i))
+                    changes = sorted(
+                        i
+                        for i in changesets
+                        if changesets[i] != latest_changesets.get(i)
+                    )
                     print(
                         f"Select {package} for building because some source has changed (in {' '.join(changes)}) since latest release"
                     )
                     selected_packages.add(package)
+                    packages_per_channel.setdefault(
+                        recipe["soma-env"]["publication"], []
+                    ).append(package)
                 else:
                     print(f"No change detected in package {package}")
 
@@ -528,7 +563,7 @@ class Commands:
         if not selected_packages:
             print("Nothing to do.")
             return
-        
+
         # Select new packages that are compiled and depend on, at least, one selected compiled package
         selection_modified = True
         while selection_modified:
@@ -547,9 +582,11 @@ class Commands:
                                 f"Select {package} because it is binary dependent on {other_package} which is selected"
                             )
                             selected_packages.add(package)
+                            packages_per_channel.setdefault(
+                                recipe["soma-env"]["publication"], []
+                            ).append(package)
                             selection_modified = True
 
-    
         # Generate rattler-build recipe and action for soma-env package
         print(f"Generate recipe for soma-env {future_published_soma_env_version}")
         (plan_dir / "recipes" / "soma-env").mkdir(exist_ok=True, parents=True)
@@ -603,13 +640,10 @@ class Commands:
                 f"soma-env>={future_published_soma_env_version},<{next_environment_version}"
             )
 
-            # Remove soma-env specific data from recipe
-            recipe.pop("soma-env", None)
-
             (plan_dir / "recipes" / package).mkdir(exist_ok=True, parents=True)
 
             with open(plan_dir / "recipes" / package / "recipe.yaml", "w") as f:
-                yaml.safe_dump(recipe, f)
+                yaml.safe_dump({k: v for k, v in recipe.items() if k != "soma-env"}, f)
 
             package_actions.append(
                 {
@@ -619,39 +653,46 @@ class Commands:
                 }
             )
 
-            release_history["soma-env"][future_published_soma_env_version][package] = (
-                recipe["package"]["version"]
-            )
-            release_history["packages"].setdefault(package, {})[
+            channel = recipe["soma-env"]["publication"]
+            release_histories[channel]["soma-env"][future_published_soma_env_version][
+                package
+            ] = recipe["package"]["version"]
+            release_histories[channel]["packages"].setdefault(package, {})[
                 recipe["package"]["version"]
             ] = changesets
 
-        # Add an action to assess that compilation was successfully done
-        actions.append({"action": "check_build_status"})
+        if package_actions:
+            # Add an action to assess that compilation was successfully done
+            actions.append({"action": "check_build_status"})
 
-        actions.append(
-            {
-                "action": "create_package",
-                "args": ["soma-env"],
-                "kwargs": {"test": False},
-            }
-        )
-
-        actions.extend(package_actions)
-        packages_dir = self.soma_root / "plan" / "packages"
-        if publication_directory is not None:
             actions.append(
                 {
-                    "action": "publish",
-                    "kwargs": {
-                        "environment": environment_version,
-                        "packages_dir": str(packages_dir),
-                        "packages": ["soma-env"] + list(selected_packages),
-                        "release_history": release_history,
-                        "publication_dir": str(publication_directory),
-                    },
+                    "action": "create_package",
+                    "args": ["soma-env"],
+                    "kwargs": {"test": False},
                 }
             )
+
+            actions.extend(package_actions)
+            packages_dir = self.soma_root / "plan" / "packages"
+            for publication_channel, packages in packages_per_channel.items():
+                publication_directory = soma_env_conf["publication"][
+                    publication_channel
+                ]
+                actions.append(
+                    {
+                        "action": "publish",
+                        "kwargs": {
+                            "environment": environment_version,
+                            "packages_dir": str(packages_dir),
+                            "packages": ["soma-env"] + list(selected_packages),
+                            "release_history": release_histories[publication_channel],
+                            "publication_dir": str(publication_directory),
+                        },
+                    }
+                )
+        else:
+            print("Nothing to do")
 
         with open(plan_dir / "actions.yaml", "w") as f:
             yaml.safe_dump(

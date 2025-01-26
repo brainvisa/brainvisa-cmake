@@ -1,7 +1,45 @@
 import json
+import subprocess
 import yaml
+import re
 
 import brainvisa_cmake.brainvisa_projects as brainvisa_projects
+
+
+def pin_dev_compatible(package, min_pin=None, max_pin=None, exact=False):
+    output = subprocess.check_output(["pixi", "list", "--json", package])
+    installed_packages = {i["name"]: i for i in json.loads(output.decode())}
+    package_info = installed_packages.get(package)
+    if package_info is None:
+        raise ValueError(f'Cannot find "{package}" in installed packages')
+    version = package_info["version"]
+    if exact:
+        return f"{package} =={version} {package_info['build']}"
+    if min_pin is None:
+        min_version = version
+    else:
+        min_version = ".".join((version.split("."))[: len(min_pin.split("."))])
+    if max_pin is None:
+        max_version = version.split(".")[:-1]
+    elif max_pin:
+        max_version = version.split(".")[: len(max_pin.split("."))]
+    else:
+        max_version = None
+    if max_version:
+        max_version[-1] = str(int(max_version[-1]) + 1)
+        max_version = f',<{".".join(max_version)}'
+    else:
+        max_version = ""
+    return f"{package} >={min_version}{max_version}"
+
+
+def replace_soma_env(match):
+    replacement_env = {"pin_dev_compatible": pin_dev_compatible}
+    return eval(f"f'''{{{match.group(1)}}}'''", replacement_env, replacement_env)
+
+
+def resolve_requirement(requirement):
+    return re.sub(r"\$soma-env\{\{(.*)\}\}", replace_soma_env, requirement)
 
 
 def read_recipes(soma_root):
@@ -33,12 +71,20 @@ def read_recipes(soma_root):
                         print(
                             f"WARNING: directory {component_src} does not contain project_info.cmake, python/*/info.py or */info.py file"
                         )
-                
+
                 # Replace git location by source directories in component list
                 components = {component_src.name: component_src}
                 for component in recipe["soma-env"].get("components", {}).keys():
                     components[component] = src_dir / component
                 recipe["soma-env"]["components"] = components
+
+                # Replace $soma-env{{...}} elements in dependencies
+                for section, requirements in recipe.get("requirements", {}).items():
+                    if isinstance(requirements, list):
+                        for i in range(len(requirements)):
+                            r = requirements[i]
+                            if isinstance(r, str):
+                                requirements[i] = resolve_requirement(r)
                 yield recipe
 
 
@@ -109,7 +155,7 @@ def sorted_recipies(soma_root):
         done.add(package)
         for dependent in inverted_dependencies.get(package, []):
             dependencies = recipe.get("internal-dependencies", [])
-            if all(d in done for d in dependencies):
+            if dependent not in done and all(d in done for d in dependencies):
                 ready.add(dependent)
 
 

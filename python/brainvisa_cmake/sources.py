@@ -32,7 +32,7 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
     _validOptions.update(_variables_with_replacements)
     _validOptions.update(_path_variables)
     _validOptions.update(_validAdditiveOptions)
-        
+
     def __init__(self, directory, configuration):
         super(SourceDirectory, self).__init__()
         self.configuration = configuration
@@ -71,7 +71,7 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
             pass
         else:
             self.sourceConfigurationLines.append(line)
-            
+
     def parseSourceConfiguration(self):
         for l in self.sourceConfigurationLines:
             self.parseSourceConfigurationLine(l)
@@ -103,29 +103,29 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
                 (component_version, url, git_tag, dest_directory,
                     bv_version))
         elif l == ['soma-env']:
+            from pathlib import Path
             import json
-            import git
-            import yaml
 
-            with open(os.path.join(os.environ['SOMA_ROOT'], 'conf', 'soma-env.json')) as f:
-                soma_env = json.load(f)
-            packages = soma_env["packages"]
+            sources = {}
+            for sources_file in sorted(
+                (Path(os.environ["SOMA_ROOT"]) / "conf" / "sources.d").iterdir()
+            ):
+                with open(sources_file) as f:
+                    sources.update(json.load(f))
 
-            src = os.path.join(os.environ['SOMA_ROOT'], 'src')
-            self.gitComponents.append((None, 'https://github.com/brainvisa/brainvisa-cmake', 'master', 'brainvisa-cmake', 'current'))
-            for package, component_git_url_branch in packages.items():
-                component, git_url, branch = component_git_url_branch
-                component_src = os.path.join(src, component)
-                if not os.path.exists(component_src):
-                    print(f'Cloning git repository for package {package}: {git_url}')
-                    git.Repo.clone_from(git_url, component_src, branch=branch)
-                self.gitComponents.append((None, git_url, branch, component, 'current'))
-                with open(os.path.join(component_src, 'soma-env', 'soma-env-recipe.yaml')) as f:
-                    recipe = yaml.safe_load(f)
-                other_components = recipe["soma-env"].get("components", {})
-                for other_component, other_git_url_branch in other_components.items():
-                    other_git_url, other_branch = other_git_url_branch
-                    self.gitComponents.append((None, other_git_url, other_branch, other_component, 'current'))
+            self.gitComponents.append(
+                (
+                    None,
+                    "https://github.com/brainvisa/brainvisa-cmake",
+                    "master",
+                    "brainvisa-cmake",
+                    "current",
+                )
+            )
+            for component, git_info in sources.items():
+                url = git_info["url"]
+                ref = git_info.get("branch", git_info.get("tag"))
+                self.gitComponents.append((None, url, ref, component, "current"))
         else:
             if len(l) < 2 or len(l) > 4:
                 raise SyntaxError()
@@ -178,19 +178,26 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
                                 component_version=(component, version))
                             break
                     else:
-                        repo_dir = brainvisa_projects.url_per_component[component].get('trunk')
-                        if 'CONDA_PREFIX' in os.environ and repo_dir:
+                        repo_dir = brainvisa_projects.url_per_component[component].get(
+                            "trunk"
+                        )
+                        if "CONDA_PREFIX" in os.environ and repo_dir:
                             repo, dir = repo_dir
                             url = repo.split()[1]
-                            default_source_dir = getattr(self, 'default_source_dir', None)
+                            default_source_dir = getattr(
+                                self, "default_source_dir", None
+                            )
                             if default_source_dir:
-                                dir = default_source_dir.format(project=project,
-                                                                component=component,
-                                                                branch=versionPattern)
+                                dir = default_source_dir.format(
+                                    project=project,
+                                    component=component,
+                                    branch=versionPattern,
+                                )
                             self.parseSourceConfigurationLine(
-                                f'git {url} {versionPattern} {dir}',
-                                virtual=True, 
-                                component_version=(component, versionPattern))
+                                f"git {url} {versionPattern} {dir}",
+                                virtual=True,
+                                component_version=(component, versionPattern),
+                            )
             elif sign in ('-', 'brainvisa_exclude'):
                 if '/' in componentPattern:
                     raise SyntaxError()

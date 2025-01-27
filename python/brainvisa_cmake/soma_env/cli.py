@@ -16,20 +16,15 @@ import toml
 import yaml
 
 from .defaults import default_publication_directory
-from .recipes import sorted_recipies, find_soma_env_packages, read_recipes
+from .recipes import (
+    sorted_recipies,
+    find_soma_env_packages,
+    read_recipes,
+    resolve_requirement,
+)
 from . import plan as plan_module
 
-
-def update_merge(updated, other):
-    for key, value in other.items():
-        if (
-            key in updated
-            and isinstance(updated[key], dict)
-            and isinstance(other, dict)
-        ):
-            update_merge(updated[key], value)
-        else:
-            updated[key] = value
+from .plan import update_merge
 
 
 class Commands:
@@ -66,10 +61,9 @@ class Commands:
         # pixi dependencies with "build" and "run" dependencies
         with open(self.soma_root / "pixi.toml") as f:
             pixi = toml.load(f)
-        dependencies = pixi.get("dependencies", {})
         dependencies = {
             k: set((i if i[0] in "<>=" else f"=={i}") for i in v.split(",") if i != "*")
-            for k, v in dependencies.items()
+            for k, v in pixi.get("dependencies", {}).items() if isinstance(v, str)
         }
         for component_src in (self.soma_root / "src").iterdir():
             recipe_file = component_src / "soma-env" / "soma-env-recipe.yaml"
@@ -80,9 +74,11 @@ class Commands:
                     "run", []
                 ) + recipe.get("requirements", {}).get("build", [])
                 for requirement in requirements:
+                    if not isinstance(requirement, str):
+                        continue
+                    requirement = resolve_requirement(requirement)
                     if (
-                        not isinstance(requirement, str)
-                        or requirement.startswith("$")
+                        requirement.startswith("$")
                         or requirement.split()[0] == "mesalib"
                     ):
                         # mesalib makes Anatomist crash
@@ -351,6 +347,7 @@ class Commands:
         packages: str = "*",
         force: bool = False,
         test: bool = False,
+        default_patch_version: int = 0,
     ):
         # Read environment version
         with open(self.soma_root / "conf" / "soma-env.json") as f:
@@ -395,7 +392,7 @@ class Commands:
         #    "packages": for each package, contains a dict with all published
         #        versions and, for each version, the brainvisa-cmake components
         #        associated to their git changeset.
-        release_histories = {}
+        release_histories_diff = {}
         merged_release_history = {"soma-env": {}, "packages": {}}
         last_published_soma_env_version = None
         for channel, channel_info in publication_conf.items():
@@ -406,7 +403,7 @@ class Commands:
             if release_history_file.exists():
                 print(f"Read release history file: {release_history_file}")
                 with open(release_history_file) as f:
-                    release_history = release_histories[channel] = json.load(f)
+                    release_history = json.load(f)
                 # Find highest version of soma-env
                 for version_string in release_history["soma-env"].keys():
                     version = tuple(int(i) for i in version_string.split("."))
@@ -420,25 +417,29 @@ class Commands:
                 print(f"WARNING: {release_history_file} does not exist")
 
         # Set the new soma-env full version by incrementing last published version patch
-        # number or setting it to 0
+        # number or setting it to default_patch_version
         if last_published_soma_env_version:
             # Increment patch number
             major, minor, patch = last_published_soma_env_version
             future_published_soma_env_version = f"{major}.{minor}.{patch+1}"
             last_published_soma_env_version = f"{major}.{minor}.{patch}"
-            release_histories.setdefault(channel, {})["soma-env"][
-                future_published_soma_env_version
-            ] = copy.deepcopy(
-                release_histories.setdefault(channel, {})["soma-env"][
-                    last_published_soma_env_version
-                ]
-            )
+            for channel in publication_conf:
+                release_histories_diff.setdefault(channel, {}).setdefault(
+                    "soma-env", {}
+                )[future_published_soma_env_version] = copy.deepcopy(
+                    release_histories_diff.setdefault(channel, {})
+                    .setdefault("soma-env", {})
+                    .get(last_published_soma_env_version, {})
+                )
             print(f"Last published soma-env version: {last_published_soma_env_version}")
         else:
-            future_published_soma_env_version = f"{environment_version}.0"
-            release_histories.setdefault(channel, {}).setdefault("soma-env", {})[
-                future_published_soma_env_version
-            ] = {}
+            future_published_soma_env_version = (
+                f"{environment_version}.{default_patch_version}"
+            )
+            for channel in publication_conf:
+                release_histories_diff.setdefault(channel, {}).setdefault(
+                    "soma-env", {}
+                )[future_published_soma_env_version] = {}
             print("soma-env has never been published")
 
         # Next environment version is used to build dependencies strings
@@ -654,12 +655,12 @@ class Commands:
             )
 
             channel = recipe["soma-env"]["publication"]
-            release_histories[channel]["soma-env"][future_published_soma_env_version][
-                package
-            ] = recipe["package"]["version"]
-            release_histories[channel]["packages"].setdefault(package, {})[
-                recipe["package"]["version"]
-            ] = changesets
+            release_histories_diff[channel]["soma-env"][
+                future_published_soma_env_version
+            ][package] = recipe["package"]["version"]
+            release_histories_diff[channel].setdefault("packages", {}).setdefault(
+                package, {}
+            )[recipe["package"]["version"]] = changesets
 
         if package_actions:
             # Add an action to assess that compilation was successfully done
@@ -675,18 +676,33 @@ class Commands:
 
             actions.extend(package_actions)
             packages_dir = self.soma_root / "plan" / "packages"
+            actions.append(
+                {
+                    "action": "publish",
+                    "kwargs": {
+                        "environment": environment_version,
+                        "packages_dir": str(packages_dir),
+                        "packages": ["soma-env"],
+                        "publication_dir": str(
+                            soma_env_conf["publication"]["neuro-forge"]["directory"]
+                        ),
+                    },
+                }
+            )
             for publication_channel, packages in packages_per_channel.items():
                 publication_directory = soma_env_conf["publication"][
                     publication_channel
-                ]
+                ]["directory"]
                 actions.append(
                     {
                         "action": "publish",
                         "kwargs": {
                             "environment": environment_version,
                             "packages_dir": str(packages_dir),
-                            "packages": ["soma-env"] + list(selected_packages),
-                            "release_history": release_histories[publication_channel],
+                            "packages": list(packages),
+                            "release_history_diff": release_histories_diff[
+                                publication_channel
+                            ],
                             "publication_dir": str(publication_directory),
                         },
                     }

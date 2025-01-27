@@ -8,6 +8,16 @@ import subprocess
 import sys
 import toml
 
+def update_merge(updated, other):
+    for key, value in other.items():
+        if (
+            key in updated
+            and isinstance(updated[key], dict)
+            and isinstance(other, dict)
+        ):
+            update_merge(updated[key], value)
+        else:
+            updated[key] = value
 
 def check_build_status(context):
     # Check that bv_maker steps had been done successfully in the right order
@@ -114,7 +124,7 @@ def publish(
     publication_dir,
     packages_dir,
     packages,
-    release_history,
+    release_history_diff=None,
     index=False,
     force=False,
 ):
@@ -147,15 +157,21 @@ def publish(
             dest.parent.mkdir(exist_ok=True)
             shutil.copy2(src, dest)
             copied.append(dest)
-        release_history_file = publication_dir / f"soma-env-{environment}.json"
-        if release_history_file.exists():
-            release_history_file_backup = (
-                publication_dir / f"soma-env-{environment}.json.backup"
-            )
-            os.rename(release_history_file, release_history_file_backup)
-        with open(release_history_file, "w") as f:
-            copied.append(release_history_file)
-            json.dump(release_history, f, indent=4)
+        if release_history_diff:
+            release_history_file = publication_dir / f"soma-env-{environment}.json"
+            if release_history_file.exists():
+                with open(release_history_file) as f:
+                    release_history = json.load(f)
+                release_history_file_backup = (
+                    publication_dir / f"soma-env-{environment}.json.backup"
+                )
+                os.rename(release_history_file, release_history_file_backup)
+            else:
+                release_history = {}
+            update_merge(release_history, release_history_diff)
+            with open(release_history_file, "w") as f:
+                copied.append(release_history_file)
+                json.dump(release_history, f, indent=4)
         if index:
             subprocess.check_call(["conda", "index", str(publication_dir)])
     except Exception:

@@ -535,6 +535,11 @@ site.addsitedir(os.path.dirname(__file__))
         with open(cmakeLists, 'w') as out:
             print(f'''
 cmake_minimum_required( VERSION 3.20 )
+if ( EXISTS "$ENV{{CONDA_PREFIX}}/bin/clang")
+  set( CMAKE_CXX_COMPILER "$ENV{{CONDA_PREFIX}}/bin/clang" CACHE STRING "C++ compiler" FORCE )
+  set( CMAKE_CXX_STANDARD_LIBRARIES "-lstdc++" )
+endif()
+
 set( CMAKE_PREFIX_PATH "${{CMAKE_BINARY_DIR}}" ${{CMAKE_PREFIX_PATH}} )
 project( "Brainvisa" )
 include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )
@@ -615,7 +620,7 @@ include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )
         # in 2 passes: once to reinstall bv-cmake from sources, and a second
         # time to actually configure all projects using the newly installed
         # bv-cmake.
-        if 'brainvisa-cmake' in self.components:
+        if 'brainvisa-cmake' in self.components  and 'SOMA_ROOT' not in os.environ:
             print('=== bootstraping brainvisa-cmake project ===')
             bvcmake_dir = os.path.join(self.directory, 'brainvisa-cmake')
             if not os.path.exists(bvcmake_dir):

@@ -1,3 +1,4 @@
+cmake_minimum_required( VERSION 3.20 )
 
 if( BRAINVISA_BVMAKER )
   # in BV mode, force CMAKE_INSTALL_PREFIX to point to build directory
@@ -7,7 +8,6 @@ endif()
 cmake_policy( SET CMP0048 NEW )
 project( brainvisa-cmake LANGUAGES CXX VERSION 1.0 )
 
-cmake_minimum_required( VERSION 3.20 )
 
 function( BRAINVISA_GLOB_AND_FILTER glob variable )
   file( ${glob} allFiles ${ARGN} )

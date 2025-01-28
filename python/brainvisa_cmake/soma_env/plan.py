@@ -8,6 +8,7 @@ import subprocess
 import sys
 import toml
 
+
 def update_merge(updated, other):
     for key, value in other.items():
         if (
@@ -18,6 +19,7 @@ def update_merge(updated, other):
             update_merge(updated[key], value)
         else:
             updated[key] = value
+
 
 def check_build_status(context):
     # Check that bv_maker steps had been done successfully in the right order
@@ -56,7 +58,10 @@ def check_build_status(context):
 def modify_file(context, file, file_contents):
     print(f"Modify file {file}")
     with open(file, "w") as f:
-        f.write(file_contents)
+        if isinstance(file_contents, dict):
+            json.dumps(file_contents, f, indent=4)
+        else:
+            f.write(file_contents)
 
 
 def git_commit(context, repo, modified, message):

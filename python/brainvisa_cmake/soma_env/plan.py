@@ -143,11 +143,9 @@ def create_package(context, package, test):
 
 def publish(
     context,
-    environment,
     publication_dir,
     packages_dir,
     packages,
-    release_history_diff=None,
     index=False,
     force=False,
 ):
@@ -169,7 +167,6 @@ def publish(
             raise ValueError(f"No package file found for {package} in {packages_dir}")
         packages_files.append(candidates[0])
     copied = []
-    release_history_file_backup = None
     try:
         for src in packages_files:
             r = src.relative_to(packages_dir)
@@ -180,28 +177,9 @@ def publish(
             dest.parent.mkdir(exist_ok=True)
             shutil.copy2(src, dest)
             copied.append(dest)
-        if release_history_diff:
-            release_history_file = publication_dir / f"soma-env-{environment}.json"
-            if release_history_file.exists():
-                with open(release_history_file) as f:
-                    release_history = json.load(f)
-                release_history_file_backup = (
-                    publication_dir / f"soma-env-{environment}.json.backup"
-                )
-                os.rename(release_history_file, release_history_file_backup)
-            else:
-                release_history = {}
-            update_merge(release_history, release_history_diff)
-            with open(release_history_file, "w") as f:
-                copied.append(release_history_file)
-                json.dump(release_history, f, indent=4)
         if index:
             subprocess.check_call(["conda", "index", str(publication_dir)])
     except Exception:
         for f in copied:
             os.remove(f)
-        if release_history_file_backup is not None:
-            os.rename(release_history_file_backup, release_history_file)
         raise
-    if release_history_file_backup is not None:
-        os.remove(release_history_file_backup)

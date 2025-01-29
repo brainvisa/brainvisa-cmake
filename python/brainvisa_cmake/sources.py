@@ -122,9 +122,16 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
                     "current",
                 )
             )
+            with open(Path(os.environ["SOMA_ROOT"]) / "conf" / "soma-env.json") as f:
+                soma_env_conf = json.load(f)
+                environment_version = soma_env_conf["version"]
+            is_release = len(environment_version.split(".")) > 2
             for component, git_info in sources.items():
                 url = git_info["url"]
-                ref = git_info.get("branch", git_info.get("tag"))
+                if is_release:
+                    ref = git_info["changeset"]
+                else:
+                    ref = git_info.get("branch", git_info.get("tag"))
                 self.gitComponents.append((None, url, ref, component, "current"))
         else:
             if len(l) < 2 or len(l) > 4:

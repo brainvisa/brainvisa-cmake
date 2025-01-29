@@ -626,16 +626,20 @@ class Commands:
             actions.append(
                 {
                     "action": "modify_file",
-                    "file": str(f),
-                    "content": component_sources_file[f],
+                    "kwargs": {
+                        "file": str(f),
+                        "file_contents": component_sources_file[f],
+                    },
                 }
             )
         files_to_commit.update(modified_sources)
         actions.append(
             {
                 "action": "modify_file",
-                "file": str(soma_env_conf_file),
-                "content": soma_env_conf,
+                "kwargs": {
+                    "file": str(soma_env_conf_file),
+                    "file_contents": soma_env_conf,
+                },
             }
         )
         files_to_commit.add(soma_env_conf_file)
@@ -644,8 +648,11 @@ class Commands:
             actions.append(
                 {
                     "action": "git_commit",
-                    "modified": [str(i) for i in files_to_commit],
-                    "message": f"Release {environment_name} {future_published_soma_env_version}",
+                    "kwargs": {
+                        "repo": str(self.soma_root),
+                        "modified": [str(i) for i in files_to_commit],
+                        "message": f"Release {environment_name} {future_published_soma_env_version}",
+                    },
                 }
             )
 

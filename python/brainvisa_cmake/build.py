@@ -535,8 +535,9 @@ site.addsitedir(os.path.dirname(__file__))
         with open(cmakeLists, 'w') as out:
             print(f'''
 cmake_minimum_required( VERSION 3.20 )
-if ( EXISTS "$ENV{{CONDA_PREFIX}}/bin/clang")
-  set( CMAKE_CXX_COMPILER "$ENV{{CONDA_PREFIX}}/bin/clang" CACHE STRING "C++ compiler" FORCE )
+if ( DEFINED USE_CLANG )
+  set( USE_CLANG "YES" CACHE STRING "Force usage of clang compiler" FORCE )
+  set( CMAKE_CXX_COMPILER "clang" CACHE STRING "C++ compiler" FORCE )
   set( CMAKE_CXX_STANDARD_LIBRARIES "-lstdc++" )
 endif()
 

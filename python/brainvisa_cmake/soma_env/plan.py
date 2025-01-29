@@ -8,6 +8,7 @@ import subprocess
 import sys
 import toml
 
+
 def update_merge(updated, other):
     for key, value in other.items():
         if (
@@ -18,6 +19,7 @@ def update_merge(updated, other):
             update_merge(updated[key], value)
         else:
             updated[key] = value
+
 
 def check_build_status(context):
     # Check that bv_maker steps had been done successfully in the right order
@@ -56,7 +58,10 @@ def check_build_status(context):
 def modify_file(context, file, file_contents):
     print(f"Modify file {file}")
     with open(file, "w") as f:
-        f.write(file_contents)
+        if isinstance(file_contents, dict):
+            json.dump(file_contents, f, indent=4)
+        else:
+            f.write(file_contents)
 
 
 def git_commit(context, repo, modified, message):
@@ -80,6 +85,24 @@ def rebuild(context):
             "doc",
         ]
     )
+
+
+def create_release_tag(context, tag):
+    repo = git.Repo(context.soma_root)
+    branch = repo.head.reference
+    repo.git.checkout(repo.head.commit)
+    conf_file = context.soma_root / "conf" / "soma-env.json"
+    with open(conf_file) as f:
+        conf = json.load(f)
+    conf["version"] = conf.pop("latest_release")
+    with open(conf_file, "w") as f:
+        json.dump(conf, f, indent=4)
+    repo.git.add(str(conf_file))
+    import pprint
+    pprint.pprint(conf)
+    commit = repo.index.commit(f"Release {conf['name']} {conf['version']}")
+    repo.create_tag(tag, ref=commit)
+    branch.checkout()
 
 
 def create_package(context, package, test):

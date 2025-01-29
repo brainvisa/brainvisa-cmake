@@ -74,7 +74,7 @@ def read_recipes(soma_root):
 
                 # Replace git location by source directories in component list
                 components = {component_src.name: component_src}
-                for component in recipe["soma-env"].get("components", {}).keys():
+                for component in recipe["soma-env"].get("components", []):
                     components[component] = src_dir / component
                 recipe["soma-env"]["components"] = components
 

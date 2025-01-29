@@ -10,7 +10,7 @@ import argparse
 
 
 def get_rattler_cache_dir():
-    cdir = os.environ.get('XDG_CACHE_DIR')
+    cdir = os.environ.get('XDG_CACHE_HOME')
     if cdir is None:
         home = pathlib.Path.home()
         cdir = str(home / '.cache')

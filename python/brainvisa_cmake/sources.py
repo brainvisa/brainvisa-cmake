@@ -128,9 +128,11 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
             is_release = len(environment_version.split(".")) > 2
             for component, git_info in sources.items():
                 url = git_info["url"]
+                ref = None
                 if is_release:
-                    ref = git_info["changeset"]
-                else:
+                    ref = git_info.get("changeset")
+
+                if not ref:
                     ref = git_info.get("branch", git_info.get("tag"))
                 self.gitComponents.append((None, url, ref, component, "current"))
         else:

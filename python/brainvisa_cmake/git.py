@@ -490,8 +490,8 @@ going from Subversion to Git). You must check yourself that you have nothing
 to keep in this directory and delete it to make "bv_maker sources" work.'''
                        % self.path)
             self._setup_git_lfs_global_config()
-            system('git', 'clone', '--branch', self.remote_ref,
-                   self.remote_url, self.path)
+            system('git', 'clone', self.remote_url, self.path)
+            system('git', '-C',  self.path, 'checkout', self.remote_ref)
         else:
             self.ensure_origin_remote()
 

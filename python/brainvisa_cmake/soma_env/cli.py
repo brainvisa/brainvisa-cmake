@@ -313,6 +313,7 @@ class Commands:
     def packaging_plan(
         self,
         packages: str = "*",
+        release: bool = False,
         force: bool = False,
         test: bool = False,
         default_patch_version: int = 0,
@@ -604,94 +605,95 @@ class Commands:
                 }
             )
 
-        # Update latest_release in conf/soma-env.json
-        soma_env_conf["latest_release"] = future_published_soma_env_version
+        if release:
+            # Update latest_release in conf/soma-env.json
+            soma_env_conf["latest_release"] = future_published_soma_env_version
 
-        # Create actions to update components source files to set changesets
-        modified_sources = set()
-        for package in selected_packages:
-            recipe = recipes[package]
-            soma_env_conf["packages"][package] = recipe["package"]["version"]
-            for component in recipe["soma-env"].get("components"):
-                src = self.soma_root / "src" / component
-                repo = git.Repo(src)
-                changeset = str(repo.head.commit)
-                if (
-                    component_sources[component]["sources"].get("changeset")
-                    != changeset
-                ):
-                    component_sources[component]["sources"]["changeset"] = changeset
-                    modified_sources.add(component_sources[component]["json_file"])
-        for f in modified_sources:
+            # Create actions to update components source files to set changesets
+            modified_sources = set()
+            for package in selected_packages:
+                recipe = recipes[package]
+                soma_env_conf["packages"][package] = recipe["package"]["version"]
+                for component in recipe["soma-env"].get("components"):
+                    src = self.soma_root / "src" / component
+                    repo = git.Repo(src)
+                    changeset = str(repo.head.commit)
+                    if (
+                        component_sources[component]["sources"].get("changeset")
+                        != changeset
+                    ):
+                        component_sources[component]["sources"]["changeset"] = changeset
+                        modified_sources.add(component_sources[component]["json_file"])
+            for f in modified_sources:
+                actions.append(
+                    {
+                        "action": "modify_file",
+                        "kwargs": {
+                            "file": str(f),
+                            "file_contents": component_sources_file[f],
+                        },
+                    }
+                )
+            files_to_commit.update(modified_sources)
             actions.append(
                 {
                     "action": "modify_file",
                     "kwargs": {
-                        "file": str(f),
-                        "file_contents": component_sources_file[f],
+                        "file": str(soma_env_conf_file),
+                        "file_contents": soma_env_conf,
                     },
                 }
             )
-        files_to_commit.update(modified_sources)
-        actions.append(
-            {
-                "action": "modify_file",
-                "kwargs": {
-                    "file": str(soma_env_conf_file),
-                    "file_contents": soma_env_conf,
-                },
-            }
-        )
-        files_to_commit.add(soma_env_conf_file)
+            files_to_commit.add(soma_env_conf_file)
 
-        if files_to_commit:
+            if files_to_commit:
+                actions.append(
+                    {
+                        "action": "git_commit",
+                        "kwargs": {
+                            "repo": str(self.soma_root),
+                            "modified": [str(i) for i in files_to_commit],
+                            "message": f"Release {environment_name} {future_published_soma_env_version}",
+                        },
+                    }
+                )
+
+            # Create release tag
             actions.append(
                 {
-                    "action": "git_commit",
+                    "action": "create_release_tag",
                     "kwargs": {
-                        "repo": str(self.soma_root),
-                        "modified": [str(i) for i in files_to_commit],
-                        "message": f"Release {environment_name} {future_published_soma_env_version}",
+                        "tag": future_published_soma_env_version,
                     },
                 }
             )
 
-        # Create release tag
-        actions.append(
-            {
-                "action": "create_release_tag",
-                "kwargs": {
-                    "tag": future_published_soma_env_version,
-                },
-            }
-        )
-
-        # Create actions to publish packages
-        packages_dir = self.soma_root / "plan" / "packages"
-        actions.append(
-            {
-                "action": "publish",
-                "kwargs": {
-                    "packages_dir": str(packages_dir),
-                    "packages": [environment_name],
-                    "publication_dir": str(
-                        publication_conf[soma_env_conf["publication"]]["directory"]
-                    ),
-                },
-            }
-        )
-        for publication_channel, packages in packages_per_channel.items():
-            publication_directory = publication_conf[publication_channel]["directory"]
+            # Create actions to publish packages
+            packages_dir = self.soma_root / "plan" / "packages"
             actions.append(
                 {
                     "action": "publish",
                     "kwargs": {
                         "packages_dir": str(packages_dir),
-                        "packages": list(packages),
-                        "publication_dir": str(publication_directory),
+                        "packages": [environment_name],
+                        "publication_dir": str(
+                            publication_conf[soma_env_conf["publication"]]["directory"]
+                        ),
                     },
                 }
             )
+            for publication_channel, packages in packages_per_channel.items():
+                publication_directory = publication_conf[publication_channel]["directory"]
+                actions.append(
+                    {
+                        "action": "publish",
+                        "kwargs": {
+                            "packages_dir": str(packages_dir),
+                            "packages": list(packages),
+                            "publication_dir": str(publication_directory),
+                        },
+                    }
+                )
 
         # Save actions.yaml
         with open(plan_dir / "actions.yaml", "w") as f:

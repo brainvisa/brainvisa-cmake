@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import fnmatch
 import itertools
 import json
@@ -130,6 +131,7 @@ class Commands:
 
         actions = []
         commit_actions = []
+        push_actions = []
 
         # Read and merge json files defineing components sources (there can be several files
         # in environments deriving from soma-env)
@@ -265,12 +267,21 @@ class Commands:
                                 },
                             }
                         )
+                        push_actions.append(
+                            {
+                                "action": "git_push",
+                                "kwargs": {
+                                    "repo": str(src),
+                                },
+                            }
+                        )
 
                 else:
                     print(f"No change detected in package {package}")
 
         if commit_actions:
             actions.extend(commit_actions)
+            actions.extend(push_actions)
             actions.append({"action": "rebuild"})
 
         with open(plan_dir / "actions.yaml", "w") as f:
@@ -663,6 +674,17 @@ class Commands:
                     "action": "create_release_tag",
                     "kwargs": {
                         "tag": future_published_soma_env_version,
+                    },
+                }
+            )
+
+            # Push modifications
+            actions.append(
+                {
+                    "action": "git_push",
+                    "kwargs": {
+                        "repo": str(self.soma_root),
+                        "tags": True,
                     },
                 }
             )

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import git
 import json
 import os
@@ -72,6 +73,15 @@ def git_commit(context, repo, modified, message):
     repo.git.push()
 
 
+def git_push(context, repo, tags=False):
+    repo = git.Repo(repo)
+    origin = repo.remote("origin")
+    if tags:
+        origin.push(tags=True)
+    else:
+        origin.push()
+
+
 def rebuild(context):
     subprocess.check_call(
         [
@@ -99,6 +109,7 @@ def create_release_tag(context, tag):
         json.dump(conf, f, indent=4)
     repo.git.add(str(conf_file))
     import pprint
+
     pprint.pprint(conf)
     commit = repo.index.commit(f"Release {conf['name']} {conf['version']}")
     repo.create_tag(tag, ref=commit)

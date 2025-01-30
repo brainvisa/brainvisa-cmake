@@ -1,4 +1,3 @@
-import copy
 import fnmatch
 import itertools
 import json
@@ -683,7 +682,9 @@ class Commands:
                 }
             )
             for publication_channel, packages in packages_per_channel.items():
-                publication_directory = publication_conf[publication_channel]["directory"]
+                publication_directory = publication_conf[publication_channel][
+                    "directory"
+                ]
                 actions.append(
                     {
                         "action": "publish",

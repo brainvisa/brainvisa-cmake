@@ -33,11 +33,15 @@ class BBIDaily:
         # the correct base_directory.
         assert os.environ['CASA_BASE_DIRECTORY'] == base_directory
         self.bbe_name = f'BBE-{getpass.getuser()}-{socket.gethostname()}'
-        self.neuro_forge_src = osp.dirname(osp.dirname(
+        self.bv_cmake_src = osp.dirname(osp.dirname(
             osp.dirname(__file__)))
-        self.casa_distro_cmd = [
-            sys.executable,
-            osp.join(osp.dirname(__file__), 'bv_run_pixi_env.py')]
+        runpixi = osp.join(osp.dirname(osp.realpath(sys.argv[0])),
+                           'bv_run_pixi_env.py')
+        if not osp.exists(runpixi):
+            runpixi = osp.join(
+                osp.dirname(osp.dirname(osp.dirname(osp.realpath(__file__)))),
+                'bin', 'bv_run_pixi_env.py')
+        self.casa_distro_cmd = [sys.executable, runpixi]
         self.casa_distro_cmd_env = {'cwd': base_directory}
         self.jenkins = jenkins
         if self.jenkins and not self.jenkins.job_exists(self.bbe_name):
@@ -81,13 +85,20 @@ class BBIDaily:
 
         return p.returncode, '\n'.join(log)
 
-    def update_neuroforge(self):
+    def update_brainvisa_cmake(self, config=None):
+        if config is None:
+            bvdir = self.bv_cmake_src
+        else:
+            env_dir = self.env_prefix.format(
+                environment_dir=config['directory'])
+            bvdir = osp.join(env_dir, 'src', 'brainvisa-cmake')
+            if bvdir == self.bv_cmake_src or not osp.exists(bvdir):
+                return True
+
         start = time.time()
-        result, log = self.call_output(['git',
-                                        '-C', self.neuro_forge_src,
-                                        'pull'])
+        result, log = self.call_output(['git', '-C', bvdir, 'pull'])
         duration = int(1000 * (time.time() - start))
-        self.log(self.bbe_name, 'update neuro-forge',
+        self.log(self.bbe_name, 'update brainvisa-cmake',
                  result, log,
                  duration=duration)
         return result == 0
@@ -119,6 +130,12 @@ class BBIDaily:
         failed = []
         for step in steps:
             start = time.time()
+            print('run:', self.casa_distro_cmd + [
+                'bv_maker',
+                'name={}'.format(config['name']),
+                '--',
+                step,
+            ])
             result, log = self.call_output(self.casa_distro_cmd + [
                 'bv_maker',
                 'name={}'.format(config['name']),
@@ -503,10 +520,12 @@ class BBIDaily:
         if bv_maker_steps:
             bv_maker_steps = bv_maker_steps.split(',')
 
+        successful = True
+
         try:
 
             if update_neuroforge:
-                successful = self.update_neuroforge()
+                successful |= self.update_brainvisa_cmake()
                 if successful:
                     successful_tasks.append('update_neuroforge')
                 else:
@@ -514,7 +533,15 @@ class BBIDaily:
 
             for dev_config, user_config in zip(dev_configs, user_configs):
                 # doc_build_success = False
-                self.update_soma_env(dev_config)
+                if update_neuroforge:
+                    successful |= self.update_soma_env(dev_config)
+                    successful |= self.update_brainvisa_cmake(dev_config)
+                    if successful:
+                        successful_tasks.append(
+                            f'update_neuroforge {dev_config["name"]}')
+                    else:
+                        failed_tasks.append(
+                            f'update_neuroforge {dev_config["name"]}')
                 if bv_maker_steps:
                     successful, failed = self.bv_maker(dev_config,
                                                        bv_maker_steps)

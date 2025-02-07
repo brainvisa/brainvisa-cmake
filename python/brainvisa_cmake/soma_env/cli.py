@@ -465,8 +465,8 @@ class Commands:
                         )
                     selected_packages.add(package)
                     packages_per_channel.setdefault(
-                        recipe["soma-env"]["publication"], []
-                    ).append(package)
+                        recipe["soma-env"]["publication"], set()
+                    ).add(package)
                 elif changesets != latest_changesets:
                     changes = sorted(
                         i
@@ -478,8 +478,8 @@ class Commands:
                     )
                     selected_packages.add(package)
                     packages_per_channel.setdefault(
-                        recipe["soma-env"]["publication"], []
-                    ).append(package)
+                        recipe["soma-env"]["publication"], set()
+                    ).add(package)
                 else:
                     print(f"No change detected in package {package}")
 

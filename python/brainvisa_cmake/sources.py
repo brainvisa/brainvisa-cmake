@@ -16,19 +16,25 @@ from brainvisa_cmake.subprocess import system
 from brainvisa_cmake.version_number import version_format_short
 
 
-class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
-                      brainvisa_cmake.configuration.ConfigVariableParser):
+class SourceDirectory(
+    brainvisa_cmake.configuration.DirectorySection,
+    brainvisa_cmake.configuration.ConfigVariableParser,
+):
 
-    _variables_with_replacements = set(('directory_id',  'cross_compiling_dirs'))
-    _path_variables = set(('directory',))
-    _validAdditiveOptions = set(('default_steps', 'cross_compiling_dirs'))
-    _validOptions = set(('revision_control',
-                         'build_condition',
-                         'stdout_file', 
-                         'stderr_file',
-                         'update_git_remotes',
-                         'default_source_dir',
-                         'ignore_git_failure'))
+    _variables_with_replacements = set(("directory_id", "cross_compiling_dirs"))
+    _path_variables = set(("directory",))
+    _validAdditiveOptions = set(("default_steps", "cross_compiling_dirs"))
+    _validOptions = set(
+        (
+            "revision_control",
+            "build_condition",
+            "stdout_file",
+            "stderr_file",
+            "update_git_remotes",
+            "default_source_dir",
+            "ignore_git_failure",
+        )
+    )
     _validOptions.update(_variables_with_replacements)
     _validOptions.update(_path_variables)
     _validOptions.update(_validAdditiveOptions)
@@ -41,10 +47,10 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
         self.sourceConfigurationLines = []
         self.svnComponents = []
         self.gitComponents = []
-        self.default_steps = ['sources']
-        self.revision_control = 'ON'
-        self.update_git_remotes = 'ON'
-        self.directory_id = ''
+        self.default_steps = ["sources"]
+        self.revision_control = "ON"
+        self.update_git_remotes = "ON"
+        self.directory_id = ""
         # cross_compiling_dirs contains toolchain substitutions for source
         # directories. This is used when execution needs different path to
         # access sources (i.e.: in windows cross compilation, for pure python
@@ -53,7 +59,7 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
         self.cross_compiling_dirs = {}
         self.ignore_git_failure = False
         if self.configuration.verbose:
-            print('Processing source directory %s' % self.directory)
+            print("Processing source directory %s" % self.directory)
         self._git_only_failed = False
 
     def addConfigurationLine(self, line):
@@ -67,7 +73,9 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
         #    + https://svn.url [<dest_directory>] [<bv_version>]]
         #    + <component_pattern> <version_pattern>
         #    - <component_pattern> [<version_pattern>]
-        if brainvisa_cmake.configuration.ConfigVariableParser.addConfigurationLine(self, line):
+        if brainvisa_cmake.configuration.ConfigVariableParser.addConfigurationLine(
+            self, line
+        ):
             pass
         else:
             self.sourceConfigurationLines.append(line)
@@ -76,42 +84,56 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
         for l in self.sourceConfigurationLines:
             self.parseSourceConfigurationLine(l)
 
-    def parseSourceConfigurationLine(self, line, virtual=False, 
-                                     component_version = None):
+    def parseSourceConfigurationLine(self, line, virtual=False, component_version=None):
         line = os.path.expandvars(line)
         l = line.split()
         sign = l[0]
-        if sign == 'git':
+        if sign == "git":
             if len(l) < 3 or len(l) > 5:
                 raise SyntaxError()
-            sign, url, git_tag, dest_directory, bv_version = (
-                l + [None, None])[:5]
-            git_tag_type, git_tag = (['branch'] \
-                + git_tag.split(':',1))[-2:]
+            sign, url, git_tag, dest_directory, bv_version = (l + [None, None])[:5]
+            git_tag_type, git_tag = (["branch"] + git_tag.split(":", 1))[-2:]
             if dest_directory is None:
-                dest_directory = url.rsplit('/', 1)[-1]
+                dest_directory = url.rsplit("/", 1)[-1]
             # git_tag is the git branch (master, integration...)
             # bv_version is the bv branch name (bug_fix, trunk)
             if self.configuration.verbose:
-                print('    adding repository: git', url, git_tag)
-                print('                   in:', \
-                    os.path.join(self.directory, dest_directory))
+                print("    adding repository: git", url, git_tag)
+                print(
+                    "                   in:",
+                    os.path.join(self.directory, dest_directory),
+                )
                 if component_version:
-                    print('                  for: %s version %s' \
-                        % component_version)
+                    print("                  for: %s version %s" % component_version)
             self.gitComponents.append(
-                (component_version, url, git_tag, dest_directory,
-                    bv_version))
-        elif l == ['soma-env']:
+                (component_version, url, git_tag, dest_directory, bv_version)
+            )
+        elif l == ["soma-env"]:
             from pathlib import Path
             import json
 
+            soma_root = Path(os.environ["SOMA_ROOT"])
+            with open(soma_root / "conf" / "soma-env.json") as f:
+                soma_env_conf = json.load(f)
+            base_environment_name = soma_env_conf.get("base")
+            environment_version = soma_env_conf["version"]
+
+            base_components = set()
+            if base_environment_name:
+                base_sources_file = (
+                    soma_root / "conf" / "sources.d" / f"{base_environment_name}.json"
+                )
+                with open(base_sources_file) as f:
+                    base_components = {
+                        component
+                        for component, info in json.load(f).items()
+                        if "url" in info
+                    }
+
             sources = {}
-            for sources_file in sorted(
-                (Path(os.environ["SOMA_ROOT"]) / "conf" / "sources.d").iterdir()
-            ):
+            for sources_file in sorted((soma_root / "conf" / "sources.d").iterdir()):
                 with open(sources_file) as f:
-                    sources.update(json.load(f))
+                    sources.update({k: v for k, v in json.load(f).items() if url in v})
 
             self.gitComponents.append(
                 (
@@ -122,14 +144,11 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
                     "current",
                 )
             )
-            with open(Path(os.environ["SOMA_ROOT"]) / "conf" / "soma-env.json") as f:
-                soma_env_conf = json.load(f)
-                environment_version = soma_env_conf["version"]
             is_release = len(environment_version.split(".")) > 2
             for component, git_info in sources.items():
                 url = git_info["url"]
                 ref = None
-                if is_release:
+                if is_release or component in base_components:
                     ref = git_info.get("changeset")
 
                 if not ref:
@@ -138,53 +157,58 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
         else:
             if len(l) < 2 or len(l) > 4:
                 raise SyntaxError()
-            sign, componentPattern, versionPattern, bv_version = (
-                l + [None, None])[:4]
-            if sign == 'svn' or (sign == '+' and '/' in componentPattern):
-                if '*' in componentPattern:
+            sign, componentPattern, versionPattern, bv_version = (l + [None, None])[:4]
+            if sign == "svn" or (sign == "+" and "/" in componentPattern):
+                if "*" in componentPattern:
                     raise SyntaxError()
-                if componentPattern.startswith('http') \
-                        or componentPattern.startswith('file'):
+                if componentPattern.startswith("http") or componentPattern.startswith(
+                    "file"
+                ):
                     url = componentPattern
                     dest_directory = versionPattern
                 else:
-                    url = brainvisa_projects.SVN_URL + '/' \
-                        + componentPattern
+                    url = brainvisa_projects.SVN_URL + "/" + componentPattern
                     dest_directory = versionPattern
                     if dest_directory is None:
                         dest_directory = componentPattern
                 if dest_directory is None:
                     raise SyntaxError()
                 if self.configuration.verbose:
-                    print('    adding repository: svn', url,
-                            component_version)
-                    print('                   in:', \
-                        os.path.join(self.directory, dest_directory))
+                    print("    adding repository: svn", url, component_version)
+                    print(
+                        "                   in:",
+                        os.path.join(self.directory, dest_directory),
+                    )
                     if component_version:
-                        print('                  for: %s version %s' \
-                            % component_version)
+                        print(
+                            "                  for: %s version %s" % component_version
+                        )
 
                 self.svnComponents.append(
-                    (component_version, url, dest_directory, bv_version))
-            elif sign in ('brainvisa', '+'):
+                    (component_version, url, dest_directory, bv_version)
+                )
+            elif sign in ("brainvisa", "+"):
                 if versionPattern is None:
                     raise SyntaxError()
-                for component in brainvisa_projects.find_components(
-                    componentPattern):
-                    project = brainvisa_projects.project_per_component[
-                        component]
-                    for version, repo_dir in brainvisa_projects.url_per_component[component].items():
+                for component in brainvisa_projects.find_components(componentPattern):
+                    project = brainvisa_projects.project_per_component[component]
+                    for version, repo_dir in brainvisa_projects.url_per_component[
+                        component
+                    ].items():
                         repo, dir = repo_dir
                         if fnmatchcase(version, versionPattern):
-                            default_source_dir = getattr(self, 'default_source_dir', None)
+                            default_source_dir = getattr(
+                                self, "default_source_dir", None
+                            )
                             if default_source_dir:
-                                dir = default_source_dir.format(project=project,
-                                                                component=component,
-                                                                branch=version)
+                                dir = default_source_dir.format(
+                                    project=project, component=component, branch=version
+                                )
                             self.parseSourceConfigurationLine(
-                                '%s %s %s' % (repo, dir, version), 
-                                virtual=True, 
-                                component_version=(component, version))
+                                "%s %s %s" % (repo, dir, version),
+                                virtual=True,
+                                component_version=(component, version),
+                            )
                             break
                     else:
                         repo_dir = brainvisa_projects.url_per_component[component].get(
@@ -207,50 +231,83 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
                                 virtual=True,
                                 component_version=(component, versionPattern),
                             )
-            elif sign in ('-', 'brainvisa_exclude'):
-                if '/' in componentPattern:
+            elif sign in ("-", "brainvisa_exclude"):
+                if "/" in componentPattern:
                     raise SyntaxError()
                 else:
                     if versionPattern is None:
-                        versionPattern = '*'
+                        versionPattern = "*"
                     for component in brainvisa_projects.find_components(
-                        componentPattern):
+                        componentPattern
+                    ):
                         for version, repo_dir in brainvisa_projects.url_per_component[
-                                component].items():
+                            component
+                        ].items():
                             if fnmatchcase(version, versionPattern):
                                 # Remove unwanted svn components
                                 count = 0
-                                for component_version \
-                                    in [i[0] for i in self.svnComponents]:
+                                for component_version in [
+                                    i[0] for i in self.svnComponents
+                                ]:
                                     if component_version:
                                         c, v = component_version
                                         if c == component and v == version:
                                             if self.configuration.verbose:
-                                                component_version, url, \
-                                                dest_directory, bv_version = \
-                                                self.svnComponents[count]
-                                                print('    removing repository:',
-                                                      'svn', url)
-                                                print('                     in:',
-                                                      os.path.join(
-                                                          self.directory, 
-                                                          dest_directory))
-                                                print('                    for: %s version %s' % component_version)
+                                                (
+                                                    component_version,
+                                                    url,
+                                                    dest_directory,
+                                                    bv_version,
+                                                ) = self.svnComponents[count]
+                                                print(
+                                                    "    removing repository:",
+                                                    "svn",
+                                                    url,
+                                                )
+                                                print(
+                                                    "                     in:",
+                                                    os.path.join(
+                                                        self.directory, dest_directory
+                                                    ),
+                                                )
+                                                print(
+                                                    "                    for: %s version %s"
+                                                    % component_version
+                                                )
                                             del self.svnComponents[count]
                                             count -= 1
                                     count += 1
                                 # Remove unwanted git components
                                 count = 0
-                                for component_version in [i[0] for i in self.gitComponents]:
+                                for component_version in [
+                                    i[0] for i in self.gitComponents
+                                ]:
                                     if component_version:
                                         c, v = component_version
                                         if c == component and v == version:
                                             if self.configuration.verbose:
-                                                component_version, url, git_tag, dest_directory, bv_version = self.gitComponents[
-                                                    count]
-                                                print('    removing repository: git', url, git_tag)
-                                                print('                     in:', os.path.join(self.directory, dest_directory))
-                                                print('                    for: %s version %s' % component_version)
+                                                (
+                                                    component_version,
+                                                    url,
+                                                    git_tag,
+                                                    dest_directory,
+                                                    bv_version,
+                                                ) = self.gitComponents[count]
+                                                print(
+                                                    "    removing repository: git",
+                                                    url,
+                                                    git_tag,
+                                                )
+                                                print(
+                                                    "                     in:",
+                                                    os.path.join(
+                                                        self.directory, dest_directory
+                                                    ),
+                                                )
+                                                print(
+                                                    "                    for: %s version %s"
+                                                    % component_version
+                                                )
                                             del self.gitComponents[count]
                                             count -= 1
                                     count += 1
@@ -270,17 +327,16 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
             self.ignore_git_failure = True
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
-        with open(os.path.join(self.directory, 'bv_maker.cfg'),
-                  'w') as clientFile:
-            print('\n'.join(self.configurationLines), file=clientFile)
+        with open(os.path.join(self.directory, "bv_maker.cfg"), "w") as clientFile:
+            print("\n".join(self.configurationLines), file=clientFile)
 
         if len(self.svnComponents) == 0 or not options.svn:
             svn = False
         else:
-            svn  = True
-        repositoryDirectory = os.path.join(self.directory, '.repository')
+            svn = True
+        repositoryDirectory = os.path.join(self.directory, ".repository")
         checkout = False
-        use_rcs = self.revision_control.upper() in ('', 'ON')
+        use_rcs = self.revision_control.upper() in ("", "ON")
         if use_rcs and svn and not os.path.exists(repositoryDirectory):
             os.makedirs(repositoryDirectory)
             # Because of a bug in svnadmin on MacOS, I cannot use an absolute name for the directory to create.
@@ -289,15 +345,15 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
             # But it works if I do "cd /neurospin/brainvisa && vnadmin create
             # cmake_mac"
             cwd, dir = os.path.split(repositoryDirectory)
-            system('svnadmin', 'create', dir, cwd=cwd)
+            system("svnadmin", "create", dir, cwd=cwd)
 
             if len(os.path.splitdrive(repositoryDirectory)[0]) > 0:
                 # This is for windows absolute pathes
-                repositoryDirectory = '/' + \
-                    repositoryDirectory.replace(os.path.sep, "/")
+                repositoryDirectory = "/" + repositoryDirectory.replace(
+                    os.path.sep, "/"
+                )
 
-            self.svncommand(
-                'checkout',  'file://' + repositoryDirectory, self.directory)
+            self.svncommand("checkout", "file://" + repositoryDirectory, self.directory)
             checkout = True
 
         source_directories = []
@@ -305,44 +361,56 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
         # Update SVN repositories
 
         # Go to the sources directory
-        externalsFileName = os.path.join(self.directory, 'bv_maker.externals')
-        with open(externalsFileName, 'w') as externalsFile:
-            for component_version, url, dest_directory, bv_version in set(self.svnComponents):
+        externalsFileName = os.path.join(self.directory, "bv_maker.externals")
+        with open(externalsFileName, "w") as externalsFile:
+            for component_version, url, dest_directory, bv_version in set(
+                self.svnComponents
+            ):
                 print(dest_directory, url, file=externalsFile)
                 source_directories.append((dest_directory, bv_version))
 
         if use_rcs and svn:
             if options.cleanup:
-                self.svncommand('cleanup', self.directory, cwd=self.directory)
-            self.svncommand('propset', 'svn:externals',
-                            '--file', externalsFileName, self.directory,
-                            cwd=self.directory)
-            self.svncommand('commit', '-m', '', self.directory,
-                            cwd=self.directory)
-            self.svncommand('update', self.directory, cwd=self.directory)
+                self.svncommand("cleanup", self.directory, cwd=self.directory)
+            self.svncommand(
+                "propset",
+                "svn:externals",
+                "--file",
+                externalsFileName,
+                self.directory,
+                cwd=self.directory,
+            )
+            self.svncommand("commit", "-m", "", self.directory, cwd=self.directory)
+            self.svncommand("update", self.directory, cwd=self.directory)
 
         # update Git Repositories
 
         git_status_list = []
         git_update_failure = False
-        for component_version, url, git_tag, dest_directory, bv_version \
-                in self.gitComponents:
+        for (
+            component_version,
+            url,
+            git_tag,
+            dest_directory,
+            bv_version,
+        ) in self.gitComponents:
             if dest_directory is None:
-                dest_directory = url.rsplit('/', 1)[-1]
-                if dest_directory.endswith('.git'):
+                dest_directory = url.rsplit("/", 1)[-1]
+                if dest_directory.endswith(".git"):
                     dest_directory = dest_directory[:-4]
             if use_rcs and options.git:
-                gr = GitRepository(self.directory, dest_directory,
-                                   remote_url=url, remote_ref=git_tag)
+                gr = GitRepository(
+                    self.directory, dest_directory, remote_url=url, remote_ref=git_tag
+                )
                 try:
                     gr.update_or_clone(source_dir=self)
                 except GitUpdateError as exc:
-                    update_message = '✗ ' + str(exc)
+                    update_message = "✗ " + str(exc)
                     git_update_failure = True
                 else:
-                    update_message = u'✓'
+                    update_message = "✓"
                 status_dict = gr.get_status_dict()
-                status_dict['update_message'] = update_message
+                status_dict["update_message"] = update_message
                 git_status_list.append(status_dict)
                 source_directories.append((dest_directory, bv_version))
 
@@ -352,44 +420,49 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
         for dest_path, bv_version in source_directories:
             pinfo = brainvisa_projects.read_project_info(
                 os.path.join(self.directory, dest_path),
-                version_format=version_format_short
+                version_format=version_format_short,
             )
             if pinfo:
                 project, component, version, build_model = pinfo
                 version = str(version)
-                components_sources.setdefault(component, {})[
-                    bv_version or version] = (dest_path, build_model)
+                components_sources.setdefault(component, {})[bv_version or version] = (
+                    dest_path,
+                    build_model,
+                )
             else:
-                print('WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found or used' % os.path.join(self.directory, dest_path))
-        with open(os.path.join(self.directory, 'components_sources.json'),
-                  'w') as f:
+                print(
+                    "WARNING: directory %s will be ignored because project_info.cmake, python/*/info.py or */info.py cannot be found or used"
+                    % os.path.join(self.directory, dest_path)
+                )
+        with open(os.path.join(self.directory, "components_sources.json"), "w") as f:
             json.dump(components_sources, f, indent=2)
         if git_update_failure:
             self._git_only_failed = True
-            raise RuntimeError('Error updating one or more Git repositories')
+            raise RuntimeError("Error updating one or more Git repositories")
 
     def source_status(self, options, args):
-        repositoryDirectory = os.path.join(self.directory, '.repository')
-        use_rcs = self.revision_control.upper() in ('', 'ON')
+        repositoryDirectory = os.path.join(self.directory, ".repository")
+        use_rcs = self.revision_control.upper() in ("", "ON")
 
         # Display status of SVN repositories
 
         # Go to the sources directory
         if use_rcs and options.svn and len(self.svnComponents) != 0:
-            self.svncommand('status', self.directory, cwd=self.directory)
+            self.svncommand("status", self.directory, cwd=self.directory)
 
         # Display status of Git Repositories
 
         git_status_list = []
         for _, url, git_tag, dest_directory, _ in self.gitComponents:
             if dest_directory is None:
-                dest_directory = url.rsplit('/', 1)[-1]
-                if dest_directory.endswith('.git'):
+                dest_directory = url.rsplit("/", 1)[-1]
+                if dest_directory.endswith(".git"):
                     dest_directory = dest_directory[:-4]
             dest_path = os.path.join(self.directory, dest_directory)
             if use_rcs and options.git:
-                gr = GitRepository(self.directory, dest_directory,
-                                   remote_url=url, remote_ref=git_tag)
+                gr = GitRepository(
+                    self.directory, dest_directory, remote_url=url, remote_ref=git_tag
+                )
                 gr.print_short_status(
                     extra_git_commands=options.extra_git_commands,
                 )
@@ -399,26 +472,32 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
         print_git_status_summary(self.directory, git_status_list)
 
     def svncommand(self, *svnargs, **subprocess_kwargs):
-        cmd = ['svn', svnargs[0]]
+        cmd = ["svn", svnargs[0]]
         if self.configuration.username:
-            cmd += ['--username', self.configuration.username]
-            if self.configuration.username == 'brainvisa':
-                cmd += ['--password', 'Soma2009']
+            cmd += ["--username", self.configuration.username]
+            if self.configuration.username == "brainvisa":
+                cmd += ["--password", "Soma2009"]
         cmd.extend(svnargs[1:])
         system(*cmd, **subprocess_kwargs)
 
     def info(self):
         print('Source directory: "' + self.directory + '"')
         for component_version, url, dest_directory, bv_version in self.svnComponents:
-            print('  %s <- svn %s' % (dest_directory, url))
+            print("  %s <- svn %s" % (dest_directory, url))
             if component_version:
                 component, version = component_version
-                print('    component %s (%s)' % (component, version))
-        for component_version, url, git_tag, dest_directory, bv_version in self.gitComponents:
-            print('  %s <- git %s' % (dest_directory, url))
+                print("    component %s (%s)" % (component, version))
+        for (
+            component_version,
+            url,
+            git_tag,
+            dest_directory,
+            bv_version,
+        ) in self.gitComponents:
+            print("  %s <- git %s" % (dest_directory, url))
             if component_version:
                 component, version = component_version
-                print('    component %s (%s)' % (component, version))
+                print("    component %s (%s)" % (component, version))
 
     @staticmethod
     def dep_condition(dest_section, src_section, step):
@@ -427,8 +506,10 @@ class SourceDirectory(brainvisa_cmake.configuration.DirectorySection,
         # steps are still enabled, while this source step has failed.
         if not src_section.has_failed(step):
             return True
-        if src_section.status.get(step, 'not run') == 'failed' \
-                and src_section.ignore_git_failure \
-                and src_section._git_only_failed:
+        if (
+            src_section.status.get(step, "not run") == "failed"
+            and src_section.ignore_git_failure
+            and src_section._git_only_failed
+        ):
             return True
         return False

@@ -104,13 +104,13 @@ def create_release_tag(context, tag):
     conf_file = context.soma_root / "conf" / "soma-env.json"
     with open(conf_file) as f:
         conf = json.load(f)
-    conf["version"] = conf.pop("latest_release")
+    sources_conf_file = context.soma_root / "conf" / "sources.d" / f"{conf['name']}.json"
+    with open(sources_conf_file) as f:
+        sources_conf = json.load(f)
+    conf["version"] = sources_conf["latest_release"]
     with open(conf_file, "w") as f:
         json.dump(conf, f, indent=4)
     repo.git.add(str(conf_file))
-    import pprint
-
-    pprint.pprint(conf)
     commit = repo.index.commit(f"Release {conf['name']} {conf['version']}")
     repo.create_tag(tag, ref=commit)
     branch.checkout()

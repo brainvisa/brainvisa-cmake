@@ -335,7 +335,10 @@ class Commands:
         environment_name = soma_env_conf["name"]
         environment_version = soma_env_conf["version"]
         development_environment = environment_version.startswith("0.")
-        last_published_soma_env_version = soma_env_conf.get("latest_release")
+        sources_conf_file = self.soma_root / "conf" / "sources.d" / f"{environment_name}.json"
+        with open(sources_conf_file) as f:
+            sources_conf = json.load(f)
+        last_published_soma_env_version = sources_conf.get("latest_release")
 
         publication_file = self.soma_root / "conf" / "publication.json"
         with open(publication_file) as f:
@@ -616,11 +619,12 @@ class Commands:
             )
 
         if release:
-            # Update latest_release in conf/soma-env.json
-            soma_env_conf["latest_release"] = future_published_soma_env_version
+            modified_sources = set()
+            # Update latest_release in conf/sources.d/{environment_name}.json
+            component_sources_file[sources_conf_file]["latest_release"] = future_published_soma_env_version
+            modified_sources.add(sources_conf_file)
 
             # Create actions to update components source files to set changesets
-            modified_sources = set()
             for package in selected_packages:
                 recipe = recipes[package]
                 soma_env_conf["packages"][package] = recipe["package"]["version"]

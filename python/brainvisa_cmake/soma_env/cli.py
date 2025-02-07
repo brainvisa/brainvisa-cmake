@@ -543,8 +543,8 @@ class Commands:
                             )
                             selected_packages.add(package)
                             packages_per_channel.setdefault(
-                                recipe["soma-env"]["publication"], []
-                            ).append(package)
+                                recipe["soma-env"]["publication"], set()
+                            ).add(package)
                             selection_modified = True
 
         # Generate rattler-build recipe and actions for new environment version

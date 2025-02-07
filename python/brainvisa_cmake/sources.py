@@ -133,7 +133,7 @@ class SourceDirectory(
             sources = {}
             for sources_file in sorted((soma_root / "conf" / "sources.d").iterdir()):
                 with open(sources_file) as f:
-                    sources.update({k: v for k, v in json.load(f).items() if url in v})
+                    sources.update({k: v for k, v in json.load(f).items() if "url" in v})
 
             self.gitComponents.append(
                 (

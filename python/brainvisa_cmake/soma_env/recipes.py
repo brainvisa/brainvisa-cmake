@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 import subprocess
 import yaml
@@ -55,37 +56,40 @@ def read_recipes(soma_root):
     for component_src in src_dir.iterdir():
         recipe_file = component_src / "soma-env" / "soma-env-recipe.yaml"
         if recipe_file.exists():
-            with open(recipe_file) as f:
-                recipe = yaml.safe_load(f)
+            try:
+                with open(recipe_file) as f:
+                    recipe = yaml.safe_load(f)
 
-                if development_environment:
-                    # Set recipe version to development environment version
-                    recipe["package"]["version"] = environment_version
-                else:
-                    # Set main component version as recipe version
-                    pinfo = brainvisa_projects.read_project_info(component_src)
-                    if pinfo:
-                        project, component, component_version, build_model = pinfo
-                        recipe["package"]["version"] = str(component_version)
+                    if development_environment:
+                        # Set recipe version to development environment version
+                        recipe["package"]["version"] = environment_version
                     else:
-                        print(
-                            f"WARNING: directory {component_src} does not contain project_info.cmake, python/*/info.py or */info.py file"
-                        )
+                        # Set main component version as recipe version
+                        pinfo = brainvisa_projects.read_project_info(component_src)
+                        if pinfo:
+                            project, component, component_version, build_model = pinfo
+                            recipe["package"]["version"] = str(component_version)
+                        else:
+                            print(
+                                f"WARNING: directory {component_src} does not contain project_info.cmake, python/*/info.py or */info.py file"
+                            )
 
-                # Replace git location by source directories in component list
-                components = {component_src.name: component_src}
-                for component in recipe["soma-env"].get("components", []):
-                    components[component] = src_dir / component
-                recipe["soma-env"]["components"] = components
+                    # Replace git location by source directories in component list
+                    components = {component_src.name: component_src}
+                    for component in recipe["soma-env"].get("components", []):
+                        components[component] = src_dir / component
+                    recipe["soma-env"]["components"] = components
 
-                # Replace $soma-env{{...}} elements in dependencies
-                for section, requirements in recipe.get("requirements", {}).items():
-                    if isinstance(requirements, list):
-                        for i in range(len(requirements)):
-                            r = requirements[i]
-                            if isinstance(r, str):
-                                requirements[i] = resolve_requirement(r)
-                yield recipe
+                    # Replace $soma-env{{...}} elements in dependencies
+                    for section, requirements in recipe.get("requirements", {}).items():
+                        if isinstance(requirements, list):
+                            for i in range(len(requirements)):
+                                r = requirements[i]
+                                if isinstance(r, str):
+                                    requirements[i] = resolve_requirement(r)
+                    yield recipe
+            except Exception as e:
+                raise RuntimeError(f"Error while reading {recipe_file}") from e
 
 
 def selected_recipes(soma_root, selection=None):

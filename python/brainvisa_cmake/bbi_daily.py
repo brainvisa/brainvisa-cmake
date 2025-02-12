@@ -583,7 +583,8 @@ class BBIDaily:
                         failed_tasks.append(
                             '{}: build_packages'.format(dev_config['name']))
 
-                if install_packages and self.packaging_done:
+                if install_packages or (install_packages is None
+                                        and self.packaging_done):
                     success = self.recreate_user_env(user_config, dev_config)
                     if success:
                         successful_tasks.append(
@@ -592,7 +593,7 @@ class BBIDaily:
                         failed_tasks.append(
                             '{}: install_packages'.format(dev_config['name']))
 
-                if user_tests and self.packaging_done:
+                if user_tests or (user_tests is None and self.packaging_done):
                     successful, failed = self.tests(user_config, dev_config)
                     successful_tasks.extend(
                         '{}: {}'.format(user_config['name'], i)
@@ -666,12 +667,13 @@ def main():
     parser.add_argument('--install_packages',
                         action=argparse.BooleanOptionalAction,
                         help='Install packages in a user environment. '
-                        'default: true', default=True)
+                        'default: done only if new packages are built',
+                        default=None)
     parser.add_argument('--user_tests',
                         action=argparse.BooleanOptionalAction,
                         help='Perform installed packages tests (as a user '
-                        'install). default: true',
-                        default=True)
+                        'install). default: done only if new packages are '
+                        'built', default=None)
 
     args = parser.parse_args(sys.argv[1:])
 

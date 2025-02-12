@@ -47,6 +47,7 @@ class BBIDaily:
         if self.jenkins and not self.jenkins.job_exists(self.bbe_name):
             self.jenkins.create_job(self.bbe_name)
         self.env_prefix = '{environment_dir}'
+        self.packaging_done = False
 
     def log(self, environment, task_name, result, log,
             duration=None):
@@ -340,6 +341,11 @@ class BBIDaily:
                      'The packaging plan failed.')
 
         if success:
+            # is there anything changed ? If no plan file, nothing left to do.
+            if not osp.exists(osp.join(env_dir, 'plan', 'actions.yaml')):
+                self.packaging_done = False
+                return success
+
             # pack
             cmd = ['pixi', 'run', '--frozen', 'soma-env', 'apply-plan']
             log = ['buid packages plan', 'command:', ' '.join(cmd),
@@ -401,6 +407,8 @@ class BBIDaily:
                 if not success:
                     self.log(environment, 'packaging failed', 1,
                              'The packaging failed.')
+                else:
+                    self.packaging_done = True
 
         return success
 
@@ -575,7 +583,7 @@ class BBIDaily:
                         failed_tasks.append(
                             '{}: build_packages'.format(dev_config['name']))
 
-                if install_packages:
+                if install_packages and self.packaging_done:
                     success = self.recreate_user_env(user_config, dev_config)
                     if success:
                         successful_tasks.append(
@@ -584,7 +592,7 @@ class BBIDaily:
                         failed_tasks.append(
                             '{}: install_packages'.format(dev_config['name']))
 
-                if user_tests:
+                if user_tests and self.packaging_done:
                     successful, failed = self.tests(user_config, dev_config)
                     successful_tasks.extend(
                         '{}: {}'.format(user_config['name'], i)

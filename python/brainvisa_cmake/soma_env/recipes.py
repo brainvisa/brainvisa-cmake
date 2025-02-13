@@ -49,7 +49,9 @@ def read_recipes(soma_root):
     """
     # Read environment version
     with open(soma_root / "conf" / "soma-env.json") as f:
-        environment_version = json.load(f)["version"]
+        soma_env_conf = json.load(f)
+    environment_packages = soma_env_conf["packages"]
+    environment_version = soma_env_conf["version"]
     development_environment = environment_version.startswith("0.")
 
     src_dir = soma_root / "src"
@@ -59,35 +61,36 @@ def read_recipes(soma_root):
             try:
                 with open(recipe_file) as f:
                     recipe = yaml.safe_load(f)
-
-                    if development_environment:
-                        # Set recipe version to development environment version
-                        recipe["package"]["version"] = environment_version
+                if recipe["package"]["name"] not in environment_packages:
+                    continue
+                if development_environment:
+                    # Set recipe version to development environment version
+                    recipe["package"]["version"] = environment_version
+                else:
+                    # Set main component version as recipe version
+                    pinfo = brainvisa_projects.read_project_info(component_src)
+                    if pinfo:
+                        project, component, component_version, build_model = pinfo
+                        recipe["package"]["version"] = str(component_version)
                     else:
-                        # Set main component version as recipe version
-                        pinfo = brainvisa_projects.read_project_info(component_src)
-                        if pinfo:
-                            project, component, component_version, build_model = pinfo
-                            recipe["package"]["version"] = str(component_version)
-                        else:
-                            print(
-                                f"WARNING: directory {component_src} does not contain project_info.cmake, python/*/info.py or */info.py file"
-                            )
+                        print(
+                            f"WARNING: directory {component_src} does not contain project_info.cmake, python/*/info.py or */info.py file"
+                        )
 
-                    # Replace git location by source directories in component list
-                    components = {component_src.name: component_src}
-                    for component in recipe["soma-env"].get("components", []):
-                        components[component] = src_dir / component
-                    recipe["soma-env"]["components"] = components
+                # Replace git location by source directories in component list
+                components = {component_src.name: component_src}
+                for component in recipe["soma-env"].get("components", []):
+                    components[component] = src_dir / component
+                recipe["soma-env"]["components"] = components
 
-                    # Replace $soma-env{{...}} elements in dependencies
-                    for section, requirements in recipe.get("requirements", {}).items():
-                        if isinstance(requirements, list):
-                            for i in range(len(requirements)):
-                                r = requirements[i]
-                                if isinstance(r, str):
-                                    requirements[i] = resolve_requirement(r)
-                    yield recipe
+                # Replace $soma-env{{...}} elements in dependencies
+                for section, requirements in recipe.get("requirements", {}).items():
+                    if isinstance(requirements, list):
+                        for i in range(len(requirements)):
+                            r = requirements[i]
+                            if isinstance(r, str):
+                                requirements[i] = resolve_requirement(r)
+                yield recipe
             except Exception as e:
                 raise RuntimeError(f"Error while reading {recipe_file}") from e
 

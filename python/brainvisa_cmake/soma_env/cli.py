@@ -334,8 +334,11 @@ class Commands:
             soma_env_conf = json.load(f)
         environment_name = soma_env_conf["name"]
         environment_version = soma_env_conf["version"]
+        base_environment = soma_env_conf.get("base")
         development_environment = environment_version.startswith("0.")
-        sources_conf_file = self.soma_root / "conf" / "sources.d" / f"{environment_name}.json"
+        sources_conf_file = (
+            self.soma_root / "conf" / "sources.d" / f"{environment_name}.json"
+        )
         with open(sources_conf_file) as f:
             sources_conf = json.load(f)
         last_published_soma_env_version = sources_conf.get("latest_release")
@@ -375,12 +378,14 @@ class Commands:
             ]
             future_published_soma_env_version = f"{major}.{minor}.{patch+1}"
             last_published_soma_env_version = f"{major}.{minor}.{patch}"
-            print(f"Last published soma-env version: {last_published_soma_env_version}")
+            print(
+                f"Last published {environment_name} version: {last_published_soma_env_version}"
+            )
         else:
             future_published_soma_env_version = (
                 f"{environment_version}.{default_patch_version}"
             )
-            print("soma-env has never been published")
+            print(f"{environment_name} has never been published")
 
         # Next environment version is used to build dependencies strings
         # for components:
@@ -552,24 +557,34 @@ class Commands:
             f"Generate recipe for {environment_name} {future_published_soma_env_version}"
         )
         (plan_dir / "recipes" / environment_name).mkdir(exist_ok=True, parents=True)
+        environment_recipe = {
+            "package": {
+                "name": environment_name,
+                "version": future_published_soma_env_version,
+            },
+            "build": {
+                "string": f"py{sys.version_info[0]}{sys.version_info[1]}",
+                "script": (
+                    "mkdir --parents $PREFIX/share/soma\n"
+                    f"echo '{future_published_soma_env_version}' > $PREFIX/share/soma/{environment_name}.version"
+                ),
+            },
+            "requirements": {
+                "run": [f"python=={sys.version_info[0]}.{sys.version_info[1]}"]
+            },
+        }
+        if base_environment:
+            with open(
+                self.soma_root / "conf" / "sources.d" / f"{base_environment}.json"
+            ) as f:
+                base_environment_sources = json.load(f)
+            base_environment_version = base_environment_sources["latest_release"]
+            environment_recipe["requirements"]["run"].append(
+                f"{base_environment}=={base_environment_version}"
+            )
         with open(plan_dir / "recipes" / environment_name / "recipe.yaml", "w") as f:
             yaml.safe_dump(
-                {
-                    "package": {
-                        "name": environment_name,
-                        "version": future_published_soma_env_version,
-                    },
-                    "build": {
-                        "string": f"py{sys.version_info[0]}{sys.version_info[1]}",
-                        "script": (
-                            "mkdir --parents $PREFIX/share/soma\n"
-                            f"echo '{future_published_soma_env_version}' > $PREFIX/share/soma/{environment_name}.version"
-                        ),
-                    },
-                    "requirements": {
-                        "run": [f"python=={sys.version_info[0]}.{sys.version_info[1]}"]
-                    },
-                },
+                environment_recipe,
                 f,
             )
         actions.append(
@@ -621,7 +636,9 @@ class Commands:
         if release:
             modified_sources = set()
             # Update latest_release in conf/sources.d/{environment_name}.json
-            component_sources_file[sources_conf_file]["latest_release"] = future_published_soma_env_version
+            component_sources_file[sources_conf_file][
+                "latest_release"
+            ] = future_published_soma_env_version
             modified_sources.add(sources_conf_file)
 
             # Create actions to update components source files to set changesets

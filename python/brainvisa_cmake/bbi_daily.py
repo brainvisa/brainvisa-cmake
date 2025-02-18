@@ -464,10 +464,10 @@ class BBIDaily:
         with open(pixi_toml) as f:
             lines = list(f.readlines())
         lines.insert(1, 'channel-priority = "disabled"\n')
-        lines += ['',
-                  '[pypi-dependencies]',
-                  'dracopy = ">=1.4.2, <2"',
-                  'acres = ">=0.2.0, <0.3"']
+        lines += ['\n',
+                  '[pypi-dependencies]\n',
+                  'dracopy = ">=1.4.2, <2"\n',
+                  'acres = ">=0.2.0, <0.3"\n']
         with open(pixi_toml, 'w') as f:
             f.write(''.join(lines))
 

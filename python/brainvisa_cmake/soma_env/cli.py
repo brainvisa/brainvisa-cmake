@@ -503,6 +503,7 @@ class Commands:
                         "  make install-\\${component}-dev",
                         "  make install-\\${component}-usrdoc",
                         "  make install-\\${component}-devdoc",
+                        "  make install-\\${component}-test",
                         "done",
                         "END",
                     )

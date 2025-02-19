@@ -68,6 +68,7 @@ class Commands:
         }
         for component_src in (self.soma_root / "src").iterdir():
             recipe_file = component_src / "soma-env" / "soma-env-recipe.yaml"
+            print(f'Processing {recipe_file}')
             if recipe_file.exists():
                 with open(recipe_file) as f:
                     recipe = yaml.safe_load(f)

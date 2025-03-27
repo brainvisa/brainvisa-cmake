@@ -467,7 +467,8 @@ class BBIDaily:
         lines += ['\n',
                   '[pypi-dependencies]\n',
                   'dracopy = ">=1.4.2, <2"\n',
-                  'acres = ">=0.2.0"\n']
+                  # 'acres = ">=0.2.0"\n',
+                  ]
         with open(pixi_toml, 'w') as f:
             f.write(''.join(lines))
 

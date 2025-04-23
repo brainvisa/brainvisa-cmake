@@ -15,6 +15,8 @@ import json
 import traceback
 import shutil
 import yaml
+import glob
+import pathlib
 
 
 def ensure_str(arg, encoding='utf-8', errors='stric'):
@@ -426,6 +428,26 @@ class BBIDaily:
                 d['version'] = f'{recipe["package"]["version"]}'
         return packages
 
+    def cleanup_pixi_cache(self, dev_config):
+        # make sure the new packages are not stored in the pixi cache,
+        # because it could be older ones.
+        dev_env_dir = osp.abspath(dev_config['directory'])
+        packages = glob.glob(osp.join(dev_env_dir, 'plan/packages/*/*.conda'))
+        print('packages:', packages)
+        cache_dir = os.environ.get('XDG_CACHE_HOME')
+        if cache_dir is None:
+            home = pathlib.Path.home()
+            cache_dir = str(home / '.cache')
+        pixi_cache = osp.join(cache_dir, 'rattler/cache/pkgs')
+        for package in packages:
+            pack_name = osp.basename(package).split('.conda')[0]
+            pack_dir = osp.join(pixi_cache, pack_name)
+            if osp.exists(pack_dir):
+                print('removing cache:', pack_dir)
+                shutil.rmtree(pack_dir)
+                if osp.exists(f'{pack_dir}.lock'):
+                    os.unlink(f'{pack_dir}.lock')
+
     def recreate_user_env(self, user_config, dev_config):
         environment = user_config['name']
         if self.jenkins and not self.jenkins.job_exists(environment):
@@ -474,6 +496,7 @@ class BBIDaily:
         with open(pixi_toml, 'w') as f:
             f.write(''.join(lines))
 
+        self.cleanup_pixi_cache(dev_config)
         duration = int(1000 * (time.time() - start))
         self.log(environment, 'create user environment',
                  (0 if success else 1),

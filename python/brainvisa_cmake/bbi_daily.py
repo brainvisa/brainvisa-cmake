@@ -464,6 +464,8 @@ class BBIDaily:
         with open(pixi_toml) as f:
             lines = list(f.readlines())
         lines.insert(1, 'channel-priority = "disabled"\n')
+        deps_i = lines.index('[dependencies]\n')
+        lines.insert(deps_i + 1, 'soma-env = "0.0.*"')
         lines += ['\n',
                   '[pypi-dependencies]\n',
                   'dracopy = ">=1.4.2, <2"\n',

@@ -25,7 +25,12 @@ def get_cache_pkgs(cache_dir=None):
     files = []
     for p in os.listdir(pkg_dir):
         if p.endswith('.lock'):
-            key = p[:-5].rsplit('-', 1)[0]
+            if not osp.exists(osp.join(pkg_dir, p[:-5])):
+                # orphan .lock
+                print('rm', osp.join(pkg_dir, p))
+                os.unlink(osp.join(pkg_dir, p))
+                continue
+            key = p[:-5].rsplit('-', 2)[0]
             pkgs[key] = []
         else:
             files.append(p)
@@ -51,6 +56,10 @@ def clean_pkgs_cache(cache_dir=None, dry_run=False):
                 print('rm', f)
                 if not dry_run:
                     shutil.rmtree(f)
+                    if osp.exists(f'{f}.lock'):
+                        shutil.rmtree(f'{f}.lock')
+        elif len(files) == 0:
+            print('empty:', pkg)
 
 
 if __name__ == '__main__':

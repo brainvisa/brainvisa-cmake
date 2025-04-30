@@ -57,7 +57,7 @@ def clean_pkgs_cache(cache_dir=None, dry_run=False):
                 if not dry_run:
                     shutil.rmtree(f)
                     if osp.exists(f'{f}.lock'):
-                        shutil.rmtree(f'{f}.lock')
+                        os.unlink(f'{f}.lock')
         elif len(files) == 0:
             print('empty:', pkg)
 

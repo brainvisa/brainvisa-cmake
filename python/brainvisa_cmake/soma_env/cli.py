@@ -141,6 +141,19 @@ class Commands:
             with open(json_sources) as f:
                 component_sources.update(json.load(f))
 
+        # Check if pixi.lock has changed using git
+        soma_env_repo = git.Repo(self.soma_root)
+        files_to_commit = set()
+        pixi_lock_changed = False
+        changed_files = {item.a_path for item in soma_env_repo.index.diff(None)}
+        if "pixi.lock" in changed_files:
+            files_to_commit.add("pixi.lock")
+            pixi_lock_changed = True
+        if "pixi.toml" in changed_files:
+            files_to_commit.add("pixi.toml")
+            if not pixi_lock_changed:
+                raise RuntimeError("pixi.toml file changed but not pixi.lock")
+
         for recipe in read_recipes(self.soma_root):
             package = recipe["package"]["name"]
             if not selector.match(package):
@@ -165,18 +178,21 @@ class Commands:
 
                 if not latest_changesets:
                     print(f"Package {package} never released within this branch")
-                elif changesets != latest_changesets:
-                    changes = sorted(
-                        i
-                        for i in changesets
-                        if changesets[i] != latest_changesets.get(i)
-                    )
-
+                elif pixi_lock_changed or changesets != latest_changesets:
                     latest_release_version = soma_env["packages"][package]
-                    print(
-                        f"Package {package} modified since last release (in {', '.join(changes)})"
-                    )
-                    if recipe["package"]["version"] == latest_release_version:
+                    if pixi_lock_changed:
+                        print(f"Select {package} because pixi.lock has changed")
+                    else:
+                        changes = sorted(
+                            i
+                            for i in changesets
+                            if changesets[i] != latest_changesets.get(i)
+                        )
+
+                        print(
+                            f"Package {package} modified since last release (in {', '.join(changes)})"
+                        )
+                    if pixi_lock_changed or recipe["package"]["version"] == latest_release_version:
                         package_version = tuple(
                             int(i) for i in recipe["package"]["version"].split(".")
                         )

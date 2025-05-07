@@ -20,11 +20,25 @@ def main():
 
     # export cpu_count() as NCPU env variable so that it can be used in conf file
     # for env replacements
-    try:
-        os.environ['NCPU'] = str(multiprocessing.cpu_count())
-    except NotImplementedError:
-        # multiprocessing.cpu_count can raise NotImplementedError
-        os.environ['NCPU'] = '1'
+    if os.environ.get('NCPU') is None:
+        try:
+            ncpu = multiprocessing.cpu_count()
+            # check for system quotas on CPU usage
+            quot_dir = '/etc/systemd/system/user-.slice.d'
+            if os.path.exists(quot_dir):
+                for cf in os.listdir(quot_dir):
+                    if cf.endswith('.conf'):
+                        with open(os.path.join(quot_dir, cf)) as f:
+                            for line in f.readlines():
+                                if line.startswith('CPUQuota='):
+                                    cpul = round(float(line.strip()[9:-1].strip()) / 100)
+                                    if cpul < ncpu:
+                                        ncpu = cpul
+                                    break
+        except NotImplementedError:
+            # multiprocessing.cpu_count can raise NotImplementedError
+            ncpu = 1
+        os.environ['NCPU'] = str(ncpu)
 
     check_ld_library_path_error(fatal=False)
 

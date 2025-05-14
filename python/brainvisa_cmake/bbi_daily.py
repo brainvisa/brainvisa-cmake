@@ -488,6 +488,7 @@ class BBIDaily:
         lines.insert(1, 'channel-priority = "disabled"\n')
         deps_i = lines.index('[dependencies]\n')
         lines.insert(deps_i + 1, 'soma-env = "0.0.*"')
+        lines.insert(deps_i + 1, 'pytest = "*"')
         lines += ['\n',
                   '[pypi-dependencies]\n',
                   'dracopy = ">=1.4.2, <2"\n',

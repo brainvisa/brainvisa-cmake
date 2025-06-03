@@ -17,6 +17,27 @@ def get_rattler_cache_dir():
     return f'{cdir}/rattler/cache'
 
 
+def nlinks(dirname):
+    todo = [dirname]
+    nlinks = 0
+    while todo:
+        dirname = todo.pop(0)
+        for f in os.listdir(dirname):
+            fname = osp.join(dirname, f)
+            if osp.isdir(fname):
+                todo.append(fname)
+            else:
+                if not osp.islink(fname):
+                    n = os.stat(fname, follow_symlinks=False).st_nlink
+                    if nlinks == 0:
+                        nlinks = n
+                    else:
+                        nlinks = max((nlinks, n))
+                    if nlinks >= 2:
+                        return nlinks
+    return nlinks
+
+
 def get_cache_pkgs(cache_dir=None):
     if cache_dir is None:
         cache_dir = get_rattler_cache_dir()
@@ -41,7 +62,9 @@ def get_cache_pkgs(cache_dir=None):
             if s == n or p[s] in sep:
                 name = p[:s]
                 if name in pkgs:
-                    pkgs[name].append(osp.join(pkg_dir, p))
+                    fullp = osp.join(pkg_dir, p)
+                    # print(fullp, ':', nlinks(fullp))
+                    pkgs[name].append((fullp, nlinks(fullp)))
                     break
     return pkgs
 
@@ -50,16 +73,24 @@ def clean_pkgs_cache(cache_dir=None, dry_run=False):
     pkgs = get_cache_pkgs(cache_dir)
     for pkg in sorted(pkgs.keys()):
         files = pkgs[pkg]
-        if len(files) >= 2:
-            print(pkg, ':', len(files))
-            for f in sorted(files)[:-1]:
-                print('rm', f)
+        for f in files:
+            if f[1] == 1:  # 1 ref hard link
+                print('rm', f[0])
                 if not dry_run:
-                    shutil.rmtree(f)
-                    if osp.exists(f'{f}.lock'):
-                        os.unlink(f'{f}.lock')
-        elif len(files) == 0:
-            print('empty:', pkg)
+                    shutil.rmtree(f[0])
+                    if osp.exists(f'{f[0]}.lock'):
+                        os.unlink(f'{f[0]}.lock')
+
+        #if len(files) >= 2:
+            #print(pkg, ':', len(files))
+            #for f in sorted(files)[:-1]:
+                #print('rm', f)
+                #if not dry_run:
+                    #shutil.rmtree(f)
+                    #if osp.exists(f'{f}.lock'):
+                        #os.unlink(f'{f}.lock')
+        #elif len(files) == 0:
+            #print('empty:', pkg)
 
 
 if __name__ == '__main__':

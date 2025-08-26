@@ -5,6 +5,7 @@ import os
 import pathlib
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import toml
@@ -104,7 +105,9 @@ def create_release_tag(context, tag):
     conf_file = context.soma_root / "conf" / "soma-env.json"
     with open(conf_file) as f:
         conf = json.load(f)
-    sources_conf_file = context.soma_root / "conf" / "sources.d" / f"{conf['name']}.json"
+    sources_conf_file = (
+        context.soma_root / "conf" / "sources.d" / f"{conf['name']}.json"
+    )
     with open(sources_conf_file) as f:
         sources_conf = json.load(f)
     conf["version"] = sources_conf["latest_release"]
@@ -187,6 +190,8 @@ def publish(
                 raise ValueError(f"Destination file {dest} already exist")
             dest.parent.mkdir(exist_ok=True)
             shutil.copy2(src, dest)
+            st = os.stat(dest)
+            os.chmod(dest, st.st_mode | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
             copied.append(dest)
         if index:
             subprocess.check_call(["conda", "index", str(publication_dir)])

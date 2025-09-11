@@ -55,6 +55,7 @@ if __name__ == '__main__':
             for e in envs:
                 var, val = e.split('=')
                 env_dict[var] = val
+            continue
 
         args.append(arg)
 

@@ -1,6 +1,7 @@
-# -*- coding: utf-8 -*-
-
-import glob, os, re
+import importlib
+import glob
+import os
+import re
 from fnmatch import fnmatchcase
 import toml
 import sys
@@ -303,8 +304,15 @@ def parse_project_info_toml(
     # with both old and new name.
     if component == 'populse_db':
         project = component = 'populse-db'
-    try:
-        v = pyproject['project']['version']
+
+    v = pyproject.get('project', {}).get('version')
+    if not v and 'version' in pyproject['project'].get('dynamic'):
+        version_location = pyproject.get('tool', {}).get('setuptools', {}).get('dynamic', {}).get('version',{}).get('attr')
+        if version_location:
+            module, variable = version_location.rsplit('.', 1)
+            v = getattr(importlib.import_module(module), variable, None)
+
+    if v:
         v = ''.join([x for x in v if x in '0123456789.'])
         v = v.split('.', 3)
         if len(version) > 0:
@@ -315,10 +323,7 @@ def parse_project_info_toml(
 
             if len(version) > 2:
                 version[2] = v[2]
-    except AttributeError:
-        print('Error reading config for', project, path, file=sys.stderr)
-        raise
-    except KeyError:
+    else:
         print('Error reading config version for', project, path,
               file=sys.stderr)
         version[0] = 0

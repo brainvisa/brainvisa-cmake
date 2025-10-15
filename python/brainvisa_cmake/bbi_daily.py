@@ -313,7 +313,7 @@ class BBIDaily:
             shutil.rmtree(osp.join(env_dir, 'plan'))
         # packaging plan, don't test, don't publish.
         cmd = ['pixi', 'run', '--frozen', 'soma-env', 'packaging-plan',
-               '--test', '0']
+               '--no-test']
         log = ['buid packages plan', 'command:', ' '.join(cmd), 'from dir:',
                env_dir]
         environment = config['name']

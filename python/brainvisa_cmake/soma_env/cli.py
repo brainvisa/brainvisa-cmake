@@ -27,40 +27,50 @@ from . import plan as plan_module
 
 from .plan import update_merge
 
+
 class CommandContext:
     def __init__(self):
         self.soma_root = pathlib.Path(os.environ["SOMA_ROOT"]).absolute()
 
+
 command_context = CommandContext()
 command_typer = typer.Typer()
+
 
 @command_typer.command()
 def info():
     return subprocess.call(["bv_maker", "info"])
- 
+
+
 @command_typer.command()
 def sources():
     return subprocess.call(["bv_maker", "sources"])
- 
+
+
 @command_typer.command()
 def status():
     return subprocess.call(["bv_maker", "status"])
- 
+
+
 @command_typer.command()
 def configure():
     return subprocess.call(["bv_maker", "configure"])
+
 
 @command_typer.command()
 def build():
     return subprocess.call(["bv_maker", "build"])
 
+
 @command_typer.command()
 def doc():
     return subprocess.call(["bv_maker", "doc"])
 
+
 @command_typer.command()
 def all():
     return subprocess.call(["bv_maker"])
+
 
 @command_typer.command()
 def update():
@@ -79,21 +89,18 @@ def update():
     }
     for component_src in (command_context.soma_root / "src").iterdir():
         recipe_file = component_src / "soma-env" / "soma-env-recipe.yaml"
-        print(f'Processing {recipe_file}')
+        print(f"Processing {recipe_file}")
         if recipe_file.exists():
             with open(recipe_file) as f:
                 recipe = yaml.safe_load(f)
-            requirements = recipe.get("requirements", {}).get(
-                "run", []
-            ) + recipe.get("requirements", {}).get("build", [])
+            requirements = recipe.get("requirements", {}).get("run", []) + recipe.get(
+                "requirements", {}
+            ).get("build", [])
             for requirement in requirements:
                 if not isinstance(requirement, str):
                     continue
                 requirement = resolve_requirement(requirement)
-                if (
-                    requirement.startswith("$")
-                    or requirement.split()[0] == "mesalib"
-                ):
+                if requirement.startswith("$") or requirement.split()[0] == "mesalib":
                     # mesalib makes Anatomist crash
                     continue
                 package, constraint = (requirement.split(None, 1) + [None])[:2]
@@ -109,6 +116,7 @@ def update():
         ]
         print("'{i}'" for i in command)
         subprocess.check_call(command)
+
 
 @command_typer.command()
 def version_plan(
@@ -148,7 +156,9 @@ def version_plan(
     # Read and merge json files defineing components sources (there can be several files
     # in environments deriving from soma-env)
     component_sources = {}
-    for json_sources in (command_context.soma_root / "conf" / "sources.d").glob("*.json"):
+    for json_sources in (command_context.soma_root / "conf" / "sources.d").glob(
+        "*.json"
+    ):
         with open(json_sources) as f:
             component_sources.update(json.load(f))
 
@@ -203,7 +213,10 @@ def version_plan(
                     print(
                         f"Package {package} modified since last release (in {', '.join(changes)})"
                     )
-                if pixi_lock_changed or recipe["package"]["version"] == latest_release_version:
+                if (
+                    pixi_lock_changed
+                    or recipe["package"]["version"] == latest_release_version
+                ):
                     package_version = tuple(
                         int(i) for i in recipe["package"]["version"].split(".")
                     )
@@ -318,6 +331,7 @@ def version_plan(
             f,
         )
 
+
 @command_typer.command()
 def check_merge(src: str = None, branch: str = None):
     if src:
@@ -348,6 +362,7 @@ def check_merge(src: str = None, branch: str = None):
                 print(f"git -C '{src}' push")
         else:
             stack.extend(i for i in src.iterdir() if i.is_dir())
+
 
 @command_typer.command()
 def packaging_plan(
@@ -503,9 +518,7 @@ def packaging_plan(
                 ).add(package)
             elif changesets != latest_changesets:
                 changes = sorted(
-                    i
-                    for i in changesets
-                    if changesets[i] != latest_changesets.get(i)
+                    i for i in changesets if changesets[i] != latest_changesets.get(i)
                 )
                 print(
                     f"Select {package} for building because some source has changed (in {', '.join(changes)}) since latest release"
@@ -543,9 +556,7 @@ def packaging_plan(
             recipe["soma-env"]["src_errors"] = src_errors
             recipe["soma-env"]["changesets"] = changesets
         elif recipe["soma-env"]["type"] == "virtual":
-            raise NotImplementedError(
-                "packaging of virtual packages not implemented"
-            )
+            raise NotImplementedError("packaging of virtual packages not implemented")
         else:
             raise Exception(
                 f"Invalid recipe for {package} (bad type or no component defined)"
@@ -583,9 +594,7 @@ def packaging_plan(
                         selection_modified = True
 
     # Generate rattler-build recipe and actions for new environment version
-    print(
-        f"Generate recipe for {environment_name} {future_published_soma_env_version}"
-    )
+    print(f"Generate recipe for {environment_name} {future_published_soma_env_version}")
     (plan_dir / "recipes" / environment_name).mkdir(exist_ok=True, parents=True)
     environment_recipe = {
         "package": {
@@ -605,7 +614,10 @@ def packaging_plan(
     }
     if base_environment:
         with open(
-            command_context.soma_root / "conf" / "sources.d" / f"{base_environment}.json"
+            command_context.soma_root
+            / "conf"
+            / "sources.d"
+            / f"{base_environment}.json"
         ) as f:
             base_environment_sources = json.load(f)
         base_environment_version = base_environment_sources["latest_release"]
@@ -625,6 +637,32 @@ def packaging_plan(
         }
     )
 
+    # Generate brainvisa virtual package
+    virtual_packages_to_release = []
+    if environment_name == "soma-env":
+        with open(command_context.soma_root / "recipes" / "brainvisa.yaml") as f:
+            brainvisa_recipe = yaml.safe_load(f)
+        brainvisa_recipe["package"]["version"] = future_published_soma_env_version
+        brainvisa_recipe["requirements"]["run"].append(
+            f"soma-env=={future_published_soma_env_version}"
+        )
+
+        recipe_path = plan_dir / "recipes" / "brainvisa" / "recipe.yaml"
+        recipe_path.parent.mkdir(exist_ok=True)
+        with open(plan_dir / "recipes" / "brainvisa" / "recipe.yaml", "w") as f:
+            yaml.safe_dump(
+                brainvisa_recipe,
+                f,
+            )
+        actions.append(
+            {
+                "action": "create_package",
+                "args": ["brainvisa"],
+                "kwargs": {"test": test},
+            }
+        )
+        virtual_packages_to_release.append("brainvisa")
+
     # Generate rattler-build recipe and actions for selected packages
     for package in selected_packages:
         recipe = recipes[package]
@@ -641,9 +679,7 @@ def packaging_plan(
         if internal_dependencies:
             for dpackage in internal_dependencies:
                 d = f"{dpackage}>={recipes[dpackage]['package']['version']}"
-                recipe.setdefault("requirements", {}).setdefault("run", []).append(
-                    d
-                )
+                recipe.setdefault("requirements", {}).setdefault("run", []).append(d)
 
         # Add dependency to current environment
         recipe["requirements"]["run"].append(
@@ -747,7 +783,7 @@ def packaging_plan(
                 "action": "publish",
                 "kwargs": {
                     "packages_dir": str(packages_dir),
-                    "packages": [environment_name],
+                    "packages": [environment_name] + virtual_packages_to_release,
                     "publication_dir": str(
                         publication_conf[soma_env_conf["publication"]]["directory"]
                     ),
@@ -755,9 +791,7 @@ def packaging_plan(
             }
         )
         for publication_channel, packages in packages_per_channel.items():
-            publication_directory = publication_conf[publication_channel][
-                "directory"
-            ]
+            publication_directory = publication_conf[publication_channel]["directory"]
             actions.append(
                 {
                     "action": "publish",
@@ -776,6 +810,7 @@ def packaging_plan(
             f,
         )
 
+
 @command_typer.command()
 def apply_plan():
     with open(command_context.soma_root / "plan" / "actions.yaml") as f:
@@ -790,6 +825,7 @@ def apply_plan():
             action["status"] = "success"
             with open(command_context.soma_root / "plan" / "actions.yaml", "w") as f:
                 yaml.safe_dump(actions, f)
+
 
 @command_typer.command()
 def graphviz(packages: str = "*", conda_forge=False, versions=False):
@@ -850,6 +886,7 @@ def graphviz(packages: str = "*", conda_forge=False, versions=False):
     for package in conda_forge_packages:
         print(f'  "{package}" [fillcolor="aliceblue"]')
     print("}")
+
 
 def main():
     command_typer()

@@ -487,7 +487,10 @@ class BBIDaily:
             lines = list(f.readlines())
         lines.insert(1, 'channel-priority = "disabled"\n')
         deps_i = lines.index('[dependencies]\n')
-        lines.insert(deps_i + 1, 'soma-env = "0.0.*"\n')
+        with open(osp.join(dev_env_dir, 'conf', 'soma-env.json')) as f:
+            env_conf = json.load(f)
+        version = env_conf['version']
+        lines.insert(deps_i + 1, f'soma-env = "{version}.*"\n')
         lines.insert(deps_i + 2, 'pytest = "*"\n')
         lines += ['\n',
                   '[pypi-dependencies]\n',

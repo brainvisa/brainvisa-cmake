@@ -350,7 +350,7 @@ class BBIDaily:
 
             # pack
             cmd = ['pixi', 'run', '--frozen', 'soma-env', 'apply-plan']
-            log = ['buid packages plan', 'command:', ' '.join(cmd),
+            log = ['apply packaging plan', 'command:', ' '.join(cmd),
                    'from dir:', env_dir]
             self.log(environment, 'buid packages', 0,
                      '\n'.join(log), duration=0)

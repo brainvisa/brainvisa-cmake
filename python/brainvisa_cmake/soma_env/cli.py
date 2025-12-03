@@ -637,32 +637,6 @@ def packaging_plan(
         }
     )
 
-    # Generate brainvisa virtual package
-    virtual_packages_to_release = []
-    if environment_name == "soma-env":
-        with open(command_context.soma_root / "recipes" / "brainvisa.yaml") as f:
-            brainvisa_recipe = yaml.safe_load(f)
-        brainvisa_recipe["package"]["version"] = future_published_soma_env_version
-        brainvisa_recipe["requirements"]["run"].append(
-            f"soma-env=={future_published_soma_env_version}"
-        )
-
-        recipe_path = plan_dir / "recipes" / "brainvisa" / "recipe.yaml"
-        recipe_path.parent.mkdir(exist_ok=True)
-        with open(plan_dir / "recipes" / "brainvisa" / "recipe.yaml", "w") as f:
-            yaml.safe_dump(
-                brainvisa_recipe,
-                f,
-            )
-        actions.append(
-            {
-                "action": "create_package",
-                "args": ["brainvisa"],
-                "kwargs": {"test": test},
-            }
-        )
-        virtual_packages_to_release.append("brainvisa")
-
     # Generate rattler-build recipe and actions for selected packages
     for package in selected_packages:
         recipe = recipes[package]
@@ -698,6 +672,32 @@ def packaging_plan(
                 "kwargs": {"test": test},
             }
         )
+
+    # Generate brainvisa virtual package
+    virtual_packages_to_release = []
+    if environment_name == "soma-env":
+        with open(command_context.soma_root / "recipes" / "brainvisa.yaml") as f:
+            brainvisa_recipe = yaml.safe_load(f)
+        brainvisa_recipe["package"]["version"] = future_published_soma_env_version
+        brainvisa_recipe["requirements"]["run"].append(
+            f"soma-env=={future_published_soma_env_version}"
+        )
+
+        recipe_path = plan_dir / "recipes" / "brainvisa" / "recipe.yaml"
+        recipe_path.parent.mkdir(exist_ok=True)
+        with open(plan_dir / "recipes" / "brainvisa" / "recipe.yaml", "w") as f:
+            yaml.safe_dump(
+                brainvisa_recipe,
+                f,
+            )
+        actions.append(
+            {
+                "action": "create_package",
+                "args": ["brainvisa"],
+                "kwargs": {"test": test},
+            }
+        )
+        virtual_packages_to_release.append("brainvisa")
 
     if release:
         modified_sources = set()

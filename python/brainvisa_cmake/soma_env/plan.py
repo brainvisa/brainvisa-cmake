@@ -141,7 +141,7 @@ def create_package(context, package, test):
     with open(context.soma_root / "pixi.toml") as f:
         pixi_toml = toml.load(f)
     channels = pixi_toml["project"]["channels"]
-    for i in channels + [f"file://{output}"]:
+    for i in [f"file://{output}"] + [i for i in channels if i not in ('pytorch', 'nvidia')]:
         command.extend(["-c", i])
     try:
         subprocess.check_call(command)

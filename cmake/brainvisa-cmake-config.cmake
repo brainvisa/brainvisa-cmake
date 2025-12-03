@@ -1012,7 +1012,7 @@ endfunction()
 # Usage:
 #   BRAINVISA_COPY_PYTHON_DIRECTORY( <python directory> <component>
 #                                    <destination directory> [NO_SYMLINKS]
-#                                    [INSTALL_ONLY] )
+#                                    [INSTALL_ONLY] [NO_INSTALL] )
 #     <python directory>: python directory to copy
 #     <component>: name of the component passed to BRAINVISA_INSTALL.
 #     <destination directory>: directory where the files will be copied
@@ -1040,6 +1040,14 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
     set( install_only FALSE )
   else()
     set( install_only TRUE )
+    list( REMOVE_AT _args ${result} )
+  endif()
+  # Read NO_INSTALL option
+  list( FIND _args NO_INSTALL result )
+  if( result EQUAL -1 )
+    set( no_install FALSE )
+  else()
+    set( no_install TRUE )
     list( REMOVE_AT _args ${result} )
   endif()
 
@@ -1122,10 +1130,12 @@ function( BRAINVISA_COPY_PYTHON_DIRECTORY _pythonDirectory _component )
         set( _targetDepends ${_targetDepends} "${_fileBuild}" )
     endif()
     get_filename_component( _dest "${_destDir}/${_file}" DIRECTORY )
-    BRAINVISA_INSTALL(
-      FILES "${_pythonDirectory}/${_file}"
-      DESTINATION "${_dest}"
-      COMPONENT ${_component} )
+    if( NOT no_install )
+        BRAINVISA_INSTALL(
+          FILES "${_pythonDirectory}/${_file}"
+          DESTINATION "${_dest}"
+          COMPONENT ${_component} )
+    endif()
 endforeach(_file ${_pythonSources})
 
   # Copy other files
@@ -1154,9 +1164,11 @@ endforeach(_file ${_pythonSources})
 
     # Install source file and byte compiled files
     get_filename_component( _dest "${_destDir}/${_file}" DIRECTORY )
-    BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}"
-                       DESTINATION "${_dest}"
-                       COMPONENT ${_component} )
+    if( NOT no_install )
+        BRAINVISA_INSTALL( FILES "${_pythonDirectory}/${_file}"
+                           DESTINATION "${_dest}"
+                           COMPONENT ${_component} )
+    endif()
     set( _targetDepends ${_targetDepends} "${_fileBuild}" )
   endforeach(_file ${_nonPythonSources})
 

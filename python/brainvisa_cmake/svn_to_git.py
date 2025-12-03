@@ -22,7 +22,7 @@ def convert_project(project, repos, svn_repos, authors_file=None,
         it so it's safe to use the same repos directory for several projects
     svn_repos: str
         svn repos URL, including project/component dir
-        (ex: https://bioproj.extra.cea.fr/neurosvn/brainvisa/soma/soma-base)
+        (ex: https://bioproj.cea.fr/neurosvn/brainvisa/soma/soma-base)
     authors_file: str
         correspondance map file betweeen svn and git[hub] logins.
         format: see git-svn manpage (--authors-file)
@@ -269,7 +269,7 @@ def convert_perforce_directory(project, repos, svn_repos, authors_file=None):
         it so it's safe to use the same repos directory for several projects
     svn_repos: str
         svn repos URL, including project/component dir
-        (ex: https://bioproj.extra.cea.fr/neurosvn/perforce/brainvisa)
+        (ex: https://bioproj.cea.fr/neurosvn/perforce/brainvisa)
     authors_file: str
         correspondance map file betweeen svn and git[hub] logins.
         format: see git-svn manpage (--authors-file)
@@ -336,7 +336,7 @@ def graft_history(project, old_project, repos, old_repos, branch='master',
 def main():
     import argparse
 
-    bioproj = 'https://bioproj.extra.cea.fr/neurosvn'
+    bioproj = 'https://bioproj.cea.fr/neurosvn'
 
     parser = argparse.ArgumentParser('Convert some svn repositories to git')
     parser.add_argument('-u', '--update', action='store_true',

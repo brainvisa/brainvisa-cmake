@@ -6,7 +6,7 @@ from fnmatch import fnmatchcase
 import toml
 import sys
 
-SVN_URL = 'https://bioproj.extra.cea.fr/neurosvn'
+SVN_URL = 'https://bioproj.cea.fr/neurosvn'
 BRAINVISA_SVN_URL = SVN_URL + '/brainvisa'
 
 from brainvisa_cmake.components_definition import (
@@ -513,7 +513,7 @@ def parse_versioning_client_info(client_info):
       The versioning client information is described using the format
       <client_type> <url> [<client_parameters>]
 
-      i.e: svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-gpl/branches/4.4
+      i.e: svn https://bioproj.cea.fr/neurosvn/brainvisa/aims/aims-gpl/branches/4.4
       or git https://github.com/neurospin/soma-workflow.git master
 
     @type client_info: string

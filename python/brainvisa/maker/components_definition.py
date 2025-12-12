@@ -53,10 +53,10 @@ components_definition = [
             ['web', {
                 'groups': ['all'],
                 'branches': {
-                    'trunk': ('git https://bioproj.extra.cea.fr/git/brainvisa-commu/web.git branch:integration','communication/web/trunk'),
-                    'bug_fix': ('git https://bioproj.extra.cea.fr/git/brainvisa-commu/web.git branch:master','communication/web/master'),
-                    '5.0': ('git https://bioproj.extra.cea.fr/git/brainvisa-commu/web.git branch:master','communication/web/5.0'),
-                    '5.1': ('git https://bioproj.extra.cea.fr/git/brainvisa-commu/web.git branch:master','communication/web/5.1'),
+                    'trunk': ('git https://bioproj.cea.fr/git/brainvisa-commu/web.git branch:integration','communication/web/trunk'),
+                    'bug_fix': ('git https://bioproj.cea.fr/git/brainvisa-commu/web.git branch:master','communication/web/master'),
+                    '5.0': ('git https://bioproj.cea.fr/git/brainvisa-commu/web.git branch:master','communication/web/5.0'),
+                    '5.1': ('git https://bioproj.cea.fr/git/brainvisa-commu/web.git branch:master','communication/web/5.1'),
                 },
             }],
         ],
@@ -238,7 +238,7 @@ components_definition = [
                 'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
                            'standard', 'cea', 'cati_platform'],
                 'branches': {
-                    '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/datamind/branches/5.0','datamind/5.0'),
+                    '5.0': ('svn https://bioproj.cea.fr/neurosvn/brainvisa/datamind/branches/5.0','datamind/5.0'),
                 },
             }],
         ],
@@ -286,10 +286,10 @@ components_definition = [
             ['morphologist-baby', {
                 'groups': ['all', 'standard', 'cea'],
                 'branches': {
-                    'trunk': ('git https://bioproj.extra.cea.fr/git/brainvisa-t1mri/morphologist-baby.git branch:integration','morphologist/morphologist-baby/integration'),
-                    'bug_fix': ('git https://bioproj.extra.cea.fr/git/brainvisa-t1mri/morphologist-baby.git branch:master','morphologist/morphologist-baby/master'),
-                    '5.0': ('git https://bioproj.extra.cea.fr/git/brainvisa-t1mri/morphologist-baby.git branch:5.0','morphologist/morphologist-baby/5.0'),
-                    '5.1': ('git https://bioproj.extra.cea.fr/git/brainvisa-t1mri/morphologist-baby.git branch:5.1','morphologist/morphologist-baby/5.1'),
+                    'trunk': ('git https://bioproj.cea.fr/git/brainvisa-t1mri/morphologist-baby.git branch:integration','morphologist/morphologist-baby/integration'),
+                    'bug_fix': ('git https://bioproj.cea.fr/git/brainvisa-t1mri/morphologist-baby.git branch:master','morphologist/morphologist-baby/master'),
+                    '5.0': ('git https://bioproj.cea.fr/git/brainvisa-t1mri/morphologist-baby.git branch:5.0','morphologist/morphologist-baby/5.0'),
+                    '5.1': ('git https://bioproj.cea.fr/git/brainvisa-t1mri/morphologist-baby.git branch:5.1','morphologist/morphologist-baby/5.1'),
                 },
             }],
             ['tms', {
@@ -300,8 +300,8 @@ components_definition = [
             ['sulci-data', {
                 'groups': [],
                 'branches': {
-                    'trunk': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-data/trunk','morphologist/sulci-data/trunk'),
-                    'bug_fix': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/morphologist/sulci-data/trunk','morphologist/sulci-data/bug_fix'),
+                    'trunk': ('svn https://bioproj.cea.fr/neurosvn/brainvisa/morphologist/sulci-data/trunk','morphologist/sulci-data/trunk'),
+                    'bug_fix': ('svn https://bioproj.cea.fr/neurosvn/brainvisa/morphologist/sulci-data/trunk','morphologist/sulci-data/bug_fix'),
                 },
             }],
             ['sulci-nonfree', {
@@ -342,53 +342,53 @@ components_definition = [
             ['brainrat-gpl', {
                 'groups': ['all', 'brainvisa', 'cea'],
                 'branches': {
-                    'trunk': ('git https://bioproj.extra.cea.fr/git/brainrat-gpl branch:master', 'brainrat/brainrat-gpl/integration'),
-                    'bug_fix': ('git https://bioproj.extra.cea.fr/git/brainrat-gpl branch:master', 'brainrat/brainrat-gpl/master'),
-                    '5.0': ('git https://bioproj.extra.cea.fr/git/brainrat-gpl branch:5.0', 'brainrat/brainrat-gpl/5.0'),
-                    '5.1': ('git https://bioproj.extra.cea.fr/git/brainrat-gpl branch:5.1', 'brainrat/brainrat-gpl/5.1'),
+                    'trunk': ('git https://bioproj.cea.fr/git/brainrat-gpl branch:master', 'brainrat/brainrat-gpl/integration'),
+                    'bug_fix': ('git https://bioproj.cea.fr/git/brainrat-gpl branch:master', 'brainrat/brainrat-gpl/master'),
+                    '5.0': ('git https://bioproj.cea.fr/git/brainrat-gpl branch:5.0', 'brainrat/brainrat-gpl/5.0'),
+                    '5.1': ('git https://bioproj.cea.fr/git/brainrat-gpl branch:5.1', 'brainrat/brainrat-gpl/5.1'),
                 },
             }],
             ['brainrat-private', {
                 'groups': ['all', 'brainvisa', 'cea'],
                 'branches': {
-                    'trunk': ('git https://bioproj.extra.cea.fr/git/brainrat-private branch:master', 'brainrat/brainrat-private/integration'),
-                    'bug_fix': ('git https://bioproj.extra.cea.fr/git/brainrat-private branch:master', 'brainrat/brainrat-private/master'),
-                    '5.0': ('git https://bioproj.extra.cea.fr/git/brainrat-private branch:5.0', 'brainrat/brainrat-private/5.0'),
-                    '5.1': ('git https://bioproj.extra.cea.fr/git/brainrat-private branch:5.1', 'brainrat/brainrat-private/5.1'),
+                    'trunk': ('git https://bioproj.cea.fr/git/brainrat-private branch:master', 'brainrat/brainrat-private/integration'),
+                    'bug_fix': ('git https://bioproj.cea.fr/git/brainrat-private branch:master', 'brainrat/brainrat-private/master'),
+                    '5.0': ('git https://bioproj.cea.fr/git/brainrat-private branch:5.0', 'brainrat/brainrat-private/5.0'),
+                    '5.1': ('git https://bioproj.cea.fr/git/brainrat-private branch:5.1', 'brainrat/brainrat-private/5.1'),
                 },
             }],
             ['bioprocessing', {
                 'groups': ['all', 'cea'],
                 'branches': {
-                    'trunk': ('git https://bioproj.extra.cea.fr/git/bioprocessing branch:master', 'brainrat/bioprocessing/integration'),
-                    'bug_fix': ('git https://bioproj.extra.cea.fr/git/bioprocessing branch:master', 'brainrat/bioprocessing/master'),
-                    '5.0': ('git https://bioproj.extra.cea.fr/git/bioprocessing branch:5.0', 'brainrat/bioprocessing/5.0'),
-                    '5.1': ('git https://bioproj.extra.cea.fr/git/bioprocessing branch:5.1', 'brainrat/bioprocessing/5.1'),
+                    'trunk': ('git https://bioproj.cea.fr/git/bioprocessing branch:master', 'brainrat/bioprocessing/integration'),
+                    'bug_fix': ('git https://bioproj.cea.fr/git/bioprocessing branch:master', 'brainrat/bioprocessing/master'),
+                    '5.0': ('git https://bioproj.cea.fr/git/bioprocessing branch:5.0', 'brainrat/bioprocessing/5.0'),
+                    '5.1': ('git https://bioproj.cea.fr/git/bioprocessing branch:5.1', 'brainrat/bioprocessing/5.1'),
                 },
             }],
             ['preclinical-imaging-iam', {
                 'groups': ['all'],
                 'branches': {
-                    'trunk': ('git https://bioproj.extra.cea.fr/git/preclinical-imaging-iam branch:master', 'brainrat/preclinical-imaging-iam/integration'),
-                    'bug_fix': ('git https://bioproj.extra.cea.fr/git/preclinical-imaging-iam branch:master', 'brainrat/preclinical-imaging-iam/master'),
+                    'trunk': ('git https://bioproj.cea.fr/git/preclinical-imaging-iam branch:master', 'brainrat/preclinical-imaging-iam/integration'),
+                    'bug_fix': ('git https://bioproj.cea.fr/git/preclinical-imaging-iam branch:master', 'brainrat/preclinical-imaging-iam/master'),
                 },
             }],
             ['primatologist-gpl', {
                 'groups': ['all', 'brainvisa', 'cea'],
                 'branches': {
-                    'trunk': ('git https://bioproj.extra.cea.fr/git/primatologist-gpl branch:master', 'brainrat/primatologist-gpl/integration'),
-                    'bug_fix': ('git https://bioproj.extra.cea.fr/git/primatologist-gpl branch:master', 'brainrat/primatologist-gpl/master'),
-                    '5.0': ('git https://bioproj.extra.cea.fr/git/primatologist-gpl branch:5.0', 'brainrat/primatologist-gpl/5.0'),
-                    '5.1': ('git https://bioproj.extra.cea.fr/git/primatologist-gpl branch:5.1', 'brainrat/primatologist-gpl/5.1'),
+                    'trunk': ('git https://bioproj.cea.fr/git/primatologist-gpl branch:master', 'brainrat/primatologist-gpl/integration'),
+                    'bug_fix': ('git https://bioproj.cea.fr/git/primatologist-gpl branch:master', 'brainrat/primatologist-gpl/master'),
+                    '5.0': ('git https://bioproj.cea.fr/git/primatologist-gpl branch:5.0', 'brainrat/primatologist-gpl/5.0'),
+                    '5.1': ('git https://bioproj.cea.fr/git/primatologist-gpl branch:5.1', 'brainrat/primatologist-gpl/5.1'),
                 },
             }],
             ['3dns-private', {
                 'groups': ['3dns'],
                 'branches': {
-                    'trunk': ('git https://bioproj.extra.cea.fr/git/3dns-private branch:master', 'brainrat/3dns-private/integration'),
-                    'bug_fix': ('git https://bioproj.extra.cea.fr/git/3dns-private branch:master', 'brainrat/3dns-private/master'),
-                    '5.0': ('git https://bioproj.extra.cea.fr/git/3dns-private branch:5.0', 'brainrat/3dns-private/5.0'),
-                    '5.1': ('git https://bioproj.extra.cea.fr/git/3dns-private branch:5.1', 'brainrat/3dns-private/5.1'),
+                    'trunk': ('git https://bioproj.cea.fr/git/3dns-private branch:master', 'brainrat/3dns-private/integration'),
+                    'bug_fix': ('git https://bioproj.cea.fr/git/3dns-private branch:master', 'brainrat/3dns-private/master'),
+                    '5.0': ('git https://bioproj.cea.fr/git/3dns-private branch:5.0', 'brainrat/3dns-private/5.0'),
+                    '5.1': ('git https://bioproj.cea.fr/git/3dns-private branch:5.1', 'brainrat/3dns-private/5.1'),
                 },
             }],
         ],
@@ -476,7 +476,7 @@ components_definition = [
                 'groups': ['all', 'opensource', 'brainvisa', 'bvdev',
                            'standard', 'cea', 'cati_platform'],
                 'branches': {
-                    '5.0': ('svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/snapbase/branches/5.0','snapbase/5.0'),
+                    '5.0': ('svn https://bioproj.cea.fr/neurosvn/brainvisa/snapbase/branches/5.0','snapbase/5.0'),
                 },
             }],
         ],
@@ -543,10 +543,10 @@ components_definition = [
             ['disco', {
                 'groups': ['all', 'cea'],
                 'branches': {
-                    'trunk': ('git https://bioproj.extra.cea.fr/git/brainvisa-disco branch:master', 'disco/integration'),
-                    'bug_fix': ('git https://bioproj.extra.cea.fr/git/brainvisa-disco branch:master', 'disco/master'),
-                    '5.0': ('git https://bioproj.extra.cea.fr/git/brainvisa-disco branch:5.0', 'disco/5.0'),
-                    '5.1': ('git https://bioproj.extra.cea.fr/git/brainvisa-disco branch:5.1', 'disco/5.1'),
+                    'trunk': ('git https://bioproj.cea.fr/git/brainvisa-disco branch:master', 'disco/integration'),
+                    'bug_fix': ('git https://bioproj.cea.fr/git/brainvisa-disco branch:master', 'disco/master'),
+                    '5.0': ('git https://bioproj.cea.fr/git/brainvisa-disco branch:5.0', 'disco/5.0'),
+                    '5.1': ('git https://bioproj.cea.fr/git/brainvisa-disco branch:5.1', 'disco/5.1'),
                 },
             }],
         ],

@@ -224,9 +224,9 @@ or:
 
     brainvisa repository_directory local_directory
 
-In order to include some directories that do not correspond to registered BrainVISA components, one can directly give the directory name in ``repository_directory``. This directory name must be given relatively to the main BrainVISA repository URL: https://bioproj.extra.cea.fr/neurosvn/brainvisa. By default, ``repository_directory`` is also used to define where this directory will be in the source directory. It is not mandatory to provide a value for local_directory. If it is given, it is used instead of repositor_directory to define the directory location relatively to the source directory.
+In order to include some directories that do not correspond to registered BrainVISA components, one can directly give the directory name in ``repository_directory``. This directory name must be given relatively to the main BrainVISA repository URL: https://bioproj.cea.fr/neurosvn/brainvisa. By default, ``repository_directory`` is also used to define where this directory will be in the source directory. It is not mandatory to provide a value for local_directory. If it is given, it is used instead of repositor_directory to define the directory location relatively to the source directory.
 
-For instance, the following configuration will link the repository directory https://bioproj.extra.cea.fr/neurosvn/brainvisa/perso/myself/myproject with the local directory ``/home/myself/brainvisa/perso/myself/myproject``.
+For instance, the following configuration will link the repository directory https://bioproj.cea.fr/neurosvn/brainvisa/perso/myself/myproject with the local directory ``/home/myself/brainvisa/perso/myself/myproject``.
 
 .. code-block:: bash
 

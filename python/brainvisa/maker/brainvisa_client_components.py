@@ -83,7 +83,7 @@ def get_version_control_component( project,
         @type client_info: string
         @param client_info: The versioning client information is described using
                             the format <client_type> <url> [<client_parameters>]
-                            i.e: svn https://bioproj.extra.cea.fr/neurosvn/brainvisa/aims/aims-gpl/branches/4.4
+                            i.e: svn https://bioproj.cea.fr/neurosvn/brainvisa/aims/aims-gpl/branches/4.4
                               or git https://github.com/neurospin/soma-workflow.git master
     """
     from brainvisa.maker import svn

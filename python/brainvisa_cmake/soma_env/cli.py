@@ -654,9 +654,12 @@ def packaging_plan(
             compiled = (recipes[package]['soma-env'].get('type') == 'compiled')
             for dpackage in internal_dependencies:
                 equality = '>='
+                dversion = recipes[dpackage]['package']['version']
                 if compiled and recipes[dpackage]['soma-env']['type'] == 'compiled':
                     equality = '=='
-                d = f"{dpackage}{equality}{recipes[dpackage]['package']['version']}"
+                    if development_environment:
+                        dversion = future_published_soma_env_version
+                d = f"{dpackage}{equality}{dversion}"
                 recipe.setdefault("requirements", {}).setdefault("run", []).append(d)
 
         # Add dependency to current environment

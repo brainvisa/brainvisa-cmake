@@ -43,6 +43,16 @@ def resolve_requirement(requirement):
     return re.sub(r"\$soma-env\{\{(.*)\}\}", replace_soma_env, requirement)
 
 
+def filter_recipe(recipe):
+    # Replace $soma-env{{...}} elements in dependencies
+    for section, requirements in recipe.get("requirements", {}).items():
+        if isinstance(requirements, list):
+            for i in range(len(requirements)):
+                r = requirements[i]
+                if isinstance(r, str):
+                    requirements[i] = resolve_requirement(r)
+
+
 def read_recipes(soma_root):
     """
     Iterate over all recipes files defined in soma-forge.
@@ -83,13 +93,7 @@ def read_recipes(soma_root):
                     components[component] = src_dir / component
                 recipe["soma-env"]["components"] = components
 
-                # Replace $soma-env{{...}} elements in dependencies
-                for section, requirements in recipe.get("requirements", {}).items():
-                    if isinstance(requirements, list):
-                        for i in range(len(requirements)):
-                            r = requirements[i]
-                            if isinstance(r, str):
-                                requirements[i] = resolve_requirement(r)
+                filter_recipe(recipe)
                 yield recipe
             except Exception as e:
                 raise RuntimeError(f"Error while reading {recipe_file}") from e

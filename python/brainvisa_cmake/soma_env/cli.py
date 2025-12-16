@@ -20,6 +20,7 @@ from .defaults import default_publication_directory
 from .recipes import (
     sorted_recipies,
     find_soma_env_packages,
+    filter_recipe,
     read_recipes,
     resolve_requirement,
 )
@@ -689,7 +690,7 @@ def packaging_plan(
         brainvisa_recipe["requirements"]["run"].append(
             f"soma-env=={future_published_soma_env_version}"
         )
-
+        filter_recipe(brainvisa_recipe)
         recipe_path = plan_dir / "recipes" / "brainvisa" / "recipe.yaml"
         recipe_path.parent.mkdir(exist_ok=True)
         with open(plan_dir / "recipes" / "brainvisa" / "recipe.yaml", "w") as f:

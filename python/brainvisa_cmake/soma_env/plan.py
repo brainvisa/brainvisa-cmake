@@ -140,7 +140,7 @@ def create_package(context, package, test):
         command.append("--no-test")
     with open(context.soma_root / "pixi.toml") as f:
         pixi_toml = toml.load(f)
-    channels = pixi_toml["project"]["channels"]
+    channels = pixi_toml.get("workspace", pixi_toml.get("project", {})).get("channels", [])
     for i in [f"file://{output}"] + [i for i in channels if i not in ('pytorch', 'nvidia')]:
         command.extend(["-c", i])
     try:

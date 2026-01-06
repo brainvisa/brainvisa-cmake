@@ -120,220 +120,6 @@ def update():
 
 
 @command_typer.command()
-def version_plan(
-    packages: str = "*",
-    force: bool = False,
-):
-    selector = re.compile("|".join(f"(?:{fnmatch.translate(i)})" for i in packages))
-
-    plan_dir = command_context.soma_root / "plan"
-
-    # Check if a plan file already exists and can be erased
-    if not force:
-        actions_file = plan_dir / "actions.yaml"
-        if actions_file.exists():
-            with open(actions_file) as f:
-                actions = yaml.safe_load(f)
-            if any(action.get("status") == "success" for action in actions):
-                raise RuntimeError(
-                    f"A plan already exists in {plan_dir} and was used. "
-                    "Erase it or use --force option"
-                )
-
-    # Erase existing plan
-    if plan_dir.exists():
-        print(f"Erasing existing plan: {plan_dir}")
-        shutil.rmtree(plan_dir)
-    plan_dir.mkdir()
-
-    # Read environment version
-    with open(command_context.soma_root / "conf" / "soma-env.json") as f:
-        soma_env = json.load(f)
-
-    actions = []
-    commit_actions = []
-    push_actions = []
-
-    # Read and merge json files defineing components sources (there can be several files
-    # in environments deriving from soma-env)
-    component_sources = {}
-    for json_sources in (command_context.soma_root / "conf" / "sources.d").glob(
-        "*.json"
-    ):
-        with open(json_sources) as f:
-            component_sources.update(json.load(f))
-
-    # Check if pixi.lock has changed using git
-    soma_env_repo = git.Repo(command_context.soma_root)
-    files_to_commit = set()
-    pixi_lock_changed = False
-    changed_files = {item.a_path for item in soma_env_repo.index.diff(None)}
-    if "pixi.lock" in changed_files:
-        files_to_commit.add("pixi.lock")
-        pixi_lock_changed = True
-    if "pixi.toml" in changed_files:
-        files_to_commit.add("pixi.toml")
-        if not pixi_lock_changed:
-            raise RuntimeError("pixi.toml file changed but not pixi.lock")
-
-    for recipe in read_recipes(command_context.soma_root):
-        package = recipe["package"]["name"]
-        if not selector.match(package):
-            print(f"Package {package} excluded from selection")
-            continue
-        components = list(recipe["soma-env"].get("components", {}).keys())
-        if components:
-
-            latest_changesets = {}
-            changesets = {}
-            for component in components:
-                src = command_context.soma_root / "src" / component
-                repo = git.Repo(src)
-                if repo.is_dirty():
-                    print(f"WARNING: repository {src} contains uncomited files")
-                elif repo.untracked_files:
-                    print(f"WARNING: repository {src} has local modifications")
-                changesets[component] = str(repo.head.commit)
-                changeset = component_sources[component].get("changeset")
-                if changeset:
-                    latest_changesets[component] = changeset
-
-            if not latest_changesets:
-                print(f"Package {package} never released within this branch")
-            elif pixi_lock_changed or changesets != latest_changesets:
-                latest_release_version = soma_env["packages"][package]
-                if pixi_lock_changed:
-                    print(f"Select {package} because pixi.lock has changed")
-                else:
-                    changes = sorted(
-                        i
-                        for i in changesets
-                        if changesets[i] != latest_changesets.get(i)
-                    )
-
-                    print(
-                        f"Package {package} modified since last release (in {', '.join(changes)})"
-                    )
-                if (
-                    pixi_lock_changed
-                    or recipe["package"]["version"] == latest_release_version
-                ):
-                    package_version = tuple(
-                        int(i) for i in recipe["package"]["version"].split(".")
-                    )
-                    new_version = package_version[:-1] + (package_version[-1] + 1,)
-                    new_version = ".".join(str(i) for i in new_version)
-                    print(
-                        f"Set {package} version from {latest_release_version} to {new_version}"
-                    )
-                    # Find file to change
-                    src = next(iter(recipe["soma-env"]["components"].values()))
-                    file = src / "pyproject.toml"
-                    if file.exists():
-                        version_regexps = (
-                            re.compile(
-                                r'(\bversion\s*=\s*")([0-9]+)(\.[0-9]+\.[0-9]+")'
-                            ),
-                            re.compile(
-                                r'(\bversion\s*=\s*"[0-9]+\.)([0-9]+)(\.[0-9]+")'
-                            ),
-                            re.compile(
-                                r'(\bversion\s*=\s*"[0-9]+\.[0-9]+\.)([0-9]+)(")'
-                            ),
-                        )
-                    else:
-                        file = src / "project_info.cmake"
-                        if file.exists():
-                            version_regexps = (
-                                re.compile(
-                                    r"(\bset\s*\(\s*BRAINVISA_PACKAGE_VERSION_MAJOR\s*)"
-                                    r"([0-9]+)(\s*\))",
-                                    re.IGNORECASE,
-                                ),
-                                re.compile(
-                                    r"(\bset\s*\(\s*BRAINVISA_PACKAGE_VERSION_MINOR\s*)"
-                                    r"([0-9]+)(\s*\))",
-                                    re.IGNORECASE,
-                                ),
-                                re.compile(
-                                    r"(\bset\s*\(\s*BRAINVISA_PACKAGE_VERSION_PATCH\s*)"
-                                    r"([0-9]+)(\s*\))",
-                                    re.IGNORECASE,
-                                ),
-                            )
-                        else:
-                            version_regexps = (
-                                re.compile(r"(\bversion_major\s*=\s*)([0-9]+)(\b)"),
-                                re.compile(r"(\bversion_minor\s*=\s*)([0-9]+)(\b)"),
-                                re.compile(r"(\bversion_micro\s*=\s*)([0-9]+)(\b)"),
-                            )
-                            files = list(
-                                itertools.chain(
-                                    src.glob("info.py"),
-                                    src.glob("*/info.py"),
-                                    src.glob("python/*/info.py"),
-                                )
-                            )
-                            if not files:
-                                raise RuntimeError(
-                                    f"Cannot find component version file (info.py or project_info.cmake) in {src}"
-                                )
-                            file = files[0]
-                    with open(file) as f:
-                        file_contents = f.read()
-                    for regex, version_component in zip(
-                        version_regexps, new_version.split(".")
-                    ):
-                        file_contents, _ = regex.subn(
-                            f"\\g<1>{version_component}\\g<3>", file_contents
-                        )
-                    print(
-                        f"Create actions to modify {file} to set {package} version from {latest_release_version} to {new_version}"
-                    )
-                    actions.append(
-                        {
-                            "action": "modify_file",
-                            "kwargs": {
-                                "file": str(file),
-                                "file_contents": file_contents,
-                            },
-                        }
-                    )
-                    commit_actions.append(
-                        {
-                            "action": "git_commit",
-                            "kwargs": {
-                                "repo": str(src),
-                                "modified": [str(file)],
-                                "message": f"Set package {package} from version {latest_release_version} to version {new_version}",
-                            },
-                        }
-                    )
-                    push_actions.append(
-                        {
-                            "action": "git_push",
-                            "kwargs": {
-                                "repo": str(src),
-                            },
-                        }
-                    )
-
-            else:
-                print(f"No change detected in package {package}")
-
-    if commit_actions:
-        actions.extend(commit_actions)
-        actions.extend(push_actions)
-        actions.append({"action": "rebuild"})
-
-    with open(plan_dir / "actions.yaml", "w") as f:
-        yaml.safe_dump(
-            actions,
-            f,
-        )
-
-
-@command_typer.command()
 def check_merge(src: str = None, branch: str = None):
     if src:
         src = pathlib.Path(src)
@@ -594,6 +380,115 @@ def packaging_plan(
                         ).add(package)
                         selection_modified = True
 
+    # Generate version change rules
+    if not development_environment and release:
+        commit_actions = []
+        push_actions = []
+        for package in selected_packages:
+            # --------------------------------------
+            recipe = recipes[package]
+            latest_release_version = soma_env_conf["packages"][package]
+            package_version = tuple(
+                int(i) for i in recipe["package"]["version"].split(".")
+            )
+            new_version = package_version[:-1] + (package_version[-1] + 1,)
+            new_version = ".".join(str(i) for i in new_version)
+            recipe["package"]["version"] = new_version
+            print(
+                f"Set {package} version from {latest_release_version} to {new_version}"
+            )
+            # Find file to change
+            src = next(iter(recipe["soma-env"]["components"].values()))
+            file = src / "pyproject.toml"
+            if file.exists():
+                version_regexps = (
+                    re.compile(r'(\bversion\s*=\s*")([0-9]+)(\.[0-9]+\.[0-9]+")'),
+                    re.compile(r'(\bversion\s*=\s*"[0-9]+\.)([0-9]+)(\.[0-9]+")'),
+                    re.compile(r'(\bversion\s*=\s*"[0-9]+\.[0-9]+\.)([0-9]+)(")'),
+                )
+            else:
+                file = src / "project_info.cmake"
+                if file.exists():
+                    version_regexps = (
+                        re.compile(
+                            r"(\bset\s*\(\s*BRAINVISA_PACKAGE_VERSION_MAJOR\s*)"
+                            r"([0-9]+)(\s*\))",
+                            re.IGNORECASE,
+                        ),
+                        re.compile(
+                            r"(\bset\s*\(\s*BRAINVISA_PACKAGE_VERSION_MINOR\s*)"
+                            r"([0-9]+)(\s*\))",
+                            re.IGNORECASE,
+                        ),
+                        re.compile(
+                            r"(\bset\s*\(\s*BRAINVISA_PACKAGE_VERSION_PATCH\s*)"
+                            r"([0-9]+)(\s*\))",
+                            re.IGNORECASE,
+                        ),
+                    )
+                else:
+                    version_regexps = (
+                        re.compile(r"(\bversion_major\s*=\s*)([0-9]+)(\b)"),
+                        re.compile(r"(\bversion_minor\s*=\s*)([0-9]+)(\b)"),
+                        re.compile(r"(\bversion_micro\s*=\s*)([0-9]+)(\b)"),
+                    )
+                    files = list(
+                        itertools.chain(
+                            src.glob("info.py"),
+                            src.glob("*/info.py"),
+                            src.glob("python/*/info.py"),
+                        )
+                    )
+                    if not files:
+                        raise RuntimeError(
+                            f"Cannot find component version file (info.py or project_info.cmake) in {src}"
+                        )
+                    file = files[0]
+            with open(file) as f:
+                file_contents = f.read()
+            for regex, version_component in zip(
+                version_regexps, new_version.split(".")
+            ):
+                file_contents, _ = regex.subn(
+                    f"\\g<1>{version_component}\\g<3>", file_contents
+                )
+            print(
+                f"Create actions to modify {file} to set {package} version from {latest_release_version} to {new_version}"
+            )
+            actions.append(
+                {
+                    "action": "modify_file",
+                    "kwargs": {
+                        "file": str(file),
+                        "file_contents": file_contents,
+                    },
+                }
+            )
+            commit_actions.append(
+                {
+                    "action": "git_commit",
+                    "kwargs": {
+                        "repo": str(src),
+                        "modified": [str(file)],
+                        "message": f"Set package {package} from version {latest_release_version} to version {new_version}",
+                    },
+                }
+            )
+            push_actions.append(
+                {
+                    "action": "git_push",
+                    "kwargs": {
+                        "repo": str(src),
+                    },
+                }
+            )
+            # --------------------------------------
+
+        if commit_actions:
+            actions.extend(commit_actions)
+            actions.extend(push_actions)
+            actions.append({"action": "rebuild"})
+
     # Generate rattler-build recipe and actions for new environment version
     print(f"Generate recipe for {environment_name} {future_published_soma_env_version}")
     (plan_dir / "recipes" / environment_name).mkdir(exist_ok=True, parents=True)
@@ -652,12 +547,12 @@ def packaging_plan(
                 )
         internal_dependencies = recipe["soma-env"].get("internal-dependencies", [])
         if internal_dependencies:
-            compiled = (recipes[package]['soma-env'].get('type') == 'compiled')
+            compiled = recipes[package]["soma-env"].get("type") == "compiled"
             for dpackage in internal_dependencies:
-                equality = '>='
-                dversion = recipes[dpackage]['package']['version']
-                if compiled and recipes[dpackage]['soma-env']['type'] == 'compiled':
-                    equality = '=='
+                equality = ">="
+                dversion = recipes[dpackage]["package"]["version"]
+                if compiled and recipes[dpackage]["soma-env"]["type"] == "compiled":
+                    equality = "=="
                     if development_environment:
                         dversion = future_published_soma_env_version
                 d = f"{dpackage}{equality}{dversion}"

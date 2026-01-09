@@ -130,12 +130,8 @@ def check_merge(src: str = None, branch: str = None):
         src = stack.pop()
         if (src / ".git").exists():
             repo = git.Repo(str(src))
-            branches = {i.name.rsplit("/", 1)[-1] for i in repo.remote().refs}
             if branch is None:
-                if "master" in branches:
-                    real_branch = "master"
-                else:
-                    real_branch = "main"
+                real_branch = "soma-env-6.0"
             else:
                 real_branch = branch
             repo.git.fetch()

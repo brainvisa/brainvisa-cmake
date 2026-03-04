@@ -11,6 +11,9 @@ import sys
 import toml
 
 
+dry_run = False
+
+
 def update_merge(updated, other):
     for key, value in other.items():
         if (
@@ -66,21 +69,59 @@ def modify_file(context, file, file_contents):
             f.write(file_contents)
 
 
+def update_file_dict(context, file, update_dict):
+    print(f"Update dict file {file}")
+    with open(file) as f:
+        contents = json.load(f)
+    # merge dicts
+    todo = [(contents, update_dict)]
+    while todo:
+        dst, src = todo.pop()
+        for key, item in src.items():
+            if isinstance(item, dict):
+                node = dst.setdefault(key, {})
+                todo.append((node, item))
+            else:
+                dst[key] = item
+    with open(file, "w") as f:
+        json.dump(contents, f, indent=4)
+
+
 def git_commit(context, repo, modified, message):
     print(f"Commit in {repo}: {message}")
-    repo = git.Repo(repo)
-    repo.git.add(*modified)
-    repo.git.commit("-m", message, "-n")
-    repo.git.push()
+    if not dry_run:
+        repo = git.Repo(repo)
+        repo.git.add(*modified)
+        repo.git.commit("-m", message, "-n")
+        repo.git.push()
 
 
 def git_push(context, repo, tags=False):
-    repo = git.Repo(repo)
-    origin = repo.remote("origin")
-    if tags:
-        origin.push(tags=True)
-    else:
-        origin.push()
+    if not dry_run:
+        repo = git.Repo(repo)
+        origin = repo.remote("origin")
+        if tags:
+            origin.push(tags=True)
+        else:
+            origin.push()
+
+
+def git_tag(context, repo, component, tag, update_changeset=None):
+    """ tag the component repo; get the component changeset and write it in the
+    components JSON file (update_changeset is the JSON filename)
+    """
+    print(f"tag {repo}: {tag}")
+    if not dry_run:
+        repo = git.Repo(repo)
+        repo.git.tag(tag)
+        if update_changeset is not None:
+            changeset = str(repo.head.commit)
+            with open(update_changeset) as f:
+                components = json.load(f)
+            if components[component]["changeset"] != changeset:
+                components[component]["changeset"] = changeset
+                with open(update_changeset, "w") as f:
+                    json.dump(components, f, indent=4)
 
 
 def rebuild(context):
@@ -113,10 +154,11 @@ def create_release_tag(context, tag):
     conf["version"] = sources_conf["latest_release"]
     with open(conf_file, "w") as f:
         json.dump(conf, f, indent=4)
-    repo.git.add(str(conf_file))
-    commit = repo.index.commit(f"Release {conf['name']} {conf['version']}")
-    repo.create_tag(tag, ref=commit)
-    branch.checkout()
+    if not dry_run:
+        repo.git.add(str(conf_file))
+        commit = repo.index.commit(f"Release {conf['name']} {conf['version']}")
+        repo.create_tag(tag, ref=commit)
+        branch.checkout()
 
 
 def create_package(context, package, test):
@@ -188,14 +230,16 @@ def publish(
             print(src, "->", dest)
             if not force and dest.exists():
                 raise ValueError(f"Destination file {dest} already exist")
-            dest.parent.mkdir(exist_ok=True)
-            shutil.copy2(src, dest)
-            st = os.stat(dest)
-            os.chmod(dest, st.st_mode | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+            if not dry_run:
+                dest.parent.mkdir(exist_ok=True)
+                shutil.copy2(src, dest)
+                st = os.stat(dest)
+                os.chmod(dest, st.st_mode | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
             copied.append(dest)
-        if index:
+        if index and not dry_run:
             subprocess.check_call(["conda", "index", str(publication_dir)])
     except Exception:
-        for f in copied:
-            os.remove(f)
-        raise
+        if not dry_run:
+            for f in copied:
+                os.remove(f)
+            raise

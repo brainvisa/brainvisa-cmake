@@ -15,6 +15,7 @@ import typer
 import git
 import toml
 import yaml
+import typing
 
 from .defaults import default_publication_directory
 from .recipes import (
@@ -257,6 +258,7 @@ def packaging_plan(
     recipes = {}
     selected_packages = set()
     packages_per_channel = {}
+    selected_components = set()
     # Get ordered selection of recipes. Order is based on package
     # dependencies. Recipes are selected according to user selection and
     # modification since last packaging
@@ -273,6 +275,7 @@ def packaging_plan(
             #    changesets
             #  - Add package to selected_packages if any component has changed
             #    since the last release
+            #  - add component to selected_components if it has changed
             src_errors = []
             changesets = {}
             latest_changesets = {}
@@ -296,10 +299,11 @@ def packaging_plan(
                         f"Select {package} because no source changesets was found in release history"
                     )
                 selected_packages.add(package)
+                selected_components.add(components[0])
                 packages_per_channel.setdefault(
                     recipe["soma-env"]["publication"], set()
                 ).add(package)
-            elif changesets != latest_changesets:
+            if changesets != latest_changesets:
                 changes = sorted(
                     i for i in changesets if changesets[i] != latest_changesets.get(i)
                 )
@@ -307,6 +311,7 @@ def packaging_plan(
                     f"Select {package} for building because some source has changed (in {', '.join(changes)}) since latest release"
                 )
                 selected_packages.add(package)
+                selected_components.update(changes)
                 packages_per_channel.setdefault(
                     recipe["soma-env"]["publication"], set()
                 ).add(package)
@@ -378,9 +383,11 @@ def packaging_plan(
 
     # Generate version change rules
     if not development_environment and release:
-        commit_actions = []
-        push_actions = []
+        do_rebuild = False
         for package in selected_packages:
+            commit_actions = []
+            tag_actions = []
+            push_actions = []
             # --------------------------------------
             recipe = recipes[package]
             latest_release_version = soma_env_conf["packages"][package]
@@ -393,96 +400,121 @@ def packaging_plan(
             print(
                 f"Set {package} version from {latest_release_version} to {new_version}"
             )
-            # Find file to change
-            src = next(iter(recipe["soma-env"]["components"].values()))
-            file = src / "pyproject.toml"
-            if file.exists():
-                version_regexps = (
-                    re.compile(r'(\bversion\s*=\s*")([0-9]+)(\.[0-9]+\.[0-9]+")'),
-                    re.compile(r'(\bversion\s*=\s*"[0-9]+\.)([0-9]+)(\.[0-9]+")'),
-                    re.compile(r'(\bversion\s*=\s*"[0-9]+\.[0-9]+\.)([0-9]+)(")'),
-                )
-            else:
-                file = src / "project_info.cmake"
+            # WARNING: here we set the same package version on all its
+            # components which have changed. Is it what we want ?
+            # Find files to change
+            print('package:', package)
+            for component, src in recipe["soma-env"]["components"].items():
+                # change all components to the same version
+                # if component not in selected_components:
+                #     print('skip component:', component)
+                #     continue  # component up-to-date
+
+                print('update component:', component)
+                file = src / "pyproject.toml"
                 if file.exists():
                     version_regexps = (
-                        re.compile(
-                            r"(\bset\s*\(\s*BRAINVISA_PACKAGE_VERSION_MAJOR\s*)"
-                            r"([0-9]+)(\s*\))",
-                            re.IGNORECASE,
-                        ),
-                        re.compile(
-                            r"(\bset\s*\(\s*BRAINVISA_PACKAGE_VERSION_MINOR\s*)"
-                            r"([0-9]+)(\s*\))",
-                            re.IGNORECASE,
-                        ),
-                        re.compile(
-                            r"(\bset\s*\(\s*BRAINVISA_PACKAGE_VERSION_PATCH\s*)"
-                            r"([0-9]+)(\s*\))",
-                            re.IGNORECASE,
-                        ),
+                        re.compile(r'(\bversion\s*=\s*")([0-9]+)(\.[0-9]+\.[0-9]+")'),
+                        re.compile(r'(\bversion\s*=\s*"[0-9]+\.)([0-9]+)(\.[0-9]+")'),
+                        re.compile(r'(\bversion\s*=\s*"[0-9]+\.[0-9]+\.)([0-9]+)(")'),
                     )
                 else:
-                    version_regexps = (
-                        re.compile(r"(\bversion_major\s*=\s*)([0-9]+)(\b)"),
-                        re.compile(r"(\bversion_minor\s*=\s*)([0-9]+)(\b)"),
-                        re.compile(r"(\bversion_micro\s*=\s*)([0-9]+)(\b)"),
-                    )
-                    files = list(
-                        itertools.chain(
-                            src.glob("info.py"),
-                            src.glob("*/info.py"),
-                            src.glob("python/*/info.py"),
+                    file = src / "project_info.cmake"
+                    if file.exists():
+                        version_regexps = (
+                            re.compile(
+                                r"(\bset\s*\(\s*BRAINVISA_PACKAGE_VERSION_MAJOR\s*)"
+                                r"([0-9]+)(\s*\))",
+                                re.IGNORECASE,
+                            ),
+                            re.compile(
+                                r"(\bset\s*\(\s*BRAINVISA_PACKAGE_VERSION_MINOR\s*)"
+                                r"([0-9]+)(\s*\))",
+                                re.IGNORECASE,
+                            ),
+                            re.compile(
+                                r"(\bset\s*\(\s*BRAINVISA_PACKAGE_VERSION_PATCH\s*)"
+                                r"([0-9]+)(\s*\))",
+                                re.IGNORECASE,
+                            ),
                         )
-                    )
-                    if not files:
-                        raise RuntimeError(
-                            f"Cannot find component version file (info.py or project_info.cmake) in {src}"
+                    else:
+                        version_regexps = (
+                            re.compile(r"(\bversion_major\s*=\s*)([0-9]+)(\b)"),
+                            re.compile(r"(\bversion_minor\s*=\s*)([0-9]+)(\b)"),
+                            re.compile(r"(\bversion_micro\s*=\s*)([0-9]+)(\b)"),
                         )
-                    file = files[0]
-            with open(file) as f:
-                file_contents = f.read()
-            for regex, version_component in zip(
-                version_regexps, new_version.split(".")
-            ):
-                file_contents, _ = regex.subn(
-                    f"\\g<1>{version_component}\\g<3>", file_contents
+                        files = list(
+                            itertools.chain(
+                                src.glob("info.py"),
+                                src.glob("*/info.py"),
+                                src.glob("python/*/info.py"),
+                            )
+                        )
+                        if not files:
+                            raise RuntimeError(
+                                f"Cannot find component version file (info.py or project_info.cmake) in {src}"
+                            )
+                        file = files[0]
+                with open(file) as f:
+                    file_contents = f.read()
+                for regex, version_component in zip(
+                    version_regexps, new_version.split(".")
+                ):
+                    file_contents, _ = regex.subn(
+                        f"\\g<1>{version_component}\\g<3>", file_contents
+                    )
+                print(
+                    f"Create actions to modify {file} to set {package} version from {latest_release_version} to {new_version}"
                 )
-            print(
-                f"Create actions to modify {file} to set {package} version from {latest_release_version} to {new_version}"
-            )
-            actions.append(
-                {
-                    "action": "modify_file",
-                    "kwargs": {
-                        "file": str(file),
-                        "file_contents": file_contents,
-                    },
-                }
-            )
-            commit_actions.append(
-                {
-                    "action": "git_commit",
-                    "kwargs": {
-                        "repo": str(src),
-                        "modified": [str(file)],
-                        "message": f"Set package {package} from version {latest_release_version} to version {new_version}",
-                    },
-                }
-            )
-            push_actions.append(
-                {
-                    "action": "git_push",
-                    "kwargs": {
-                        "repo": str(src),
-                    },
-                }
-            )
-            # --------------------------------------
+                actions.append(
+                    {
+                        "action": "modify_file",
+                        "kwargs": {
+                            "file": str(file),
+                            "file_contents": file_contents,
+                        },
+                    }
+                )
+                commit_actions.append(
+                    {
+                        "action": "git_commit",
+                        "kwargs": {
+                            "repo": str(src),
+                            "modified": [str(file)],
+                            "message": f"Set package {package} from version {latest_release_version} to version {new_version}",
+                        },
+                    }
+                )
+                # tag the component repo, and set the new changeset in the
+                # components .json file
+                tag_actions.append(
+                    {
+                        "action": "git_tag",
+                        "kwargs": {
+                            "repo": str(src),
+                            "component": component,
+                            "tag": new_version,
+                            "update_changeset": str(component_sources[component]["json_file"]),
+                        }
+                    }
+                )
+                push_actions.append(
+                    {
+                        "action": "git_push",
+                        "kwargs": {
+                            "repo": str(src),
+                        },
+                    }
+                )
+                # --------------------------------------
 
-        if commit_actions:
-            actions.extend(commit_actions)
-            actions.extend(push_actions)
+            if commit_actions:
+                actions.extend(commit_actions)
+                actions.extend(tag_actions)
+                actions.extend(push_actions)
+                do_rebuild = True
+        if do_rebuild:
             actions.append({"action": "rebuild"})
 
     # Generate rattler-build recipe and actions for new environment version
@@ -607,29 +639,43 @@ def packaging_plan(
         modified_sources.add(sources_conf_file)
 
         # Create actions to update components source files to set changesets
-        for package in selected_packages:
-            recipe = recipes[package]
-            soma_env_conf["packages"][package] = recipe["package"]["version"]
-            for component in recipe["soma-env"].get("components"):
-                src = command_context.soma_root / "src" / component
-                repo = git.Repo(src)
-                changeset = str(repo.head.commit)
-                if (
-                    component_sources[component]["sources"].get("changeset")
-                    != changeset
-                ):
-                    component_sources[component]["sources"]["changeset"] = changeset
-                    modified_sources.add(component_sources[component]["json_file"])
-        for f in modified_sources:
-            actions.append(
-                {
-                    "action": "modify_file",
-                    "kwargs": {
-                        "file": str(f),
-                        "file_contents": component_sources_file[f],
-                    },
-                }
-            )
+        # This is not done here any longer, as git commits will be performed
+        # during apply-plan. The "git_tag" actions (see above) will do it.
+
+        # for package in selected_packages:
+        #     recipe = recipes[package]
+        #     soma_env_conf["packages"][package] = recipe["package"]["version"]
+        #     for component in recipe["soma-env"].get("components"):
+        #         src = command_context.soma_root / "src" / component
+        #         repo = git.Repo(src)
+        #         changeset = str(repo.head.commit)
+        #         if (
+        #             component_sources[component]["sources"].get("changeset")
+        #             != changeset
+        #         ):
+        #             component_sources[component]["sources"]["changeset"] = changeset
+        #             modified_sources.add(component_sources[component]["json_file"])
+        # for f in modified_sources:
+        #     actions.append(
+        #         {
+        #             "action": "modify_file",
+        #             "kwargs": {
+        #                 "file": str(f),
+        #                 "file_contents": component_sources_file[f],
+        #             },
+        #         }
+        #     )
+        actions.append(
+            {
+                "action": "update_dict_file",
+                "kwargs": {
+                    "file": str(sources_conf_file),
+                    "update_dict": {
+                        "latest_release": future_published_soma_env_version,
+                    }
+                },
+            }
+        )
         files_to_commit.update(modified_sources)
         actions.append(
             {
@@ -711,19 +757,31 @@ def packaging_plan(
 
 
 @command_typer.command()
-def apply_plan():
+def apply_plan(
+    dry_run: typing.Annotated[
+        bool,
+        typer.Option(
+            help="don't perform git commit / push and publish operations")]
+            = False
+):
+    """ dry_run: don't perform git commit / push operations """
     with open(command_context.soma_root / "plan" / "actions.yaml") as f:
         actions = yaml.safe_load(f)
     context = types.SimpleNamespace()
     context.soma_root = command_context.soma_root
+    plan_module.dry_run = dry_run
     for action in actions:
         if action.get("status") != "success":
+            if dry_run:
+                print('run action:', action)
             getattr(plan_module, action["action"])(
                 context, *action.get("args", []), **action.get("kwargs", {})
             )
             action["status"] = "success"
             with open(command_context.soma_root / "plan" / "actions.yaml", "w") as f:
                 yaml.safe_dump(actions, f)
+        elif dry_run:
+            print('skip action:', action)
 
 
 @command_typer.command()

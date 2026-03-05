@@ -609,7 +609,16 @@ def packaging_plan(
     if environment_name == "soma-env":
         with open(command_context.soma_root / "recipes" / "brainvisa.yaml") as f:
             brainvisa_recipe = yaml.safe_load(f)
+        
+        # Set the minimum version of dependencies
+        for dep in ("build", "run"):
+            new_requirements = []
+            for pack in brainvisa_recipe["requirements"][dep]:
+                new_requirements.append(f"{pack}>={recipes[pack]['package']['version']}")
+            brainvisa_recipe["requirements"][dep] = new_requirements
+        
         brainvisa_recipe["package"]["version"] = future_published_soma_env_version
+
         brainvisa_recipe["requirements"]["run"].append(
             f"soma-env=={future_published_soma_env_version}"
         )

@@ -504,6 +504,7 @@ def packaging_plan(
                         "action": "git_push",
                         "kwargs": {
                             "repo": str(src),
+                            "tags": True,
                         },
                     }
                 )

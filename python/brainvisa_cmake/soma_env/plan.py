@@ -69,7 +69,7 @@ def modify_file(context, file, file_contents):
             f.write(file_contents)
 
 
-def update_file_dict(context, file, update_dict):
+def update_dict_file(context, file, update_dict):
     print(f"Update dict file {file}")
     with open(file) as f:
         contents = json.load(f)

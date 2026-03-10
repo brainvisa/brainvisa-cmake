@@ -397,6 +397,7 @@ def packaging_plan(
             new_version = package_version[:-1] + (package_version[-1] + 1,)
             new_version = ".".join(str(i) for i in new_version)
             recipe["package"]["version"] = new_version
+            soma_env_conf["packages"][package] = new_version
             print(
                 f"Set {package} version from {latest_release_version} to {new_version}"
             )

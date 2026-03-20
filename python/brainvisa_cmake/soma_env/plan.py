@@ -429,3 +429,20 @@ def web(
     web_environment_dir,
 ):
     print('web')
+    cwd = os.getcwd()
+    try:
+        web_scr = osp.join(web_environment_dir,
+                           'src/web/scripts/bv_publish_web')
+        if not osp.exists(web_scr):
+            web_scr = osp.join(
+                web_environment_dir,
+                'src/communication/web/master/scripts/bv_publish_web')
+        os.chdir(web_environment_dir)
+        cmd = ["pixi", "run", "bv_maker"]
+        subprocess.check_call(cmd)
+        cmd = ["pixi", "run", web_scr,
+               "brainvisa@brainvisa.info:/var/www/html/brainvisa.info"]
+        subprocess.check_call(cmd)
+
+    finally:
+        os.chdir(cwd)

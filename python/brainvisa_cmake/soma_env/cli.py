@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import types
+import os.path as osp
 
 # import fire
 import typer
@@ -16,6 +17,7 @@ import git
 import toml
 import yaml
 import typing
+
 
 from .defaults import default_publication_directory
 from .recipes import (
@@ -37,6 +39,40 @@ class CommandContext:
 
 command_context = CommandContext()
 command_typer = typer.Typer()
+
+
+def self_update_soma_env(
+    context: CommandContext,
+):
+    self_root = osp.dirname(osp.dirname(osp.dirname(osp.dirname(
+        osp.realpath(__file__)))))
+    modif = False
+    # print('brainvisa-cmake root:', self_root)
+    if osp.exists(osp.join(self_root, '.git')):
+        # print('brainvisa-cmake is under git')
+        repo = git.Repo(self_root)
+        try:
+            res = repo.git.pull(ff_only=True)
+            if res != 'Already up to date.':
+                modif = True
+        except git.GitCommandError:
+            print('brainvisa-cmake update cannot be done automatically. '
+                  'Please check manually', file=sys.stderr)
+            raise
+    soma_env_root = context.soma_root
+    # print('soma-env root:', soma_env_root)
+    if osp.exists(osp.join(soma_env_root, '.git')):
+        # print('soma-env is under git')
+        repo = git.Repo(soma_env_root)
+        try:
+            res = repo.git.pull(ff_only=True)
+            if res != 'Already up to date.':
+                modif = True
+        except git.GitCommandError:
+            print('soma-env root environment update cannot be done '
+                  'automatically. Please check manually', file=sys.stderr)
+            raise
+    return modif
 
 
 @command_typer.command()
@@ -155,7 +191,75 @@ def packaging_plan(
     force: bool = False,
     test: bool = False,
     default_patch_version: int = 0,
+    self_update: bool = True,
+    sources: typing.Annotated[
+        bool,
+        typer.Option(
+            help="sync all sources before starting")]
+        = True,
+    nf_publish: typing.Annotated[
+        str,
+        typer.Option(
+            help="publish to Neurop-Forge web site, using neuro-forge "
+            "sources at given location")]
+        = None,
+    install: typing.Annotated[
+        str,
+        typer.Option(
+            help="install at given location. If the install "
+            "directory already contains an installation, update it. "
+            "Only performed if nf_publish is used.")]
+        = None,
+    container: typing.Annotated[
+        str,
+        typer.Option(
+            help="build a container. If install is also used, install it "
+            "there in the same parent directory. The casa-distro images base "
+            "directory should be passed as argument. "
+            "Only performed if nf_publish is used.")]
+        = None,
+    web: typing.Annotated[
+        str,
+        typer.Option(
+            help="rebuild and install web site. The dev environment "
+            "containing the web sources directory shoud be given as "
+            "argument.")]
+        = None,
 ):
+    if self_update:
+        # update brainvisa-cmake and soma-env
+        modified = self_update_soma_env(command_context)
+        if modified:
+            # some sources have changed: restart using the new sources
+            cmd = ["soma-env", "packaging-plan", "--no-self-update"]
+            if packages and packages != "*":
+                cmd += ["--packages", packages]
+            if release:
+                cmd.append("--release")
+            if force:
+                cmd.append("--force")
+            if test:
+                cmd.append("--test")
+            if default_patch_version != 0:
+                cmd += ["--default-patch-version", str(default_patch_version)]
+            if sources:
+                cmd.append("--sources")
+            if nf_publish:
+                cmd += ["--nf-publish", nf_publish]
+            if install:
+                cmd += ["--install", install]
+            if container:
+                cmd.append("--container")
+            if web:
+                cmd += ["--web", web]
+            subprocess.check_call(cmd)
+            sys.exit(0)
+
+    if sources:
+        # sources is both a function in the cli module and a parameter in this
+        # function. We need to access the function now. using globals()
+        globals()['sources']()
+
     # Read environment configuration
     soma_env_conf_file = command_context.soma_root / "conf" / "soma-env.json"
     with open(soma_env_conf_file) as f:
@@ -759,6 +863,63 @@ def packaging_plan(
                 }
             )
 
+        if nf_publish is not None:
+            actions.append(
+                {
+                    "action": "neuro_forge_publish",
+                    "kwargs": {
+                        "nf_sources": str(nf_publish),
+                    },
+                }
+            )
+        if web is not None:
+            actions.append(
+                {
+                    "action": "web",
+                    "kwargs": {
+                        "web_environment_dir": str(web),
+                    },
+                }
+            )
+        if install is not None:
+            packages = [
+                recipe["package"]["name"]
+                for recipe in sorted_recipies(command_context.soma_root)]
+
+            actions.append(
+                {
+                    "action": "install",
+                    "kwargs": {
+                        "install_dir": str(install),
+                        "packages": packages,
+                    },
+                }
+            )
+        if container is not None:
+            packages = [
+                recipe["package"]["name"]
+                for recipe in sorted_recipies(command_context.soma_root)]
+
+            actions.append(
+                {
+                    "action": "build_container",
+                    "kwargs": {
+                        "casa_distro_base": str(container),
+                        "packages": packages,
+                    },
+                }
+            )
+            if install is not None:
+                actions.append(
+                    {
+                        "action": "install_container",
+                        "kwargs": {
+                            "casa_distro_base": str(container),
+                            "install_dir": osp.dirname(str(install)),
+                        },
+                    }
+                )
+
     # Save actions.yaml
     with open(plan_dir / "actions.yaml", "w") as f:
         yaml.safe_dump(
@@ -775,7 +936,6 @@ def apply_plan(
             help="don't perform git commit / push and publish operations")]
             = False
 ):
-    """ dry_run: don't perform git commit / push operations """
     with open(command_context.soma_root / "plan" / "actions.yaml") as f:
         actions = yaml.safe_load(f)
     context = types.SimpleNamespace()

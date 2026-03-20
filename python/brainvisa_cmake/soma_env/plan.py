@@ -9,6 +9,8 @@ import stat
 import subprocess
 import sys
 import toml
+import os.path as osp
+import glob
 
 
 dry_run = False
@@ -243,3 +245,187 @@ def publish(
             for f in copied:
                 os.remove(f)
             raise
+
+
+def neuro_forge_publish(
+    context,
+    nf_sources,
+):
+    print('neuro_forge_publish')
+    cwd = os.getcwd()
+    try:
+        os.chdir(nf_sources)
+        repo = git.Repo(context.soma_root)
+        repo.git.pull(ff_only=True)
+        cmd = ["pixi", "run", "neuro-forge", "publish"]
+        if not dry_run:
+            subprocess.check_call(cmd)
+        else:
+            print(" ".join(cmd))
+    finally:
+        os.chdir(cwd)
+
+
+def install(
+    context,
+    install_dir,
+    packages,
+):
+    print('install')
+    cwd = os.getcwd()
+    try:
+        if osp.exists(install_dir):
+            os.chdir(install_dir)
+            cmd = ["pixi", "update", "brainvisa"]
+            subprocess.check_call(cmd)
+        else:
+            os.makedirs(install_dir)
+            os.chdir(install_dir)
+            cmd = ["pixi", "init", "-c", "https://brainvisa.info/neuro-forge",
+                   "-c", "conda-forge"]
+            if osp.exists('/drf/neuro-forge/brainvisa-cea'):
+                cmd += ["-c", "/drf/neuro-forge/brainvisa-cea"]
+            subprocess.check_call(cmd)
+            cmd = ["pixi", "add"] + packages
+            subprocess.check_call(cmd)
+        cmd = ["pixi", "run", "brainvisa", "-b", "--setup"]
+        subprocess.check_call(cmd)
+        cmd = ["pixi", "run", "bv_update_bin_links"]
+        subprocess.check_call(cmd)
+
+    finally:
+        os.chdir(cwd)
+
+
+def build_container(
+    context,
+    casa_distro_base,
+    packages,
+):
+    print('build_container')
+    conf_file = context.soma_root / "conf" / "soma-env.json"
+    with open(conf_file) as f:
+        conf = json.load(f)
+    sources_conf_file = (
+        context.soma_root / "conf" / "sources.d" / f"{conf['name']}.json"
+    )
+    with open(sources_conf_file) as f:
+        sources_conf = json.load(f)
+    version = sources_conf["latest_release"]
+    print('version:', version)
+
+    cwd = os.getcwd()
+    path = os.environ['PATH']
+    try:
+        casa_distro = osp.join(context.soma_root, 'src', 'casa-distro')
+        os.chdir(casa_distro)
+        repo = git.Repo(casa_distro)
+        repo.git.pull(ff_only=True)
+        new_path = ':'.join([osp.join(casa_distro, 'bin'), path])
+        os.environ['PATH'] = new_path
+        os.chdir(casa_distro_base)
+
+        os.environ["CASA_BASE_DIRECTORY"] = casa_distro_base
+        cmd = ["casa_distro", "pull_image", "image=casa-pixi-5.4.sif"]
+        subprocess.check_call(cmd)
+        images = glob.glob("casa-pixi-5.4-*.sif")
+        image = None
+        maxnum = -1
+        for image_t in images:
+            print("image_t:", image_t)
+            num = int(image_t.rsplit("-", 1)[1].split(".", 1)[0])
+            print(num)
+            if num > maxnum:
+                image = image_t
+                maxnum = num
+        print('image:', image)
+
+        cmd = ["casa_distro_admin", "create_user_image",
+               "container_type=apptainer_pixi", "image_version=5.4",
+               f"base_image={image}", f"version={version}",
+               "distro=brainvisa"]
+        # FIXME packages / distro
+        subprocess.check_call(cmd)
+
+    finally:
+        os.chdir(cwd)
+        os.environ['PATH'] = path
+
+
+def install_container(
+    context,
+    casa_distro_base,
+    install_dir,
+):
+    print('install_container')
+    conf_file = context.soma_root / "conf" / "soma-env.json"
+    with open(conf_file) as f:
+        conf = json.load(f)
+    sources_conf_file = (
+        context.soma_root / "conf" / "sources.d" / f"{conf['name']}.json"
+    )
+    with open(sources_conf_file) as f:
+        sources_conf = json.load(f)
+    version = sources_conf["latest_release"]
+    print('version:', version)
+
+    path = os.environ['PATH']
+    try:
+        casa_distro = osp.join(context.soma_root, 'src', 'casa-distro')
+        new_path = ':'.join([osp.join(casa_distro, 'bin'), path])
+        os.environ['PATH'] = new_path
+
+        os.environ["CASA_BASE_DIRECTORY"] = casa_distro_base
+
+        image_base = f"brainvisa-{version}.sif"
+        image = osp.join(casa_distro_base, image_base)
+        shutil.copy2(image, install_dir)
+        cont_install = osp.join(install_dir, f"brainvisa-casa-{version}")
+        os.makedirs(cont_install)
+        cmd = ["apptainer", "run", "-ce", "--bind",
+               f"{cont_install}:/casa/setup",
+               osp.join(install_dir, image_base)]
+        subprocess.check_call(cmd)
+
+    finally:
+        os.environ['PATH'] = path
+
+
+def pulish_container(
+    context,
+    casa_distro_base,
+):
+    print('publish_container')
+    conf_file = context.soma_root / "conf" / "soma-env.json"
+    with open(conf_file) as f:
+        conf = json.load(f)
+    sources_conf_file = (
+        context.soma_root / "conf" / "sources.d" / f"{conf['name']}.json"
+    )
+    with open(sources_conf_file) as f:
+        sources_conf = json.load(f)
+    version = sources_conf["latest_release"]
+    print('version:', version)
+
+    path = os.environ['PATH']
+    try:
+        casa_distro = osp.join(context.soma_root, 'src', 'casa-distro')
+        new_path = ':'.join([osp.join(casa_distro, 'bin'), path])
+        os.environ['PATH'] = new_path
+
+        os.environ["CASA_BASE_DIRECTORY"] = casa_distro_base
+
+        image_base = f"brainvisa-{version}.sif"
+        cmd = ["casa_distro_admin", "publish_user_image",
+               f"image={image_base}"]
+        subprocess.check_call(cmd)
+
+    finally:
+        os.environ['PATH'] = path
+
+
+def web(
+    context,
+    web_environment_dir,
+):
+    print('web')

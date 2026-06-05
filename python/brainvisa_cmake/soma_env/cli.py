@@ -919,6 +919,15 @@ def packaging_plan(
                         },
                     }
                 )
+            if nf_publish is not None:
+                actions.append(
+                    {
+                        "action": "publish_container",
+                        "kwargs": {
+                            "casa_distro_base": str(container),
+                        },
+                    }
+                )
 
     # Save actions.yaml
     with open(plan_dir / "actions.yaml", "w") as f:

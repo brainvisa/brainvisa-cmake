@@ -408,7 +408,10 @@ def publish_container(
     print('version:', version)
 
     path = os.environ['PATH']
+    cwd = os.getcwd()
+    os.chdir(casa_distro_base)
     try:
+        casa_distro = osp.join(context.soma_root, 'src', 'casa-distro')
         casa_distro = osp.join(context.soma_root, 'src', 'casa-distro')
         new_path = ':'.join([osp.join(casa_distro, 'bin'), path])
         os.environ['PATH'] = new_path
@@ -421,6 +424,7 @@ def publish_container(
         subprocess.check_call(cmd)
 
     finally:
+        os.chdir(cwd)
         os.environ['PATH'] = path
 
 

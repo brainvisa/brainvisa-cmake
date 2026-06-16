@@ -391,7 +391,7 @@ def install_container(
         os.environ['PATH'] = path
 
 
-def pulish_container(
+def publish_container(
     context,
     casa_distro_base,
 ):

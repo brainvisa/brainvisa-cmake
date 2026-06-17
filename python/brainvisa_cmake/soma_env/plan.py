@@ -386,6 +386,8 @@ def install_container(
                f"{cont_install}:/casa/setup",
                osp.join(install_dir, image_base)]
         subprocess.check_call(cmd)
+        # remove local home dir for a shared install
+        shutil.rmtree(osp.join(cont_install, 'home'))
 
     finally:
         os.environ['PATH'] = path

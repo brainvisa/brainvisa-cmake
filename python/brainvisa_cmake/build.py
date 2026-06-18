@@ -534,7 +534,7 @@ site.addsitedir(os.path.dirname(__file__))
         cmakeLists = os.path.join(self.directory, 'CMakeLists.txt')
         with open(cmakeLists, 'w') as out:
             print(f'''
-cmake_minimum_required( VERSION 3.20 )
+cmake_minimum_required( VERSION 4.2 )
 if ( DEFINED USE_CLANG )
   set( USE_CLANG "YES" CACHE STRING "Force usage of clang compiler" FORCE )
   set( CMAKE_CXX_COMPILER "clang" CACHE STRING "C++ compiler" FORCE )

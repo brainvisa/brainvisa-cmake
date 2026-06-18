@@ -1,4 +1,4 @@
-cmake_minimum_required( VERSION 3.20 )
+cmake_minimum_required( VERSION 4.2 )
 
 if( BRAINVISA_BVMAKER )
   # in BV mode, force CMAKE_INSTALL_PREFIX to point to build directory

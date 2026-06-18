@@ -86,14 +86,12 @@ ELSE(WIN32)
       SET(GSL_CXX_FLAGS "`${GSL_CONFIG} --cflags`")
       
       # set INCLUDE_DIRS to prefix+include
-      EXEC_PROGRAM(${GSL_CONFIG}
-        ARGS --prefix
+      execute_process(COMMAND ${GSL_CONFIG} --prefix
         OUTPUT_VARIABLE GSL_PREFIX)
       SET(GSL_INCLUDE_DIR ${GSL_PREFIX}/include CACHE STRING INTERNAL)
 
       # set link libraries and link flags
-      EXEC_PROGRAM(${GSL_CONFIG}
-        ARGS --libs
+      execute_process(COMMAND ${GSL_CONFIG} --libs
         OUTPUT_VARIABLE GSL_LIBRARIES)
 #      SET(GSL_INCLUDE_DIR ${GSL_PREFIX}/include CACHE STRING INTERNAL)
 
@@ -102,8 +100,7 @@ ELSE(WIN32)
 # the following execution of the GSL_CONFIG command
       
       # extract link dirs for rpath  
-      EXEC_PROGRAM(${GSL_CONFIG}
-        ARGS --libs
+      execute_process(COMMAND ${GSL_CONFIG} --libs
         OUTPUT_VARIABLE GSL_CONFIG_LIBS )
 
       # split off the link dirs (for rpath)

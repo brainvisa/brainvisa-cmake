@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 import requests
 from xml.sax.saxutils import escape as xmlescape
-
 
 class BrainVISAJenkins:
     '''

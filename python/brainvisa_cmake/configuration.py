@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Handling of bv_maker configuration (bv_maker.cfg)."""
 
 import glob
@@ -21,9 +19,7 @@ from brainvisa_cmake.environment import VarReplacementType
 from brainvisa_cmake.utils import global_installer_variables
 from brainvisa_cmake.version import version as brainvisa_cmake_version
 
-
 default_subprocess_timeout = 3600 * 6  # default subprocess timeout is 6 hours
-
 
 def check_filter_condition(filters):
     # for now, use python eval()
@@ -37,7 +33,6 @@ def check_filter_condition(filters):
         traceback.print_exc()
         raise
     return res
-
 
 class GlobalConfiguration(object):
 
@@ -177,7 +172,6 @@ http://brainvisa.info/brainvisa-cmake/
         # store options and args
         self.options = options
         self.args = args
-
 
     def parse_config_file(self, f, options, extra_build_dir=None):
         """Read configuration from an file object (opened in binary mode)."""
@@ -340,7 +334,6 @@ http://brainvisa.info/brainvisa-cmake/
                     print(getattr(s, 'directory', 'general'), 'options:')
                     for o in s._validOptions:
                         print(' ', o, '=', getattr(s, o, None))
-
 
 class ConfigVariableParser(object):
 
@@ -628,7 +621,6 @@ class ConfigVariableParser(object):
         else:
             return value
 
-
 class GeneralSection(ConfigVariableParser):
     _variables_with_replacements = \
         set(('directory_id_by_default',
@@ -680,7 +672,6 @@ class GeneralSection(ConfigVariableParser):
         for var, value in six.iteritems(self._env_vars):
             if var not in os.environ or os.environ[var] != value:
                 os.environ[var] = value
-
 
 class DirectorySection(object):
 

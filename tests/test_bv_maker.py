@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-
 import os
 import shutil
 import subprocess
@@ -8,11 +5,9 @@ import tempfile
 import unittest
 import sys
 
-
 BV_MAKER_SUBCOMMANDS = ['info', 'sources', 'status', 'configure', 'build',
                         'doc', 'testref', 'test', 'pack', 'install_pack',
                         'testref_pack', 'test_pack', 'publish_pack']
-
 
 # Test the bv_maker executable from the source tree, with the same version of
 # Python that is used to run the tests.
@@ -22,12 +17,10 @@ BV_MAKER = [
                                  '..', 'bin', 'bv_maker'))
 ]
 
-
 # Variables set in setUpModule()
 MODULE_TEST_DIR = None
 TEST_REPO_PATH = None
 BRAINVISA_CMAKE_REPO = None
-
 
 def setUpModule():
     global MODULE_TEST_DIR
@@ -67,10 +60,8 @@ def setUpModule():
             shutil.rmtree(MODULE_TEST_DIR)
         raise
 
-
 def tearDownModule():
     shutil.rmtree(MODULE_TEST_DIR)
-
 
 class TestWithoutRepository(unittest.TestCase):
     @classmethod
@@ -114,7 +105,6 @@ class TestWithoutRepository(unittest.TestCase):
         self.assertTrue(os.path.isfile(os.path.join(
             self.src_dir, 'development', 'brainvisa-cmake',
             'project_info.cmake')))
-
 
 class TestWithRepository(unittest.TestCase):
     @classmethod
@@ -172,7 +162,6 @@ class TestWithRepository(unittest.TestCase):
         # Verify that bv_maker has bootstrapped itself in the build tree
         self.assertTrue(os.path.isfile(os.path.join(self.build_dir,
                                                     'bin', 'bv_maker')))
-
 
 if __name__ == '__main__':
     unittest.main()

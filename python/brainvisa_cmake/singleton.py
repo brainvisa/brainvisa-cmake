@@ -1,14 +1,9 @@
-# -*- coding: utf-8 -*-
-
 '''
 Singleton pattern.
 
 - author: Yann Cointepas
 - organization: `NeuroSpin <http://www.neurospin.org>`_
 '''
-from __future__ import absolute_import
-__docformat__ = 'restructuredtext en'
-
 
 class Singleton(object):
 

@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
 import json
 import subprocess
 import yaml
 import re
 
 import brainvisa_cmake.brainvisa_projects as brainvisa_projects
-
 
 def pin_dev_compatible(package, min_pin=None, max_pin=None, exact=False):
     output = subprocess.check_output(["pixi", "list", "--json", package])
@@ -33,15 +31,12 @@ def pin_dev_compatible(package, min_pin=None, max_pin=None, exact=False):
         max_version = ""
     return f"{package} >={min_version}{max_version}"
 
-
 def replace_soma_env(match):
     replacement_env = {"pin_dev_compatible": pin_dev_compatible}
     return eval(f"f'''{{{match.group(1)}}}'''", replacement_env, replacement_env)
 
-
 def resolve_requirement(requirement):
     return re.sub(r"\$soma-env\{\{(.*)\}\}", replace_soma_env, requirement)
-
 
 def filter_recipe(recipe):
     # Replace $soma-env{{...}} elements in dependencies
@@ -51,7 +46,6 @@ def filter_recipe(recipe):
                 r = requirements[i]
                 if isinstance(r, str):
                     requirements[i] = resolve_requirement(r)
-
 
 def read_recipes(soma_root):
     """
@@ -98,7 +92,6 @@ def read_recipes(soma_root):
             except Exception as e:
                 raise RuntimeError(f"Error while reading {recipe_file}") from e
 
-
 def selected_recipes(soma_root, selection=None):
     """
     Iterate over recipes selected in configuration and their dependencies.
@@ -143,7 +136,6 @@ def selected_recipes(soma_root, selection=None):
         dependencies = recipe["soma-env"].get("internal-dependencies", [])
         stack.extend(i for i in dependencies if i not in done)
 
-
 def sorted_recipies(soma_root):
     """
     Iterate over recipes sorted according to their dependencies starting with a
@@ -168,7 +160,6 @@ def sorted_recipies(soma_root):
             dependencies = recipe.get("internal-dependencies", [])
             if dependent not in done and all(d in done for d in dependencies):
                 ready.add(dependent)
-
 
 def find_soma_env_packages(soma_root):
     for recipe in read_recipes(soma_root):

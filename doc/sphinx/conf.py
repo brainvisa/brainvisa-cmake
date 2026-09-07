@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # totor documentation build configuration file, created by
 # sphinx-quickstart on Mon Jan 24 17:33:44 2011.
@@ -10,8 +9,6 @@
 #
 # All configuration values have a default; values that are commented out
 # serve to show the default.
-
-from __future__ import absolute_import, print_function
 
 import sys, os
 import datetime
@@ -56,7 +53,6 @@ def find_in_path(file, path=None):
             r = glob.glob(os.path.join(p, file))
             if r:
                 return r[0]
-
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -157,7 +153,6 @@ pygments_style = 'sphinx'
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
-
 # -- Options for HTML output ---------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  Major themes that come with
@@ -232,7 +227,6 @@ html_use_modindex = True
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'brainvisa_cmake_doc'
-
 
 # -- Options for LaTeX output --------------------------------------------------
 

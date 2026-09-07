@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-
 import os
 import shutil
 import subprocess
 import tempfile
 import unittest
 import sys
-
 
 # Test the bv_maker executable from the source tree, with the same version of
 # Python that is used to run the tests.
@@ -16,7 +12,6 @@ BV_MAKER = [
     os.path.abspath(os.path.join(os.path.dirname(__file__),
                                  '..', 'bin', 'bv_maker'))
 ]
-
 
 class GitUpdateTestCase(unittest.TestCase):
     @classmethod
@@ -160,7 +155,6 @@ class GitUpdateTestCase(unittest.TestCase):
             BV_MAKER + ['-c', self.bv_maker_cfg, 'status', '--no-svn'],
             env=self.env)
         self.assertEqual(retcode, 0, 'bv_maker status failed')
-
 
     def test_dirty_repository_update(self):
         # Test fresh clone of the master branch
@@ -395,7 +389,6 @@ class GitUpdateTestCase(unittest.TestCase):
                                   cwd=self.clone_path)
         self.assertNotEqual(retcode, 0,
                             'HEAD should be detached after cloning a commit')
-
 
 if __name__ == '__main__':
     unittest.main()

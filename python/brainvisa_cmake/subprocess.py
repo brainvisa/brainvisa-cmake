@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tools for launching subprocesses from bv_maker."""
 
 import locale
@@ -8,17 +7,14 @@ import sys
 import signal
 import shlex
 
-
 try:
     from subprocess import DEVNULL
 except ImportError:
     DEVNULL = open(os.devnull, 'wb')
 
-
 def decode_output(output_bytes):
     """Decode the output of subprocess.check_output to Unicode."""
     return output_bytes.decode(locale.getpreferredencoding())
-
 
 def system(*args, **kwargs):
     print('$ ' + ' '.join(shlex.quote(arg) for arg in args))
@@ -55,7 +51,6 @@ def system(*args, **kwargs):
                 txt += f'\n{error[1].args[0]}'
             error = (error[0], error[0](txt, *error[1].args[1:]), error[2])
             raise error[0](txt, *error[1].args[1:]) from error[1]
-
 
 def system_output_on_error(*args, **kwargs):
     # system_output_on_error is a bit strange currently:

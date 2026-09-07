@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Support code for sub-commands of bv_maker."""
 
 import datetime
@@ -25,9 +23,7 @@ from brainvisa_cmake.utils import installer_parse_date
 from brainvisa_cmake.utils import installer_parse_time
 from brainvisa_cmake.utils import global_installer_datetime
 
-
 IGNORED_STEP = 'ignored'
-
 
 class StepCommand(object):
 
@@ -142,7 +138,6 @@ class StepCommand(object):
             elif self.configuration.verbose:
                 print('Skipping', step, 'of', d,
                       'because it is not in the selected directories.')
-
 
     def redirect_stdout(self, d, o, step):
         o.start_time[step] = time.localtime()
@@ -387,7 +382,6 @@ Subject: %s - %s %s on %s (%s)
         with open(log_file, 'a') as f:
             f.write('%s on %s (%s)\n' % (message, machine, osname))
 
-
 class InfoCommand(StepCommand):
 
     def __init__(self, argv, configuration):
@@ -418,7 +412,6 @@ class InfoCommand(StepCommand):
         dirs.update(self.configuration.packageDirectories)
         dirs.update(self.configuration.publicationDirectories)
         self.process('info', list(dirs.values()), 'info')
-
 
 class SourcesCommand(StepCommand):
 
@@ -460,7 +453,6 @@ class SourcesCommand(StepCommand):
         self.process('sources', list(self.configuration.sourcesDirectories.values()),
                      'process', self.options, self.args)
 
-
 class SourceStatusCommand(StepCommand):
 
     def __init__(self, argv, configuration):
@@ -499,7 +491,6 @@ class SourceStatusCommand(StepCommand):
         self.process('status',
                      list(self.configuration.sourcesDirectories.values()),
                      'source_status', self.options, self.args)
-
 
 class ConfigureCommand(StepCommand):
 
@@ -563,7 +554,6 @@ class BuildCommand(StepCommand):
         self.process('build', list(self.configuration.buildDirectories.values()),
                      'build', self.options, self.args)
 
-
 class DocCommand(StepCommand):
 
     def __init__(self, argv, configuration):
@@ -589,7 +579,6 @@ class DocCommand(StepCommand):
 
     def __call__(self):
         self.process('doc', list(self.configuration.buildDirectories.values()), 'doc')
-
 
 class TestCommand(StepCommand):
 
@@ -624,7 +613,6 @@ class TestCommand(StepCommand):
         self.process('test', list(self.configuration.buildDirectories.values()), 'test',
                      self.options, self.args)
 
-
 class TestrefCommand(StepCommand):
 
     def __init__(self, argv, configuration):
@@ -658,7 +646,6 @@ class TestrefCommand(StepCommand):
     def __call__(self):
         self.process('testref', list(self.configuration.buildDirectories.values()), 'testref',
                      self.options, self.args)
-
 
 class PackCommand(StepCommand):
 
@@ -706,7 +693,6 @@ class PackCommand(StepCommand):
 
         self.process('pack', __getPackageDirectoriesByDepth(),
                      'package', self.options, self.args)
-
 
 class InstallPackCommand(StepCommand):
 
@@ -782,7 +768,6 @@ class InstallPackCommand(StepCommand):
         self.process('install_pack', list(self.configuration.packageDirectories.values()),
                      'install_package', self.options, self.args)
 
-
 class TestPackCommand(StepCommand):
 
     def __init__(self, argv, configuration):
@@ -843,7 +828,6 @@ class TestPackCommand(StepCommand):
     def __call__(self):
         self.process('test_pack', list(self.configuration.packageDirectories.values()),
                      'test_package', self.options, self.args)
-
 
 class TestrefPackCommand(StepCommand):
 
@@ -907,7 +891,6 @@ class TestrefPackCommand(StepCommand):
         self.process('testref_pack', list(self.configuration.packageDirectories.values()),
                      'testref_package', self.options, self.args)
 
-
 class PublishPackCommand(StepCommand):
 
     def __init__(self, argv, configuration):
@@ -969,7 +952,6 @@ class PublishPackCommand(StepCommand):
     def __call__(self):
         self.process('publish_pack', list(self.configuration.publicationDirectories.values()),
                      'publish_package', self.options, self.args)
-
 
 COMMANDS = {
     'info': InfoCommand,

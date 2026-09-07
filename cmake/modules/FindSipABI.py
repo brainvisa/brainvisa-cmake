@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 import sys
 import importlib
 import re
 import os
-
 
 # found in https://github.com/kovidgoyal/calibre/commit/73a312dd648143006184ed71a0aab7336dc03cc1#diff-74e67b94edb27c8f348abd003df82f462d963c11c9ba0a786d7e73f1f7f9ae24
 def pyqt_sip_abi_version(pyqt_mod):
@@ -18,7 +16,6 @@ def pyqt_sip_abi_version(pyqt_mod):
                               flags=re.MULTILINE)
                 if m is not None:
                     return m.group(1)
-
 
 sip_mod = sys.argv[1]
 #sip = importlib.import_module(sip_mod)

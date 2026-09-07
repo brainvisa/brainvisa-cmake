@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import os
 import os.path as osp
 import getpass
@@ -18,12 +16,10 @@ import yaml
 import glob
 import pathlib
 
-
 def ensure_str(arg, encoding='utf-8', errors='stric'):
     if isinstance(arg, bytes):
         return arg.decode(encoding=encoding, errors=errors)
     return arg
-
 
 class BBIDaily:
     NONFATAL_BV_MAKER_STEPS = {'doc', 'test'}
@@ -653,7 +649,6 @@ class BBIDaily:
             self.log(self.bbe_name, 'finished',
                      (1 if failed_tasks else 0), '\n'.join(log))
 
-
 def main():
 
     import argparse
@@ -767,7 +762,6 @@ def main():
     bbi_daily.run_bbi(dev_configs, user_configs, update_neuroforge,
                       bv_maker_steps, dev_tests, pack, install_packages,
                       user_tests)
-
 
 if __name__ == '__main__':
     main()

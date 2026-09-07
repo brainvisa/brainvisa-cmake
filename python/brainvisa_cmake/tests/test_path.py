@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 import unittest
 import shutil
 import sys
-
-
 
 from brainvisa_cmake.path import Path, SystemPathConverter
 

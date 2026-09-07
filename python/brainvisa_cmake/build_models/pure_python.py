@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import glob
 import os
 import sys
@@ -106,7 +105,6 @@ find_package( PythonInterp REQUIRED )
 
 set( %(component_upper)s_FOUND true )
 """
-
 
 class PurePythonComponentBuild(object):
     bool_to_cmake_testref = {True: "TESTREF", False: ""}

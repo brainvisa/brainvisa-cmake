@@ -1,6 +1,6 @@
 Package: brainvisa-cmake
 Version: @BRAINVISA_PACKAGE_VERSION_MAJOR@.@BRAINVISA_PACKAGE_VERSION_MINOR@.@BRAINVISA_PACKAGE_VERSION_PATCH@
-Maintainer: IFR 49
+Maintainer: NeuroSpin
 Architecture: all
 Description: CMake based compilation and packaging tools for BrainVISA projects.
 Priority: optional

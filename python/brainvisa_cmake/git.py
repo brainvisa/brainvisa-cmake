@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Management of Git repositories in bv_maker."""
 
 import shutil
@@ -11,7 +10,6 @@ from six.moves import shlex_quote
 from brainvisa_cmake.subprocess import decode_output
 from brainvisa_cmake.subprocess import DEVNULL
 from brainvisa_cmake.subprocess import system
-
 
 # FIXME(ylep): move to a utils module
 def cached_property(fget):
@@ -26,11 +24,9 @@ def cached_property(fget):
         return value
     return property(cached_getter, doc=fget.__doc__)
 
-
 class GitUpdateError(Exception):
     """Exception for a non-fatal error updating a Git repository."""
     pass
-
 
 class GitRepository(object):
     """Class for querying and interacting with a Git repository."""
@@ -570,7 +566,6 @@ repository manually using the following command:
         if (os.path.exists(os.path.join(self.path, '.pre-commit-config.yaml'))
                 and self.have_pre_commit()):
             self.call_nonessential_command(['pre-commit', 'install'])
-
 
 def print_git_status_summary(source_directory, status_list):
     if not status_list:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 
 components_definition = [
@@ -723,7 +722,6 @@ packages_definition = {
         'packages': {'3dns-private'},
     },
 }
-
 
 customize_components_definition = [os.path.expanduser('~/.brainvisa/components_definition.py')]
 if 'BV_MAKER_BUILD' in os.environ:

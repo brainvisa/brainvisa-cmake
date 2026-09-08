@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import git
 import json
 import os
@@ -12,9 +11,7 @@ import toml
 import os.path as osp
 import glob
 
-
 dry_run = False
-
 
 def update_merge(updated, other):
     for key, value in other.items():
@@ -26,7 +23,6 @@ def update_merge(updated, other):
             update_merge(updated[key], value)
         else:
             updated[key] = value
-
 
 def check_build_status(context):
     # Check that bv_maker steps had been done successfully in the right order
@@ -61,7 +57,6 @@ def check_build_status(context):
     if doc_step_info.get("start") <= build_step_info.get("stop"):
         raise ValueError("bv_maker doc step started before the end of build.")
 
-
 def modify_file(context, file, file_contents):
     print(f"Modify file {file}")
     with open(file, "w") as f:
@@ -69,7 +64,6 @@ def modify_file(context, file, file_contents):
             json.dump(file_contents, f, indent=4)
         else:
             f.write(file_contents)
-
 
 def update_dict_file(context, file, update_dict):
     print(f"Update dict file {file}")
@@ -88,7 +82,6 @@ def update_dict_file(context, file, update_dict):
     with open(file, "w") as f:
         json.dump(contents, f, indent=4)
 
-
 def git_commit(context, repo, modified, message):
     print(f"Commit in {repo}: {message}")
     if not dry_run:
@@ -96,7 +89,6 @@ def git_commit(context, repo, modified, message):
         repo.git.add(*modified)
         repo.git.commit("-m", message, "-n")
         repo.git.push()
-
 
 def git_push(context, repo, tags=False):
     if not dry_run:
@@ -106,7 +98,6 @@ def git_push(context, repo, tags=False):
             origin.push(tags=True)
         else:
             origin.push()
-
 
 def git_tag(context, repo, component, tag, update_changeset=None):
     """ tag the component repo; get the component changeset and write it in the
@@ -125,7 +116,6 @@ def git_tag(context, repo, component, tag, update_changeset=None):
                 with open(update_changeset, "w") as f:
                     json.dump(components, f, indent=4)
 
-
 def rebuild(context):
     subprocess.check_call(
         [
@@ -139,7 +129,6 @@ def rebuild(context):
             "doc",
         ]
     )
-
 
 def create_release_tag(context, tag):
     repo = git.Repo(context.soma_root)
@@ -161,7 +150,6 @@ def create_release_tag(context, tag):
         commit = repo.index.commit(f"Release {conf['name']} {conf['version']}")
         repo.create_tag(tag, ref=commit)
         branch.checkout()
-
 
 def create_package(context, package, test):
     recipe_dir = context.soma_root / "plan" / "recipes" / package
@@ -197,7 +185,6 @@ def create_package(context, package, test):
             flush=True,
         )
         raise
-
 
 def publish(
     context,
@@ -246,7 +233,6 @@ def publish(
                 os.remove(f)
             raise
 
-
 def neuro_forge_publish(
     context,
     nf_sources,
@@ -264,7 +250,6 @@ def neuro_forge_publish(
             print(" ".join(cmd))
     finally:
         os.chdir(cwd)
-
 
 def install(
     context,
@@ -295,7 +280,6 @@ def install(
 
     finally:
         os.chdir(cwd)
-
 
 def build_container(
     context,
@@ -351,7 +335,6 @@ def build_container(
         os.chdir(cwd)
         os.environ['PATH'] = path
 
-
 def install_container(
     context,
     casa_distro_base,
@@ -392,7 +375,6 @@ def install_container(
     finally:
         os.environ['PATH'] = path
 
-
 def publish_container(
     context,
     casa_distro_base,
@@ -428,7 +410,6 @@ def publish_container(
     finally:
         os.chdir(cwd)
         os.environ['PATH'] = path
-
 
 def web(
     context,

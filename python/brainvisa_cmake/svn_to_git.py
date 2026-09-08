@@ -1,14 +1,8 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
-
 import os
 import re
 import subprocess
 import time
-
 
 def convert_project(project, repos, svn_repos, authors_file=None,
                     latest_release_version=None):
@@ -46,7 +40,6 @@ def convert_project(project, repos, svn_repos, authors_file=None,
               latest_release_version=latest_release_version)
     os.chdir(cur_dir)
 
-
 def update_project(project, repos, authors_file=None,
                    latest_release_version=None):
     '''
@@ -67,7 +60,6 @@ def update_project(project, repos, authors_file=None,
     update_branches(os.path.join(repos, project))
     make_tags(os.path.join(repos, project),
               latest_release_version=latest_release_version)
-
 
 def fetch_project(project, repos, authors_file=None):
     '''
@@ -99,7 +91,6 @@ def fetch_project(project, repos, authors_file=None):
             print('conversion fails at some point... trying again in 5 seconds...')
             time.sleep(5)
     os.chdir(cur_dir)
-
 
 def make_branches(repos):
     '''
@@ -136,7 +127,6 @@ def make_branches(repos):
             subprocess.check_call(cmd)
     os.chdir(cur_dir)
 
-
 def update_branches(repos):
     '''
     Update master / integration branches matching resp. bug_fix and trunk
@@ -165,7 +155,6 @@ def update_branches(repos):
     print(cmd)
     subprocess.check_call(cmd.split())
     os.chdir(cur_dir)
-
 
 def make_tags(repos, latest_release_version=None):
     '''
@@ -257,7 +246,6 @@ def make_tags(repos, latest_release_version=None):
                       % svn_tag_name)
     os.chdir(cur_dir)
 
-
 def convert_perforce_directory(project, repos, svn_repos, authors_file=None):
     '''
     Parameters
@@ -290,7 +278,6 @@ def convert_perforce_directory(project, repos, svn_repos, authors_file=None):
             print('conversion fails at some point...')
     finally:
         os.chdir(cur_dir)
-
 
 def graft_history(project, old_project, repos, old_repos, branch='master',
                   old_branch='trunk'):
@@ -329,7 +316,6 @@ def graft_history(project, old_project, repos, old_repos, branch='master',
     print(cmd)
     subprocess.check_call(cmd, shell=True)
     os.chdir(cur_dir)
-
 
 # --
 
@@ -437,7 +423,6 @@ def main():
             old_dir = os.path.join(repos, old_project)
         graft_history(new_project, old_project, new_dir, old_dir,
                       new_branch, old_branch)
-
 
 if __name__ == '__main__':
     main()

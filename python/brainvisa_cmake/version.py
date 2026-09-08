@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from pathlib import Path
 
 from brainvisa_cmake.brainvisa_projects import read_project_info

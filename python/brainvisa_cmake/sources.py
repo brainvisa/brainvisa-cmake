@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Handling of source-directory configuration."""
 
 from fnmatch import fnmatchcase
@@ -14,7 +12,6 @@ from brainvisa_cmake.git import GitUpdateError
 from brainvisa_cmake.git import print_git_status_summary
 from brainvisa_cmake.subprocess import system
 from brainvisa_cmake.version_number import version_format_short
-
 
 class SourceDirectory(
     brainvisa_cmake.configuration.DirectorySection,

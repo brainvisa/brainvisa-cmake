@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import fnmatch
 import itertools
 import json
@@ -18,7 +17,6 @@ import toml
 import yaml
 import typing
 
-
 from .defaults import default_publication_directory
 from .recipes import (
     sorted_recipies,
@@ -31,15 +29,12 @@ from . import plan as plan_module
 
 from .plan import update_merge
 
-
 class CommandContext:
     def __init__(self):
         self.soma_root = pathlib.Path(os.environ["SOMA_ROOT"]).absolute()
 
-
 command_context = CommandContext()
 command_typer = typer.Typer()
-
 
 def self_update_soma_env(
     context: CommandContext,
@@ -74,41 +69,33 @@ def self_update_soma_env(
             raise
     return modif
 
-
 @command_typer.command()
 def info():
     return subprocess.call(["bv_maker", "info"])
-
 
 @command_typer.command()
 def sources():
     return subprocess.call(["bv_maker", "sources"])
 
-
 @command_typer.command()
 def status():
     return subprocess.call(["bv_maker", "status"])
-
 
 @command_typer.command()
 def configure():
     return subprocess.call(["bv_maker", "configure"])
 
-
 @command_typer.command()
 def build():
     return subprocess.call(["bv_maker", "build"])
-
 
 @command_typer.command()
 def doc():
     return subprocess.call(["bv_maker", "doc"])
 
-
 @command_typer.command()
 def all():
     return subprocess.call(["bv_maker"])
-
 
 @command_typer.command()
 def update():
@@ -155,7 +142,6 @@ def update():
         print("'{i}'" for i in command)
         subprocess.check_call(command)
 
-
 @command_typer.command()
 def check_merge(src: str = None, branch: str = None):
     if src:
@@ -182,7 +168,6 @@ def check_merge(src: str = None, branch: str = None):
                 print(f"git -C '{src}' push")
         else:
             stack.extend(i for i in src.iterdir() if i.is_dir())
-
 
 @command_typer.command()
 def packaging_plan(
@@ -936,7 +921,6 @@ def packaging_plan(
             f,
         )
 
-
 @command_typer.command()
 def apply_plan(
     dry_run: typing.Annotated[
@@ -962,7 +946,6 @@ def apply_plan(
                 yaml.safe_dump(actions, f)
         elif dry_run:
             print('skip action:', action)
-
 
 @command_typer.command()
 def graphviz(packages: str = "*", conda_forge=False, versions=False):
@@ -1023,7 +1006,6 @@ def graphviz(packages: str = "*", conda_forge=False, versions=False):
     for package in conda_forge_packages:
         print(f'  "{package}" [fillcolor="aliceblue"]')
     print("}")
-
 
 def main():
     command_typer()

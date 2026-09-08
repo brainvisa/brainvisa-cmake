@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """Extract reference documentation from the NumPy source tree.
 
 """
-from __future__ import division, absolute_import, print_function
 
 import inspect
 import textwrap
@@ -11,7 +9,6 @@ import pydoc
 from warnings import warn
 import collections
 import sys
-
 
 class Reader(object):
     """A line-based string reader.
@@ -85,7 +82,6 @@ class Reader(object):
 
     def is_empty(self):
         return not ''.join(self._str).strip()
-
 
 class NumpyDocString(object):
     def __init__(self, docstring, config={}):
@@ -186,7 +182,6 @@ class NumpyDocString(object):
             params.append((arg_name,arg_type,desc))
 
         return params
-
 
     _name_rgx = re.compile(r"^\s*(:(?P<role>\w+):`(?P<name>[a-zA-Z0-9_.-]+)`|"
                            r" (?P<name2>[a-zA-Z0-9_.-]+))\s*", re.X)
@@ -404,7 +399,6 @@ class NumpyDocString(object):
         out += self._str_index()
         return '\n'.join(out)
 
-
 def indent(str,indent=4):
     indent_str = ' '*indent
     if str is None:
@@ -418,7 +412,6 @@ def dedent_lines(lines):
 
 def header(text, style='-'):
     return text + '\n' + style*len(text) + '\n'
-
 
 class FunctionDoc(NumpyDocString):
     def __init__(self, func, role='func', doc=None, config={}):
@@ -471,7 +464,6 @@ class FunctionDoc(NumpyDocString):
 
         out += super(FunctionDoc, self).__str__(func_role=self._role)
         return out
-
 
 class ClassDoc(NumpyDocString):
 

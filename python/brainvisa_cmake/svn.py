@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import os
 import string
 import re
@@ -38,7 +36,6 @@ def svn_get_latest_revision(svn_url):
     if match:
         return match.group(1)
 
-
 def svn_cat(url,
         simulate=False,
         verbose=False):
@@ -59,7 +56,6 @@ def svn_cat(url,
 
     except SystemError as e:
         raise RuntimeError('SVN error: Unable to cat from ' + url)
-
 
 def svn_checkout(url,
             path,
@@ -112,7 +108,6 @@ def svn_checkout(url,
         raise RuntimeError('SVN error: Unable to export from '
                         + url + ' to ' + path)
 
-
 def svn_commit(path,
             message='',
             simulate=False,
@@ -141,7 +136,6 @@ def svn_commit(path,
 
     except SystemError as e:
         raise RuntimeError('SVN error: Unable to commit changes from ' + path)
-
 
 def svn_copy(source,
             dest,
@@ -175,7 +169,6 @@ def svn_copy(source,
                     simulate=simulate,
                     verbose=verbose)
 
-
 def svn_delete(url,
                message='',
                simulate=False,
@@ -197,7 +190,6 @@ def svn_delete(url,
                     simulate=simulate,
                     verbose=verbose)
 
-
 def svn_exists(url):
     """Check that the url exists
 
@@ -213,7 +205,6 @@ def svn_exists(url):
 
     except RuntimeError as e:
         return False
-
 
 def svn_export(url,
               path,
@@ -241,7 +232,6 @@ def svn_export(url,
     except SystemError as e:
         raise RuntimeError('SVN error: Unable to export from '
                         + url + ' to ' + path)
-
 
 def svn_info(url,
         xml=True,
@@ -271,7 +261,6 @@ def svn_info(url,
 
     except SystemError as e:
         raise RuntimeError('SVN error: Unable to get info for ' + url)
-
 
 def svn_list(url,
         xml=True,
@@ -368,7 +357,6 @@ def svn_merge( source,
       raise RuntimeError( 'SVN error: Unable to merge ' + source
                         + ' and ' + dest )
     
-
 def svn_mkdir( url,
              parents = False,
              simulate = False,
@@ -739,7 +727,6 @@ def svn_update_version_info( version_file_url,
             f.write( version_file_content_new )
             f.close()
             
-            
             svn_commit(
                 version_file_path,
                 message = message,
@@ -751,7 +738,6 @@ def svn_update_version_info( version_file_url,
             return False
 
         return True
-
 
 # Define API functions
 vcs_export = svn_export
@@ -1511,7 +1497,6 @@ class SvnComponent( VersionControlComponent ):
                                     for
                                     [Default: None].
 
-            
             @type: string
             @param dest_branch_type: The destination BranchType to merge project
                                      info file for

@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
-
 import re
 import sys
 import six
 
 from abc import abstractmethod
-
 
 # To keep brainvisa-cmake independent from other projects (soma-base)
 # we need to duplicate the singleton module.

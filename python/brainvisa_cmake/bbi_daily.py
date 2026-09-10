@@ -462,7 +462,7 @@ class BBIDaily:
                # '-c', 'https://brainvisa.info/neuro-forge',
                '-c', 'file:///drf/neuro-forge/public',
                '-c', 'file:///drf/neuro-forge/brainvisa-cea',
-               '-c', 'nvidia', '-c', 'pytorch', '-c', 'conda-forge']
+               '-c', 'conda-forge']
         log = ['create user environment', 'command:', ' '.join(cmd),
                'from dir:', env_dir]
         self.log(environment, 'create user environment', 0,
@@ -492,11 +492,6 @@ class BBIDaily:
         version = env_conf['version']
         lines.insert(deps_i + 1, f'soma-env = "{version}.*"\n')
         lines.insert(deps_i + 2, 'pytest = "*"\n')
-        lines += ['\n',
-                  '[pypi-dependencies]\n',
-                  'dracopy = ">=1.4.2, <2"\n',
-                  # 'acres = ">=0.2.0"\n',
-                  ]
         with open(pixi_toml, 'w') as f:
             f.write(''.join(lines))
 

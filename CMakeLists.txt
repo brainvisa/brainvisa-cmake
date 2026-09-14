@@ -90,26 +90,6 @@ install( FILES ${_files}
          DESTINATION "${brainvisa-cmake_INSTALL_PREFIX}/scripts/windows"
          COMPONENT brainvisa-cmake )
 
-# Packaging
-set( PACKAGE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE PATH "Installation path for debian package" )
-configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/debian-control.in"
-                "${CMAKE_BINARY_DIR}/debian-control"
-                @ONLY )
-set( packageName "${CMAKE_BINARY_DIR}/brainvisa-cmake-${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}.${BRAINVISA_PACKAGE_VERSION_PATCH}.deb" )
-set( tmpDir "/tmp/brainvisa-cmake_create_deb" )
-add_custom_command( OUTPUT "${packageName}"
-  DEPENDS "${CMAKE_BINARY_DIR}/debian-control"
-  COMMENT "Creating package \"${packageName}\""
-  COMMAND ${CMAKE_COMMAND} -E remove_directory "${tmpDir}"
-  COMMAND ${CMAKE_COMMAND} -E make_directory "${tmpDir}"
-  COMMAND ${CMAKE_COMMAND} -E make_directory "${tmpDir}/DEBIAN"
-  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/debian-control" "${tmpDir}/DEBIAN/control"
-  COMMAND ${CMAKE_COMMAND} "-DCMAKE_INSTALL_PREFIX=${tmpDir}${PACKAGE_INSTALL_PREFIX}" -P "${CMAKE_BINARY_DIR}/cmake_install.cmake"
-  COMMAND dpkg --build "${tmpDir}" "${packageName}"
-  COMMAND ${CMAKE_COMMAND} -E remove_directory "${tmpDir}"
-)
-add_custom_target( "deb-package" DEPENDS "${packageName}" )
-
 if( DESIRED_QT_VERSION )
   add_definitions( -DDESIRED_QT_VERSION=${DESIRED_QT_VERSION} )
 endif()

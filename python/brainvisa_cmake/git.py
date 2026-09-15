@@ -5,8 +5,7 @@ import shutil
 import os
 import subprocess
 
-import six
-from six.moves import shlex_quote
+import shlex
 
 from brainvisa_cmake.subprocess import decode_output
 from brainvisa_cmake.subprocess import DEVNULL
@@ -56,10 +55,10 @@ class GitRepository(object):
     def call_command(self, args, echo=False, **kwargs):
         """Call a command in the repository, returning its exit code."""
         if echo:
-            if isinstance(args, six.string_types):
-                print('$ ' + shlex_quote(args))
+            if isinstance(args, str):
+                print('$ ' + shlex.quote(args))
             else:
-                print('$ ' + ' '.join(shlex_quote(arg) for arg in args))
+                print('$ ' + ' '.join(shlex.quote(arg) for arg in args))
         return subprocess.call(args, cwd=self.path, **kwargs)
 
     def call_nonessential_command(self, args, echo=True, **kwargs):
@@ -221,7 +220,7 @@ to the origin repository.''')
         """
         if not hasattr(cls, '_git_lfs_is_configured'):
             args = ['git', 'lfs', 'install', '--skip-repo']
-            print('$ ' + ' '.join(shlex_quote(arg) for arg in args))
+            print('$ ' + ' '.join(shlex.quote(arg) for arg in args))
             try:
                 subprocess.check_call(args)
             except OSError:

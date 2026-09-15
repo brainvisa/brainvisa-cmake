@@ -117,9 +117,6 @@ if ( PYTHON_VERSION AND PYTHON_EXECUTABLE AND PYTHON_PREFIX
   set( PYTHON_FOUND TRUE )
 else()
   find_package( PythonInterp REQUIRED )
-  include( CMakeFindFrameworks )
-  # Search for the python framework on Apple.
-  cmake_find_frameworks( Python )
 
   # Get python information for the host python interpreter
   __GET_PYTHON_INFO("${PYTHON_HOST_EXECUTABLE}" PYTHON_HOST NO "")

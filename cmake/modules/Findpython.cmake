@@ -43,7 +43,12 @@ function(__GET_PYTHON_INFO __python_executable __output_prefix __translate_path 
                            "${__python_executable}" 
                            "-c" "import sys; sys.stdout.write('.'.join( (str(i) for i in sys.version_info[ :3 ]) ))"
     OUTPUT_VARIABLE _fullVersion )
-  message( STATUS "Using python ${_fullVersion}: ${__python_executable}" )
+
+  if (NOT BRAINVISA_PRINT_PYTHON_VERSION)
+    message( STATUS "Using python ${_fullVersion}: ${__python_executable}" )
+    set( BRAINVISA_PRINT_PYTHON_VERSION DONE CACHE INTERNAL "" FORCE )
+  endif()
+  
   execute_process( COMMAND ${__target_system_prefix}
                            "${__python_executable}"
                            "-c" "import sys, os; print(';'.join([s for s in sys.path if os.path.exists(s)]))"
@@ -116,7 +121,14 @@ if ( PYTHON_VERSION AND PYTHON_EXECUTABLE AND PYTHON_PREFIX
   # Python already found, do nothing
   set( PYTHON_FOUND TRUE )
 else()
-  find_package( PythonInterp REQUIRED )
+  find_package( Python REQUIRED COMPONENTS Interpreter Development)
+  # Backward compatibility with older PYTHON_EXECUTABLE, PYTHON_
+  set( PYTHON_EXECUTABLE "${Python_EXECUTABLE}")
+  if ( NOT Python_LIBRARIES )
+    message(FATAL_ERROR "Python libraries not found")
+  endif()
+  set(PYTHON_LIBRARY "${Python_LIBRARIES}")
+  set(PYTHON_INCLUDE_PATH "${Python_INCLUDE_DIRS}")
 
   # Get python information for the host python interpreter
   __GET_PYTHON_INFO("${PYTHON_HOST_EXECUTABLE}" PYTHON_HOST NO "")
@@ -171,7 +183,7 @@ else()
     PATH_SUFFIXES
       python${PYTHON_SHORT_VERSION}
   )
-  mark_as_advanced( PYTHON_INCLUDE_PATH )
+  set( PYTHON_INCLUDE_PATH "${PYTHON_INCLUDE_PATH}" CACHE STRING "Path to Python.h" )
   
   # try to find the "python3-config" or "python2-config" program
   get_filename_component( _py_exe_dir ${PYTHON_EXECUTABLE} PATH )
@@ -182,31 +194,25 @@ else()
                      OUTPUT_VARIABLE _py_libs )
     string( REGEX MATCH "(python[^ ]*)" _py_main_lib "${_py_libs}" )
   endif()
-
-  find_package(PythonLibs REQUIRED)
-
-  if( WIN64 )
-    set( PYTHON_FLAGS MS_WIN64 CACHE STRING "Flags used to compile target python interpreter" )
-  endif()
   
-#   message("==== Python host interpreter")
-#   message("PYTHON_HOST_EXECUTABLE: ${PYTHON_HOST_EXECUTABLE}") 
-#   message("PYTHON_HOST_EXECUTABLE_NAME: ${PYTHON_HOST_EXECUTABLE_NAME}") 
-#   message("PYTHON_HOST_PREFIX: ${PYTHON_HOST_PREFIX}")
-#   message("PYTHON_HOST_VERSION: ${PYTHON_HOST_VERSION}") 
-#   message("PYTHON_HOST_SHORT_VERSION: ${PYTHON_HOST_SHORT_VERSION}")
-#   message("PYTHON_HOST_MODULES_PATH: ${PYTHON_HOST_MODULES_PATH}")
-#   message("==== Python target interpreter") 
-#   message("PYTHON_EXECUTABLE: ${PYTHON_EXECUTABLE}") 
-#   message("PYTHON_EXECUTABLE_NAME: ${PYTHON_EXECUTABLE_NAME}") 
-#   message("PYTHON_PREFIX: ${PYTHON_PREFIX}")
-#   message("PYTHON_VERSION: ${PYTHON_VERSION}") 
-#   message("PYTHON_SHORT_VERSION: ${PYTHON_SHORT_VERSION}")
-#   message("PYTHON_INCLUDE_PATH: ${PYTHON_INCLUDE_PATH}")
-#   message("PYTHON_LIBRARY: ${PYTHON_LIBRARY}")
-#   message("PYTHON_MODULES_PATH: ${PYTHON_MODULES_PATH}")
-#   message("====")
-#   
+  # message("==== Python host interpreter")
+  # message("PYTHON_HOST_EXECUTABLE: ${PYTHON_HOST_EXECUTABLE}") 
+  # message("PYTHON_HOST_EXECUTABLE_NAME: ${PYTHON_HOST_EXECUTABLE_NAME}") 
+  # message("PYTHON_HOST_PREFIX: ${PYTHON_HOST_PREFIX}")
+  # message("PYTHON_HOST_VERSION: ${PYTHON_HOST_VERSION}") 
+  # message("PYTHON_HOST_SHORT_VERSION: ${PYTHON_HOST_SHORT_VERSION}")
+  # message("PYTHON_HOST_MODULES_PATH: ${PYTHON_HOST_MODULES_PATH}")
+  # message("==== Python target interpreter") 
+  # message("PYTHON_EXECUTABLE: ${PYTHON_EXECUTABLE}") 
+  # message("PYTHON_EXECUTABLE_NAME: ${PYTHON_EXECUTABLE_NAME}") 
+  # message("PYTHON_PREFIX: ${PYTHON_PREFIX}")
+  # message("PYTHON_VERSION: ${PYTHON_VERSION}") 
+  # message("PYTHON_SHORT_VERSION: ${PYTHON_SHORT_VERSION}")
+  # message("PYTHON_INCLUDE_PATH: ${PYTHON_INCLUDE_PATH}")
+  # message("PYTHON_LIBRARY: ${PYTHON_LIBRARY}")
+  # message("PYTHON_MODULES_PATH: ${PYTHON_MODULES_PATH}")
+  # message("====")
+
   # handle the QUIETLY and REQUIRED arguments and set PYTHONINTERP_FOUND to TRUE if
   # all listed variables are TRUE
   INCLUDE(FindPackageHandleStandardArgs)

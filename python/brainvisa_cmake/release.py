@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
 """Functions used by release-management scripts."""
-
 
 import itertools
 import logging
@@ -12,9 +10,7 @@ import sys
 
 from brainvisa_cmake.components_definition import components_definition
 
-
 logger = logging.getLogger(__name__)
-
 
 def user_confirms(message, *, dry_run, dry_run_reply):
     if dry_run:
@@ -33,11 +29,9 @@ def user_confirms(message, *, dry_run, dry_run_reply):
                 sys.exit(1)
         print('Answer not recognized. Please try again [y/n/q].')
 
-
 class SourceVersionError(Exception):
     """Exception for source version parse failures."""
     pass
-
 
 def find_source_version_file_and_syntax(source_path):
     source_path = pathlib.Path(source_path)
@@ -57,7 +51,6 @@ def find_source_version_file_and_syntax(source_path):
             return (str(info_py_candidates[0].relative_to(source_path)), 'py')
     raise SourceVersionError(f'cannot find a version file in {source_path}')
 
-
 # Each regex must have 3 groups: before the version number, the version number
 # itself, and after the version number.
 CMAKE_VERSION_REGEXPS = (
@@ -72,13 +65,11 @@ CMAKE_VERSION_REGEXPS = (
                re.IGNORECASE),
 )
 
-
 PY_VERSION_REGEXPS = (
     re.compile(r'(\bversion_major\s*=\s*)([0-9]+)(\b)'),
     re.compile(r'(\bversion_minor\s*=\s*)([0-9]+)(\b)'),
     re.compile(r'(\bversion_micro\s*=\s*)([0-9]+)(\b)'),
 )
-
 
 def iterate_source_version_regexes(syntax):
     if syntax == 'project_info.cmake':
@@ -89,7 +80,6 @@ def iterate_source_version_regexes(syntax):
         raise RuntimeError(f'unknown syntax {syntax}')
     for regex in regexps:
         yield regex
-
 
 def get_source_version_components(source_path):
     version_file, syntax = find_source_version_file_and_syntax(source_path)
@@ -104,14 +94,12 @@ def get_source_version_components(source_path):
             )
         yield int(match.group(2))
 
-
 def get_source_version_tuple(source_path):
     try:
         return tuple(get_source_version_components(source_path))
     except SourceVersionError as exc:
         logger.error(str(exc))
         return None
-
 
 def set_source_version_tuple(source_path, version_tuple, *, dry_run=False):
     version_file, syntax = find_source_version_file_and_syntax(source_path)
@@ -135,7 +123,6 @@ def set_source_version_tuple(source_path, version_tuple, *, dry_run=False):
         with open(version_file_fullpath, 'wt') as f:
             f.write(file_contents)
     return version_file
-
 
 def set_version_number_and_commit(source_root, local_path,
                                   version_tuple, branch,

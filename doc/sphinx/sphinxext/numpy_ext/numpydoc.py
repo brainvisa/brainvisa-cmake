@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ========
 numpydoc
@@ -16,7 +15,6 @@ It will:
 .. [1] https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt
 
 """
-from __future__ import division, absolute_import, print_function
 
 import os, sys, re, pydoc
 import sphinx
@@ -31,7 +29,6 @@ from .docscrape_sphinx import get_doc_object, SphinxDocString
 from sphinx.util.compat import Directive
 
 sixu = six.u
-
 
 def mangle_docstrings(app, what, name, obj, options, lines,
                       reference_offset=[0]):

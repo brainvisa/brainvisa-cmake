@@ -1,8 +1,6 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 import sys
-
 
 def help_exit():
     print('''run the pixi command in a given environment dir.
@@ -18,7 +16,6 @@ will perform the equivalent of:
 cd brainvisa-6.0; pixi run bv_maker sources
 ''')
     sys.exit(1)
-
 
 if __name__ == '__main__':
     import os

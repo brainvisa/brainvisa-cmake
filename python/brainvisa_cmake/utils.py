@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Miscellaneous utilities with no dependencies on other bv_maker modules."""
 
 import datetime
@@ -12,26 +10,20 @@ import time
 
 from brainvisa_cmake.brainvisa_projects import find_project_info
 
-
 _installer_datetime = None
 _installer_variables = None
-
 
 def installer_parse_date(value):
     return datetime.datetime.strptime(value, '%Y_%m_%d').timetuple()[:3]
 
-
 def installer_parse_time(value):
     return datetime.datetime.strptime(value, '%H:%M:%S').timetuple()[3:6]
-
 
 def installer_format_date(date):
     return '%04d_%02d_%02d' % date
 
-
 def installer_format_time(time):
     return '%02d:%02d:%02d' % time
-
 
 def global_installer_datetime():
     global _installer_datetime
@@ -46,10 +38,8 @@ def global_installer_datetime():
 
     return _installer_datetime
 
-
 def get_standard_arch(arch = platform.architecture()[0]):
     return 64 if arch in ['64', '64bit', 'x86_64'] else 32
-
 
 def get_host_system_name():
     systems = {'darwin' : 'osx',
@@ -64,7 +54,6 @@ def get_host_system_name():
         osname += str(get_standard_arch(arch))
 
     return osname
-
 
 def get_host_libc_version():
     # determine libc version - using ctypes and calling C
@@ -81,7 +70,6 @@ def get_host_libc_version():
         ver = ver.decode()
     return ver.split('.')
 
-
 def get_pack_host_system_name():
     '''
         Get system name to use for packaging.
@@ -97,7 +85,6 @@ def get_pack_host_system_name():
         pack_system += '-' + '.'.join(platform.mac_ver()[0].split('.')[:2])
 
     return pack_system
-
 
 def global_installer_variables():
     global _installer_variables

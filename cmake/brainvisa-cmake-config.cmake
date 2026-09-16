@@ -109,7 +109,7 @@ set( Boost_ADDITIONAL_VERSIONS
      "1.52.0" "1.52" "1.51.0" "1.51" "1.50.0" "1.50" "1.49.0" "1.49"
      "1.48.0" "1.48" "1.47.0" "1.47" "1.46.1" "1.46.0" "1.46"
      "1.45.0" "1.45" "1.44.0" "1.44" "1.43.0" "1.43" "1.42.0" "1.42"
-     "1.41.0" "1.41" "1.40.0" "1.40" "1.39.0" "1.39" )
+     "1.41.0" "1.41" "1.40.0" "1.40" "1.39.0" "1.39" "1.90" )
 # Do not use BoostConfig.cmake from boost-cmake, because its behaviour may be
 # different from regular FindBoost.cmake.
 set(Boost_NO_BOOST_CMAKE ON)
@@ -352,7 +352,7 @@ macro( BRAINVISA_PROJECT )
     set( BRAINVISA_PACKAGE_VERSION "${BRAINVISA_PACKAGE_VERSION_MAJOR}.${BRAINVISA_PACKAGE_VERSION_MINOR}.${BRAINVISA_PACKAGE_VERSION_PATCH}" )
   endif()
 
-  if(NOT NO_BV_MAKER)
+  if( BRAINVISA_BVMAKER )
     project( ${BRAINVISA_PACKAGE_NAME} ${ARGN} )
   endif()
 
@@ -360,7 +360,7 @@ macro( BRAINVISA_PROJECT )
   set( ${PROJECT_NAME}_VERSION_MINOR ${BRAINVISA_PACKAGE_VERSION_MINOR} )
   set( ${PROJECT_NAME}_VERSION_PATCH ${BRAINVISA_PACKAGE_VERSION_PATCH} )
   set( ${PROJECT_NAME}_VERSION "${BRAINVISA_PACKAGE_VERSION}" )
-  if( DEFINED BRAINVISA_BVMAKER )
+  if( BRAINVISA_BVMAKER )
     set( ${PROJECT_NAME}_VERSION_MAJOR ${BRAINVISA_PACKAGE_VERSION_MAJOR} PARENT_SCOPE )
     set( ${PROJECT_NAME}_VERSION_MINOR ${BRAINVISA_PACKAGE_VERSION_MINOR} PARENT_SCOPE )
     set( ${PROJECT_NAME}_VERSION_PATCH ${BRAINVISA_PACKAGE_VERSION_PATCH} PARENT_SCOPE )
@@ -2341,6 +2341,8 @@ macro( BRAINVISA_ADD_MOC_FILES _sources )
         qt5_generate_moc( "${_tmp_FILE}" "${_moc}" )
       elseif( DESIRED_QT_VERSION EQUAL 6 )
         qt6_generate_moc( "${_tmp_FILE}" "${_moc}" )
+      else()
+        message(FATAL_ERROR "Unsuported Qt version : ${DESIRED_QT_VERSION}")
       endif()
       set(${_sources} ${${_sources}} "${_moc}" )
     endif()

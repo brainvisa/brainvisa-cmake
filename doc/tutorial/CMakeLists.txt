@@ -1,4 +1,4 @@
-cmake_minimum_required( VERSION 3.20 )
+cmake_minimum_required( VERSION 4.2 )
 
 find_package( brainvisa-cmake REQUIRED )
 

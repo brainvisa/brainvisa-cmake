@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Code related to the BrainVISA installer and packaging.
 
 Note that the installer was used for releases 4.6 and 4.7. Is is not used
@@ -26,7 +24,6 @@ from brainvisa_cmake.subprocess import subprocess32
 from brainvisa_cmake.subprocess import system_output_on_error
 from brainvisa_cmake.utils import global_installer_datetime
 
-
 def get_matching_dirs(directories, pattern):
     dirs = []
     for d in directories:
@@ -35,8 +32,6 @@ def get_matching_dirs(directories, pattern):
             dirs.append(d)
 
     return dirs
-
-
 
 class PackageDirectory(build.ComponentsConfigParser,
                        brainvisa_cmake.configuration.ConfigVariableParser):
@@ -332,8 +327,6 @@ class PackageDirectory(build.ComponentsConfigParser,
         else:
             data_repos_dir_url = ""
 
-
-
         with open(script_fname, 'w') as f:
             f.write('''var install_dir = "%s";
 var repositories = ["%s"%s];
@@ -512,7 +505,6 @@ Controller.prototype.FinishedPageCallback = function()
         cmd = self.installer_cmdline()
         print('running:', "'" + "' '".join(cmd) + "'")
 
-
         if subprocess32:
             subprocess32.check_call(cmd, cwd=self.build_dir.directory,
                                     env=self.get_environ(),
@@ -657,7 +649,6 @@ Controller.prototype.FinishedPageCallback = function()
                             and len(os.listdir(tmp_dir)) == 0:
                         print('removing:', tmp_dir)
                         self.rm_with_empty_dirs_nofail(tmp_dir)
-
 
     def install_package(self, options, args):
         #self.test_config(options, args)
@@ -978,7 +969,6 @@ Controller.prototype.FinishedPageCallback = function()
             new_line += text
             new_line += expressions.pop(0)
         return ' '.join(shlex.split(new_line))
-
 
 class PublicationDirectory(brainvisa_cmake.configuration.DirectorySection,
                            brainvisa_cmake.configuration.ConfigVariableParser):

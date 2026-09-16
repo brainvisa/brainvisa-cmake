@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import division, absolute_import, print_function
-
 import sys, re, inspect, textwrap, pydoc
 import sphinx
 import collections
@@ -8,7 +5,6 @@ from .docscrape import NumpyDocString, FunctionDoc, ClassDoc
 import six
 
 sixu = six.u
-
 
 class SphinxDocString(NumpyDocString):
     def __init__(self, docstring, config={}):

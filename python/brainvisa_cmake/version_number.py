@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 version_separator = '.'
 
 class VersionFormat( object ):
@@ -72,7 +71,6 @@ class VersionFormat( object ):
                               the bug fix version.
         '''
         return self._version_len
-
 
 version_format_unconstrained = VersionFormat(
                                    separator = version_separator,
@@ -431,7 +429,6 @@ class VersionNumber( object ):
                      
         self._version_numbers.extend( value._version_numbers )
 
-        
     def resize( self, length, value = 0 ):
         ''' resize a VersionNumber using a given length.
         

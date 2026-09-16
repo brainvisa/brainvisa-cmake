@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Handling of build-directory configuration."""
 
 from fnmatch import fnmatchcase
@@ -28,7 +26,6 @@ from brainvisa_cmake.version import version as brainvisa_cmake_version
 from brainvisa_cmake.version_number import VersionNumber
 from brainvisa_cmake.version_number import version_format_short
 
-
 if os.path.exists(sys.argv[0]):
     this_script = sys.argv[0]
 else:
@@ -52,7 +49,6 @@ if this_script:
                                     brainvisa_cmake_version,
                                     version_format_short)),
                               'cmake')
-
 
 class ComponentsConfigParser(brainvisa_cmake.configuration.DirectorySection):
 
@@ -223,7 +219,6 @@ class ComponentsConfigParser(brainvisa_cmake.configuration.DirectorySection):
             self._configuration_lines_processed = True
             if self.configuration.verbose:
                 print('Build directory %s parsing done.' % self.directory)
-
 
 class BuildDirectory(ComponentsConfigParser,
                      brainvisa_cmake.configuration.ConfigVariableParser):
@@ -534,10 +529,11 @@ site.addsitedir(os.path.dirname(__file__))
         cmakeLists = os.path.join(self.directory, 'CMakeLists.txt')
         with open(cmakeLists, 'w') as out:
             print(f'''
-cmake_minimum_required( VERSION 3.20 )
+cmake_minimum_required( VERSION 4.2 )
 if ( DEFINED USE_CLANG )
   set( USE_CLANG "YES" CACHE STRING "Force usage of clang compiler" FORCE )
-  set( CMAKE_CXX_COMPILER "clang" CACHE STRING "C++ compiler" FORCE )
+  set( CMAKE_C_COMPILER "clang" CACHE STRING "C compiler" FORCE )
+  set( CMAKE_CXX_COMPILER "clang++" CACHE STRING "C++ compiler" FORCE )
   set( CMAKE_CXX_STANDARD_LIBRARIES "-lstdc++" )
 endif()
 
@@ -669,7 +665,6 @@ include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )
                                         + [config_dir]),
                    env=self.get_environ(),
                    timeout=timeout)
-
 
         # After a first configuration, the global version file of the build
         # directory has been generated, and package directories variables,
@@ -868,7 +863,6 @@ include( "{brainvisa_cmake_root}/cmake/brainvisa-compilation.cmake" )
 
         return fullVersion
 
-
 class VirtualenvDirectory(BuildDirectory):
 
     '''
@@ -924,7 +918,6 @@ class VirtualenvDirectory(BuildDirectory):
                 % env_path)
         pass
 
-
 def get_target_path_system(platform):
     if platform.startswith('win'):
         # We prefer alternative windows path i.e. pathes separated
@@ -934,13 +927,11 @@ def get_target_path_system(platform):
     else:
         return 'linux'
 
-
 def cmake_path(path):
     if sys.platform == 'win32':
         return Path(path, 'windows').to_system('windows_alt')
     else:
         return path
-
 
 def copy_brainvisa_cmake(installDir):
     global this_script
@@ -961,7 +952,6 @@ def copy_brainvisa_cmake(installDir):
             if not os.path.exists(d):
                 os.makedirs(d)
             shutil.copy(os.path.join(sourceDir, p, f), d)
-
 
 def check_ld_library_path_error(fatal):
     # This code is a safeguard: libraries that are dynamically mounted by
@@ -996,7 +986,6 @@ def check_ld_library_path_error(fatal):
                 lpath.remove('/.singularity.d/libs')
                 lpath = os.pathsep.join(lpath)
                 os.environ['LD_LIBRARY_PATH'] = lpath
-
 
 def run_and_log_tests(cwd=None, env=None, options=None, projects=None, timeout=None):
     # get test labels to assign them to projects
@@ -1054,7 +1043,6 @@ def run_and_log_tests(cwd=None, env=None, options=None, projects=None, timeout=N
             print('labels to test: %s' % repr(labels), file=f)
             print('current label: %s' % label, file=f)
     return logs
-
 
 def run_and_log_testref(cwd=None, env=None, options=None, timeout=None,
                         print_output=True):

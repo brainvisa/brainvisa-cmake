@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from brainvisa_cmake.version_number        import VersionNumber, \
                                                   version_format_release
 from brainvisa_cmake.brainvisa_projects    import parse_versioning_client_info
@@ -16,7 +14,6 @@ class BranchType(object):
     TRUNK = 'trunk'
     BUG_FIX = 'bug_fix'
     RELEASE = 'release'
-
 
 #class BranchVersionReadingMode:
     #""" Modes available to read branch version
@@ -413,7 +410,6 @@ class VersionControlComponent(object):
                           + 'not implemented. It must be defined by '
                           + 'subclasses.' )
 
-    
     def branch_update_version_info( self,
                                     branch_type = BranchType.TRUNK,
                                     branch_name = None,

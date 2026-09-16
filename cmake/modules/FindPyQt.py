@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This script comes from kdelibs's git repository at https://quickgit.kde.org/
 # under [kdelibs.git]/cmake/modules/FindPyQt.py
 #
@@ -28,9 +27,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
-from __future__ import absolute_import, print_function
-
 import sys
 import os
 import os.path as osp
@@ -38,7 +34,6 @@ import collections
 import importlib
 
 pyqt_ver = 5
-
 
 def get_default_sip_dir():
     import sipconfig

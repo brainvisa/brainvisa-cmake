@@ -15,37 +15,21 @@ else()
 
     if (NOT CMAKE_CROSSCOMPILING OR CMAKE_CROSSCOMPILING_RUNNABLE)
         find_package(python REQUIRED)
-        EXEC_PROGRAM ("${PYTHON_EXECUTABLE}"
-        ARGS "-c" "\"from __future__ import print_function; import numpy; print('>>BEGIN NPY CONFIG<<', numpy.get_include(), '>>END NPY CONFIG<<')\""
-        OUTPUT_VARIABLE NUMPY_INCLUDE_DIR_WRAPPED
-        ERROR_QUIET
-        RETURN_VALUE NUMPY_NOT_FOUND)
+        execute_process( COMMAND "${PYTHON_EXECUTABLE}" "-c" "import numpy; print(numpy.get_include())"
+            OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE NUMPY_NOT_FOUND)
 
         if (NUMPY_NOT_FOUND EQUAL 0)
-
-            string( REGEX MATCH ">>BEGIN NPY CONFIG<<.(.*).>>END NPY CONFIG<<"
-                _dummy "${NUMPY_INCLUDE_DIR_WRAPPED}"
-            )
-            set( NUMPY_INCLUDE_DIR "${CMAKE_MATCH_1}")
-            if(CMAKE_CROSSCOMPILING)
-                if(COMMAND TARGET_TO_HOST_PATH)
-                    TARGET_TO_HOST_PATH(${NUMPY_INCLUDE_DIR} NUMPY_INCLUDE_DIR)
-                else()
-                    message(WARNING "Unable to translate NUMPY_INCLUDE_DIR to valid host path")
-                endif()
-            endif()
-            #message("==== NUMPY_INCLUDE_DIR: ${NUMPY_INCLUDE_DIR}")
+            # message("==== NUMPY_INCLUDE_DIR: ${NUMPY_INCLUDE_DIR}")
             set (NUMPY_FOUND TRUE)
             set (NUMPY_INCLUDE_DIR "${NUMPY_INCLUDE_DIR}" CACHE STRING "Numpy include path")
             
-            EXEC_PROGRAM ("${PYTHON_EXECUTABLE}"
-                ARGS "-c" "\"from __future__ import print_function; import numpy; print('>>BEGIN NPY CONFIG<<', numpy.version.version, '>>END NPY CONFIG<<')\""
-                OUTPUT_VARIABLE NUMPY_VERSION_WRAPPED)
-            string( REGEX MATCH ">>BEGIN NPY CONFIG<<.(.*).>>END NPY CONFIG<<"
-                _dummy "${NUMPY_VERSION_WRAPPED}"
-            )
-            set( NUMPY_VERSION "${CMAKE_MATCH_1}" CACHE STRING "Numpy version")
-            #message("==== NUMPY_VERSION: ${NUMPY_VERSION}")
+            execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c" "import numpy; print(numpy.version.version)"
+                OUTPUT_VARIABLE NUMPY_VERSION
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+            set( NUMPY_VERSION "${NUMPY_VERSION}" CACHE STRING "Numpy version")
+            # message("==== NUMPY_VERSION: ${NUMPY_VERSION}")
         else ()
             if( NUMPY_INCLUDE_DIR )
                 message( "Numpy detection failed - output message: ${NUMPY_INCLUDE_DIR}" )

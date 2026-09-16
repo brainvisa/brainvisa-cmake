@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
-
 """Output-related functions (encoding, redirection)."""
-
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 
 import codecs
 import io
@@ -13,7 +8,6 @@ import sys
 
 import six
 
-
 ASCII_SUBSTITUTIONS = {
     ord('┌'): '/',
     ord('─'): '-',
@@ -21,7 +15,6 @@ ASCII_SUBSTITUTIONS = {
     ord('✓'): 'v',
     ord('✗'): 'X',
 }
-
 
 def _substitute_ascii_error_handler(error):
     """Unicode error handler that replaces a few characters with ASCII.
@@ -39,9 +32,7 @@ def _substitute_ascii_error_handler(error):
     else:
         raise error
 
-
 codecs.register_error('substitute_ascii', _substitute_ascii_error_handler)
-
 
 def reconfigure_stdout():
     """Reconfigure stdout so it does not crash on foreign Unicode characters.

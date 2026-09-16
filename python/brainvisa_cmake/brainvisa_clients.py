@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import sys
 import posixpath
 from subprocess                         import Popen, PIPE, STDOUT

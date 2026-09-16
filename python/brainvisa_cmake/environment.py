@@ -1,16 +1,10 @@
-# -*- coding: utf-8 -*-
-
 """Utilities related to environment variables."""
-
-from __future__ import absolute_import, division
-from __future__ import print_function, unicode_literals
 
 import re
 import os
 
 env_vars_regex = re.compile(r'\$([A-Za-z0-9_]*)')
 python_vars_regex = re.compile(r'\%\(([A-Za-z0-9_]*)\)s')
-
 
 def variablesSubstitution(parser, value, vars={}):
     result = value
@@ -25,10 +19,8 @@ def variablesSubstitution(parser, value, vars={}):
             result = result[:start] + content + result[end:]
     return result
 
-
 def pythonVariablesSubstitution(value, python_vars={}):
     return variablesSubstitution(python_vars_regex, value, vars=python_vars)
-
 
 def environmentVariablesSubstitution(value, env=None):
     if env is None:
@@ -36,17 +28,14 @@ def environmentVariablesSubstitution(value, env=None):
 
     return variablesSubstitution(env_vars_regex, value, vars=env)
 
-
 def environmentPathVariablesSubstitution(path, env=None):
     return normalize_path(environmentVariablesSubstitution(path, env))
-
 
 class VarReplacementType:
     NO = 0
     PYTHON = 1
     ENV = 2
     ALL = PYTHON | ENV
-
 
 def replace_vars(value,
                  replacement_type=VarReplacementType.ALL,
@@ -66,7 +55,6 @@ def replace_vars(value,
         result = environmentVariablesSubstitution(result, env = env_vars)
 
     return result
-
 
 def normalize_path(path):
     file_scheme = 'file://'

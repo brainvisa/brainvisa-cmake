@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Main procedure of the bv_maker command-line tool."""
 
 import multiprocessing
@@ -11,7 +9,6 @@ from brainvisa_cmake.build import check_ld_library_path_error
 import brainvisa_cmake.commands
 import brainvisa_cmake.configuration
 import brainvisa_cmake.output
-
 
 def main():
     """Main procedure of the bv_maker command-line tool."""
@@ -41,7 +38,6 @@ def main():
         os.environ['NCPU'] = str(ncpu)
 
     check_ld_library_path_error(fatal=False)
-
 
     default_commands = ['info', 'sources', 'configure', 'build', 'doc', 'test',
                         'pack', 'install_pack', 'test_pack']
@@ -92,7 +88,6 @@ def main():
     failed = display_failure_summary(configuration) or failed
 
     return 1 if failed else 0
-
 
 def display_failure_summary(configuration):
     sections = [('sourcesDirectories', ['sources']),

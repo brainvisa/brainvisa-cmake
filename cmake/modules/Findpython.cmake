@@ -183,7 +183,7 @@ else()
     PATH_SUFFIXES
       python${PYTHON_SHORT_VERSION}
   )
-  mark_as_advanced( PYTHON_INCLUDE_PATH )
+  set( PYTHON_INCLUDE_PATH "${PYTHON_INCLUDE_PATH}" CACHE STRING "Path to Python.h" )
   
   # try to find the "python3-config" or "python2-config" program
   get_filename_component( _py_exe_dir ${PYTHON_EXECUTABLE} PATH )
@@ -197,7 +197,7 @@ else()
   
   # message("==== Python host interpreter")
   # message("PYTHON_HOST_EXECUTABLE: ${PYTHON_HOST_EXECUTABLE}") 
-  # message("PYTHON_HOST_EXECUTABLE_NAME: ${PYTHON_cmake --help-policy CMP0148HOST_EXECUTABLE_NAME}") 
+  # message("PYTHON_HOST_EXECUTABLE_NAME: ${PYTHON_HOST_EXECUTABLE_NAME}") 
   # message("PYTHON_HOST_PREFIX: ${PYTHON_HOST_PREFIX}")
   # message("PYTHON_HOST_VERSION: ${PYTHON_HOST_VERSION}") 
   # message("PYTHON_HOST_SHORT_VERSION: ${PYTHON_HOST_SHORT_VERSION}")

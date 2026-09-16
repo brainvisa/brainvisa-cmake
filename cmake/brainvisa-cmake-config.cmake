@@ -3,6 +3,7 @@ cmake_policy( SET CMP0009 NEW )
 cmake_policy( SET CMP0054 NEW )
 cmake_policy( SET CMP0057 NEW )
 cmake_policy( SET CMP0072 NEW )
+cmake_policy( SET CMP0177 NEW )
 
 get_property( config_done GLOBAL PROPERTY BRAINVISA_CMAKE_CONFIG_DONE )
 

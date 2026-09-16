@@ -1,0 +1,23 @@
+[workspace]
+preview = ["pixi-build"]
+name = "brainvisa-cmake"
+version = "0.1.0"
+description = "BrainVISA CMake build system package"
+authors = ["BrainVISA Team"]
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[package]
+name = "python_rich"
+version = "0.1.0"
+
+# We are using `pixi-build-python` in order to build a Python package
+[package.build.backend]
+name = "pixi-build-rattler-build"
+version = "0.*"
+
+
+[dependencies]
+cmake = ">=4.4.3,<5"
+# No runtime dependencies needed as this is a build system package
+

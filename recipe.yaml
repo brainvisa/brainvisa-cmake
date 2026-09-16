@@ -1,0 +1,26 @@
+package:
+  name: brainvisa-cmake
+  version: 0.1.0
+
+source:
+  path: .
+  use_gitignore: true 
+
+build:
+  number: 0
+  script: | 
+    mkdir -p "$SP_DIR"
+    cp -r python/brainvisa_cmake "$SP_DIR"
+    mkdir -p "$PREFIX/lib/cmake"
+    cp -r cmake "$PREFIX/lib/cmake/brainvisa-cmake"
+  python:
+    entry_points:
+      - bv_maker = brainvisa_cmake.main:main
+      - soma-env = brainvisa_cmake.soma_env.cli:main
+requirements:
+  build: 
+    - python
+  host:
+    - python
+  run:
+    - python

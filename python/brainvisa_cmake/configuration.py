@@ -8,8 +8,7 @@ from socket import gethostname  # for use in eval()'d expressions
 import sys
 import traceback
 
-import six
-from six.moves import reload_module
+from importlib import reload as reload_module
 
 import brainvisa_cmake.brainvisa_projects as brainvisa_projects
 import brainvisa_cmake.components_definition
@@ -401,9 +400,9 @@ class ConfigVariableParser(object):
 
             elif isinstance(value, dict):
                 value = dict([(k, from_config_object(v)) \
-                              for k, v in six.iteritems(value)])
+                              for k, v in value.items()])
 
-            elif isinstance(value, six.string_types):
+            elif isinstance(value, str):
                 env_vars = config_parser.get_environ()
                 python_vars = config_parser.get_python_vars()
                 value = replace_vars(value, repl_type, python_vars, env_vars)
@@ -669,7 +668,7 @@ class GeneralSection(ConfigVariableParser):
     def init_vars(self):
         super(GeneralSection, self).init_vars()
         # actually add env vars to os.environ
-        for var, value in six.iteritems(self._env_vars):
+        for var, value in self._env_vars.items():
             if var not in os.environ or os.environ[var] != value:
                 os.environ[var] = value
 

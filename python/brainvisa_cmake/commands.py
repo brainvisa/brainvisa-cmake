@@ -14,8 +14,6 @@ import tempfile
 import time
 import traceback
 
-import six
-
 from brainvisa_cmake.environment import normalize_path
 from brainvisa_cmake.utils import installer_format_date
 from brainvisa_cmake.utils import installer_format_time
@@ -107,7 +105,7 @@ class StepCommand(object):
                                 continue
                             o.stop_time[step] = time.localtime()
                             o.status[step] = 'succeeded'
-                            for label, item in six.iteritems(logs):
+                            for label, item in logs.items():
                                 log = item['log_file']
                                 exc = item['exception']
                                 full_step = '%s:%s' % (step, label)

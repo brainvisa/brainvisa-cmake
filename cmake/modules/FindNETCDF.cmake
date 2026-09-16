@@ -86,7 +86,7 @@ else()
                 if(NOT NETCDF_VERSION)
                     find_program(__nc_config nc-config
                                  PATHS "/i2bm/brainvisa/Windows-7-x86_64/netcdf-4.1.3/bin")
-                    message("Found nc-config: ${__nc_config}")
+                    message(STATUS "Found nc-config: ${__nc_config}")
                     if(__nc_config)
                         execute_process(COMMAND ${__nc_config} --version
                                         OUTPUT_VARIABLE __result)

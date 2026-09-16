@@ -10,7 +10,7 @@ from socket import gethostname  # for use in eval()'d expressions
 import sys
 import traceback
 
-import importlib.reload as reload_module
+from importlib import reload as reload_module
 
 import brainvisa_cmake.brainvisa_projects as brainvisa_projects
 import brainvisa_cmake.components_definition

@@ -496,6 +496,7 @@ class BBIDaily:
         # tweak Qt6 installs - until fixed by proper pyqt6_webengine packages
         qt_ver = self.get_qt_version(dev_env_dir)
         if qt_ver >= [6, 0]:
+            lines.insert(deps_i + 3, 'pyqt6 = "*"\n')
             lines += [
                 '\n',
                 '[pypi-dependencies]\n',
@@ -504,7 +505,7 @@ class BBIDaily:
                 '[activation]\n',
                 'scripts = ["activate.sh"]\n'
             ]
-            with open(osp.join(env_dir, 'activation.sh'), 'w') as g:
+            with open(osp.join(env_dir, 'activate.sh'), 'w') as g:
                 print('''# remove pip-installed resources for the pip Qt binaries, whenever they come back
 # (after an update)
 if [ -d "$PIXI_PROJECT_ROOT/.pixi/envs/$PIXI_ENVIRONMENT_NAME/lib/python3.12/site-packages/PyQt6/Qt6" ]; then

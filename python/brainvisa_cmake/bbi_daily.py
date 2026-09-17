@@ -485,13 +485,38 @@ class BBIDaily:
         pixi_toml = osp.join(env_dir, 'pixi.toml')
         with open(pixi_toml) as f:
             lines = list(f.readlines())
-        lines.insert(1, 'channel-priority = "disabled"\n')
+        # lines.insert(1, 'channel-priority = "disabled"\n')
         deps_i = lines.index('[dependencies]\n')
         with open(osp.join(dev_env_dir, 'conf', 'soma-env.json')) as f:
             env_conf = json.load(f)
         version = env_conf['version']
         lines.insert(deps_i + 1, f'soma-env = "{version}.*"\n')
         lines.insert(deps_i + 2, 'pytest = "*"\n')
+
+        # tweak Qt6 installs - until fixed by proper pyqt6_webengine packages
+        qt_ver = self.get_qt_version(dev_env_dir)
+        if qt_ver >= [6, 0]:
+            lines += [
+                '',
+                '[pypi-dependencies]',
+                'pyqt6_webengine = "*"',
+                '',
+                '[activation]',
+                'scripts = ["activate.sh"]'
+            ]
+            with open(osp.join(env_dir, 'activation.sh'), 'w') as g:
+                print('''# remove pip-installed resources for the pip Qt binaries, whenever they come back
+# (after an update)
+if [ -d "$PIXI_PROJECT_ROOT/.pixi/envs/$PIXI_ENVIRONMENT_NAME/lib/python3.12/site-packages/PyQt6/Qt6" ]; then
+    rm -rf $PIXI_PROJECT_ROOT/.pixi/envs/$PIXI_ENVIRONMENT_NAME/lib/python3.12/site-packages/PyQt6/Qt6
+fi
+export QT_API=pyqt6
+# force LD_LIBRARY_PATH for QtWebEngine installed via pip
+# as a conqequence many host system software will not work in this environment.
+export LD_LIBRARY_PATH="$PIXI_PROJECT_ROOT/.pixi/envs/$PIXI_ENVIRONMENT_NAME:$LD_LIBRARY_PATH"
+''', file=g)
+
+
         with open(pixi_toml, 'w') as f:
             f.write(''.join(lines))
 
@@ -545,6 +570,18 @@ class BBIDaily:
                          'The packages installation failed.')
 
         return success
+
+    def get_qt_version(self, dev_env_dir):
+        cwd = os.getcwd()
+        out = subprocess.check_output(['pixi', 'ls', 'qt6-main'])
+        if out.startswith('Error'):
+            out = subprocess.check_output(['pixi', 'ls', 'qt6-main'])
+        out = out.decode().strip().split('\n')
+        lines = [line.split() for line in out]
+        ver = [int(x) for x in lines[1][1].split('.')]
+
+        os.chdir(cwd)
+        return ver
 
     def run_bbi(self, dev_configs, user_configs,
                 update_neuroforge=True,

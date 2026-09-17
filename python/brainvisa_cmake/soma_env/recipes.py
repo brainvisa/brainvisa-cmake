@@ -7,7 +7,14 @@ import re
 import brainvisa_cmake.brainvisa_projects as brainvisa_projects
 
 
-def pin_dev_compatible(package, min_pin=None, max_pin=None, exact=False):
+def pin_dev_compatible(package, lower_bound=None, upper_bound=None,
+                       min_pin=None, max_pin=None, exact=False):
+    # min_pin and max_pin are obsolete and removed from recent rattler-build
+    # pin_compatible() function
+    if lower_bound is None:
+        lower_bound = min_pin
+    if upper_bound is None:
+        upper_bound = max_pin
     output = subprocess.check_output(["pixi", "list", "--json", package])
     installed_packages = {i["name"]: i for i in json.loads(output.decode())}
     package_info = installed_packages.get(package)
@@ -16,14 +23,14 @@ def pin_dev_compatible(package, min_pin=None, max_pin=None, exact=False):
     version = package_info["version"]
     if exact:
         return f"{package} =={version} {package_info['build']}"
-    if min_pin is None:
+    if lower_bound is None:
         min_version = version
     else:
-        min_version = ".".join((version.split("."))[: len(min_pin.split("."))])
-    if max_pin is None:
+        min_version = ".".join((version.split("."))[: len(lower_bound.split("."))])
+    if upper_bound is None:
         max_version = version.split(".")[:-1]
-    elif max_pin:
-        max_version = version.split(".")[: len(max_pin.split("."))]
+    elif upper_bound:
+        max_version = version.split(".")[: len(upper_bound.split("."))]
     else:
         max_version = None
     if max_version:

@@ -492,11 +492,14 @@ class BBIDaily:
         version = env_conf['version']
         lines.insert(deps_i + 1, f'soma-env = "{version}.*"\n')
         lines.insert(deps_i + 2, 'pytest = "*"\n')
+        ## FIXME: temporary until we remove the obsolete neuro-forge package
+        lines.insert(deps_i + 3, 'openjpeg = ">=2.5.4"\n')
+        ni = 3
 
         # tweak Qt6 installs - until fixed by proper pyqt6_webengine packages
         qt_ver = self.get_qt_version(dev_env_dir)
         if qt_ver >= [6, 0]:
-            lines.insert(deps_i + 3, 'pyqt6 = "*"\n')
+            lines.insert(deps_i + ni, 'pyqt6 = "*"\n')
             lines += [
                 '\n',
                 '[pypi-dependencies]\n',

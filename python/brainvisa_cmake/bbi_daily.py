@@ -578,9 +578,10 @@ export LD_LIBRARY_PATH="$PIXI_PROJECT_ROOT/.pixi/envs/$PIXI_ENVIRONMENT_NAME:$LD
     def get_qt_version(self, dev_env_dir):
         cwd = os.getcwd()
         os.chdir(dev_env_dir)
-        out = subprocess.call(['pixi', 'ls', 'qt6-main']).decode()
-        if out.startswith('Error'):
+        try:
             out = subprocess.check_output(['pixi', 'ls', 'qt6-main']).decode()
+        except Exception:
+            out = subprocess.check_output(['pixi', 'ls', 'qt-main']).decode()
         out = out.strip().split('\n')
         lines = [line.split() for line in out]
         ver = [int(x) for x in lines[1][1].split('.')]

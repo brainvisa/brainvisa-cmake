@@ -111,10 +111,10 @@ class SourceDirectory(
         elif l == ["soma-env"]:
             from pathlib import Path
             import json
-            from .soma_env.config import read_soma_env_config
 
             soma_root = Path(os.environ["SOMA_ROOT"])
-            soma_env_conf = read_soma_env_config()
+            with open(soma_root / "conf" / "soma-env.json") as f:
+                soma_env_conf = json.load(f)
             base_environment_name = soma_env_conf.get("base")
             environment_version = soma_env_conf["version"]
 

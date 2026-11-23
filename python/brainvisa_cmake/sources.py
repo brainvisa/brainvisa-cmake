@@ -132,7 +132,7 @@ class SourceDirectory(
                                 base_components.update({
                                     component
                                     for component, info in content.items()
-                                    if "url" in info
+                                    if type(info) is dict and "url" in info
                                 })
 
             sources = {}

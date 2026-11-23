@@ -120,20 +120,27 @@ class SourceDirectory(
 
             base_components = set()
             if base_environment_name:
-                base_sources_file = (
-                    soma_root / "conf" / "sources.d" / f"{base_environment_name}.json"
+                base_sources_files = (
+                    soma_root / "conf" / "sources.d" / f"{base_environment_name}.json",
+                    soma_root / "conf" / "sources.d" / f"{base_environment_name}-private.json"
                 )
-                with open(base_sources_file) as f:
-                    base_components = {
-                        component
-                        for component, info in json.load(f).items()
-                        if "url" in info
-                    }
+                for base_sources_file in base_sources_files:
+                    if base_sources_file.exists():
+                        with open(base_sources_file) as f:
+                            content = json.load(f)
+                            if content.get("enabled", True):
+                                base_components.update({
+                                    component
+                                    for component, info in content.items()
+                                    if type(info) is dict and "url" in info
+                                })
 
             sources = {}
             for sources_file in sorted((soma_root / "conf" / "sources.d").iterdir()):
                 with open(sources_file) as f:
-                    sources.update({k: v for k, v in json.load(f).items() if "url" in v})
+                    content = json.load(f)
+                    if content.get("enabled", True):
+                        sources.update({k: v for k, v in content.items() if type(v) is dict and "url" in v})
 
             self.gitComponents.append(
                 (

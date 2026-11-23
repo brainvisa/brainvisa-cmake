@@ -18,6 +18,8 @@ import yaml
 import glob
 import pathlib
 
+from soma_env.config import read_soma_env_config
+
 
 def ensure_str(arg, encoding='utf-8', errors='stric'):
     if isinstance(arg, bytes):
@@ -415,9 +417,7 @@ class BBIDaily:
         return success
 
     def read_packages_list(self, dev_config):
-        with open(osp.join(dev_config['directory'], 'conf',
-                           'soma-env.json')) as f:
-            binfo = json.load(f)
+        binfo = read_soma_env_config(dev_config['directory'] / "conf")
         packages = {p: {'version': v} for p, v in binfo['packages'].items()}
         for p, d in packages.items():
             recipe_f = osp.join(dev_config['directory'], 'plan', 'recipes', p,
@@ -487,8 +487,7 @@ class BBIDaily:
             lines = list(f.readlines())
         # lines.insert(1, 'channel-priority = "disabled"\n')
         deps_i = lines.index('[dependencies]\n')
-        with open(osp.join(dev_env_dir, 'conf', 'soma-env.json')) as f:
-            env_conf = json.load(f)
+        env_conf = read_soma_env_config(dev_env_dir / "conf")
         version = env_conf['version']
         lines.insert(deps_i + 1, f'soma-env = "{version}.*"\n')
         lines.insert(deps_i + 2, 'pytest = "*"\n')

@@ -3,6 +3,7 @@ import fnmatch
 import itertools
 import json
 import os
+import glob
 import pathlib
 import re
 import shutil
@@ -20,6 +21,7 @@ import typing
 
 
 from .defaults import default_publication_directory
+from .config import read_soma_env_config
 from .recipes import (
     sorted_recipies,
     find_soma_env_packages,
@@ -39,7 +41,6 @@ class CommandContext:
 
 command_context = CommandContext()
 command_typer = typer.Typer()
-
 
 def self_update_soma_env(
     context: CommandContext,
@@ -260,10 +261,8 @@ def packaging_plan(
         # function. We need to access the function now. using globals()
         globals()['sources']()
 
-    # Read environment configuration
     soma_env_conf_file = command_context.soma_root / "conf" / "soma-env.json"
-    with open(soma_env_conf_file) as f:
-        soma_env_conf = json.load(f)
+    soma_env_conf = read_soma_env_config()
     environment_name = soma_env_conf["name"]
     environment_version = soma_env_conf["version"]
     base_environment = soma_env_conf.get("base")

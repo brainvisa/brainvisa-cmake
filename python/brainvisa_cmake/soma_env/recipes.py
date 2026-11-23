@@ -5,6 +5,7 @@ import yaml
 import re
 
 import brainvisa_cmake.brainvisa_projects as brainvisa_projects
+from .config import read_soma_env_config
 
 
 def pin_dev_compatible(package, lower_bound=None, upper_bound=None,
@@ -65,8 +66,7 @@ def read_recipes(soma_root):
     Iterate over all recipes files defined in soma-forge.
     """
     # Read environment version
-    with open(soma_root / "conf" / "soma-env.json") as f:
-        soma_env_conf = json.load(f)
+    soma_env_conf = read_soma_env_config(soma_root / "conf")
     environment_packages = soma_env_conf["packages"]
     environment_version = soma_env_conf["version"]
     development_environment = environment_version.startswith("0.")

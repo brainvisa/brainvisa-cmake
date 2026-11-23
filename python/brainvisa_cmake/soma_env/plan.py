@@ -12,7 +12,6 @@ import toml
 import os.path as osp
 import glob
 
-from .config import read_soma_env_config
 
 dry_run = False
 
@@ -147,7 +146,8 @@ def create_release_tag(context, tag):
     branch = repo.head.reference
     repo.git.checkout(repo.head.commit)
     conf_file = context.soma_root / "conf" / "soma-env.json"
-    conf = read_soma_env_config()
+    with open(conf_file) as f:
+        conf = json.load(f)
     sources_conf_file = (
         context.soma_root / "conf" / "sources.d" / f"{conf['name']}.json"
     )
@@ -303,7 +303,9 @@ def build_container(
     packages,
 ):
     print('build_container')
-    conf = read_soma_env_config()
+    conf_file = context.soma_root / "conf" / "soma-env.json"
+    with open(conf_file) as f:
+        conf = json.load(f)
     sources_conf_file = (
         context.soma_root / "conf" / "sources.d" / f"{conf['name']}.json"
     )
@@ -356,7 +358,9 @@ def install_container(
     install_dir,
 ):
     print('install_container')
-    conf = read_soma_env_config()
+    conf_file = context.soma_root / "conf" / "soma-env.json"
+    with open(conf_file) as f:
+        conf = json.load(f)
     sources_conf_file = (
         context.soma_root / "conf" / "sources.d" / f"{conf['name']}.json"
     )
@@ -394,7 +398,9 @@ def publish_container(
     casa_distro_base,
 ):
     print('publish_container')
-    conf = read_soma_env_config()
+    conf_file = context.soma_root / "conf" / "soma-env.json"
+    with open(conf_file) as f:
+        conf = json.load(f)
     sources_conf_file = (
         context.soma_root / "conf" / "sources.d" / f"{conf['name']}.json"
     )

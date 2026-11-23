@@ -2,7 +2,12 @@ import json
 import os
 import pathlib
 
-from .config import read_soma_env_config
 
-soma_env_conf = read_soma_env_config()
-__version__ = soma_env_conf.get("version")
+conf_file = pathlib.Path(os.environ.get("SOMA_ROOT")) / "conf" / "soma-env.json"
+if conf_file.exists():
+    try:
+        with open(conf_file) as f:
+            conf = json.load(f)
+        __version__ = conf.get("version")
+    except Exception as e:
+        print(f"ERROR: {e}")
